@@ -1,18 +1,19 @@
 import React, { useState } from 'react';
 import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
 import {
-	TrendingUp,
-	Users,
-	FileText,
-	Settings,
-	LogOut,
-	X,
-	Home,
-	FileQuestion,
-	CalendarCheck,
-} from 'lucide-react';
-import { supabase } from '../lib/supabase';
-import { AuthSessionMissingError } from '@supabase/supabase-js';
+  TrendingUp,
+  LogOut,
+  X,
+  Users,
+  Home,
+  FileText,
+  Settings,
+  Menu,
+  LayoutDashboard,
+  UserRoundMinusIcon,
+} from "lucide-react";
+import { supabase } from "../lib/supabase";
+import { AuthSessionMissingError } from "@supabase/supabase-js";
 
 export default function Layout() {
 	const location = useLocation();
@@ -102,16 +103,16 @@ export default function Layout() {
 					})}
 				</nav>
 
-				<div className='absolute bottom-0 w-full p-4 border-t border-gray-200'>
-					<button
-						onClick={() => setShowLogoutConfirm(true)}
-						className='flex items-center w-full px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-md'
-					>
-						<LogOut className='h-5 w-5 mr-3' />
-						Déconnexion
-					</button>
-				</div>
-			</div>
+        <div className="absolute bottom-0 w-full p-4 border-t border-gray-200">
+          <button
+            onClick={() => setShowLogoutConfirm(true)}
+            className="flex items-center w-full px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-md"
+          >
+            <UserRoundMinusIcon className="h-5 w-5 mr-3" />
+            Déconnexion
+          </button>
+        </div>
+      </div>
 
 			{/* Main content */}
 			<div className='pl-64'>
