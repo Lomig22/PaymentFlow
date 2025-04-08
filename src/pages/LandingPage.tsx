@@ -1,7 +1,6 @@
 import React, { useState, useRef } from "react";
 import { motion, useInView } from "framer-motion";
 import { InlineWidget } from "react-calendly";
-import { useNavigate } from "react-router-dom";
 
 import {
   BarChart2,
@@ -28,7 +27,6 @@ interface LandingPageProps {
 }
 
 export default function LandingPage({ onGetStarted }: LandingPageProps) {
-  const navigate = useNavigate();
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
   const [showLegalNotice, setShowLegalNotice] = useState(false);
@@ -94,65 +92,28 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
       // Get current user from Supabase
       const {
         data: { user },
-        error: userError,
+        error,
       } = await supabase.auth.getUser();
 
-      if (userError || !user) {
+      if (error || !user) {
         alert("Veuillez vous connecter pour continuer");
         return;
       }
 
-      // Check for existing subscription
-      const { data: existingSubscriptions, error: subscriptionError } =
-        await supabase
-          .from("subscriptions")
-          .select("id")
-          .eq("user_id", user.id);
-
-      if (subscriptionError) {
-        console.error("Error checking subscriptions:", subscriptionError);
-        alert(
-          "Une erreur est survenue lors de la vérification de l'abonnement"
-        );
-        return;
-      }
-
-      if (existingSubscriptions && existingSubscriptions.length > 0) {
-        alert("Vous avez déjà un abonnement actif.");
-        return;
-      }
-
-      // Add new subscription to Supabase
-      const { error: insertError } = await supabase
-        .from("subscriptions")
-        .insert([
-          {
-            user_id: user.id,
-            status: "active",
-          },
-        ]);
-
-      if (insertError) {
-        console.error("Error creating subscription:", insertError);
-        alert("Erreur lors de la création de l'abonnement");
-        return;
-      }
-
-      // Proceed to Stripe payment
       let stripeUrl = "";
       switch (plan) {
         case "basic":
-          stripeUrl = `https://buy.stripe.com/test_dR66s9cgGcRgcQU3cc?prefilled_email=${encodeURIComponent(
+          stripeUrl = `https://buy.stripe.com/9AQeXMeeggZDc4E145?prefilled_email=${encodeURIComponent(
             user.email ?? ""
           )}`;
           break;
         case "pro":
-          stripeUrl = `https://buy.stripe.com/test_dR66s9cgGcRgcQU3cc?prefilled_email=${encodeURIComponent(
+          stripeUrl = `https://buy.stripe.com/00g02Sc685gVfgQbIK?prefilled_email=${encodeURIComponent(
             user.email ?? ""
           )}`;
           break;
         case "enterprise":
-          stripeUrl = `https://buy.stripe.com/test_dR66s9cgGcRgcQU3cc?prefilled_email=${encodeURIComponent(
+          stripeUrl = `https://buy.stripe.com/5kA5nc5HK38N5Gg3cf?prefilled_email=${encodeURIComponent(
             user.email ?? ""
           )}`;
           break;
@@ -166,6 +127,7 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
       alert("Une erreur est survenue. Veuillez réessayer.");
     }
   };
+
   const heroRef = useRef(null);
   const featuresRef = useRef(null);
   const useCasesRef = useRef(null);

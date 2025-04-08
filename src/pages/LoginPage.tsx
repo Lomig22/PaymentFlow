@@ -20,10 +20,7 @@ export default function LoginPage() {
     setMessage(null);
 
     try {
-      const {
-        data: { user },
-        error,
-      } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -35,22 +32,7 @@ export default function LoginPage() {
         throw error;
       }
 
-      // Check if user has an active subscription
-      const { data: subscriptions, error: subError } = await supabase
-        .from("subscriptions")
-        .select("id")
-        .eq("user_id", user?.id);
-
-      if (subError) {
-        console.error("Subscription check error:", subError);
-        throw new Error("Erreur de vérification de l'abonnement");
-      }
-
-      if (subscriptions && subscriptions.length > 0) {
-        navigate("/dashboard");
-      } else {
-        navigate("/");
-      }
+      navigate("");
     } catch (error: any) {
       setMessage({
         type: "error",
@@ -64,6 +46,13 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-gray-100/80 backdrop-blur-sm flex items-center justify-center p-4 fixed inset-0 z-50">
       <div className="max-w-md w-full bg-white rounded-lg shadow-xl p-8 relative">
+        <button
+          onClick={() => navigate("")}
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+        >
+          <ArrowLeft className="h-6 w-6" />
+        </button>
+
         <h2 className="text-2xl font-bold text-center mb-8">Se connecter</h2>
 
         {message && (

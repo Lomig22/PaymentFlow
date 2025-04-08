@@ -22,7 +22,6 @@ import ForgotPassword from "./pages/ForgotPassword";
 import PricingPage from "./pages/PricingPage";
 import AppHeader from "./components/AppHeader";
 import ContactPage from "./pages/ContactPage";
-import PaymentSuccess from "./pages/PaymentSuccess";
 
 function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -80,12 +79,11 @@ function App() {
         />
         <Route
           path="/login"
-          element={!user ? <LoginPage /> : <Navigate to="/" replace />}
+          element={!user ? <LoginPage /> : <Navigate to="/dashboard" replace />}
         />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/pricing" element={<PricingPage />} />
-
-        <Route path="/payment-success" element={<PaymentSuccess />} />
+        <Route path="/contact" element={<ContactPage />} />
 
         {/* Auth-protected routes */}
         <Route
