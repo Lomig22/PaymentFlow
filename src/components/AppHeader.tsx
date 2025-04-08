@@ -1,5 +1,3 @@
-import { useRef } from "react";
-import { PopupWidget } from "react-calendly";
 import { Link, useNavigate } from "react-router-dom";
 import { TrendingUp } from "lucide-react";
 import { supabase } from "../lib/supabase";
@@ -12,7 +10,6 @@ interface AppHeaderProps {
 
 export default function AppHeader({ user }: AppHeaderProps) {
   const navigate = useNavigate();
-  const calendlyRef = useRef<any>(null); // Use 'any' type if TypeScript complains
 
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
@@ -75,14 +72,6 @@ export default function AppHeader({ user }: AppHeaderProps) {
             Commencer
           </Link>
         )}
-        {/* Calendly Popup Widget - Hidden until button click */}
-        <PopupWidget
-          ref={calendlyRef}
-          url="https://calendly.com/huzaifaali2002/30min" // Replace with your Calendly URL
-          rootElement={document.getElementById("root")!}
-          text="planifier une réunion"
-          color="#2563eb"
-        />
       </nav>
     </header>
   );
