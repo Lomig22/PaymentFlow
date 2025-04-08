@@ -35,13 +35,11 @@ export default function LoginPage() {
         throw error;
       }
 
-      if (!user) throw new Error("Utilisateur non trouvé");
-
       // Check if user has an active subscription
       const { data: subscriptions, error: subError } = await supabase
         .from("subscriptions")
         .select("id")
-        .eq("user_id", user.id);
+        .eq("user_id", user?.id);
 
       if (subError) {
         console.error("Subscription check error:", subError);
@@ -49,8 +47,7 @@ export default function LoginPage() {
       }
 
       if (subscriptions && subscriptions.length > 0) {
-        // Navigate to dashboard with encoded email in URL
-        navigate(`/dashboard/${encodeURIComponent(user.email)}`);
+        navigate("/dashboard");
       } else {
         navigate("/");
       }
