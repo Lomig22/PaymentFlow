@@ -11,8 +11,6 @@ import {
   BanknoteIcon,
 } from "lucide-react";
 import { Client, Receivable } from "../types/database";
-import { useParams } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
 
 interface DashboardStats {
   totalClients: number;
@@ -32,10 +30,7 @@ interface DashboardStats {
   };
 }
 
-export default function Dashboard({ user }: DashboardProps) {
-  const { email } = useParams();
-  const navigate = useNavigate();
-
+export default function Dashboard() {
   const [stats, setStats] = useState<DashboardStats>({
     totalClients: 0,
     clientsNeedingReminder: 0,
@@ -54,15 +49,6 @@ export default function Dashboard({ user }: DashboardProps) {
     },
   });
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (user?.email) {
-      const expectedEmail = encodeURIComponent(user.email);
-      if (email !== expectedEmail) {
-        navigate(`/dashboard/${expectedEmail}`, { replace: true });
-      }
-    }
-  }, [user, email, navigate]);
 
   useEffect(() => {
     fetchDashboardStats();
