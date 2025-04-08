@@ -1,6 +1,4 @@
-import React, { useState, useRef } from "react";
-import { motion, useInView } from "framer-motion";
-
+import React, { useState } from "react";
 import {
   BarChart2,
   Mail,
@@ -12,12 +10,6 @@ import {
 } from "lucide-react";
 import { sendContactForm } from "../lib/contactService";
 import { supabase } from "../lib/supabase";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation, Pagination } from "swiper/modules";
-import "swiper/css";
-import "swiper/css/navigation";
-import "swiper/css/pagination";
-
 import { User } from "@supabase/supabase-js";
 interface LandingPageProps {
   onGetStarted: () => void;
@@ -126,78 +118,6 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
     }
   };
 
-  const heroRef = useRef(null);
-  const featuresRef = useRef(null);
-  const useCasesRef = useRef(null);
-  const pricingRef = useRef(null);
-  const testimonialsRef = useRef(null);
-
-  // Check when sections are in view
-  const heroInView = useInView(heroRef, { once: true, margin: "-100px" });
-  const featuresInView = useInView(featuresRef, { once: true, amount: 0.25 });
-  const useCasesInView = useInView(useCasesRef, { once: true, amount: 0.1 });
-  const pricingInView = useInView(pricingRef, { once: true, amount: 0.1 });
-  const testimonialsInView = useInView(testimonialsRef, {
-    once: true,
-    amount: 0.1,
-  });
-
-  const fadeInUp = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.6, ease: "easeOut" },
-    },
-  };
-
-  const fadeInScale = {
-    hidden: { opacity: 0, scale: 0.95 },
-    visible: {
-      opacity: 1,
-      scale: 1,
-      transition: { duration: 0.6 },
-    },
-  };
-
-  const staggerContainer = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.2 },
-    },
-  };
-
-  // New fadeInLeft animation variant
-  const fadeInLeft = {
-    hidden: { opacity: 0, x: -20 },
-    visible: {
-      opacity: 1,
-      x: 0,
-      transition: { duration: 0.6, ease: "easeOut" },
-    },
-  };
-
-  const [billingInterval, setBillingInterval] = useState<"monthly" | "yearly">(
-    "monthly"
-  );
-
-  // Add this helper function to calculate prices
-  const getPrice = (monthlyPrice: number) => {
-    const roundPrice = (price: number) => Math.round(price / 5) * 5; // Rounds to nearest 5
-
-    if (billingInterval === "yearly") {
-      const yearlyPrice = monthlyPrice * 12;
-      const discountedPrice = yearlyPrice * 0.9; // 10% discount
-      return {
-        displayedPrice: roundPrice(discountedPrice),
-        originalPrice: roundPrice(yearlyPrice),
-      };
-    }
-
-    return { displayedPrice: roundPrice(monthlyPrice), originalPrice: null };
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Header */}
@@ -205,13 +125,7 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
       {/* Hero Section */}
       <main>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px", amount: 1 }}
-            variants={fadeInUp}
-            className="text-center"
-          >
+          <div className="text-center">
             <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
               Automatisez vos relances clients
             </h1>
@@ -225,23 +139,14 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
             >
               Essayer gratuitement
             </button>
-          </motion.div>
+          </div>
           {/* Features */}
-          <motion.div
+          <div
             id="features"
             className="mt-24 grid grid-cols-1 md:grid-cols-3 gap-12"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px", amount: 1 }}
-            variants={staggerContainer}
           >
             {/* Add group class to each feature card */}
-            <motion.div
-              variants={fadeInUp}
-              whileHover={{ y: -5 }}
-              transition={{ type: "spring", stiffness: 300 }}
-              className="text-center group"
-            >
+            <div className="text-center group">
               <div
                 className="bg-blue-100 w-16 h-16 rounded-lg flex items-center justify-center mx-auto mb-6 
       transition-transform duration-300 ease-in-out 
@@ -254,14 +159,9 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
                 Identifiez les meilleurs moments pour relancer vos prospects
                 B2B.
               </p>
-            </motion.div>
+            </div>
 
-            <motion.div
-              variants={fadeInUp}
-              whileHover={{ y: -5 }}
-              transition={{ type: "spring", stiffness: 300 }}
-              className="text-center group"
-            >
+            <div className="text-center group">
               <div
                 className="bg-blue-100 w-16 h-16 rounded-lg flex items-center justify-center mx-auto mb-6 
       transition-transform duration-300 ease-in-out 
@@ -275,14 +175,9 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
               <p className="text-gray-600">
                 Créez des séquences de relance personnalisées et automatisées.
               </p>
-            </motion.div>
+            </div>
 
-            <motion.div
-              variants={fadeInUp}
-              whileHover={{ y: -5 }}
-              transition={{ type: "spring", stiffness: 300 }}
-              className="text-center group"
-            >
+            <div className="text-center group">
               <div
                 className="bg-blue-100 w-16 h-16 rounded-lg flex items-center justify-center mx-auto mb-6 
       transition-transform duration-300 ease-in-out 
@@ -296,24 +191,17 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
               <p className="text-gray-600">
                 Suivez vos performances et optimisez vos campagnes de relance.
               </p>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
           {/* Use Cases */}
-          <motion.div
-            className="mt-32"
-            variants={staggerContainer}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.3 }}
-          >
+          <div className="mt-32">
             <h2 className="text-3xl font-bold text-center mb-16">
               Comment PaymentFlow peut vous aider
             </h2>
 
             <div className="space-y-24">
-              {/* Section 1 */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-                <motion.div variants={fadeInLeft}>
+                <div>
                   <h3 className="text-2xl font-bold mb-4">
                     Gestion des créances impayées
                   </h3>
@@ -340,35 +228,25 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
                       <span>Suivi détaillé de l'historique des relances</span>
                     </li>
                   </ul>
-                </motion.div>
-                <motion.div
-                  variants={fadeInScale}
-                  className="bg-gray-100 p-6 rounded-lg shadow-inner"
-                >
+                </div>
+                <div className="bg-gray-100 p-6 rounded-lg shadow-inner">
                   <img
                     src="https://images.unsplash.com/photo-1554224155-6726b3ff858f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2011&q=80"
                     alt="Gestion des créances"
                     className="rounded-lg shadow-md w-full"
                   />
-                </motion.div>
+                </div>
               </div>
 
-              {/* Section 2 */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-                <motion.div
-                  variants={fadeInScale}
-                  className="order-2 md:order-1 bg-gray-100 p-6 rounded-lg shadow-inner"
-                >
+                <div className="order-2 md:order-1 bg-gray-100 p-6 rounded-lg shadow-inner">
                   <img
                     src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
                     alt="Automatisation des relances"
                     className="rounded-lg shadow-md w-full"
                   />
-                </motion.div>
-                <motion.div
-                  variants={fadeInLeft}
-                  className="order-1 md:order-2"
-                >
+                </div>
+                <div className="order-1 md:order-2">
                   <h3 className="text-2xl font-bold mb-4">
                     Automatisation des relances
                   </h3>
@@ -390,12 +268,11 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
                       <span>Planification intelligente des envois</span>
                     </li>
                   </ul>
-                </motion.div>
+                </div>
               </div>
 
-              {/* Section 3 */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-                <motion.div variants={fadeInLeft}>
+                <div>
                   <h3 className="text-2xl font-bold mb-4">
                     Analyse et reporting
                   </h3>
@@ -417,78 +294,36 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
                       <span>Identification des clients à risque</span>
                     </li>
                   </ul>
-                </motion.div>
-                <motion.div
-                  variants={fadeInScale}
-                  className="bg-gray-100 p-6 rounded-lg shadow-inner"
-                >
+                </div>
+                <div className="bg-gray-100 p-6 rounded-lg shadow-inner">
                   <img
                     src="https://images.unsplash.com/photo-1551434678-e076c223a692?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
                     alt="Analyse et reporting"
                     className="rounded-lg shadow-md w-full"
                   />
-                </motion.div>
+                </div>
               </div>
             </div>
-          </motion.div>
+          </div>
+          {/* Pricing Section */}
 
           {/* Pricing Section */}
-          <motion.div
-            id="pricing"
-            className="mt-32"
-            variants={staggerContainer}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.3 }}
-          >
-            <motion.h2
-              className="text-3xl font-bold text-center mb-8"
-              variants={fadeInLeft}
-            >
+          <div id="pricing" className="mt-32">
+            <h2 className="text-3xl font-bold text-center mb-16">
               Tarifs simples et transparents
-              <div className="flex items-center justify-center gap-4">
-                <button
-                  onClick={() => setBillingInterval("monthly")}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                    billingInterval === "monthly"
-                      ? "bg-blue-600 text-white shadow-md"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}
-                >
-                  Facturation mensuelle
-                </button>
-                <button
-                  onClick={() => setBillingInterval("yearly")}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                    billingInterval === "yearly"
-                      ? "bg-blue-600 text-white shadow-md"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}
-                >
-                  Facturation annuelle
-                </button>
-              </div>
-            </motion.h2>
+            </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {/* Basic Plan */}
-              <motion.div
-                variants={fadeInLeft}
-                className="bg-white rounded-lg shadow-lg p-8 border border-gray-200 hover:border-blue-500 transition-colors"
-              >
+              <div className="bg-white rounded-lg shadow-lg p-8 border border-gray-200 hover:border-blue-500 transition-colors">
                 <h3 className="text-xl font-bold mb-2">Basic</h3>
                 <p className="text-gray-600 mb-6">
                   Pour les petites entreprises
                 </p>
                 <p className="text-4xl font-bold mb-6">
-                  {billingInterval === "yearly" && (
-                    <span className="text-lg font-normal text-gray-500 line-through mr-2">
-                      {getPrice(29).originalPrice}€
-                    </span>
-                  )}
-                  {getPrice(29).displayedPrice}€
+                  29€
                   <span className="text-lg font-normal text-gray-500">
-                    /{billingInterval === "monthly" ? "mois" : "an"}
+                    /mois
                   </span>
                 </p>
                 <ul className="space-y-3 mb-8">
@@ -508,10 +343,6 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
                     <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
                     <span>Support par email</span>
                   </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
-                    <span>Hors Taxes 20%</span>
-                  </li>
                 </ul>
                 <button
                   onClick={() => handleStripePayment("basic")}
@@ -519,13 +350,10 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
                 >
                   Souscrire
                 </button>
-              </motion.div>
+              </div>
 
               {/* Pro Plan */}
-              <motion.div
-                variants={fadeInLeft}
-                className="bg-white rounded-lg shadow-lg p-8 border-2 border-blue-500 transform scale-105 z-10"
-              >
+              <div className="bg-white rounded-lg shadow-lg p-8 border-2 border-blue-500 transform scale-105 z-10">
                 <div className="bg-blue-500 text-white text-xs font-bold uppercase tracking-wider py-1 px-2 rounded-full inline-block mb-2">
                   Populaire
                 </div>
@@ -534,14 +362,9 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
                   Pour les entreprises en croissance
                 </p>
                 <p className="text-4xl font-bold mb-6">
-                  {billingInterval === "yearly" && (
-                    <span className="text-lg font-normal text-gray-500 line-through mr-2">
-                      {getPrice(79).originalPrice}€
-                    </span>
-                  )}
-                  {getPrice(79).displayedPrice}€
+                  79€
                   <span className="text-lg font-normal text-gray-500">
-                    /{billingInterval === "monthly" ? "mois" : "an"}
+                    /mois
                   </span>
                 </p>
                 <ul className="space-y-3 mb-8">
@@ -565,10 +388,6 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
                     <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
                     <span>Intégration comptable</span>
                   </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
-                    <span>Hors Taxes 20%</span>
-                  </li>
                 </ul>
                 <button
                   onClick={() => handleStripePayment("pro")}
@@ -576,26 +395,18 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
                 >
                   Souscrire
                 </button>
-              </motion.div>
+              </div>
 
               {/* Enterprise Plan */}
-              <motion.div
-                variants={fadeInLeft}
-                className="bg-white rounded-lg shadow-lg p-8 border border-gray-200 hover:border-blue-500 transition-colors"
-              >
+              <div className="bg-white rounded-lg shadow-lg p-8 border border-gray-200 hover:border-blue-500 transition-colors">
                 <h3 className="text-xl font-bold mb-2">Enterprise</h3>
                 <p className="text-gray-600 mb-6">
                   Pour les grandes entreprises
                 </p>
                 <p className="text-4xl font-bold mb-6">
-                  {billingInterval === "yearly" && (
-                    <span className="text-lg font-normal text-gray-500 line-through mr-2">
-                      {getPrice(199).originalPrice}€
-                    </span>
-                  )}
-                  {getPrice(199).displayedPrice}€
+                  199€
                   <span className="text-lg font-normal text-gray-500">
-                    /{billingInterval === "monthly" ? "mois" : "an"}
+                    /mois
                   </span>
                 </p>
                 <ul className="space-y-3 mb-8">
@@ -619,10 +430,6 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
                     <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
                     <span>API complète</span>
                   </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
-                    <span>Hors Taxes 20%</span>
-                  </li>
                 </ul>
                 <button
                   onClick={() => handleStripePayment("enterprise")}
@@ -630,135 +437,88 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
                 >
                   Contacter les ventes
                 </button>
-              </motion.div>
+              </div>
             </div>
-          </motion.div>
+          </div>
 
           {/* Testimonials */}
-          <motion.div
-            id="testimonials"
-            className="mt-32"
-            variants={staggerContainer}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 1 }}
-          >
-            <motion.h2
-              className="text-3xl font-bold text-center mb-16"
-              variants={fadeInLeft}
-            >
+          <div id="testimonials" className="mt-32">
+            <h2 className="text-3xl font-bold text-center mb-16">
               Ce que nos clients disent
-            </motion.h2>
+            </h2>
 
-            <div className="px-4 relative mb-10">
-              <Swiper
-                modules={[Navigation, Pagination]}
-                spaceBetween={30}
-                pagination={{
-                  clickable: true,
-                }}
-                slidesPerView={1}
-                breakpoints={{
-                  640: {
-                    slidesPerView: 1,
-                  },
-                  768: {
-                    slidesPerView: 2,
-                  },
-                  1024: {
-                    slidesPerView: 3,
-                  },
-                }}
-              >
-                {[
-                  {
-                    name: "Sophie Martin",
-                    role: "Directrice Financière, TechStart",
-                    img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=256&q=80",
-                    text: `"PaymentFlow a transformé notre processus de recouvrement. Nous avons réduit nos délais de paiement de 45 à 15 jours en moyenne."`,
-                  },
-                  {
-                    name: "Thomas Dubois",
-                    role: "CEO, Marketing Solutions",
-                    img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=256&q=80",
-                    text: `"L'automatisation des relances nous a fait gagner un temps précieux. Notre équipe peut désormais se concentrer sur des tâches à plus forte valeur ajoutée."`,
-                  },
-                  {
-                    name: "Émilie Lefèvre",
-                    role: "Responsable Comptabilité, GreenRetail",
-                    img: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=256&q=80",
-                    text: `"Les rapports détaillés nous permettent d'identifier rapidement les clients à risque et d'adapter notre stratégie de recouvrement en conséquence."`,
-                  },
-                  {
-                    name: "Alexandre Moreau",
-                    role: "Directeur Administratif, LogiTech",
-                    img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=256&q=80",
-                    text: `"L'intégration avec notre système comptable est impeccable. Gain de temps garanti dès le premier mois d'utilisation."`,
-                  },
-                  {
-                    name: "Camille Rousseau",
-                    role: "Cheffe de projet, StartUp Factory",
-                    img: "https://images.unsplash.com/photo-1489424731084-a5d8b219a5bb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=256&q=80",
-                    text: `"La personnalisation des modèles de relance a boosté notre taux de réponse de 30%. Un outil indispensable !"`,
-                  },
-                  {
-                    name: "Nicolas Lambert",
-                    role: "Responsable CRM, RetailPro",
-                    img: "https://images.unsplash.com/photo-1566492031773-4f4e44671857?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=256&q=80",
-                    text: `"Le suivi en temps réel des relances nous a permis d'optimiser notre trésorerie comme jamais auparavant."`,
-                  },
-                ].map((testimonial, index) => (
-                  <SwiperSlide key={index}>
-                    <motion.div
-                      variants={fadeInLeft}
-                      className="bg-white rounded-lg shadow-lg p-8 border border-gray-200 h-[250px] mx-4 my-10 flex flex-col"
-                    >
-                      <div className="flex items-center mb-6">
-                        <img
-                          src={testimonial.img}
-                          alt={testimonial.name}
-                          className="w-12 h-12 rounded-full object-cover mr-4"
-                        />
-                        <div>
-                          <h4 className="font-bold">{testimonial.name}</h4>
-                          <p className="text-gray-600 text-sm">
-                            {testimonial.role}
-                          </p>
-                        </div>
-                      </div>
-                      <p
-                        className="text-gray-700 italic flex-1"
-                        style={{
-                          display: "-webkit-box",
-                          WebkitBoxOrient: "vertical",
-                          WebkitLineClamp: 3, // Adjust the number of lines as needed
-                          overflow: "hidden",
-                        }}
-                      >
-                        {testimonial.text}
-                      </p>
-                    </motion.div>
-                  </SwiperSlide>
-                ))}
-              </Swiper>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="bg-white rounded-lg shadow-lg p-8 border border-gray-200">
+                <div className="flex items-center mb-6">
+                  <img
+                    src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=256&q=80"
+                    alt="Sophie Martin"
+                    className="w-12 h-12 rounded-full object-cover mr-4"
+                  />
+                  <div>
+                    <h4 className="font-bold">Sophie Martin</h4>
+                    <p className="text-gray-600 text-sm">
+                      Directrice Financière, TechStart
+                    </p>
+                  </div>
+                </div>
+                <p className="text-gray-700 italic">
+                  "PaymentFlow a transformé notre processus de recouvrement.
+                  Nous avons réduit nos délais de paiement de 45 à 15 jours en
+                  moyenne."
+                </p>
+              </div>
+
+              <div className="bg-white rounded-lg shadow-lg p-8 border border-gray-200">
+                <div className="flex items-center mb-6">
+                  <img
+                    src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=256&q=80"
+                    alt="Thomas Dubois"
+                    className="w-12 h-12 rounded-full object-cover mr-4"
+                  />
+                  <div>
+                    <h4 className="font-bold">Thomas Dubois</h4>
+                    <p className="text-gray-600 text-sm">
+                      CEO, Marketing Solutions
+                    </p>
+                  </div>
+                </div>
+                <p className="text-gray-700 italic">
+                  "L'automatisation des relances nous a fait gagner un temps
+                  précieux. Notre équipe peut désormais se concentrer sur des
+                  tâches à plus forte valeur ajoutée."
+                </p>
+              </div>
+
+              <div className="bg-white rounded-lg shadow-lg p-8 border border-gray-200">
+                <div className="flex items-center mb-6">
+                  <img
+                    src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=256&q=80"
+                    alt="Émilie Lefèvre"
+                    className="w-12 h-12 rounded-full object-cover mr-4"
+                  />
+                  <div>
+                    <h4 className="font-bold">Émilie Lefèvre</h4>
+                    <p className="text-gray-600 text-sm">
+                      Responsable Comptabilité, GreenRetail
+                    </p>
+                  </div>
+                </div>
+                <p className="text-gray-700 italic">
+                  "Les rapports détaillés nous permettent d'identifier
+                  rapidement les clients à risque et d'adapter notre stratégie
+                  de recouvrement en conséquence."
+                </p>
+              </div>
             </div>
-          </motion.div>
+          </div>
         </div>
       </main>
 
       {/* Footer */}
-      <motion.footer
-        className="bg-gray-50 border-t border-gray-200 py-12"
-        variants={staggerContainer}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true }} // Trigger only when fully in view
-      >
+      <footer className="bg-gray-50 border-t border-gray-200 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8"
-            variants={fadeInLeft}
-          >
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
                 <TrendingUp className="h-6 w-6 text-blue-600" />
@@ -860,16 +620,13 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
                 </li>
               </ul>
             </div>
-          </motion.div>
+          </div>
 
-          <motion.div
-            className="pt-8 border-t border-gray-200 text-center text-sm text-gray-500"
-            variants={fadeInLeft}
-          >
+          <div className="pt-8 border-t border-gray-200 text-center text-sm text-gray-500">
             <p>© 2024 PaymentFlow. Tous droits réservés.</p>
-          </motion.div>
+          </div>
         </div>
-      </motion.footer>
+      </footer>
 
       {/* Modal Privacy Policy */}
       {showPrivacyPolicy && (
