@@ -23,9 +23,7 @@ export default function ReceivableEditForm({
 	const [formData, setFormData] = useState({
 		invoice_number: receivable.invoice_number,
 		amount: receivable.amount.toString(),
-		paid_amount: receivable.paid_amount
-			? receivable.paid_amount.toString()
-			: '',
+		paid_amount: receivable.paid_amount ? receivable.paid_amount.toString() : '0',
 		document_date: receivable.document_date || '',
 		due_date: receivable.due_date,
 		installment_number: receivable.installment_number || '',
@@ -138,9 +136,7 @@ export default function ReceivableEditForm({
 				.update({
 					...formData,
 					amount: parseFloat(formData.amount),
-					paid_amount: formData.paid_amount
-						? parseFloat(formData.paid_amount)
-						: null,
+					paid_amount: formData.paid_amount ? parseFloat(formData.paid_amount) : 0,
 					document_date: formData.document_date || null,
 					installment_number: formData.installment_number || null,
 					invoice_pdf_url: invoicePath ? invoicePath : undefined,
@@ -268,12 +264,11 @@ export default function ReceivableEditForm({
 							</label>
 							<input
 								type='number'
-								required
 								step='0.01'
 								min='0'
 								value={formData.paid_amount}
 								onChange={(e) =>
-									setFormData({ ...formData, paid_amount: e.target.value })
+									setFormData({ ...formData, paid_amount: e.target.value || '0' })
 								}
 								className='w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
 							/>
