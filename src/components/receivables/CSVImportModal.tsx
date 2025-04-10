@@ -31,10 +31,10 @@ export interface CSVMapping {
 }
 
 const mappingFields: MappingField[] = [
-	{ field: 'client', label: 'Client', required: true },
-	{ field: 'invoice_number', label: 'Facture', required: true },
-	{ field: 'amount', label: 'Montant', required: true },
-	{ field: 'paid_amount', label: 'Montant réglé', required: true },
+	{ field: 'client', label: 'Client', required: false },
+	{ field: 'invoice_number', label: 'Facture', required: false },
+	{ field: 'amount', label: 'Montant', required: false },
+	{ field: 'paid_amount', label: 'Montant réglé', required: false },
 	{ field: 'due_date', label: "Date d'échéance", required: false },
 	{ field: 'status', label: 'Statut', required: false },
 	{ field: 'document_date', label: 'Date pièce', required: false },
@@ -191,13 +191,8 @@ export default function CSVImportModal({
 	const [mapping, setMapping] = useState<Record<string, keyof CSVMapping>>({});
 	const [savingSchema, setSavingSchema] = useState(false);
 
-	// Colonnes attendues dans le CSV
-	const expectedHeaders = [
-		'Client',
-		'Facture',
-		'Montant devise',
-		'Montant Réglé devise',
-	];
+	// Plus de validation des en-têtes requis
+	const expectedHeaders: string[] = [];
 
 	// Désactiver le défilement du body quand la modale est ouverte
 	useEffect(() => {
@@ -563,15 +558,7 @@ export default function CSVImportModal({
 				(h) => mapping[h] === 'installment_number'
 			);
 			const statusIndex = csvHeaders.findIndex((h) => mapping[h] === 'status');
-			if (
-				clientIndex === -1 ||
-				invoiceIndex === -1 ||
-				amountIndex === -1 ||
-				dueDateIndex === -1
-			) {
-				setError('Colonnes obligatoires manquantes dans le fichier CSV');
-				return;
-			}
+			// Plus de validation des colonnes requises, utilisation de valeurs par défaut
 			const clientCodeIndex = csvHeaders.findIndex(
 				(h) => mapping[h] === 'client_code'
 			);
@@ -581,12 +568,11 @@ export default function CSVImportModal({
 			const previewData: (Receivable & { client: Client })[] = data
 				.slice(0, 5)
 				.map((row, index) => {
-					// Récupérer les valeurs des colonnes
-					const clientName = row[clientIndex] || '';
-					const invoiceNumber = row[invoiceIndex] || '';
-					const amountStr = row[amountIndex] || '0';
-					const paidAmountStr =
-						paidAmountIndex !== -1 ? row[paidAmountIndex] : '';
+					// Récupérer les valeurs des colonnes avec des valeurs par défaut
+					const clientName = clientIndex !== -1 ? row[clientIndex] : 'Client inconnu';
+					const invoiceNumber = invoiceIndex !== -1 ? row[invoiceIndex] : `FACT-${index + 1}`;
+					const amountStr = amountIndex !== -1 ? row[amountIndex] : '0';
+					const paidAmountStr = paidAmountIndex !== -1 ? row[paidAmountIndex] : '0';
 					const documentDate =
 						documentDateIndex !== -1
 							? formatDate(row[documentDateIndex])
@@ -608,8 +594,8 @@ export default function CSVImportModal({
 						formatDate(dueDateStr) || new Date().toISOString().split('T')[0];
 					const status = mapStatus(statusStr);
 					const clientCode = row[clientCodeIndex] || '';
-					// Trouver le client correspondant
-					const clientId = getClientId(clientCode);
+					// Trouver le client correspondant en utilisant le nom du client
+					const clientId = getClientId(clientName);
 
 					//shanaka (Start)
 					// Check if the client is already in the new clients map
@@ -880,16 +866,17 @@ export default function CSVImportModal({
 						}
 					}
 
-					// Vérifier que les données sont valides avant d'ajouter à la liste
-					if (clientId && invoiceNumber && amount > 0) {
+					// Ajouter la créance avec des valeurs par défaut si nécessaire
+					if (clientId) {
 						receivablesToImport.push({
 							client_id: clientId,
-							invoice_number: invoiceNumber,
-							amount,
-							paid_amount: paidAmount,
-							document_date: documentDate,
-							due_date: dueDate,
-							installment_number: installmentNumber,
+							invoice_number: invoiceNumber || `FACT-${Math.floor(Math.random() * 100000)}`,
+							amount: amount || 0,
+							paid_amount: paidAmount || 0,
+							document_date: documentDate || new Date().toISOString().split('T')[0],
+							due_date: dueDate || new Date().toISOString().split('T')[0],
+							installment_number: installmentNumber || 1,
+							status: status || 'pending',
 							//status: status !== null ? status : undefined,
 							owner_id: user.id,
 							created_at: new Date().toISOString(),
@@ -912,7 +899,7 @@ export default function CSVImportModal({
 				if (batch.length === 0) continue;
 
 				try {
-					const { data, error } = await supabase
+					const { error } = await supabase
 						.from('receivables')
 						.upsert(batch, {
 							//Shanaka(Start)
@@ -1195,10 +1182,7 @@ export default function CSVImportModal({
 													<option
 														key={field.field}
 														value={field.field}
-														disabled={
-															Object.values(mapping).includes(field.field) &&
-															mapping[header] !== field.field
-														}
+														disabled={false}
 													>
 														{field.label}
 														{field.required ? ' *' : ''}
