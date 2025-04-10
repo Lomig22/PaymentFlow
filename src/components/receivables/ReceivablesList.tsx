@@ -235,7 +235,7 @@ function ReceivablesList() {
 					await fetchReceivables();
 				} else {
 					setError(
-						"Impossible d'envoyer la relance. Vérifiez les paramètres email et les templates."
+						"Impossible d'envoyer la relance. Vérifiez les paramètres email, la signature et les templates."
 					);
 				}
 				setSending(false);
