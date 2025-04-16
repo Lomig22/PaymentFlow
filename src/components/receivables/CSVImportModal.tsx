@@ -587,8 +587,8 @@ export default function CSVImportModal({
 						0;
 					const paidAmount = paidAmountStr
 						? parseFloat(
-								paidAmountStr.replace(/[^\d.,]/g, '').replace(',', '.')
-						  ) || null
+							paidAmountStr.replace(/[^\d.,]/g, '').replace(',', '.')
+						) || null
 						: null;
 					const dueDate =
 						formatDate(dueDateStr) || new Date().toISOString().split('T')[0];
@@ -634,7 +634,7 @@ export default function CSVImportModal({
 							document_date: documentDate,
 							due_date: dueDate,
 							installment_number: installmentNumber,
-							status: status !== null ? status : undefined,
+							status,
 							created_at: new Date().toISOString(),
 							updated_at: new Date().toISOString(),
 							client: newClient,
@@ -793,8 +793,8 @@ export default function CSVImportModal({
 						0;
 					const paidAmount = paidAmountStr
 						? parseFloat(
-								paidAmountStr.replace(/[^\d.,]/g, '').replace(',', '.')
-						  ) || null
+							paidAmountStr.replace(/[^\d.,]/g, '').replace(',', '.')
+						) || null
 						: null;
 					const dueDate =
 						formatDate(dueDateStr) || new Date().toISOString().split('T')[0];
@@ -876,7 +876,6 @@ export default function CSVImportModal({
 							document_date: documentDate || new Date().toISOString().split('T')[0],
 							due_date: dueDate || new Date().toISOString().split('T')[0],
 							installment_number: installmentNumber || 1,
-							status: status || 'pending',
 							//status: status !== null ? status : undefined,
 							owner_id: user.id,
 							created_at: new Date().toISOString(),
@@ -1321,16 +1320,16 @@ export default function CSVImportModal({
 												<td className='px-4 py-3 whitespace-nowrap text-sm text-gray-900'>
 													{receivable.paid_amount
 														? new Intl.NumberFormat('fr-FR', {
-																style: 'currency',
-																currency: 'EUR',
-														  }).format(receivable.paid_amount)
+															style: 'currency',
+															currency: 'EUR',
+														}).format(receivable.paid_amount)
 														: '-'}
 												</td>
 												<td className='px-4 py-3 whitespace-nowrap text-sm text-gray-500'>
 													{receivable.document_date
 														? new Date(
-																receivable.document_date
-														  ).toLocaleDateString('fr-FR')
+															receivable.document_date
+														).toLocaleDateString('fr-FR')
 														: '-'}
 												</td>
 												<td className='px-4 py-3 whitespace-nowrap text-sm text-gray-500'>
@@ -1343,17 +1342,16 @@ export default function CSVImportModal({
 												</td>
 												<td className='px-4 py-3 whitespace-nowrap'>
 													<span
-														className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-															receivable.status === 'paid'
-																? 'bg-green-100 text-green-800'
-																: receivable.status === 'late'
+														className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${receivable.status === 'paid'
+															? 'bg-green-100 text-green-800'
+															: receivable.status === 'late'
 																? 'bg-red-100 text-red-800'
 																: receivable.status === 'reminded'
-																? 'bg-yellow-100 text-yellow-800'
-																: receivable.status === 'legal'
-																? 'bg-purple-100 text-purple-800'
-																: 'bg-gray-100 text-gray-800'
-														}`}
+																	? 'bg-yellow-100 text-yellow-800'
+																	: receivable.status === 'legal'
+																		? 'bg-purple-100 text-purple-800'
+																		: 'bg-gray-100 text-gray-800'
+															}`}
 													>
 														{receivable.status === 'paid' && 'Payé'}
 														{receivable.status === 'late' && 'En retard'}
