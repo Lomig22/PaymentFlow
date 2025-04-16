@@ -374,6 +374,7 @@ export default function CSVImportModal({
 
 	const getClientId = (clientIdentifier: string): string | null => {
 		if (!clientIdentifier) return null;
+
 		console.log('Client Key:', clientIdentifier);
 		// Si c'est déjà un UUID valide
 		if (
@@ -381,7 +382,7 @@ export default function CSVImportModal({
 				clientIdentifier
 			)
 		) {
-			const client = clients.find((c) => c.id === clientIdentifier);
+			const client = clients.find((c) => c?.id === clientIdentifier);
 			return client ? client.id : null;
 		}
 
@@ -396,7 +397,7 @@ export default function CSVImportModal({
 		// Chercher par correspondance exacte
 		// Shanaka (Start)
 		const exactMatch = clients.find(
-			(c) => c.client_code.toLowerCase().trim() === clientKey
+			(c) => c?.client_code && c.client_code.toLowerCase().trim() === clientKey
 		);
 		// Shanaka (Finish)
 
@@ -408,7 +409,7 @@ export default function CSVImportModal({
 		// Removed partial match as we need the exact match to get the correct client id to see if the client is new
 		// Chercher par correspondance partielle
 		const partialMatches = clients.filter((c) => {
-			return clientKey.includes(c.client_code.toLowerCase());
+			return c?.client_code && clientKey.includes(c.client_code.toLowerCase());
 		});
 		if (partialMatches.length === 1) {
 			return partialMatches[0].id;
@@ -423,20 +424,21 @@ export default function CSVImportModal({
 			return partialMatches[0].id;
 		}
 		//Shanaka (Finish)
-
 		// Recherche avec caractères spéciaux nettoyés
 		const cleanClientKey = clientKey.replace(/[&@]/g, '').trim();
 		if (cleanClientKey !== clientKey) {
 			const cleanMatches = clients.filter(
 				(c) =>
-					c.client_code
+					c?.client_code && c.client_code
 						.toLowerCase()
 						.replace(/[&@]/g, '')
 						.includes(cleanClientKey) ||
-					cleanClientKey.includes(
+
+					c?.client_code && cleanClientKey.includes(
 						c.client_code.toLowerCase().replace(/[&@]/g, '')
 					)
 			);
+
 			if (cleanMatches.length === 1) {
 				return cleanMatches[0].id;
 			}
@@ -460,18 +462,18 @@ export default function CSVImportModal({
 		// Recherche par nom partiel sans tenir compte des espaces et de la casse
 		const normalizedKey = clientKey.replace(/\s+/g, '');
 		const normalizedMatches = clients.filter((c) => {
-			if (c.company_name === '') {
+			if (c?.company_name === '') {
 				return normalizedKey === '';
 			}
 			if (normalizedKey === '') {
-				return c.client_code === '';
+				return c?.client_code === '';
 			}
 			return (
-				c.client_code
+				c?.client_code && c.client_code
 					.toLowerCase()
 					.replace(/\s+/g, '')
 					.includes(normalizedKey) ||
-				normalizedKey.includes(c.client_code.toLowerCase().replace(/\s+/g, ''))
+				c?.client_code && normalizedKey.includes(c.client_code.toLowerCase().replace(/\s+/g, ''))
 			);
 		});
 		if (normalizedMatches.length === 1) {
@@ -582,6 +584,7 @@ export default function CSVImportModal({
 						installmentNumberIndex !== -1 ? row[installmentNumberIndex] : null;
 					const statusStr = statusIndex !== -1 ? row[statusIndex] : '';
 					// Nettoyer et convertir les valeurs
+
 					const amount =
 						parseFloat(amountStr.replace(/[^\d.,]/g, '').replace(',', '.')) ||
 						0;
@@ -592,10 +595,13 @@ export default function CSVImportModal({
 						: null;
 					const dueDate =
 						formatDate(dueDateStr) || new Date().toISOString().split('T')[0];
+
 					const status = mapStatus(statusStr);
 					const clientCode = row[clientCodeIndex] || '';
 					// Trouver le client correspondant en utilisant le nom du client
+
 					const clientId = getClientId(clientName);
+					console.log("ClientID", clientId, clientName)
 
 					//shanaka (Start)
 					// Check if the client is already in the new clients map
@@ -655,6 +661,8 @@ export default function CSVImportModal({
 						client: client,
 					} as Receivable & { client: Client };
 				});
+
+
 			setNewClients(newClientsMap);
 			setPreview(previewData);
 			setStep('preview');
