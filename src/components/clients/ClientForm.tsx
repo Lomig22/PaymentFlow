@@ -201,7 +201,7 @@ export default function ClientForm({
 												type='email'
 												required={index === 0}
 												defaultValue={email}
-												onBlur={(e) => {
+												onChange={(e) => {
 													const newEmails = [...emails];
 													newEmails[index] = e.target.value;
 													setEmails(newEmails);
