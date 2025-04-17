@@ -122,6 +122,8 @@ export default function ReceivableForm({
 
 				if (clientError) throw clientError;
 				clientId = newClient.id;
+				// Mettre à jour l'email dans formData avec l'email du nouveau client
+				formData.email = newClientData.email;
 			} else {
 				// Mettre à jour le client existant pour activer les relances
 				await supabase
