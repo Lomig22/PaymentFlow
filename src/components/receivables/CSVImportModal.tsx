@@ -17,6 +17,7 @@ interface MappingField {
 
 export interface CSVMapping {
 	client: string;
+	email: string;
 	invoice_number: string;
 	amount: string;
 	paid_amount: string | null;
@@ -32,6 +33,7 @@ export interface CSVMapping {
 
 const mappingFields: MappingField[] = [
 	{ field: 'client', label: 'Client', required: false },
+	{ field: 'email', label: 'Email', required: false },
 	{ field: 'invoice_number', label: 'Facture', required: false },
 	{ field: 'amount', label: 'Montant', required: false },
 	{ field: 'paid_amount', label: 'Montant réglé', required: false },
@@ -129,6 +131,9 @@ const columnMapping: { [key: string]: string } = {
 	etat: 'status',
 	statut: 'status',
 	state: 'status',
+
+	// Email
+	email: 'email',
 
 	// Client
 	client: 'client',
@@ -543,6 +548,7 @@ export default function CSVImportModal({
 
 			// Trouver les indices des colonnes
 			const clientIndex = csvHeaders.findIndex((h) => mapping[h] === 'client');
+			const emailIndex = csvHeaders.findIndex((h) => mapping[h] === 'client');
 			const invoiceIndex = csvHeaders.findIndex(
 				(h) => mapping[h] === 'invoice_number'
 			);
@@ -572,6 +578,7 @@ export default function CSVImportModal({
 				.map((row, index) => {
 					// Récupérer les valeurs des colonnes avec des valeurs par défaut
 					const clientName = clientIndex !== -1 ? row[clientIndex] : 'Client inconnu';
+					const email = emailIndex !== -1 ? row[emailIndex] : '';
 					const invoiceNumber = invoiceIndex !== -1 ? row[invoiceIndex] : `FACT-${index + 1}`;
 					const amountStr = amountIndex !== -1 ? row[amountIndex] : '0';
 					const paidAmountStr = paidAmountIndex !== -1 ? row[paidAmountIndex] : '0';
@@ -601,7 +608,7 @@ export default function CSVImportModal({
 					// Trouver le client correspondant en utilisant le nom du client
 
 					const clientId = getClientId(clientName);
-					console.log("ClientID", clientId, clientName)
+					console.log("ClientID", clientId, clientName, email)
 
 					//shanaka (Start)
 					// Check if the client is already in the new clients map
@@ -635,6 +642,7 @@ export default function CSVImportModal({
 							id: `preview-${index}`,
 							client_id: tempId,
 							invoice_number: invoiceNumber,
+							email,
 							amount,
 							paid_amount: paidAmount,
 							document_date: documentDate,
@@ -1270,6 +1278,9 @@ export default function CSVImportModal({
 												Client
 											</th>
 											<th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+												Email
+											</th>
+											<th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 												Facture
 											</th>
 											<th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
@@ -1287,9 +1298,9 @@ export default function CSVImportModal({
 											<th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 												Numéro échéance
 											</th>
-											<th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+											{/* <th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 												Statut
-											</th>
+											</th> */}
 										</tr>
 									</thead>
 									<tbody className='bg-white divide-y divide-gray-200'>
@@ -1315,6 +1326,9 @@ export default function CSVImportModal({
 													) : (
 														receivable.client.company_name
 													)}
+												</td>
+												<td className='px-4 py-3 whitespace-nowrap text-sm text-gray-900'>
+													{receivable.client.email}
 												</td>
 												<td className='px-4 py-3 whitespace-nowrap text-sm text-gray-900'>
 													{receivable.invoice_number}

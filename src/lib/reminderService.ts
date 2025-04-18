@@ -75,13 +75,14 @@ function determineReminderLevel(
 ): {
 	level: 'pre' | 'first' | 'second' | 'third' | 'final' | null;
 	template: string | null;
+	isFinal?: boolean;
 } {
 	if (!client) return { level: null, template: null };
 
 	// if(status === 'Relance finale' || status === 'Relance 3' || status === 'Relance 2' || status === 'Relance 1' || status === 'Relance préventive') return { level: null, template: null };
 	// }
 
-	if (status === 'Relance finale') return { level: null, template: null };
+	if (status === 'Relance finale') return { level: null, template: null, isFinal: true };
 	if (status === 'Relance 3' && client.reminder_template_final)
 		return { level: 'final', template: client.reminder_template_final };
 	if (status === 'Relance 2' && client.reminder_template_3)
@@ -123,7 +124,7 @@ function determineReminderLevel(
 // Fonction pour envoyer une relance manuelle
 export async function sendManualReminder(
 	receivableId: string
-): Promise<boolean> {
+): Promise<{ state: boolean, message?: string, isFinal?: boolean }> {
 	try {
 		const { data: receivable, error: receivableError } = await supabase
 			.from('receivables')
@@ -132,29 +133,30 @@ export async function sendManualReminder(
 			.single();
 
 		if (receivableError) throw receivableError;
-		if (!receivable) return false;
-
+		if (!receivable) return { state: false };
+		
 		const {
 			data: { user },
 		} = await supabase.auth.getUser();
-		if (!user) return false;
-
+		if (!user) return { state: false };
+		
 		const emailSettings = await getEmailSettings(user.id);
-		if (!emailSettings) return false;
-
+		if (!emailSettings) return { state: false };
+		
 		const dueDate = new Date(receivable.due_date);
 		const today = new Date();
 		const daysLate = Math.floor(
 			(today.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24)
 		);
 
-		const { level, template } = determineReminderLevel(
+		const { level, template, isFinal } = determineReminderLevel(
 			daysLate,
 			receivable.client,
 			receivable.status
 		);
-		if (!level || !template) return false;
-
+		
+		if (!level || !template) return { state: false, isFinal };
+		
 		const emailContent = formatTemplate(template, {
 			company: receivable.client.company_name,
 			amount: receivable.amount,
@@ -171,7 +173,7 @@ export async function sendManualReminder(
 			emailContent,
 			receivable.invoice_pdf_url
 		);
-
+		
 		if (emailSent) {
 			// Enregistrer la relance
 			await supabase.from('reminders').insert({
@@ -190,25 +192,24 @@ export async function sendManualReminder(
 						level === 'first'
 							? 'Relance 1'
 							: level === 'second'
-							? 'Relance 2'
-							: level === 'third'
-							? 'Relance 3'
-							: level === 'final'
-							? 'Relance finale'
-							: level === 'pre'
-							? 'Relance préventive'
-							: 'Relance',
+								? 'Relance 2'
+								: level === 'third'
+									? 'Relance 3'
+									: level === 'final'
+										? 'Relance finale'
+										: level === 'pre'
+											? 'Relance préventive'
+											: 'Relance',
 					updated_at: new Date().toISOString(),
 				})
 				.eq('id', receivableId);
 
-			return true;
+			return { state: true };
 		}
-
-		return false;
+		return { state: false };
 	} catch (error) {
 		console.error("Erreur lors de l'envoi de la relance:", error);
-		return false;
+		return { state: false, message: error as string };
 	}
 }
 

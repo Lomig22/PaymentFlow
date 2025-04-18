@@ -43,14 +43,13 @@ export const sendEmail = async (
 			        <body style="font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 20px;">
 			          <div style="max-width: 600px; margin: 0 auto;">
 			            ${htmlContent}
-			            ${
-										settings.email_signature
-											? `
+			            ${settings.email_signature
+										? `
 			              <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee;">
 			                ${settings.email_signature}
 			              </div>
 			            `
-											: ''
+										: ''
 									}
 			          </div>
 			        </body>
@@ -63,7 +62,7 @@ export const sendEmail = async (
 				}
 			);
 			const data = await res.json();
-			const error = data?.failures;
+			const error = data?.error;
 			if (error) {
 				console.error('Erreur Supabase Edge Function:', error);
 				throw error;

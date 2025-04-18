@@ -223,32 +223,41 @@ function ReceivablesList() {
 	};
 
 	const handleSendReminder = async () =>
-		// receivable: Receivable & { client: Client }
-		{
-			try {
-				setError(null);
-				if (selectedReceivable == null) return;
-				setSending(true);
-				const success = await sendManualReminder(selectedReceivable.id);
+	// receivable: Receivable & { client: Client }
+	{
+		try {
+			setError(null);
+			if (selectedReceivable == null) return;
 
-				if (success) {
-					await fetchReceivables();
+			setSending(true);
+			const { state, isFinal, message } = await sendManualReminder(selectedReceivable.id);
+
+			if (state) {
+				await fetchReceivables();
+			} else {
+				if (message) {
+					setError(message)
 				} else {
 					setError(
-						"Impossible d'envoyer la relance. Vérifiez les paramètres email, la signature et les templates."
+						isFinal
+							?
+							"Ce contrat est terminé."
+							:
+							"Impossible d'envoyer la relance. Vérifiez les paramètres email, la signature et les templates."
 					);
 				}
-				setSending(false);
-				setShowConfirmReminder(false);
-				setSelectedClient(null);
-			} catch (error: any) {
-				console.error('Error sending reminder:', error);
-				setError(error.message || "Erreur lors de l'envoi de la relance");
-				setSending(false);
-				setShowConfirmReminder(false);
-				setSelectedClient(null);
 			}
-		};
+			setSending(false);
+			setShowConfirmReminder(false);
+			setSelectedClient(null);
+		} catch (error: any) {
+			console.error('Error sending reminder:', error);
+			setError(error.message || "Erreur lors de l'envoi de la relance");
+			setSending(false);
+			setShowConfirmReminder(false);
+			setSelectedClient(null);
+		}
+	};
 
 	const handleImportSuccess = (importedCount: number) => {
 		setImportSuccess(`${importedCount} créance(s) importée(s) avec succès`);
@@ -650,9 +659,9 @@ function ReceivablesList() {
 									<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
 										{receivable.paid_amount
 											? new Intl.NumberFormat('fr-FR', {
-													style: 'currency',
-													currency: 'EUR',
-											  }).format(receivable.paid_amount)
+												style: 'currency',
+												currency: 'EUR',
+											}).format(receivable.paid_amount)
 											: '-'}
 									</td>
 									<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
@@ -669,22 +678,21 @@ function ReceivablesList() {
 									</td>
 									<td className='px-6 py-4 whitespace-nowrap flex gap-1 items-center'>
 										<span
-											className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-												receivable.status === 'paid'
-													? 'bg-green-100 text-green-800'
-													: receivable.status === 'late'
+											className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${receivable.status === 'paid'
+												? 'bg-green-100 text-green-800'
+												: receivable.status === 'late'
 													? 'bg-red-100 text-red-800'
 													: receivable.status === 'reminded' ||
-													  receivable.status === 'Relance 1' ||
-													  receivable.status === 'Relance 2' ||
-													  receivable.status === 'Relance 3' ||
-													  receivable.status === 'Relance finale' ||
-													  receivable.status === 'Relance préventive'
-													? 'bg-yellow-100 text-yellow-800'
-													: receivable.status === 'legal'
-													? 'bg-purple-100 text-purple-800'
-													: 'bg-gray-100 text-gray-800'
-											}`}
+														receivable.status === 'Relance 1' ||
+														receivable.status === 'Relance 2' ||
+														receivable.status === 'Relance 3' ||
+														receivable.status === 'Relance finale' ||
+														receivable.status === 'Relance préventive'
+														? 'bg-yellow-100 text-yellow-800'
+														: receivable.status === 'legal'
+															? 'bg-purple-100 text-purple-800'
+															: 'bg-gray-100 text-gray-800'
+												}`}
 										>
 											{receivable.status === 'paid' && 'Payé'}
 											{receivable.status === 'late' && 'En retard'}
