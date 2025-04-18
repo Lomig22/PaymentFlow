@@ -400,11 +400,10 @@ function ClientList({
 									<td className='px-6 py-4 whitespace-nowrap'>
 										<div className='flex items-center'>
 											<span
-												className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-													client.needs_reminder
+												className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${client.needs_reminder
 														? 'bg-red-100 text-red-800'
 														: 'bg-green-100 text-green-800'
-												}`}
+													}`}
 											>
 												{client.needs_reminder ? 'Oui' : 'Non'}
 											</span>

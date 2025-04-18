@@ -381,8 +381,7 @@ export default function CSVImportModal({
 		if (/^\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}$/.test(dateStr)) {
 			const parts = dateStr.split(/[\/\-\.]/);
 			date = new Date(
-				`${
-					parts[2].length === 2 ? '20' + parts[2] : parts[2]
+				`${parts[2].length === 2 ? '20' + parts[2] : parts[2]
 				}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`
 			);
 		}
@@ -474,6 +473,7 @@ export default function CSVImportModal({
 			const {
 				data: { user },
 			} = await supabase.auth.getUser();
+
 			if (!user) throw new Error('Utilisateur non authentifié');
 
 			const clientsToImport = csvData
@@ -522,16 +522,16 @@ export default function CSVImportModal({
 			let successCount = 0;
 
 			// Get the default reminder profile
-			const { data: reminderPorfile } = await supabase
+			const { data: reminderProfile } = await supabase
 				.from('reminder_profile')
 				.select()
 				.eq('name', 'Default')
 				.eq('owner_id', user.id);
 
 			const reminderProfileExist =
-				reminderPorfile !== null &&
-				reminderPorfile[0] !== null &&
-				reminderPorfile.length > 0;
+				reminderProfile !== null &&
+				reminderProfile[0] !== null &&
+				reminderProfile.length > 0;
 			// Préparer les clients pour l'insertion
 			const clientsToInsert = clientsToImport.map((client) => {
 				return {
@@ -540,18 +540,18 @@ export default function CSVImportModal({
 						client.client_code ||
 						Math.floor(Math.random() * (100000 - 150000) + 100000),
 					owner_id: user.id,
-					reminder_profile: reminderProfileExist ? reminderPorfile[0].id : null,
+					reminder_profile: reminderProfileExist ? reminderProfile[0].id : null,
 					reminder_delay_1: reminderProfileExist
-						? reminderPorfile[0].delay1
+						? reminderProfile[0].delay1
 						: 15,
 					reminder_delay_2: reminderProfileExist
-						? reminderPorfile[0].delay2
+						? reminderProfile[0].delay2
 						: 30,
 					reminder_delay_3: reminderProfileExist
-						? reminderPorfile[0].delay3
+						? reminderProfile[0].delay3
 						: 45,
 					reminder_delay_final: reminderProfileExist
-						? reminderPorfile[0].delay4
+						? reminderProfile[0].delay4
 						: 60,
 					created_at: client.created_at || new Date().toISOString(),
 					updated_at: client.updated_at || new Date().toISOString(),
@@ -559,19 +559,59 @@ export default function CSVImportModal({
 			});
 
 			if (clientsToInsert.length > 0) {
-				const { data, error } = await supabase
-					.from('clients')
-					.upsert(clientsToInsert, {
-						onConflict: 'owner_id, client_code',
-					})
-					.select();
+				for (const client of clientsToInsert) {
+					const { data: existingClients, error: fetchError } = await supabase
+						.from('clients')
+						.select('email')
+						.eq('email', client.email); // Adjust this check as needed (e.g., owner_id, client_code)
 
-				if (error) {
-					console.error("Erreur lors de l'import des clients:", error);
-					throw error;
-				} else {
-					successCount = data?.length || 0;
+					if (fetchError) {
+						console.error('Error fetching client:', fetchError);
+						continue; // Skip this iteration if there's an error
+					}
+
+					if (existingClients.length > 0) {
+						// 2. If the client exists, update it
+						const { data: updatedClient, error: updateError } = await supabase
+							.from('clients')
+							.update(client)
+							.eq('email', client.email); // Update based on email (or other unique field)
+
+						if (updateError) {
+							console.error('Error updating client:', updateError);
+						} else {
+							console.log('Updated client:', updatedClient);
+							successCount++;
+						}
+					} else {
+						// 3. If the client doesn't exist, insert a new client
+						const { data: insertedClient, error: insertError } = await supabase
+							.from('clients')
+							.insert([client]);
+
+						if (insertError) {
+							console.error('Error inserting client:', insertError);
+						} else {
+							console.log('Inserted new client:', insertedClient);
+							successCount++;
+						}
+					}
 				}
+
+				// const { data, error } = await supabase
+				// 	.from('clients')
+				// 	.upsert(clientsToInsert, {
+				// 		onConflict: 'email',
+				// 		// onConflict: 'owner_id, client_code',
+				// 	})
+				// 	.select();
+
+				// if (error) {
+				// 	console.error("Erreur lors de l'import des clients:", error);
+				// 	throw error;
+				// } else {
+				// 	successCount = data?.length || 0;
+				// }
 
 				setImportedCount(successCount);
 			}
@@ -908,11 +948,10 @@ export default function CSVImportModal({
 												</td>
 												<td className='px-4 py-3 whitespace-nowrap'>
 													<span
-														className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-															client.needs_reminder
-																? 'bg-red-100 text-red-800'
-																: 'bg-green-100 text-green-800'
-														}`}
+														className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${client.needs_reminder
+															? 'bg-red-100 text-red-800'
+															: 'bg-green-100 text-green-800'
+															}`}
 													>
 														{client.needs_reminder ? 'Oui' : 'Non'}
 													</span>
