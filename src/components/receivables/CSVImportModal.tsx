@@ -322,6 +322,8 @@ export default function CSVImportModal({
 					setCsvHeaders(cleanedHeaders);
 
 					const rows = result.data.slice(1) as string[][];
+					console.log("Données parsées: "+rows);
+					
 					setData(rows);
 					handleMapping(cleanedHeaders);
 				}
@@ -895,40 +897,85 @@ export default function CSVImportModal({
 					// Continuer avec la ligne suivante
 				}
 			}
-
-			// Importer les créances par lots de 20 pour éviter les problèmes de performance
+//Jet1
 			const batchSize = 20;
 			let successCount = 0;
 
 			for (let i = 0; i < receivablesToImport.length; i += batchSize) {
 				const batch = receivablesToImport.slice(i, i + batchSize);
-
 				if (batch.length === 0) continue;
-
+			
 				try {
-					const { error } = await supabase
+					const { data: existing, error: fetchError } = await supabase
 						.from('receivables')
-						.upsert(batch, {
-							//Shanaka(Start)
-							// Removed the extra on conflict statement
-							onConflict: 'owner_id, invoice_number',
-							//Shanaka(Finish)
-							ignoreDuplicates: false,
-						});
+						.select('owner_id, invoice_number, status')
+						.in('owner_id', batch.map(r => r.owner_id));
+					
+					console.log("OWNERID DE COMPARAISON: "+batch.map(r => r.owner_id))
+					
+					if (fetchError) {
+						console.error("Erreur de récupération:", fetchError);
+						continue;
+					}
+			
+					const existingMap = new Map(
+						existing.map(r => [`${r.owner_id}-${r.invoice_number}`, r])
+					);
+					console.log("EXISTING DATA:", existingMap);
 
-					if (error) {
-						console.error("Erreur lors de l'import du lot:", error);
-						// Continue with next batch instead of throwing
-					} else {
-						successCount += batch.length;
+					const toInsert: any[] = [];
+					const toUpdate: any[] = [];
+					
+					for (const record of batch) {
+						const key = `${record.owner_id}-${record.invoice_number}`;
+						if (existingMap.has(key)) {
+							console.log(record);
+							
+							// On garde le status actuel
+							const existingStatus = existingMap.get(key)?.status;
+							toUpdate.push({ ...record, status: existingStatus });
+						} else {
+							toInsert.push(record);
+						}
+					}
+			
+					// INSERT uniquement les nouveaux
+					if (toInsert.length > 0) {
+						const { error: insertError } = await supabase
+							.from('receivables')
+							.insert(toInsert);
+			
+						if (insertError) {
+							console.error("Erreur lors de l'insertion:", insertError);
+						} else {
+							successCount += toInsert.length;
+						}
+					}
+			
+					// UPDATE les existants (sans changer le statut)
+					if (toUpdate.length > 0) {
+						const { error: updateError } = await supabase
+							.from('receivables')
+							.upsert(toUpdate, {
+								onConflict: 'owner_id, invoice_number',
+								ignoreDuplicates: false,
+							});
+			
+						if (updateError) {
+							console.error("Erreur lors de la mise à jour:", updateError);
+						} else {
+							successCount += toUpdate.length;
+						}
 					}
 
 					setImportedCount(successCount);
 				} catch (err) {
-					console.error("Exception lors de l'import du lot:", err);
-					// Continue with next batch
+					console.error("Exception:", err);
 				}
 			}
+			
+
+
 
 			// Mettre à jour les clients pour activer les relances
 			const clientIds = [
@@ -1072,7 +1119,7 @@ export default function CSVImportModal({
 										<p className='text-blue-800 font-medium mb-2'>
 											Format attendu
 										</p>
-										<p className='text-blue-700 text-sm'>
+									{/* 	<p className='text-blue-700 text-sm'>
 											Le fichier CSV doit contenir une ligne d'en-tête avec les
 											noms des colonnes suivantes:
 										</p>
@@ -1089,6 +1136,9 @@ export default function CSVImportModal({
 										</ul>
 										<p className='text-blue-700 text-sm mt-2'>
 											* Les colonnes marquées d'un astérisque sont obligatoires.
+										</p> */}
+										<p className='text-blue-700 text-sm mt-2'>
+											* Il faut spécifier <strong>un numéro de facture unique</strong> pour chaque ligne du CSV.
 										</p>
 										<p className='text-blue-700 text-sm mt-2'>
 											<strong>Note:</strong> Si un client n'existe pas dans
