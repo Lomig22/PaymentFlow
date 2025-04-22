@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ReminderProfile } from '../../types/database';
 import { AlertCircle, Save } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
-
+import DelayInputJHM from './DelayInputJHM';
 const ReminderProfileSettings = () => {
 	const [userId, setUserId] = useState<string | null>(null);
 	const [error, setError] = useState<string | null>(null);
@@ -10,27 +10,28 @@ const ReminderProfileSettings = () => {
 	const [saving, setSaving] = useState(false);
 	const [formData, setFormData] = useState({
 		profile1: {
-			id: undefined,
-			delay1: 0,
-			delay2: 0,
-			delay3: 0,
-			delay4: 0,
+		  id: undefined,
+		  delay1: { j: 0, h: 0, m: 0 },
+		  delay2: { j: 0, h: 0, m: 0 },
+		  delay3: { j: 0, h: 0, m: 0 },
+		  delay4: { j: 0, h: 0, m: 0 },
 		},
 		profile2: {
-			id: undefined,
-			delay1: 0,
-			delay2: 0,
-			delay3: 0,
-			delay4: 0,
+		  id: undefined,
+		  delay1: { j: 0, h: 0, m: 0 },
+		  delay2: { j: 0, h: 0, m: 0 },
+		  delay3: { j: 0, h: 0, m: 0 },
+		  delay4: { j: 0, h: 0, m: 0 },
 		},
 		profile3: {
-			id: undefined,
-			delay1: 0,
-			delay2: 0,
-			delay3: 0,
-			delay4: 0,
+		  id: undefined,
+		  delay1: { j: 0, h: 0, m: 0 },
+		  delay2: { j: 0, h: 0, m: 0 },
+		  delay3: { j: 0, h: 0, m: 0 },
+		  delay4: { j: 0, h: 0, m: 0 },
 		},
-	});
+	  });
+	  
 	// const [reminderProfiles, setReminderProfiles] = useState<ReminderProfile[]>()
 
 	const fetchAndSetProfiles = async () => {
@@ -92,19 +93,25 @@ const ReminderProfileSettings = () => {
 		fetchAndSetProfiles();
 	}, []);
 
+	type ProfileKey = 'profile1' | 'profile2' | 'profile3';
+	type DelayKey = 'delay1' | 'delay2' | 'delay3' | 'delay4';
+	
+	type DelayValue = { j: number; h: number; m: number };
+	
 	const handleInputOnBlur = (
-		profile: 'profile1' | 'profile2' | 'profile3',
-		delay: string,
-		value: number
+	  profile: ProfileKey,
+	  delay: DelayKey,
+	  value: DelayValue
 	) => {
-		setFormData({
-			...formData,
-			[profile]: {
-				...formData[profile],
-				[delay]: value,
-			},
-		});
+	  setFormData((prevFormData) => ({
+		...prevFormData,
+		[profile]: {
+		  ...prevFormData[profile],
+		  [delay]: value,
+		},
+	  }));
 	};
+	
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		setSaving(true);
@@ -231,209 +238,101 @@ const ReminderProfileSettings = () => {
 				<div className='flex gap-2 flex-col'>
 					<label className='font-bold'>Profile 1</label>
 					<div className='grid grid-cols-5 gap-6 items-center '>
-						<div>
-							<label className='text-sm'>Délai première relance (jours)</label>
-							<input
-								type='number'
-								disabled={saving}
-								value={formData.profile1.delay1}
-								onChange={(e) =>
-									handleInputOnBlur(
-										'profile1',
-										'delay1',
-										parseInt(e.target.value)
-									)
-								}
-								className='w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-							/>
-						</div>
-						<div>
-							<label className='text-sm'>Délai deuxième relance (jours)</label>
-							<input
-								type='number'
-								disabled={saving}
-								value={formData.profile1.delay2}
-								onChange={(e) =>
-									handleInputOnBlur(
-										'profile1',
-										'delay2',
-										parseInt(e.target.value)
-									)
-								}
-								className='w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-							/>
-						</div>
-						<div>
-							<label className='text-sm'>Délai troisième relance (jours)</label>
-							<input
-								type='number'
-								disabled={saving}
-								value={formData.profile1.delay3}
-								onChange={(e) =>
-									handleInputOnBlur(
-										'profile1',
-										'delay3',
-										parseInt(e.target.value)
-									)
-								}
-								className='w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-							/>
-						</div>
-						<div>
-							<label className='text-sm'>Délai relance finale (jours)</label>
-							<input
-								type='number'
-								disabled={saving}
-								value={formData.profile1.delay4}
-								onChange={(e) =>
-									handleInputOnBlur(
-										'profile1',
-										'delay4',
-										parseInt(e.target.value)
-									)
-								}
-								className='w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-							/>
-						</div>
-					</div>
-				</div>
+						
+						
+							<DelayInputJHM
+        label="Délai première relance (Jours,Heures,Minutes)"
+        value={{ j: formData.profile1.delay1.j, h: formData.profile1.delay1.h, m: formData.profile1.delay1.m }}
+        onChange={(val) => handleInputOnBlur('profile1', 'delay1', val)}
+
+        disabled={saving}
+      />
+									<DelayInputJHM
+        label="Délai deuxième relance (Jours,Heures,Minutes)"
+        value={{ j: formData.profile1.delay2.j, h: formData.profile1.delay2.h, m: formData.profile1.delay2.m  }}
+        onChange={(val) => handleInputOnBlur('profile1', 'delay2', val)}
+        disabled={saving}
+      />				
+					<DelayInputJHM
+        label="Délai troisième relance (Jours,Heures,Minutes)"
+        value={{ j: formData.profile1.delay3.j, h: formData.profile1.delay3.h, m: formData.profile1.delay3.m }}
+        onChange={(val) => handleInputOnBlur('profile1', 'delay3', val)}
+        disabled={saving}
+      />				
+				<DelayInputJHM
+        label="Délai relance finale (Jours,Heures,Minutes)"
+        value={{ j: formData.profile1.delay4.j, h: formData.profile1.delay4.h, m: formData.profile1.delay4.m }}
+        onChange={(val) => handleInputOnBlur('profile1', 'delay4', val)}
+        disabled={saving}
+      />	
+		
+		</div>
+		</div>
 				<div className='flex flex-col gap-2'>
 					<label className='font-bold'>Profile 2</label>
+					
 					<div className='grid grid-cols-5 gap-6 items-center '>
-						<div>
-							<label className='text-sm'>Délai première relance (jours)</label>
-							<input
-								type='number'
-								disabled={saving}
-								value={formData.profile2.delay1}
-								onChange={(e) =>
-									handleInputOnBlur(
-										'profile2',
-										'delay1',
-										parseInt(e.target.value)
-									)
-								}
-								className='w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-							/>
-						</div>
-						<div>
-							<label className='text-sm'>Délai deuxième relance (jours)</label>
-							<input
-								type='number'
-								disabled={saving}
-								value={formData.profile2.delay2}
-								onChange={(e) =>
-									handleInputOnBlur(
-										'profile2',
-										'delay2',
-										parseInt(e.target.value)
-									)
-								}
-								className='w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-							/>
-						</div>
-						<div>
-							<label className='text-sm'>Délai troisième relance (jours)</label>
-							<input
-								type='number'
-								disabled={saving}
-								value={formData.profile2.delay3}
-								onChange={(e) =>
-									handleInputOnBlur(
-										'profile2',
-										'delay3',
-										parseInt(e.target.value)
-									)
-								}
-								className='w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-							/>
-						</div>
-						<div>
-							<label className='text-sm'>Délai relance finale (jours)</label>
-							<input
-								type='number'
-								disabled={saving}
-								value={formData.profile2.delay4}
-								onChange={(e) =>
-									handleInputOnBlur(
-										'profile2',
-										'delay4',
-										parseInt(e.target.value)
-									)
-								}
-								className='w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-							/>
-						</div>
-					</div>
+						
+						
+						<DelayInputJHM
+	label="Délai première relance (Jours,Heures,Minutes)"
+	value={{ j: formData.profile2.delay1.j, h: formData.profile2.delay1.h, m: formData.profile2.delay1.m }}
+	onChange={(val) => handleInputOnBlur('profile2', 'delay1', val)}
+	disabled={saving}
+  />
+								<DelayInputJHM
+	label="Délai deuxième relance (Jours,Heures,Minutes)"
+	value={{ j: formData.profile2.delay2.j, h: formData.profile2.delay2.h, m: formData.profile2.delay2.m }}
+	onChange={(val) => handleInputOnBlur('profile2', 'delay2', val)}
+	disabled={saving}
+  />				
+				<DelayInputJHM
+	label="Délai troisième relance (Jours,Heures,Minutes)"
+	value={{ j: formData.profile2.delay3.j, h: formData.profile2.delay3.h, m: formData.profile2.delay3.m }}
+	onChange={(val) => handleInputOnBlur('profile2', 'delay3', val)}
+	disabled={saving}
+  />				
+			<DelayInputJHM
+	label="Délai relance finale (Jours,Heures,Minutes)"
+	value={{ j: formData.profile2.delay4.j, h: formData.profile2.delay4.h, m: formData.profile2.delay4.m }}
+	onChange={(val) => handleInputOnBlur('profile2', 'delay4', val)}
+	disabled={saving}
+  />	
+	
+	</div>
 				</div>
 				<div className='flex flex-col gap-2'>
 					<label className='font-bold'>Profile 3</label>
+				
 					<div className='grid grid-cols-5 gap-6 items-center '>
-						<div>
-							<label className='text-sm'>Délai première relance (jours)</label>
-							<input
-								type='number'
-								disabled={saving}
-								value={formData.profile3.delay1}
-								onChange={(e) =>
-									handleInputOnBlur(
-										'profile3',
-										'delay1',
-										parseInt(e.target.value)
-									)
-								}
-								className='w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-							/>
-						</div>
-						<div>
-							<label className='text-sm'>Délai deuxième relance (jours)</label>
-							<input
-								type='number'
-								disabled={saving}
-								value={formData.profile3.delay2}
-								onChange={(e) =>
-									handleInputOnBlur(
-										'profile3',
-										'delay2',
-										parseInt(e.target.value)
-									)
-								}
-								className='w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-							/>
-						</div>
-						<div>
-							<label className='text-sm'>Délai troisième relance (jours)</label>
-							<input
-								type='number'
-								disabled={saving}
-								value={formData.profile3.delay3}
-								onChange={(e) =>
-									handleInputOnBlur(
-										'profile3',
-										'delay3',
-										parseInt(e.target.value)
-									)
-								}
-								className='w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-							/>
-						</div>
-						<div>
-							<label className='text-sm'>Délai relance finale (jours)</label>
-							<input
-								type='number'
-								disabled={saving}
-								value={formData.profile3.delay4}
-								onChange={(e) =>
-									handleInputOnBlur(
-										'profile3',
-										'delay4',
-										parseInt(e.target.value)
-									)
-								}
-								className='w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-							/>
-						</div>
-					</div>
+						
+						
+						<DelayInputJHM
+	label="Délai première relance (Jours,Heures,Minutes)"
+	value={{ j: formData.profile3.delay1.j, h: formData.profile3.delay1.h, m: formData.profile3.delay1.m }}
+	onChange={(val) => handleInputOnBlur('profile3', 'delay1', val)}
+	disabled={saving}
+  />
+								<DelayInputJHM
+	label="Délai deuxième relance (Jours,Heures,Minutes)"
+	value={{ j: formData.profile3.delay2.j, h: formData.profile3.delay2.h, m: formData.profile3.delay2.m }}
+	onChange={(val) => handleInputOnBlur('profile3', 'delay2', val)}
+	disabled={saving}
+  />				
+				<DelayInputJHM
+	label="Délai troisième relance (Jours,Heures,Minutes)"
+	value={{ j: formData.profile3.delay3.j, h: formData.profile3.delay3.h, m: formData.profile3.delay3.m }}
+	onChange={(val) => handleInputOnBlur('profile3', 'delay3', val)}
+	disabled={saving}
+  />				
+			<DelayInputJHM
+	label="Délai relance finale (Jours,Heures,Minutes)"
+	value={{ j: formData.profile3.delay4.j, h: formData.profile3.delay4.h, m: formData.profile3.delay4.m }}
+	onChange={(val) => handleInputOnBlur('profile3', 'delay4', val)}
+	disabled={saving}
+  />	
+	
+	</div>
 				</div>
 				<div className='flex justify-end'>
 					<button

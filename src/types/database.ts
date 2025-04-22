@@ -58,19 +58,19 @@ export interface Receivable {
 	email?: string;
 	automatic_reminder?: boolean;
 }
-
 export interface ReminderProfile {
 	id?: string;
 	name: string;
-	delay1: number;
-	delay2: number;
-	delay3: number;
-	delay4: number;
+	delay1: { j: number; h: number; m: number }; // Délai sous forme d'objet avec jours, heures, minutes
+	delay2: { j: number; h: number; m: number }; // Délai sous forme d'objet avec jours, heures, minutes
+	delay3: { j: number; h: number; m: number }; // Délai sous forme d'objet avec jours, heures, minutes
+	delay4: { j: number; h: number; m: number }; // Délai sous forme d'objet avec jours, heures, minutes
 	owner_id: string;
 	public: boolean;
 	created_at?: string;
 	updated_at?: string;
-}
+  }
+  
 
 export interface Reminder {
 	id: string;
