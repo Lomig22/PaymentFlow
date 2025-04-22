@@ -494,9 +494,11 @@ const CSVImport = ({
 											Le fichier CSV doit contenir une ligne d'en-tête avec les
 											noms des colonnes suivantes:
 										</p>
-										<p className='text-blue-700 text-sm mt-2'>
+								<p className='text-blue-700 text-sm mt-2'>
 											* Les colonnes marquées d'un astérisque sont obligatoires.
-										</p>
+										</p> 
+
+									
 										<p className='text-blue-700 text-sm mt-2'>
 											<strong>Note:</strong> Si un client n'existe pas dans
 											votre liste, il sera automatiquement créé lors de
