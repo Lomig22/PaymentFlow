@@ -899,7 +899,12 @@ export default function CSVImportModal({
 			// Importer les créances par lots de 20 pour éviter les problèmes de performance
 			const batchSize = 20;
 			let successCount = 0;
-
+			const { data } = await supabase
+			.from('receivables')
+			.select(`*,client:clients(*)`)
+			.order('due_date', { ascending: false });
+			console.log("DATA EXISTANT: ",data);
+			
 			for (let i = 0; i < receivablesToImport.length; i += batchSize) {
 				const batch = receivablesToImport.slice(i, i + batchSize);
 
@@ -922,6 +927,8 @@ export default function CSVImportModal({
 					} else {
 						successCount += batch.length;
 					}
+					console.log("BATCH: "+ batch);
+					console.log("Owner IDs recherchés:", batch.map(r => r.owner_id));
 
 					setImportedCount(successCount);
 				} catch (err) {
