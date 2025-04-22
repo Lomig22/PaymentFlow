@@ -921,7 +921,7 @@ export default function CSVImportModal({
 					const existingMap = new Map(
 						existing.map(r => [`${r.owner_id}-${r.invoice_number}`, r])
 					);
-					console.log("EXISTING DATA:", existing);
+					console.log("EXISTING DATA:", existingMap);
 
 					const toInsert: any[] = [];
 					const toUpdate: any[] = [];
@@ -1134,8 +1134,11 @@ export default function CSVImportModal({
 												</li>
 											))}
 										</ul>
-										<p className='text-blue-700 text-sm mt-2'>
+{/* 										<p className='text-blue-700 text-sm mt-2'>
 											* Les colonnes marquées d'un astérisque sont obligatoires.
+										</p> */}
+										<p className='text-blue-700 text-sm mt-2'>
+											* Il faut spécifier <strong>un numéro de facture unique</strong> pour chaque ligne du CSV.
 										</p>
 										<p className='text-blue-700 text-sm mt-2'>
 											<strong>Note:</strong> Si un client n'existe pas dans
