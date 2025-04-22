@@ -1119,7 +1119,7 @@ export default function CSVImportModal({
 										<p className='text-blue-800 font-medium mb-2'>
 											Format attendu
 										</p>
-										<p className='text-blue-700 text-sm'>
+									{/* 	<p className='text-blue-700 text-sm'>
 											Le fichier CSV doit contenir une ligne d'en-tête avec les
 											noms des colonnes suivantes:
 										</p>
@@ -1134,7 +1134,7 @@ export default function CSVImportModal({
 												</li>
 											))}
 										</ul>
-{/* 										<p className='text-blue-700 text-sm mt-2'>
+										<p className='text-blue-700 text-sm mt-2'>
 											* Les colonnes marquées d'un astérisque sont obligatoires.
 										</p> */}
 										<p className='text-blue-700 text-sm mt-2'>
