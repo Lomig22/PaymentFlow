@@ -10,10 +10,10 @@ export interface Client {
 	industry?: string;
 	website?: string;
 	needs_reminder: boolean;
-	reminder_delay_1?: number;
-	reminder_delay_2?: number;
-	reminder_delay_3?: number;
-	reminder_delay_final?: number;
+	reminder_delay_1?: { j: number; h: number; m: number };
+	reminder_delay_2?: { j: number; h: number; m: number };
+	reminder_delay_3?: { j: number; h: number; m: number };
+	reminder_delay_final?: { j: number; h: number; m: number };
 	reminder_template_1?: string;
 	reminder_template_2?: string;
 	reminder_template_3?: string;

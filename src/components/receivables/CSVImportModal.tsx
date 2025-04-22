@@ -25,6 +25,7 @@ export interface CSVMapping {
 	document_date: string | null;
 	installment_number: string | null;
 	client_code: string | null;
+	email:string|null;
 	code: string | null;
 	created_at: string | null;
 	updated_at: string | null;
@@ -40,6 +41,8 @@ const mappingFields: MappingField[] = [
 	{ field: 'document_date', label: 'Date pièce', required: false },
 	{ field: 'installment_number', label: "Numéro d'échéance", required: false },
 	{ field: 'client_code', label: 'Code Client', required: false },
+	{ field: 'email', label: 'Email', required: false }
+
 ];
 
 // Shanaka (Start)
@@ -163,6 +166,11 @@ const columnMapping: { [key: string]: string } = {
 
 	//Montant Réglé Devise
 	'montant réglé devise': 'paid_amount',
+	//Email
+	Email:'email',
+	'email':'email',
+	'mail':'email'
+
 };
 // Shanaka (Finish)
 export default function CSVImportModal({

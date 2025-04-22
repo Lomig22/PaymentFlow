@@ -12,6 +12,17 @@ interface EmailSettings {
 	email_signature?: string;
 }
 
+  
+  function convertJHMToMinutes(jhm: {j:number;h:number;m:number}| undefined): number {
+	if(!jhm){
+		return 60
+	}
+	const joursEnMinutes = jhm.j * 24 * 60;
+	const heuresEnMinutes = jhm.h * 60;
+	const minutes = jhm.m;
+  
+	return joursEnMinutes + heuresEnMinutes + minutes;
+  }
 // Fonction pour récupérer les paramètres email de l'utilisateur
 async function getEmailSettings(userId: string): Promise<EmailSettings | null> {
 	try {
@@ -92,27 +103,27 @@ function determineReminderLevel(
 		return { level: 'first', template: client.reminder_template_1 };
 	if (client.pre_reminder_template)
 		return { level: 'pre', template: client.pre_reminder_template };
-
+daysLate=daysLate*24*60
 	if (
-		daysLate >= (client.reminder_delay_final || 60) &&
+		daysLate >= (convertJHMToMinutes(client.reminder_delay_final) || 60) &&
 		client.reminder_template_final
 	) {
 		return { level: 'final', template: client.reminder_template_final };
 	}
 	if (
-		daysLate >= (client.reminder_delay_3 || 45) &&
+		daysLate >= (convertJHMToMinutes(client.reminder_delay_3) || 45) &&
 		client.reminder_template_3
 	) {
 		return { level: 'third', template: client.reminder_template_3 };
 	}
 	if (
-		daysLate >= (client.reminder_delay_2 || 30) &&
+		daysLate >= (convertJHMToMinutes(client.reminder_delay_2) || 30) &&
 		client.reminder_template_2
 	) {
 		return { level: 'second', template: client.reminder_template_2 };
 	}
 	if (
-		daysLate >= (client.reminder_delay_1 || 15) &&
+		daysLate >= ( convertJHMToMinutes(client.reminder_delay_1 )|| 15) &&
 		client.reminder_template_1
 	) {
 		return { level: 'first', template: client.reminder_template_1 };
