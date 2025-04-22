@@ -78,7 +78,8 @@ function ReceivablesList() {
 				.from('receivables')
 				.select(`*,client:clients(*)`)
 				.order('due_date', { ascending: false });
-
+			console.log("DATA: ",data);
+			
 			// Fetch profiles
 			const {
 				data: { user },
