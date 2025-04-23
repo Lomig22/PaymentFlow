@@ -105,38 +105,38 @@ function determineReminderLevel(
 		return { level: 'first', template: client.reminder_template_1 };
 
 	// Si aucun statut de relance encore, on peut proposer un pré-reminder
-	if (client.pre_reminder_template)
+ 	if (client.pre_reminder_template)
 		return { level: 'pre', template: client.pre_reminder_template };
 
 	// Conversion des jours de retard en minutes (1 jour = 24h * 60min)
-	daysLate = daysLate * 24 * 60;
+	let daysLateMinutes:number = daysLate * 24 * 60;
 
 	// Vérification selon le nombre de minutes de retard et les templates disponibles
 	// On commence par les relances les plus sévères (final → first)
 
 	if (
-		daysLate >= (convertJHMToMinutes(client.reminder_delay_final) || 60) &&
+		daysLateMinutes >= (convertJHMToMinutes(client.reminder_delay_final) || 60) &&
 		client.reminder_template_final
 	) {
 		return { level: 'final', template: client.reminder_template_final };
 	}
 
 	if (
-		daysLate >= (convertJHMToMinutes(client.reminder_delay_3) || 45) &&
+		daysLateMinutes >= (convertJHMToMinutes(client.reminder_delay_3) || 45) &&
 		client.reminder_template_3
 	) {
 		return { level: 'third', template: client.reminder_template_3 };
 	}
 
 	if (
-		daysLate >= (convertJHMToMinutes(client.reminder_delay_2) || 30) &&
+		daysLateMinutes >= (convertJHMToMinutes(client.reminder_delay_2) || 30) &&
 		client.reminder_template_2
 	) {
 		return { level: 'second', template: client.reminder_template_2 };
 	}
 
 	if (
-		daysLate >= (convertJHMToMinutes(client.reminder_delay_1) || 15) &&
+		daysLateMinutes >= (convertJHMToMinutes(client.reminder_delay_1) || 15) &&
 		client.reminder_template_1
 	) {
 		return { level: 'first', template: client.reminder_template_1 };
@@ -160,6 +160,7 @@ export async function sendManualReminder(
 
 		if (receivableError) throw receivableError;
 		if (!receivable) return false;
+	
 
 		const {
 			data: { user },
@@ -261,7 +262,6 @@ export async function checkAndSendReminders(userId: string): Promise<void> {
         client:clients(*)
       `
 			)
-			.eq('status', 'pending')
 			.returns<(Receivable & { client: Client })[]>();
 
 		if (receivablesError) throw receivablesError;
@@ -269,13 +269,20 @@ export async function checkAndSendReminders(userId: string): Promise<void> {
 
 		// Parcourt chaque créance
 		for (const receivable of receivables) {
+		
+			
 			const dueDate = new Date(receivable.due_date); // Date d'échéance
 			const today = new Date(); // Date actuelle
-
+			console.log("========CHECK REMINDER DEBUG====================");
+			
+			console.log("due date",dueDate);
+			
 			// Calcul du nombre de jours de retard
 			const daysLate = Math.floor(
 				(today.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24)
 			);
+			console.log("jour de retard: ",daysLate);
+			
 
 			if (daysLate <= 0) continue; // Pas encore en retard, on passe
 
@@ -285,8 +292,11 @@ export async function checkAndSendReminders(userId: string): Promise<void> {
 				receivable.client,
 				receivable.status
 			);
+			console.log("Statut actuelle: ",receivable.status);
+			console.log("CLIENTS:", receivable.client);
 			if (!level || !template) continue; // Si pas de niveau ou de template, on ignore
-
+			
+			
 			// Vérifie la dernière relance envoyée pour cette créance
 			const { data: lastReminder } = await supabase
 				.from('reminders')
@@ -296,13 +306,43 @@ export async function checkAndSendReminders(userId: string): Promise<void> {
 				.limit(1)
 				.single();
 
-			if (lastReminder) {
-				const lastReminderDate = new Date(lastReminder.created_at);
-				const daysSinceLastReminder = Math.floor(
-					(today.getTime() - lastReminderDate.getTime()) / (1000 * 60 * 60 * 24)
-				);
-				if (daysSinceLastReminder < 7) continue; // Moins de 7 jours depuis la dernière relance
-			}
+		// Détermine s'il faut attendre avant d'envoyer la relance suivante
+console.log("LAST REMINDER",lastReminder);
+
+if (lastReminder && receivable.client) {
+	const lastReminderLevel = lastReminder.reminder_type;
+  
+	let expectedDelay: number | undefined;
+  
+	switch (lastReminderLevel) {
+	  case 'pre':
+		expectedDelay = convertJHMToMinutes(receivable.client.reminder_delay_1);
+		break;
+	  case 'first':
+		console.log("WAIT RELANCE 1");
+		
+		expectedDelay = convertJHMToMinutes(receivable.client.reminder_delay_2);
+		break;
+	  case 'second':
+		expectedDelay = convertJHMToMinutes(receivable.client.reminder_delay_3);
+		break;
+	  case 'third':
+		expectedDelay = convertJHMToMinutes(receivable.client.reminder_delay_final);
+		break;
+	}
+  
+	if (expectedDelay !== undefined) {
+	  const elapsedMinutes = Math.floor(
+		(today.getTime() - new Date(lastReminder.created_at).getTime()) / (1000 * 60)
+	  );
+  
+	  if (elapsedMinutes < expectedDelay) {
+		console.log(`⏳ Attente du délai de ${expectedDelay} minutes non respectée (${elapsedMinutes} min écoulées) pour ${receivable.invoice_number}`);
+		continue; // On saute cette relance
+	  }
+	}
+  }
+  
 
 			// Prépare le contenu de l’email en remplissant le template avec les données de la créance
 			const emailContent = formatTemplate(template, {
@@ -321,7 +361,7 @@ export async function checkAndSendReminders(userId: string): Promise<void> {
 				emailContent
 			);
 
-			if (emailSent) {
+			
 				// Enregistre l'envoi de la relance dans la table "reminders"
 				await supabase.from('reminders').insert({
 					receivable_id: receivable.id,
@@ -332,14 +372,34 @@ export async function checkAndSendReminders(userId: string): Promise<void> {
 				});
 
 				// Met à jour le statut de la créance en "reminded"
-				await supabase
+					// Mettre à jour le statut de la créance
+			await supabase
+			.from('receivables')
+			.update({
+				status:
+					level === 'first'
+						? 'Relance 1'
+						: level === 'second'
+						? 'Relance 2'
+						: level === 'third'
+						? 'Relance 3'
+						: level === 'final'
+						? 'Relance finale'
+						: level === 'pre'
+						? 'Relance préventive'
+						: 'Relance',
+				updated_at: new Date().toISOString(),
+			})
+			.eq('id', receivable.id);
+		
+	/* 			await supabase
 					.from('receivables')
 					.update({
 						status: 'reminded',
 						updated_at: new Date().toISOString(),
 					})
-					.eq('id', receivable.id);
-			}
+					.eq('id', receivable.id); */
+			
 		}
 	} catch (error) {
 		console.error('Erreur lors de la vérification des relances:', error);
