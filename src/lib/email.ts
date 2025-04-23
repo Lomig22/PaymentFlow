@@ -62,6 +62,18 @@ export const sendEmail = async (
 					}),
 				}
 			);
+			console.log(JSON.stringify({
+				list: [
+				  {
+					settings,
+					to,
+					subject,
+					html: "<html>...</html>",
+					invoice_pdf_url,
+				  }
+				]
+			  }));
+			  
 			const data = await res.json();
 			const error = data?.failures;
 			if (error) {
