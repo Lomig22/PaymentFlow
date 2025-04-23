@@ -182,7 +182,15 @@ export default function ReceivableEditForm({
 			setLoading(false);
 		}
 	};
-
+	useEffect(() => {
+		if (!formData.email && clientEmails.length > 0) {
+		  setFormData((prev) => ({
+			...prev,
+			email: clientEmails[0], // ou une logique spécifique ici
+		  }));
+		}
+	  }, [clientEmails]);
+	  
 	return (
 		<div className='fixed inset-0 bg-gray-600 bg-opacity-50 z-50 overflow-y-scroll'>
 			<div className='min-h-screen py-8 px-4 flex items-center justify-center'>
@@ -333,7 +341,6 @@ export default function ReceivableEditForm({
 								className='w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
 							>
 								<option value='pending'>En attente</option>
-								<option value='reminded'>Relancé</option>
 								<option value='paid'>Payé</option>
 								<option value='legal'>Contentieux</option>
 							</select>
