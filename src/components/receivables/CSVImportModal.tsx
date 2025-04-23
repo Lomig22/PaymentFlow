@@ -557,6 +557,7 @@ export default function CSVImportModal({
 				(h) => mapping[h] === 'invoice_number'
 			);
 			const amountIndex = csvHeaders.findIndex((h) => mapping[h] === 'amount');
+			const emailIndex = csvHeaders.findIndex((h) => mapping[h] === 'email');
 			const paidAmountIndex = csvHeaders.findIndex(
 				(h) => mapping[h] === 'paid_amount'
 			);
@@ -612,7 +613,7 @@ export default function CSVImportModal({
 
 					const clientId = getClientId(clientName);
 					console.log("ClientID", clientId, clientName)
-
+					const email:string = row[emailIndex]|| `${clientName.toLowerCase().trim().replace(/\s+/g, '.')}@example.com`
 					//shanaka (Start)
 					// Check if the client is already in the new clients map
 					const client = clientId
@@ -631,9 +632,8 @@ export default function CSVImportModal({
 								clientCodeIndex !== -1
 									? row[clientCodeIndex]
 									: Math.floor(Math.random() * (100000 - 150000) + 100000),
-							email: `${clientName
-								.toLowerCase()
-								.replace(/\s+/g, '.')}@example.com`, // Email temporaire
+							email: email,
+
 							needs_reminder: true,
 							created_at: new Date().toISOString(),
 							updated_at: new Date().toISOString(),
@@ -654,6 +654,7 @@ export default function CSVImportModal({
 							created_at: new Date().toISOString(),
 							updated_at: new Date().toISOString(),
 							client: newClient,
+							email:email,
 						} as Receivable & { client: Client };
 					}
 					return {
@@ -669,6 +670,7 @@ export default function CSVImportModal({
 						created_at: new Date().toISOString(),
 						updated_at: new Date().toISOString(),
 						client: client,
+						email:email,
 					} as Receivable & { client: Client };
 				});
 
@@ -1348,6 +1350,9 @@ export default function CSVImportModal({
 											<th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 												Statut
 											</th>
+											<th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+												Email
+											</th>
 										</tr>
 									</thead>
 									<tbody className='bg-white divide-y divide-gray-200'>
@@ -1425,6 +1430,9 @@ export default function CSVImportModal({
 														{receivable.status === 'pending' && 'En attente'}
 														{receivable.status === 'legal' && 'Contentieux'}
 													</span>
+												</td>
+												<td className='px-4 py-3 whitespace-nowrap text-sm text-gray-900'>
+													{receivable.email}
 												</td>
 											</tr>
 										))}
