@@ -7,7 +7,7 @@ import {
 } from 'react-router-dom';
 import { supabase, checkAuth } from './lib/supabase';
 import { User } from '@supabase/supabase-js';
-import { startReminderService } from './lib/reminderService';
+import { AutomaticallySendReminders } from './lib/reminderService';
 import Auth from './components/Auth';
 import LandingPage from './components/LandingPage';
 import ClientList from './components/clients/ClientList';
@@ -26,15 +26,19 @@ function App() {
 	const [isLoading, setIsLoading] = useState(true);
 
 	useEffect(() => {
+		let intervalId: NodeJS.Timeout | null = null;
+	
 		const initAuth = async () => {
 			try {
 				const session = await checkAuth();
 				const currentUser = session?.user ?? null;
 				setUser(currentUser);
-
-				// Démarrer le service de relance si l'utilisateur est connecté
-				if (currentUser) {
-					startReminderService(currentUser.id);
+	
+				if (currentUser && !intervalId) {
+					intervalId = setInterval(() => {
+						console.log("🕒 Vérification des relances automatiques...");
+						AutomaticallySendReminders();
+					}, 30 * 1000); // 30 secondes pour test
 				}
 			} catch (error) {
 				console.error("Erreur lors de l'initialisation de l'auth:", error);
@@ -42,29 +46,27 @@ function App() {
 				setIsLoading(false);
 			}
 		};
-
+	
 		initAuth();
-
+	
 		const {
 			data: { subscription },
 		} = supabase.auth.onAuthStateChange(async (event, session) => {
 			const currentUser = session?.user ?? null;
 			setUser(currentUser);
-
-			if (currentUser) {
-				// Démarrer le service de relance lors de la connexion
-				startReminderService(currentUser.id);
-			}
-
-			if (!currentUser) {
-				setShowAuth(false);
+	
+			if (!currentUser && intervalId) {
+				clearInterval(intervalId);
+				intervalId = null;
 			}
 		});
-
+	
 		return () => {
+			if (intervalId) clearInterval(intervalId);
 			subscription.unsubscribe();
 		};
 	}, []);
+	
 
 	if (isLoading) {
 		return (
