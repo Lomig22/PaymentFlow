@@ -72,7 +72,7 @@ export default function CSVImportModal({
 	const [savingSchema, setSavingSchema] = useState(false);
 
 	const mappingFields: MappingField[] = [
-		{ field: 'company_name', label: "Nom de l'entreprise", required: true },
+		{ field: 'company_name', label: "entreprise", required: true },
 		{ field: 'client_code', label: 'Code Client', required: false },
 		{ field: 'email', label: 'Email', required: true },
 		{ field: 'phone', label: 'Téléphone', required: false },
@@ -134,6 +134,7 @@ export default function CSVImportModal({
 				}
 
 				const csvHeaders = parsedData[0];
+				console.log("HEADERS",csvHeaders)
 				setCsvData(parsedData.slice(1));
 				setHeaders(csvHeaders);
 
@@ -522,12 +523,15 @@ export default function CSVImportModal({
 			let successCount = 0;
 
 			// Get the default reminder profile
-			const { data: reminderPorfile } = await supabase
+			const { data: reminderPorfile,error } = await supabase
 				.from('reminder_profile')
 				.select()
 				.eq('name', 'Default')
 				.eq('owner_id', user.id);
-
+				if (error) {
+					console.error("Erreur récupération de reminderpor_file:", error);
+					throw error;
+				}
 			const reminderProfileExist =
 				reminderPorfile !== null &&
 				reminderPorfile[0] !== null &&
@@ -559,17 +563,19 @@ export default function CSVImportModal({
 			});
 
 			if (clientsToInsert.length > 0) {
+				console.log("CLIENT TO INSERT: ",clientsToInsert)
 				const { data, error } = await supabase
 					.from('clients')
 					.upsert(clientsToInsert, {
 						onConflict: 'owner_id, client_code',
 					})
 					.select();
-
+console.log("DATA: ", data)
 				if (error) {
 					console.error("Erreur lors de l'import des clients:", error);
 					throw error;
 				} else {
+
 					successCount = data?.length || 0;
 				}
 
@@ -778,10 +784,10 @@ export default function CSVImportModal({
 													<option
 														key={field.field}
 														value={field.field}
-														disabled={
+													/* 	disabled={
 															Object.values(mapping).includes(field.field) &&
 															mapping[header] !== field.field
-														}
+														} */
 													>
 														{field.label}
 														{field.required ? ' *' : ''}
