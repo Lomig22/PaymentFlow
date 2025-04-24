@@ -339,7 +339,7 @@ console.log("LAST_REMINDER: ",lastReminder);
 
       const emailSent = await sendEmail(
         emailSettings,
-        receivable.client.email,
+        receivable.email || receivable.client.email,
         `Relance facture ${receivable.invoice_number}`,
         emailContent
       );
