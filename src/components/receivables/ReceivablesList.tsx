@@ -637,7 +637,7 @@ function ReceivablesList() {
 										{receivable.client.client_code}
 									</td>
 									<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
-										{receivable.email||receivable.client.email}
+										{receivable.email||receivable.client.email.split(',')[0]}
 									</td>
 									<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
 										{receivable.invoice_number}
