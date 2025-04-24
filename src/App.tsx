@@ -33,6 +33,7 @@ function App() {
 				const session = await checkAuth();
 				const currentUser = session?.user ?? null;
 				setUser(currentUser);
+	console.log("JUSQU'ICI");
 	
 				if (currentUser && !intervalId) {
 					intervalId = setInterval(() => {
