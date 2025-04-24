@@ -243,189 +243,174 @@ export async function sendManualReminder(
 // Fonction principale pour vérifier et envoyer les relances automatiques
 // Fonction qui vérifie les factures en attente de paiement pour un utilisateur donné,
 // puis envoie des emails de relance si nécessaire.
+let isRunning = false;
+
 export async function checkAndSendReminders(userId: string): Promise<void> {
-	try {
-		// Récupère les paramètres d'email pour l'utilisateur
-		const emailSettings = await getEmailSettings(userId);
-		if (!emailSettings) {
-			console.log('Paramètres email non configurés');
-			return;
-		}
-
-		// Récupère toutes les créances (receivables) avec le statut "pending"
-		// ainsi que les informations des clients associés
-		const { data: receivables, error: receivablesError } = await supabase
-			.from('receivables')
-			.select(
-				`
-        *, 
-        client:clients(*)
-      `
-			)
-			.returns<(Receivable & { client: Client })[]>();
-
-		if (receivablesError) throw receivablesError;
-		if (!receivables || receivables.length === 0) return; // Aucune créance à traiter
-
-		// Parcourt chaque créance
-		for (const receivable of receivables) {
-		
-			
-			const dueDate = new Date(receivable.due_date); // Date d'échéance
-			const today = new Date(); // Date actuelle
-			console.log("========CHECK REMINDER DEBUG====================");
-			
-			console.log("due date",dueDate);
-			
-			// Calcul du nombre de jours de retard
-			const daysLate = Math.floor(
-				(today.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24)
-			);
-			console.log("jour de retard: ",daysLate);
-			
-
-			if (daysLate <= 0) continue; // Pas encore en retard, on passe
-
-			// Détermine le niveau de relance et le template à utiliser en fonction du retard
-			const { level, template } = determineReminderLevel(
-				daysLate,
-				receivable.client,
-				receivable.status
-			);
-			console.log("Statut actuelle: ",receivable.status);
-			console.log("CLIENTS:", receivable.client);
-			if (!level || !template) continue; // Si pas de niveau ou de template, on ignore
-			
-			
-			// Vérifie la dernière relance envoyée pour cette créance
-			const { data: lastReminder } = await supabase
-				.from('reminders')
-				.select('*')
-				.eq('receivable_id', receivable.id)
-				.order('created_at', { ascending: false })
-				.limit(1)
-				.single();
-
-		// Détermine s'il faut attendre avant d'envoyer la relance suivante
-console.log("LAST REMINDER",lastReminder);
-
-if (lastReminder && receivable.client) {
-	const lastReminderLevel = lastReminder.reminder_type;
-  
-	let expectedDelay: number | undefined;
-  
-	switch (lastReminderLevel) {
-	  case 'pre':
-		expectedDelay = convertJHMToMinutes(receivable.client.reminder_delay_1);
-		break;
-	  case 'first':
-		console.log("WAIT RELANCE 1");
-		
-		expectedDelay = convertJHMToMinutes(receivable.client.reminder_delay_2);
-		break;
-	  case 'second':
-		expectedDelay = convertJHMToMinutes(receivable.client.reminder_delay_3);
-		break;
-	  case 'third':
-		expectedDelay = convertJHMToMinutes(receivable.client.reminder_delay_final);
-		break;
-	}
-  
-	if (expectedDelay !== undefined) {
-	  const elapsedMinutes = Math.floor(
-		(today.getTime() - new Date(lastReminder.created_at).getTime()) / (1000 * 60)
-	  );
-  
-	  if (elapsedMinutes < expectedDelay) {
-		console.log(`⏳ Attente du délai de ${expectedDelay} minutes non respectée (${elapsedMinutes} min écoulées) pour ${receivable.invoice_number}`);
-		continue; // On saute cette relance
-	  }
-	}
+  if (isRunning) {
+    console.log("⏳ Une vérification est déjà en cours. On ignore cet appel.");
+    return;
   }
-  
 
-			// Prépare le contenu de l’email en remplissant le template avec les données de la créance
-			const emailContent = formatTemplate(template, {
-				company: receivable.client.company_name,
-				amount: receivable.amount,
-				invoice_number: receivable.invoice_number,
-				due_date: receivable.due_date,
-				days_late: daysLate,
-			});
+  isRunning = true;
 
-			// Envoie l’email de relance
-			const emailSent = await sendEmail(
-				emailSettings,
-				receivable.client.email,
-				`Relance facture ${receivable.invoice_number}`,
-				emailContent
-			);
+  try {
+    const emailSettings = await getEmailSettings(userId);
+    if (!emailSettings) {
+      console.log('Paramètres email non configurés');
+      return;
+    }
 
-			
-				// Enregistre l'envoi de la relance dans la table "reminders"
-				await supabase.from('reminders').insert({
-					receivable_id: receivable.id,
-					reminder_type: level,
-					reminder_date: new Date().toISOString(),
-					email_sent: true,
-					email_content: emailContent,
-				});
+    const { data: receivables, error: receivablesError } = await supabase
+      .from('receivables')
+      .select(`*, client:clients(*)`)
+      .returns<(Receivable & { client: Client })[]>();
 
-				// Met à jour le statut de la créance en "reminded"
-					// Mettre à jour le statut de la créance
-			await supabase
-			.from('receivables')
-			.update({
-				status:
-					level === 'first'
-						? 'Relance 1'
-						: level === 'second'
-						? 'Relance 2'
-						: level === 'third'
-						? 'Relance 3'
-						: level === 'final'
-						? 'Relance finale'
-						: level === 'pre'
-						? 'Relance préventive'
-						: 'Relance',
-				updated_at: new Date().toISOString(),
-			})
-			.eq('id', receivable.id);
-		
-	/* 			await supabase
-					.from('receivables')
-					.update({
-						status: 'reminded',
-						updated_at: new Date().toISOString(),
-					})
-					.eq('id', receivable.id); */
-			
-		}
-	} catch (error) {
-		console.error('Erreur lors de la vérification des relances:', error);
-	}
+    if (receivablesError) throw receivablesError;
+    if (!receivables || receivables.length === 0) return;
+
+    for (const receivable of receivables) {
+      const dueDate = new Date(receivable.due_date);
+      const today = new Date();
+
+      const daysLate = Math.floor(
+        (today.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24)
+      );
+
+      if (daysLate <= 0) continue;
+
+      const { level, template } = determineReminderLevel(
+        daysLate,
+        receivable.client,
+        receivable.status
+      );
+      if (!level || !template) continue;
+
+      const { data: lastReminder, error } = await supabase
+        .from('reminders')
+        .select('*')
+        .eq('receivable_id', receivable.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle(); // 🔧 sécurise le résultat
+console.log("LAST_REMINDER: ",lastReminder);
+
+      if (error) {
+        console.error("Erreur sur créance", receivable.id, error);
+        continue;
+      }
+
+      if (lastReminder && receivable.client) {
+        const lastReminderLevel = lastReminder.reminder_type;
+        let expectedDelay: number | undefined;
+
+        switch (lastReminderLevel) {
+          case 'pre':
+            expectedDelay = convertJHMToMinutes(receivable.client.reminder_delay_1);
+            break;
+          case 'first':
+            expectedDelay = convertJHMToMinutes(receivable.client.reminder_delay_2);
+            break;
+          case 'second':
+            expectedDelay = convertJHMToMinutes(receivable.client.reminder_delay_3);
+            break;
+          case 'third':
+            expectedDelay = convertJHMToMinutes(receivable.client.reminder_delay_final);
+            break;
+        }
+
+        if (expectedDelay !== undefined) {
+          const elapsedMinutes = Math.floor(
+            (today.getTime() - new Date(lastReminder.created_at).getTime()) / (1000 * 60)
+          );
+          if (elapsedMinutes < expectedDelay) {
+            console.log(`⏳ Attente encore en cours pour ${receivable.invoice_number} (${elapsedMinutes}/${expectedDelay} min)`);
+            continue;
+          }
+        }
+      }
+
+      const emailContent = formatTemplate(template, {
+        company: receivable.client.company_name,
+        amount: receivable.amount,
+        invoice_number: receivable.invoice_number,
+        due_date: receivable.due_date,
+        days_late: daysLate,
+      });
+
+      const emailSent = await sendEmail(
+        emailSettings,
+        receivable.client.email,
+        `Relance facture ${receivable.invoice_number}`,
+        emailContent
+      );
+
+      await supabase.from('reminders').insert({
+        receivable_id: receivable.id,
+        reminder_type: level,
+        reminder_date: new Date().toISOString(),
+        email_sent: emailSent,
+        email_content: emailContent,
+      });
+
+      await supabase
+        .from('receivables')
+        .update({
+          status:
+            level === 'first'
+              ? 'Relance 1'
+              : level === 'second'
+              ? 'Relance 2'
+              : level === 'third'
+              ? 'Relance 3'
+              : level === 'final'
+              ? 'Relance finale'
+              : level === 'pre'
+              ? 'Relance préventive'
+              : 'Relance',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', receivable.id);
+    }
+  } catch (error) {
+    console.error('Erreur lors de la vérification des relances:', error);
+  } finally {
+    isRunning = false; // 🔒 Libère le verrou
+  }
 }
 
 
-// Fonction pour démarrer le service de relance automatique
-export function startReminderService(userId: string): void {
-	// Vérifier les relances toutes les heures
-	const intervalId = setInterval(() => {
-		checkAndSendReminders(userId).catch((error) => {
-			console.error('Erreur dans le service de relance:', error);
-		});
-	},  60 * 1000);
 
-	// Nettoyer l'intervalle si le composant est démonté
+// Fonction pour démarrer le service de relance automatique
+let isRunning1 = false;
+
+export function startReminderService(userId: string): void {
+	const intervalId = setInterval(() => {
+		if (isRunning1) return;
+
+		isRunning1 = true;
+		checkAndSendReminders(userId)
+			.catch((error) => {
+				console.error('Erreur dans le service de relance:', error);
+			})
+			.finally(() => {
+				isRunning1 = false;
+			});
+	}, 60 * 1000);
+
 	window.addEventListener('beforeunload', () => {
 		clearInterval(intervalId);
 	});
 
-	// Exécuter une première fois au démarrage
-	checkAndSendReminders(userId).catch((error) => {
-		console.error(
-			'Erreur lors du démarrage initial du service de relance:',
-			error
-		);
-	});
+	// Lancement initial avec verrou
+	if (!isRunning1) {
+		isRunning1 = true;
+		checkAndSendReminders(userId)
+			.catch((error) => {
+				console.error('Erreur lors du démarrage initial du service de relance:', error);
+			})
+			.finally(() => {
+				isRunning1 = false;
+			});
+	}
 }
+
