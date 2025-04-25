@@ -573,7 +573,7 @@ function shouldSendReminder(receivable: any): boolean {
 	if (!receivable.status || !receivable.due_date) return false;
 
 	const now = new Date();
-	const lastReminderAt = receivable.last_reminder_at ? new Date(receivable.last_reminder_at) : null;
+	const lastReminderAt = receivable.updated_at ? new Date(receivable.updated_at) : null;
 
 	let delayMinutes = 0;
 
