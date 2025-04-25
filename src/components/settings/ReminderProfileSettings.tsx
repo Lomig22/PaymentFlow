@@ -3,6 +3,9 @@ import { ReminderProfile } from '../../types/database';
 import { AlertCircle, Save } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import DelayInputJHM from './DelayInputJHM';
+import { Disclosure } from '@headlessui/react';
+import { ChevronUp } from 'lucide-react';
+
 const ReminderProfileSettings = () => {
 	const [userId, setUserId] = useState<string | null>(null);
 	const [error, setError] = useState<string | null>(null);
@@ -219,7 +222,7 @@ const ReminderProfileSettings = () => {
 		setSaving(false);
 	};
 	return (
-		<div className=''>
+		<div>
 			<h2 className='text-xl font-bold mb-6'>Profil utilisateur</h2>
 
 			{error && (
@@ -230,111 +233,44 @@ const ReminderProfileSettings = () => {
 			)}
 			{success && (
 				<div className='mb-4 p-4 bg-green-50 border border-green-200 rounded-md text-green-700'>
-					profil de rappel mis à jour avec succès
+					Profil de rappel mis à jour avec succès
 				</div>
 			)}
 
-			<form onSubmit={handleSubmit} className='space-y-6'>
-				<div className='flex gap-2 flex-col'>
-					<label className='font-bold'>Profile 1</label>
-					<div className='grid grid-cols-5 gap-6 items-center '>
-						
-						
-							<DelayInputJHM
-        label="Délai première relance (Jours,Heures,Minutes)"
-        value={{ j: formData.profile1.delay1.j, h: formData.profile1.delay1.h, m: formData.profile1.delay1.m }}
-        onChange={(val) => handleInputOnBlur('profile1', 'delay1', val)}
+			<form onSubmit={handleSubmit} className='space-y-4'>
 
-        disabled={saving}
-      />
-									<DelayInputJHM
-        label="Délai deuxième relance (Jours,Heures,Minutes)"
-        value={{ j: formData.profile1.delay2.j, h: formData.profile1.delay2.h, m: formData.profile1.delay2.m  }}
-        onChange={(val) => handleInputOnBlur('profile1', 'delay2', val)}
-        disabled={saving}
-      />				
-					<DelayInputJHM
-        label="Délai troisième relance (Jours,Heures,Minutes)"
-        value={{ j: formData.profile1.delay3.j, h: formData.profile1.delay3.h, m: formData.profile1.delay3.m }}
-        onChange={(val) => handleInputOnBlur('profile1', 'delay3', val)}
-        disabled={saving}
-      />				
-				<DelayInputJHM
-        label="Délai relance finale (Jours,Heures,Minutes)"
-        value={{ j: formData.profile1.delay4.j, h: formData.profile1.delay4.h, m: formData.profile1.delay4.m }}
-        onChange={(val) => handleInputOnBlur('profile1', 'delay4', val)}
-        disabled={saving}
-      />	
-		
-		</div>
-		</div>
-				<div className='flex flex-col gap-2'>
-					<label className='font-bold'>Profile 2</label>
-					
-					<div className='grid grid-cols-5 gap-6 items-center '>
-						
-						
-						<DelayInputJHM
-	label="Délai première relance (Jours,Heures,Minutes)"
-	value={{ j: formData.profile2.delay1.j, h: formData.profile2.delay1.h, m: formData.profile2.delay1.m }}
-	onChange={(val) => handleInputOnBlur('profile2', 'delay1', val)}
-	disabled={saving}
-  />
-								<DelayInputJHM
-	label="Délai deuxième relance (Jours,Heures,Minutes)"
-	value={{ j: formData.profile2.delay2.j, h: formData.profile2.delay2.h, m: formData.profile2.delay2.m }}
-	onChange={(val) => handleInputOnBlur('profile2', 'delay2', val)}
-	disabled={saving}
-  />				
-				<DelayInputJHM
-	label="Délai troisième relance (Jours,Heures,Minutes)"
-	value={{ j: formData.profile2.delay3.j, h: formData.profile2.delay3.h, m: formData.profile2.delay3.m }}
-	onChange={(val) => handleInputOnBlur('profile2', 'delay3', val)}
-	disabled={saving}
-  />				
-			<DelayInputJHM
-	label="Délai relance finale (Jours,Heures,Minutes)"
-	value={{ j: formData.profile2.delay4.j, h: formData.profile2.delay4.h, m: formData.profile2.delay4.m }}
-	onChange={(val) => handleInputOnBlur('profile2', 'delay4', val)}
-	disabled={saving}
-  />	
-	
-	</div>
-				</div>
-				<div className='flex flex-col gap-2'>
-					<label className='font-bold'>Profile 3</label>
-				
-					<div className='grid grid-cols-5 gap-6 items-center '>
-						
-						
-						<DelayInputJHM
-	label="Délai première relance (Jours,Heures,Minutes)"
-	value={{ j: formData.profile3.delay1.j, h: formData.profile3.delay1.h, m: formData.profile3.delay1.m }}
-	onChange={(val) => handleInputOnBlur('profile3', 'delay1', val)}
-	disabled={saving}
-  />
-								<DelayInputJHM
-	label="Délai deuxième relance (Jours,Heures,Minutes)"
-	value={{ j: formData.profile3.delay2.j, h: formData.profile3.delay2.h, m: formData.profile3.delay2.m }}
-	onChange={(val) => handleInputOnBlur('profile3', 'delay2', val)}
-	disabled={saving}
-  />				
-				<DelayInputJHM
-	label="Délai troisième relance (Jours,Heures,Minutes)"
-	value={{ j: formData.profile3.delay3.j, h: formData.profile3.delay3.h, m: formData.profile3.delay3.m }}
-	onChange={(val) => handleInputOnBlur('profile3', 'delay3', val)}
-	disabled={saving}
-  />				
-			<DelayInputJHM
-	label="Délai relance finale (Jours,Heures,Minutes)"
-	value={{ j: formData.profile3.delay4.j, h: formData.profile3.delay4.h, m: formData.profile3.delay4.m }}
-	onChange={(val) => handleInputOnBlur('profile3', 'delay4', val)}
-	disabled={saving}
-  />	
-	
-	</div>
-				</div>
-				<div className='flex justify-end'>
+			{[1, 2, 3].map((n) => (
+  <Disclosure key={n}>
+    {({ open }) => (
+      <div className='border rounded-md'>
+        <Disclosure.Button className='flex justify-between w-full px-4 py-2 text-left text-sm font-medium text-blue-900 bg-blue-100 hover:bg-blue-200 rounded-t-md'>
+          <span>Profil {n}</span>
+          <ChevronUp className={`h-5 w-5 transition-transform ${open ? 'rotate-180' : ''}`} />
+        </Disclosure.Button>
+        <Disclosure.Panel className='px-4 pt-4 pb-2 text-sm text-gray-700'>
+          <div className='grid grid-cols-5 gap-6 items-center'>
+            {['delay1', 'delay2', 'delay3', 'delay4'].map((delayKey, i) => (
+              <DelayInputJHM
+                key={delayKey}
+                label={`Délai ${['première', 'deuxième', 'troisième', 'relance finale'][i]} (Jours,Heures,Minutes)`}
+                value={{
+                  j: formData[`profile${n}`][delayKey].j,
+                  h: formData[`profile${n}`][delayKey].h,
+                  m: formData[`profile${n}`][delayKey].m,
+                }}
+                onChange={(val) => handleInputOnBlur(`profile${n}`, delayKey, val)}
+                disabled={saving}
+              />
+            ))}
+          </div>
+        </Disclosure.Panel>
+      </div>
+    )}
+  </Disclosure>
+))}
+
+
+				<div className='flex justify-end pt-4'>
 					<button
 						type='submit'
 						disabled={saving}
@@ -348,5 +284,6 @@ const ReminderProfileSettings = () => {
 		</div>
 	);
 };
+
 
 export default ReminderProfileSettings;
