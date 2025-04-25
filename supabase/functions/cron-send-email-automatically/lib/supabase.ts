@@ -1,27 +1,13 @@
-import { createClient } from '@supabase/supabase-js';
+import { config } from 'dotenv';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Charger les variables d'environnement à partir du fichier .env
+config();
 
-// Création du client avec des options de persistance explicites
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: true, // Persister la session dans le localStorage
-    storageKey: 'paymentflow-auth', // Clé unique pour notre application
-    storage: window.localStorage, // Utiliser le localStorage pour la persistance
-    autoRefreshToken: true, // Rafraîchir automatiquement le token
-    detectSessionInUrl: true // Détecter la session dans l'URL pour le flow d'auth
-  }
-});
+// Création du client Supabase avec les variables d'environnement
+const supabase: SupabaseClient = createClient(
+  process.env.SUPABASE_URL as string,
+  process.env.SUPABASE_SERVICE_ROLE_KEY as string
+);
 
-// Fonction utilitaire pour vérifier si l'utilisateur est connecté
-export const checkAuth = async () => {
-  try {
-    const { data: { session }, error } = await supabase.auth.getSession();
-    if (error) throw error;
-    return session;
-  } catch (error) {
-    console.error('Erreur lors de la vérification de la session:', error);
-    return null;
-  }
-};
+export { supabase };
