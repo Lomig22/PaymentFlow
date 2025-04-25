@@ -34,7 +34,10 @@ function hasDelayPassed(since: Date, delay: Delay): boolean {
     (delay.m || 0) * 60 * 1000;
 
   const now = new Date();
-  return now.getTime() >= new Date(since.getTime() + delayMs).getTime();
+  const value=new Date(since.getTime() + delayMs).getTime()
+  console.log("NOW: ",now," VALUE: ",value);
+  
+  return now.getTime() >=value ;
 }
 
 async function AutomaticallySendReminders(): Promise<void> {
@@ -42,7 +45,7 @@ async function AutomaticallySendReminders(): Promise<void> {
     const { data: receivables, error } = await supabase
       .from('receivables')
       .select('*, client:clients(*), reminders(*)')
-      .eq('status', 'En attente');
+//      .eq('status', 'En attente');
 
     if (error) throw error;
 
@@ -52,6 +55,8 @@ async function AutomaticallySendReminders(): Promise<void> {
     }
 
     for (const receivable of receivables as Receivable[]) {
+      //  console.log("receivable:",receivable);
+        
       const { due_date, client, id, status } = receivable;
 
       if (!client || !client.email) continue;
@@ -59,6 +64,7 @@ async function AutomaticallySendReminders(): Promise<void> {
       const today = new Date();
       const dueDate = new Date(due_date);
       const daysLate = Math.floor((today.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
+console.log("STATUS: ",status);
 
       const reminderInfo = determineReminderLevel(daysLate, client, status);
 
