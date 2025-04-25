@@ -28,7 +28,15 @@ function App() {
 		const initAuth = async () => {
 			try {
 				const session = await checkAuth();
-				setUser(session?.user ?? null);
+				const currentUser = session?.user ?? null;
+				setUser(currentUser);
+	
+				if (currentUser && !intervalId) {
+					intervalId = setInterval(() => {
+						console.log("🕒 Vérification des relances automatiques...");
+						AutomaticallySendReminders();
+					}, 30 * 1000); // 30 secondes pour test
+				}
 			} catch (error) {
 				console.error("Erreur lors de l'initialisation de l'auth:", error);
 			} finally {
