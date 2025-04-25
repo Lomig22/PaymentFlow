@@ -26,16 +26,23 @@ const supabase = createClient(
   process.env.SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
-function convertJHMToMinutes(jhm: {j:number;h:number;m:number}| undefined): number {
-  if(!jhm){
-    return 60
+function convertJHMToMinutes(jhm: { j?: number; h?: number; m: number } | undefined): number {
+  if (!jhm) {
+    console.log("NOT JHM");
+    return 0; // retourne 0 si l'objet est undefined ou invalide
   }
-  const joursEnMinutes = jhm.j * 24 * 60;
-  const heuresEnMinutes = jhm.h * 60;
-  const minutes = jhm.m;
   
-  return joursEnMinutes + heuresEnMinutes + minutes;
-  }
+  // Si les valeurs de jours et heures sont absentes, elles seront considérées comme 0
+  const joursEnMinutes = (jhm.j ?? 0) * 24 * 60; // Utilisation de '??' pour fournir une valeur par défaut si 'j' est undefined
+  const heuresEnMinutes = (jhm.h ?? 0) * 60;  // Idem pour 'h'
+  const minutes = jhm.m;  // m est toujours fourni
+
+  const totalInMinutes = joursEnMinutes + heuresEnMinutes + minutes;
+  console.log("Total de minutes:", totalInMinutes);
+  
+  return totalInMinutes;
+}
+
 
 async function getLastReminder(receivableId: string) {
   const { data, error } = await supabase
@@ -60,28 +67,59 @@ async function shouldSendReminder(receivable: any): Promise<boolean> {
   const lastReminderAt = lastReminder ? new Date(lastReminder.reminder_date) : null;
 
   let delayMinutes = 0;
-  console.log("TONGA delayMinutes");
+console.log("RECEIVABLE STATUS: ",receivable.status);
 
+/*   switch (receivable.status) {
+    case 'pending':
+      console.log("pending state: ", receivable.client.company_name);
+    case 'Relance préventive':
+      delayMinutes = convertJHMToMinutes(receivable.client?.reminder_delay_1) ?? 0;
+      console.log("Relance préventive minutes: ",delayMinutes);
+      
+      break;
+    case 'Relance 1':
+      delayMinutes = convertJHMToMinutes(receivable.client?.reminder_delay_2) ?? 0;
+      break;
+    case 'Relance 2':
+      delayMinutes = convertJHMToMinutes(receivable.client?.reminder_delay_3 )?? 0;
+      break;
+    case 'Relance 3':
+      delayMinutes = convertJHMToMinutes(receivable.client?.reminder_delay_final) ?? 0;
+      break;
+    default:
+      return false;
+  } */
   switch (receivable.status) {
     case 'pending':
       console.log("pending state: ", receivable.client.company_name);
     case 'Relance préventive':
-      delayMinutes = receivable.client?.reminder_delay_1 ?? 0;
+      const delay1 = receivable.client?.reminder_delay_1;
+      console.log("Reminder Delay 1: ", delay1); // Débogage : vérifiez la valeur avant conversion
+      delayMinutes = convertJHMToMinutes(delay1) ?? 0;
+      console.log("Relance préventive minutes: ", delayMinutes);
       break;
     case 'Relance 1':
-      delayMinutes = receivable.client?.reminder_delay_2 ?? 0;
+      const delay2 = receivable.client?.reminder_delay_2;
+      console.log("Reminder Delay 2: ", delay2); // Débogage : vérifiez la valeur avant conversion
+      delayMinutes = convertJHMToMinutes(delay2) ?? 0;
       break;
     case 'Relance 2':
-      delayMinutes = receivable.client?.reminder_delay_3 ?? 0;
+      const delay3 = receivable.client?.reminder_delay_3;
+      console.log("Reminder Delay 3: ", delay3); // Débogage : vérifiez la valeur avant conversion
+      delayMinutes = convertJHMToMinutes(delay3) ?? 0;
       break;
     case 'Relance 3':
-      delayMinutes = receivable.client?.reminder_delay_final ?? 0;
+      const delayFinal = receivable.client?.reminder_delay_final;
+      console.log("Reminder Final Delay: ", delayFinal); // Débogage : vérifiez la valeur avant conversion
+      delayMinutes = convertJHMToMinutes(delayFinal) ?? 0;
       break;
     default:
       return false;
   }
-
+  
+  
   console.log("lastReminderAt: ", lastReminderAt);
+console.log("delay minutes: ",delayMinutes);
 
   // 🟢 S’il n’y a jamais eu de relance => on envoie !
   if (!lastReminderAt) return true;
@@ -274,7 +312,7 @@ export async function sendManualReminder(
 		if (!user) return false;
  */
 		const emailSettings = await getEmailSettings(receivable.owner_id);
-    console.log("CONFIGURATION MAIIIIIIIIIIIIIIL\n",emailSettings);
+  //  console.log("CONFIGURATION MAIIIIIIIIIIIIIIL\n",emailSettings);
 
 		if (!emailSettings) return false;
 
@@ -361,7 +399,7 @@ async function AutomaticallySendReminders(): Promise<void> {
 	//	console.log("Receivable: ",receivable);
     
       if (await shouldSendReminder(receivable)) {
-				console.log("SEND REMINDERS FORM RECEIVABLE"+receivable.client.company_name+" WITH CURRENT STATUS "+receivable.status);
+				console.log("sHOULD SEND REMINDERS TO "+receivable.client.company_name+" WITH CURRENT STATUS "+receivable.status);
 				console.log(receivable.id);
         
 				await sendManualReminder(receivable.id);
