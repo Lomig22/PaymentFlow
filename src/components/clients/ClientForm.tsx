@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Client } from '../../types/database';
+import { Client,Receivable } from '../../types/database';
 import { Minus, Plus, X } from 'lucide-react';
 
 interface ClientFormProps {
@@ -43,7 +43,15 @@ export default function ClientForm({
 			document.body.style.overflow = 'unset';
 		};
 	}, []);
-
+	const AddReceivableToClient= async (receivable:Receivable)=>{
+				const { error: insertError } = await supabase
+							.from('receivables')
+							.insert(receivable);
+			
+						if (insertError) {
+							console.error("Erreur lors de l'insertion:", insertError);
+						}
+	}
 	const handleEmailChange = (index: number, value: string) => {
 		const newEmails = [...emails];
 		newEmails[index] = value;
@@ -126,7 +134,33 @@ export default function ClientForm({
 					])
 					.select()
 					.single();
+					if (formData.needs_reminder) {
+						const now = new Date(); // exemple : 1714138580752
+						const formatted =
+  now.getFullYear().toString() +
+  (now.getMonth() + 1).toString().padStart(2, '0') +
+  now.getDate().toString().padStart(2, '0') +
+  now.getHours().toString().padStart(2, '0') +
+  now.getMinutes().toString().padStart(2, '0') +
+  now.getSeconds().toString().padStart(2, '0');
+						const random = Math.floor(Math.random() * 1000); // exemple : 432
+						const invoiceNumber = `FACT-${formatted}${random}`;
 
+						const newReceivable: Omit<Receivable, 'id'> = {
+							client_id: data.id, // ← l'id du client existant
+							invoice_number: invoiceNumber, // numéro de série
+							amount: 0, // Montant 0 par défaut
+							due_date: new Date().toISOString(), // Date aujourd'hui
+							status: 'pending', // Par défaut une relance préventive
+							owner_id: user.id, // ← Owner existant
+							created_at: new Date().toISOString(),
+							updated_at: new Date().toISOString(),
+						};
+					
+						await AddReceivableToClient(newReceivable as Receivable);
+					}
+					
+					
 				if (error) throw error;
 				if (data && onClientAdded) {
 					onClientAdded(data);
