@@ -247,7 +247,7 @@ function ReceivablesList() {
 					await fetchReceivables();
 				} else {
 					if (selectedReceivable.status==="Relance finale"){
-						setError("Le status de cette créance est déjà en relance finale");
+						setError("Le statut de cette créance est déjà en relance finale");
 					} else{
 						setError(
 							"Impossible d'envoyer la relance. Vérifiez les paramètres email, la signature et les templates."
