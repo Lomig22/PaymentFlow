@@ -1299,7 +1299,11 @@ export default function CSVImportModal({
 													<option
 														key={field.field}
 														value={field.field}
-														disabled={false}
+														disabled={
+															Object.entries(mapping)
+															  .filter(([key, value]) => Boolean(value) && key !== String(header))
+															  .some(([_, value]) => value === field.field)
+														  }
 													>
 														{field.label}
 														{field.required ? ' *' : ''}

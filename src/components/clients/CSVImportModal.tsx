@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { X, Upload, AlertCircle, HelpCircle, Loader2 } from 'lucide-react';
 import { Client } from '../../types/database';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css'; // Importer les styles
 
 interface CSVImportModalProps {
 	onClose: () => void;
@@ -251,7 +253,7 @@ export default function CSVImportModal({
 						'secteur',
 						'activité',
 						'industry',
-						'business',
+						'business'
 					];
 					for (const variant of industryVariants) {
 						const index = headerLower.findIndex((h) => h.includes(variant));
@@ -361,7 +363,7 @@ export default function CSVImportModal({
 		);
 
 		if (missingFields.length > 0) {
-			setError(
+			toast.error(
 				`Les champs suivants sont requis : ${missingFields
 					.map((f) => mappingFields.find((mf) => mf.field === f)?.label)
 					.join(', ')}`
@@ -407,62 +409,79 @@ export default function CSVImportModal({
 		return null;
 	};
 
+
 	const generatePreview = () => {
 		if (!validateMapping()) return;
-
+	  
 		try {
-			const previewData: Client[] = csvData.slice(0, 5).map((row, index) => {
-				const client: any = {
-					id: `preview-${index}`,
-					company_name: '',
-					email: '',
-					needs_reminder: false,
-					created_at: new Date().toISOString(),
-					updated_at: new Date().toISOString(),
-					owner_id: '',
-				};
-
-				// Remplir les données selon le mapping
-				Object.entries(mapping).forEach(([header, field]) => {
-					const headerIndex = headers.indexOf(header);
-					if (headerIndex !== -1) {
-						let value = row[headerIndex] || '';
-
-						// Traitement spécial pour needs_reminder
-						if (field === 'needs_reminder') {
-							const lowerValue = value.toLowerCase();
-							client[field] =
-								lowerValue === 'oui' ||
-								lowerValue === 'yes' ||
-								lowerValue === '1' ||
-								lowerValue === 'true' ||
-								lowerValue === 'relance en cours' ||
-								lowerValue === 'OUI';
-						}
-						// Traitement spécial pour les dates
-						else if (field === 'created_at' || field === 'updated_at') {
-							const formattedDate = formatDate(value);
-							if (formattedDate) {
-								client[field] = formattedDate;
-							}
-						} else {
-							client[field] = value;
-						}
-					}
-				});
-
-				return client as Client;
+		  // 🚨 Vérification des champs obligatoires
+		  const missingRequiredFields = mappingFields.filter((field) => {
+			if (field.required) {
+			  // Est-ce qu'on a trouvé une colonne mappée à ce champ ?
+			  const isMapped = Object.values(mapping).includes(field.field);
+			  return !isMapped;
+			}
+			return false;
+		  });
+	  
+		  if (missingRequiredFields.length > 0) {
+			const missingFieldsLabels = missingRequiredFields.map((f) => f.label).join(', ');
+			toast.error(`Les champs obligatoires suivants ne sont pas mappés : ${missingFieldsLabels}`);
+			return;
+		  }
+	  
+		  const previewData: Client[] = csvData.slice(0, 5).map((row, index) => {
+			const client: any = {
+			  id: `preview-${index}`,
+			  company_name: '',
+			  email: '',
+			  needs_reminder: false,
+			  created_at: new Date().toISOString(),
+			  updated_at: new Date().toISOString(),
+			  owner_id: '',
+			};
+	  
+			// Remplir les données selon le mapping
+			Object.entries(mapping).forEach(([header, field]) => {
+			  const headerIndex = headers.indexOf(header);
+			  if (headerIndex !== -1) {
+				let value = row[headerIndex] || '';
+	  
+				// Traitement spécial pour needs_reminder
+				if (field === 'needs_reminder') {
+				  const lowerValue = value.toLowerCase();
+				  client[field] =
+					lowerValue === 'oui' ||
+					lowerValue === 'yes' ||
+					lowerValue === '1' ||
+					lowerValue === 'true' ||
+					lowerValue === 'relance en cours' ||
+					lowerValue === 'OUI';
+				}
+				// Traitement spécial pour les dates
+				else if (field === 'created_at' || field === 'updated_at') {
+				  const formattedDate = formatDate(value);
+				  if (formattedDate) {
+					client[field] = formattedDate;
+				  }
+				} else {
+				  client[field] = value;
+				}
+			  }
 			});
-
-			setPreview(previewData);
-			setStep('preview');
-			setError(null);
+	  
+			return client as Client;
+		  });
+	  
+		  setPreview(previewData);
+		  setStep('preview');
+		  setError(null);
 		} catch (error) {
-			console.error("Erreur lors de la génération de l'aperçu:", error);
-			setError("Impossible de générer l'aperçu");
+		  console.error("Erreur lors de la génération de l'aperçu:", error);
+		  toast.error("Impossible de générer l'aperçu");
 		}
-	};
-
+	  };
+	  
 	const importClients = async () => {
 		if (!validateMapping()) return;
 
@@ -596,27 +615,54 @@ console.log("DATA: ", data)
 		}
 	};
 
+	
+	
 	const saveMapping = async () => {
-		const {
-			data: { user },
-		} = await supabase.auth.getUser();
-		if (!user) throw new Error('Utilisateur non authentifié');
-
-		try {
-			setSavingSchema(true);
-			await supabase
-				.from('profiles')
-				.update({ client_mapping: JSON.stringify(mapping) })
-				.eq('id', user.id);
-			setSavingSchema(false);
-		} catch (err) {
-			console.error(
-				'Erreur lors de la suppression des créances manquantes:',
-				err
-			);
-			setSavingSchema(false);
+	  const {
+		data: { user },
+	  } = await supabase.auth.getUser();
+	  if (!user) throw new Error('Utilisateur non authentifié');
+	
+	  try {
+		// 🚨 Vérification des champs obligatoires
+		const missingRequiredFields = mappingFields.filter((field) => {
+		  if (field.required) {
+			// Est-ce que ce champ est mappé ?
+			const isMapped = Object.values(mapping).includes(field.field);
+			return !isMapped;
+		  }
+		  return false;
+		});
+	
+		if (missingRequiredFields.length > 0) {
+		  const missingFieldsLabels = missingRequiredFields.map((f) => f.label).join(', ');
+		  toast.error(`Les champs obligatoires suivants ne sont pas mappés : ${missingFieldsLabels}`);
+		  return;  // Ne pas continuer si des champs obligatoires sont manquants
 		}
+	
+		// Si tout est bon, on continue avec l'enregistrement
+		setSavingSchema(true);
+		await supabase
+		  .from('profiles')
+		  .update({ client_mapping: JSON.stringify(mapping) })
+		  .eq('id', user.id);
+	
+		// Réinitialiser l'erreur si le mapping est valide
+		setError(null);
+	
+		// Afficher le message de succès via toast
+		toast.success("Mapping sauvegardé avec succès");
+	
+		setSavingSchema(false);
+	  } catch (err) {
+		console.error('Erreur lors de l\'enregistrement du mapping:', err);
+		setSavingSchema(false);
+		// Afficher le message d'erreur via toast
+		toast.error("Erreur lors de l'enregistrement du mapping");
+	  }
 	};
+	
+			
 
 	const resetForm = () => {
 		setFile(null);
@@ -760,43 +806,46 @@ console.log("DATA: ", data)
 									</div>
 								)}
 
-								<div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-									{headers.map((header, index) => (
-										<div key={index} className='flex items-center space-x-2'>
-											<div
-												className='w-1/2 font-medium truncate'
-												title={header}
-											>
-												{header}
-											</div>
-											<select
-												value={mapping[header] || ''}
-												onChange={(e) =>
-													handleMappingChange(
-														header,
-														e.target.value as keyof CSVMapping | ''
-													)
-												}
-												className='w-1/2 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-											>
-												<option value=''>Ne pas importer</option>
-												{mappingFields.map((field) => (
-													<option
-														key={field.field}
-														value={field.field}
-													/* 	disabled={
-															Object.values(mapping).includes(field.field) &&
-															mapping[header] !== field.field
-														} */
-													>
-														{field.label}
-														{field.required ? ' *' : ''}
-													</option>
-												))}
-											</select>
-										</div>
-									))}
-								</div>
+<div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+  {headers.map((header, index) => (
+    <div key={index} className='flex items-center space-x-2'>
+      <div
+        className='w-1/2 font-medium truncate'
+        title={header}
+      >
+        {header}
+      </div>
+      <select
+        value={mapping[header] || ''}
+        onChange={(e) =>
+          handleMappingChange(
+            header,
+            e.target.value as keyof CSVMapping | ''
+          )
+        }
+        className='w-1/2 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+      >
+        <option value=''>Ne pas importer</option>
+        {mappingFields.map((field) => (
+          <option
+            key={field.field}
+            value={field.field}
+			disabled={
+				Object.entries(mapping)
+				  .filter(([key, value]) => Boolean(value) && key !== String(header))
+				  .some(([_, value]) => value === field.field)
+			  }
+			  
+          >
+            {field.label}
+            {field.required ? ' *' : ''}
+          </option>
+        ))}
+      </select>
+    </div>
+  ))}
+</div>
+
 							</div>
 
 							<div className='flex justify-between space-x-4'>
