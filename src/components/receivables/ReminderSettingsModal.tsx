@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Client, Receivable, ReminderProfile } from '../../types/database';
 import { X, AlertCircle, Play, Pause } from 'lucide-react';
-
+import DelayInputJHM from '../settings/DelayInputJHM';
 interface ReminderSettingsModalProps {
 	client: Client;
 	onClose: () => void;
@@ -23,10 +23,10 @@ export default function ReminderSettingsModal({
 		receivable.automatic_reminder ?? false
 	);
 	const [formData, setFormData] = useState({
-		reminder_delay_1: client.reminder_delay_1 || 15,
-		reminder_delay_2: client.reminder_delay_2 || 30,
-		reminder_delay_3: client.reminder_delay_3 || 45,
-		reminder_delay_final: client.reminder_delay_final || 60,
+		reminder_delay_1: client.reminder_delay_1 || {j:0,h:0,m:1},
+		reminder_delay_2: client.reminder_delay_2 || {j:0,h:0,m:2},
+		reminder_delay_3: client.reminder_delay_3 || {j:0,h:0,m:3},
+		reminder_delay_final: client.reminder_delay_final || {j:0,h:0,m:3},
 		reminder_template_1: client.reminder_template_1 || '',
 		reminder_template_2: client.reminder_template_2 || '',
 		reminder_template_3: client.reminder_template_3 || '',
@@ -35,6 +35,16 @@ export default function ReminderSettingsModal({
 		pre_reminder_days: client.pre_reminder_days || 1,
 		pre_reminder_template: client.pre_reminder_template || '',
 	});
+	function convertJHMToMinutes(jhm: {j:number;h:number;m:number}| undefined): number {
+		if(!jhm){
+			return 60
+		}
+		const joursEnMinutes = jhm.j * 24 * 60;
+		const heuresEnMinutes = jhm.h * 60;
+		const minutes = jhm.m;
+	  
+		return joursEnMinutes + heuresEnMinutes + minutes;
+	  }
 
 	// Gestion de la touche Echap
 	useEffect(() => {
@@ -67,9 +77,9 @@ export default function ReminderSettingsModal({
 		try {
 			// Validation des délais
 			if (
-				formData.reminder_delay_1 >= formData.reminder_delay_2 ||
-				formData.reminder_delay_2 >= formData.reminder_delay_3 ||
-				formData.reminder_delay_3 >= formData.reminder_delay_final
+				convertJHMToMinutes(formData.reminder_delay_1) >= convertJHMToMinutes(formData.reminder_delay_2) ||
+				convertJHMToMinutes(formData.reminder_delay_2) >= convertJHMToMinutes(formData.reminder_delay_3) ||
+				convertJHMToMinutes(formData.reminder_delay_3) >= convertJHMToMinutes(formData.reminder_delay_final)
 			) {
 				throw new Error('Les délais doivent être strictement croissants');
 			}
@@ -114,9 +124,9 @@ export default function ReminderSettingsModal({
 		setFormData({
 			...formData,
 			reminder_profile: profileId,
-			reminder_delay_1: selectedProfile?.delay1 || 15,
-			reminder_delay_2: selectedProfile?.delay2 || 30,
-			reminder_delay_3: selectedProfile?.delay3 || 45,
+			reminder_delay_1: selectedProfile?.delay1 || {j:0,h:0,m:1},
+			reminder_delay_2: selectedProfile?.delay2 || {j:0,h:0,m:1},
+			reminder_delay_3: selectedProfile?.delay3 || {j:0,h:0,m:1},
 			reminder_delay_final: selectedProfile?.delay4 || 60,
 		});
 	};
@@ -201,75 +211,31 @@ export default function ReminderSettingsModal({
 								</select>
 							</div>
 							<div>
-								<label className='block text-sm font-medium text-gray-700 mb-2'>
-									Délai première relance (jours)
-								</label>
-								<input
-									type='number'
-									min='1'
-									value={formData.reminder_delay_1}
-									onChange={(e) =>
-										setFormData({
-											...formData,
-											reminder_delay_1: parseInt(e.target.value),
-										})
-									}
-									className='w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-								/>
+							<DelayInputJHM
+	label="Délai première relance (Jours,Heures,Minutes)"
+	value={formData.reminder_delay_1}
+  />
 							</div>
 
 							<div>
-								<label className='block text-sm font-medium text-gray-700 mb-2'>
-									Délai deuxième relance (jours)
-								</label>
-								<input
-									type='number'
-									min='1'
-									value={formData.reminder_delay_2}
-									onChange={(e) =>
-										setFormData({
-											...formData,
-											reminder_delay_2: parseInt(e.target.value),
-										})
-									}
-									className='w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-								/>
+							<DelayInputJHM
+	label="Délai deuxième relance (Jours,Heures,Minutes)"
+	value={formData.reminder_delay_2}
+  />
 							</div>
 
 							<div>
-								<label className='block text-sm font-medium text-gray-700 mb-2'>
-									Délai troisième relance (jours)
-								</label>
-								<input
-									type='number'
-									min='1'
-									value={formData.reminder_delay_3}
-									onChange={(e) =>
-										setFormData({
-											...formData,
-											reminder_delay_3: parseInt(e.target.value),
-										})
-									}
-									className='w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-								/>
+							<DelayInputJHM
+	label="Délai troisième relance (Jours,Heures,Minutes)"
+	value={formData.reminder_delay_3}
+  />
 							</div>
 
 							<div>
-								<label className='block text-sm font-medium text-gray-700 mb-2'>
-									Délai relance finale (jours)
-								</label>
-								<input
-									type='number'
-									min='1'
-									value={formData.reminder_delay_final}
-									onChange={(e) =>
-										setFormData({
-											...formData,
-											reminder_delay_final: parseInt(e.target.value),
-										})
-									}
-									className='w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-								/>
+							<DelayInputJHM
+	label="Délai  relance finale (Jours,Heures,Minutes)"
+	value={formData.reminder_delay_final}
+  />
 							</div>
 							<div>
 								<label className='block text-sm font-medium text-gray-700 mb-2'>

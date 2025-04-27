@@ -7,7 +7,6 @@ import {
 } from 'react-router-dom';
 import { supabase, checkAuth } from './lib/supabase';
 import { User } from '@supabase/supabase-js';
-import { startReminderService } from './lib/reminderService';
 import Auth from './components/Auth';
 import LandingPage from './components/LandingPage';
 import ClientList from './components/clients/ClientList';
@@ -31,10 +30,12 @@ function App() {
 				const session = await checkAuth();
 				const currentUser = session?.user ?? null;
 				setUser(currentUser);
-
-				// Démarrer le service de relance si l'utilisateur est connecté
-				if (currentUser) {
-					startReminderService(currentUser.id);
+	
+				if (currentUser && !intervalId) {
+					intervalId = setInterval(() => {
+						console.log("🕒 Vérification des relances automatiques...");
+						AutomaticallySendReminders();
+					}, 30 * 1000); // 30 secondes pour test
 				}
 			} catch (error) {
 				console.error("Erreur lors de l'initialisation de l'auth:", error);
@@ -47,18 +48,8 @@ function App() {
 
 		const {
 			data: { subscription },
-		} = supabase.auth.onAuthStateChange(async (event, session) => {
-			const currentUser = session?.user ?? null;
-			setUser(currentUser);
-
-			if (currentUser) {
-				// Démarrer le service de relance lors de la connexion
-				startReminderService(currentUser.id);
-			}
-
-			if (!currentUser) {
-				setShowAuth(false);
-			}
+		} = supabase.auth.onAuthStateChange((_event, session) => {
+			setUser(session?.user ?? null);
 		});
 
 		return () => {
@@ -74,7 +65,6 @@ function App() {
 		);
 	}
 
-	// Check if URL contains recovery token
 	const isResetPasswordPage = window.location.href.includes('type=recovery');
 
 	if (isResetPasswordPage) {

@@ -74,17 +74,25 @@ function ReceivablesList() {
 
 	const fetchReceivables = async () => {
 		try {
-			const { data, error } = await supabase
-				.from('receivables')
-				.select(`*,client:clients(*)`)
-				.order('due_date', { ascending: false });
-			console.log("DATA: ",data);
-			
-			// Fetch profiles
 			const {
 				data: { user },
-			} = await supabase.auth.getUser();
-			if (!user) throw new Error('Utilisateur non authentifié');
+			  } = await supabase.auth.getUser();
+			  
+			  if (!user) throw new Error('Utilisateur non authentifié');
+			  
+			  const { data, error } = await supabase
+				.from('receivables')
+				.select(`*, client:clients(*)`)
+				.eq('owner_id', user.id) // <<< ici le filtre
+				.order('due_date', { ascending: false });
+			  
+			  if (error) {
+				throw error;
+			  }
+			console.log("DATA: ",data);
+			
+
+	
 
 			const { data: reminderPorfile } = await supabase
 				.from('reminder_profile')
@@ -230,14 +238,22 @@ function ReceivablesList() {
 				setError(null);
 				if (selectedReceivable == null) return;
 				setSending(true);
+				if (selectedReceivable.status==="Relance finale"){
+					setError("La status de cette créance est déjà en relance finale");
+				}
 				const success = await sendManualReminder(selectedReceivable.id);
 
 				if (success) {
 					await fetchReceivables();
 				} else {
-					setError(
-						"Impossible d'envoyer la relance. Vérifiez les paramètres email, la signature et les templates."
-					);
+					if (selectedReceivable.status==="Relance finale"){
+						setError("La status de cette créance est déjà en relance finale");
+					} else{
+						setError(
+							"Impossible d'envoyer la relance. Vérifiez les paramètres email, la signature et les templates."
+						);
+					}
+				
 				}
 				setSending(false);
 				setShowConfirmReminder(false);
@@ -637,7 +653,7 @@ function ReceivablesList() {
 										{receivable.client.client_code}
 									</td>
 									<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
-										{receivable.email}
+										{receivable.email||receivable.client.email.split(',')[0]}
 									</td>
 									<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
 										{receivable.invoice_number}
@@ -698,7 +714,7 @@ function ReceivablesList() {
 											{receivable.status === 'Relance finale' &&
 												'Relance finale'}
 											{receivable.status === 'Relance préventive' &&
-												'Pré-relance'}
+												'Pré-relancé'}
 										</span>
 										{!receivable.automatic_reminder && (
 											<span

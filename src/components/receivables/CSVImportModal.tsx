@@ -25,6 +25,7 @@ export interface CSVMapping {
 	document_date: string | null;
 	installment_number: string | null;
 	client_code: string | null;
+	email:string|null;
 	code: string | null;
 	created_at: string | null;
 	updated_at: string | null;
@@ -40,6 +41,8 @@ const mappingFields: MappingField[] = [
 	{ field: 'document_date', label: 'Date pièce', required: false },
 	{ field: 'installment_number', label: "Numéro d'échéance", required: false },
 	{ field: 'client_code', label: 'Code Client', required: false },
+	{ field: 'email', label: 'Email', required: false }
+
 ];
 
 // Shanaka (Start)
@@ -163,6 +166,11 @@ const columnMapping: { [key: string]: string } = {
 
 	//Montant Réglé Devise
 	'montant réglé devise': 'paid_amount',
+	//Email
+	Email:'email',
+	'email':'email',
+	'mail':'email'
+
 };
 // Shanaka (Finish)
 export default function CSVImportModal({
@@ -549,6 +557,7 @@ export default function CSVImportModal({
 				(h) => mapping[h] === 'invoice_number'
 			);
 			const amountIndex = csvHeaders.findIndex((h) => mapping[h] === 'amount');
+			const emailIndex = csvHeaders.findIndex((h) => mapping[h] === 'email');
 			const paidAmountIndex = csvHeaders.findIndex(
 				(h) => mapping[h] === 'paid_amount'
 			);
@@ -604,7 +613,7 @@ export default function CSVImportModal({
 
 					const clientId = getClientId(clientName);
 					console.log("ClientID", clientId, clientName)
-
+					const email:string = row[emailIndex]|| `${clientName.toLowerCase().trim().replace(/\s+/g, '.')}@example.com`
 					//shanaka (Start)
 					// Check if the client is already in the new clients map
 					const client = clientId
@@ -623,9 +632,8 @@ export default function CSVImportModal({
 								clientCodeIndex !== -1
 									? row[clientCodeIndex]
 									: Math.floor(Math.random() * (100000 - 150000) + 100000),
-							email: `${clientName
-								.toLowerCase()
-								.replace(/\s+/g, '.')}@example.com`, // Email temporaire
+							email: email,
+
 							needs_reminder: true,
 							created_at: new Date().toISOString(),
 							updated_at: new Date().toISOString(),
@@ -646,6 +654,7 @@ export default function CSVImportModal({
 							created_at: new Date().toISOString(),
 							updated_at: new Date().toISOString(),
 							client: newClient,
+							email:email,
 						} as Receivable & { client: Client };
 					}
 					return {
@@ -661,6 +670,7 @@ export default function CSVImportModal({
 						created_at: new Date().toISOString(),
 						updated_at: new Date().toISOString(),
 						client: client,
+						email:email,
 					} as Receivable & { client: Client };
 				});
 
@@ -689,11 +699,13 @@ export default function CSVImportModal({
 			// Trouver les indices des colonnes
 			//Shanaka (Start)
 			// Replaced the const header , with csvHeader from the state
+			//Rino (restart mdr)
 			const clientIndex = csvHeaders.findIndex((h) => mapping[h] === 'client');
 			const invoiceIndex = csvHeaders.findIndex(
 				(h) => mapping[h] === 'invoice_number'
 			);
 			const amountIndex = csvHeaders.findIndex((h) => mapping[h] === 'amount');
+			const emailIndex = csvHeaders.findIndex((h) => mapping[h] === 'email');
 			const paidAmountIndex = csvHeaders.findIndex(
 				(h) => mapping[h] === 'paid_amount'
 			);
@@ -727,6 +739,8 @@ export default function CSVImportModal({
 				reminderPorfile.length > 0;
 
 			for (const [tempId, newClient] of Object.entries(newClients)) {
+		//		console.log("EMAILLLLLLLLLLLL:",newClient.email);
+				
 				try {
 					const { data: createdClient, error } = await supabase
 						.from('clients')
@@ -810,7 +824,8 @@ export default function CSVImportModal({
 						formatDate(dueDateStr) || new Date().toISOString().split('T')[0];
 					const status = mapStatus(statusStr);
 					const clientCode = row[clientCodeIndex] || '';
-
+					//Jetemail
+					const email=row[emailIndex]
 					// Trouver le client correspondant
 					let clientId = getClientId(clientName);
 
@@ -830,6 +845,7 @@ export default function CSVImportModal({
 
 						// Si toujours pas trouvé, créer un nouveau client à la volée
 						if (!clientId) {
+						
 							try {
 								// Créer un nouveau client
 								const { data: newClient, error } = await supabase
@@ -886,6 +902,7 @@ export default function CSVImportModal({
 							document_date: documentDate || new Date().toISOString().split('T')[0],
 							due_date: dueDate || new Date().toISOString().split('T')[0],
 							installment_number: installmentNumber || 1,
+							email:email,
 							//status: status !== null ? status : undefined,
 							owner_id: user.id,
 							created_at: new Date().toISOString(),
@@ -922,18 +939,19 @@ export default function CSVImportModal({
 						existing.map(r => [`${r.owner_id}-${r.invoice_number}`, r])
 					);
 					console.log("EXISTING DATA:", existingMap);
-
+			//		console.log("EXISTING EMAIL: ",exi);
+					
 					const toInsert: any[] = [];
 					const toUpdate: any[] = [];
 					
 					for (const record of batch) {
 						const key = `${record.owner_id}-${record.invoice_number}`;
 						if (existingMap.has(key)) {
-							console.log(record);
+							//console.log(record);
 							
 							// On garde le status actuel
 							const existingStatus = existingMap.get(key)?.status;
-							toUpdate.push({ ...record, status: existingStatus });
+							toUpdate.push({ ...record,status: existingStatus });
 						} else {
 							toInsert.push(record);
 						}
@@ -977,20 +995,62 @@ export default function CSVImportModal({
 
 
 
-			// Mettre à jour les clients pour activer les relances
-			const clientIds = [
-				...new Set(receivablesToImport.map((r) => r.client_id)),
-			];
+			// Mettre à jour les clients pour activer les relances et ajouter les nouveaux mails
+			//JetNewEmail
+			const clientIds = [...new Set(receivablesToImport.map((r) => r.client_id))];
+
 			if (clientIds.length > 0) {
-				try {
-					await supabase
-						.from('clients')
-						.update({ needs_reminder: true })
-						.in('id', clientIds);
-				} catch (err) {
-					console.error('Erreur lors de la mise à jour des clients:', err);
+			  try {
+				// 1. On récupère les clients existants
+				const { data: existingClients, error } = await supabase
+				  .from('clients')
+				  .select('id, email')
+				  .in('id', clientIds);
+			
+				if (error) throw error;
+			
+				// 2. On prépare les mises à jour
+				const updates = [];
+			
+				for (const r of receivablesToImport) {
+				  const client = existingClients.find((c) => c.id === r.client_id);
+				  if (!client) continue;
+			
+				  const existingEmails = client.email ? client.email.split(',').map((e: string) => e.trim()) : [];
+			
+				  // Si l'email n'existe pas encore, on l'ajoute
+				  if (!existingEmails.includes(r.email)) {
+					const newEmails = [...existingEmails, r.email].join(', ');
+					updates.push({
+					  id: r.client_id,
+					  email: newEmails,
+					  needs_reminder: true,
+					});
+				  } else {
+					// Mettre à jour needs_reminder même si pas besoin de changer email
+					updates.push({
+					  id: r.client_id,
+					  email: client.email,
+					  needs_reminder: true,
+					});
+				  }
 				}
+			
+				// 3. On exécute les mises à jour
+				for (const update of updates) {
+				  await supabase
+					.from('clients')
+					.update({
+					  email: update.email,
+					  needs_reminder: update.needs_reminder,
+					})
+					.eq('id', update.id);
+				}
+			  } catch (err) {
+				console.error('Erreur lors de la mise à jour des clients:', err);
+			  }
 			}
+			
 			// Delete lines that were not in the csv
 			const prevItems = new Set(
 				receivablesToImport.map(
@@ -1340,6 +1400,9 @@ export default function CSVImportModal({
 											<th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 												Statut
 											</th>
+											<th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+												Email
+											</th>
 										</tr>
 									</thead>
 									<tbody className='bg-white divide-y divide-gray-200'>
@@ -1417,6 +1480,9 @@ export default function CSVImportModal({
 														{receivable.status === 'pending' && 'En attente'}
 														{receivable.status === 'legal' && 'Contentieux'}
 													</span>
+												</td>
+												<td className='px-4 py-3 whitespace-nowrap text-sm text-gray-900'>
+													{receivable.email}
 												</td>
 											</tr>
 										))}
