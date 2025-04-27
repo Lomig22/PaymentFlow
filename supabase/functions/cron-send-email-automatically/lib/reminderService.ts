@@ -24,7 +24,7 @@ interface EmailSettings {
 	return joursEnMinutes + heuresEnMinutes + minutes;
   }
 // Fonction pour récupérer les paramètres email de l'utilisateur
-async function getEmailSettings(userId: string): Promise<EmailSettings | null> {
+export async function getEmailSettings(userId: string): Promise<EmailSettings | null> {
 	try {
 		const { data, error } = await supabase
 			.from('email_settings')
@@ -49,7 +49,7 @@ async function getEmailSettings(userId: string): Promise<EmailSettings | null> {
 }
 
 // Fonction pour formater le template avec les variables
-function formatTemplate(
+export function formatTemplate(
 	template: string,
 	variables: {
 		company: string;
@@ -79,7 +79,7 @@ function formatTemplate(
 }
 
 // Fonction pour déterminer le niveau de relance approprié
-function determineReminderLevel(
+export function determineReminderLevel(
 	daysLate: number,
 	client: Client,
 	status: string
@@ -103,10 +103,12 @@ function determineReminderLevel(
 		return { level: 'second', template: client.reminder_template_2 };
 	if (status === 'Relance préventive' && client.reminder_template_1 )
 		return { level: 'first', template: client.reminder_template_1 };
+//console.log(daysLate);
 
 	// Si aucun statut de relance encore, on peut proposer un pré-reminder
- 	if (client.pre_reminder_template && daysLate<=0){
+ 	if (client.pre_reminder_template){
 		return { level: 'pre', template: client.pre_reminder_template };
+		
 	} 
 		
 
@@ -196,7 +198,7 @@ export async function sendManualReminder(
 
 		const emailSent = await sendEmail(
 			emailSettings,
-			receivable.email||receivable.client.email,
+			receivable.client.email,
 			`Relance facture ${receivable.invoice_number}`,
 			emailContent,
 			receivable.invoice_pdf_url

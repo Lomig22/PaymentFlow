@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Client } from '../../types/database';
+import { Client,Receivable } from '../../types/database';
 import { Minus, Plus, X } from 'lucide-react';
 
 interface ClientFormProps {
@@ -21,7 +21,7 @@ export default function ClientForm({
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
-	const [emails, setEmails] = useState(client?.email.split(',') || ['']);
+	const [emails, setEmails] = useState(client?.email.split(',').filter(e => e.trim()) || ['']);
 	const [formData, setFormData] = useState({
 		company_name: client?.company_name || '',
 		email: client?.email || '',
@@ -43,15 +43,44 @@ export default function ClientForm({
 			document.body.style.overflow = 'unset';
 		};
 	}, []);
+	const AddReceivableToClient= async (receivable:Receivable)=>{
+				const { error: insertError } = await supabase
+							.from('receivables')
+							.insert(receivable);
+			
+						if (insertError) {
+							console.error("Erreur lors de l'insertion:", insertError);
+						}
+	}
+	const handleEmailChange = (index: number, value: string) => {
+		const newEmails = [...emails];
+		newEmails[index] = value;
+		setEmails(newEmails);
+		setFormData({
+			...formData,
+			email: newEmails.filter((item) => item.trim() !== '').join(','),
+		});
+	};
 
 	const handleEmailDelete = (index: number) => {
 		const newEmails = [...emails];
 		newEmails.splice(index, 1);
+		if (newEmails.length === 0) {
+			newEmails.push('');
+		}
 		setEmails(newEmails);
 		setFormData({
 			...formData,
-			email: newEmails.filter((item) => item != '').join(','),
+			email: newEmails.filter((item) => item.trim() !== '').join(','),
 		});
+	};
+
+	const handleAddEmail = () => {
+		setEmails([...emails, '']);
+	};
+
+	const isValidEmail = (email: string) => {
+		return email === '' || /^[^@]*@[^@]*$/.test(email);
 	};
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -105,7 +134,33 @@ export default function ClientForm({
 					])
 					.select()
 					.single();
+					if (formData.needs_reminder) {
+						const now = new Date(); // exemple : 1714138580752
+						const formatted =
+  now.getFullYear().toString() +
+  (now.getMonth() + 1).toString().padStart(2, '0') +
+  now.getDate().toString().padStart(2, '0') +
+  now.getHours().toString().padStart(2, '0') +
+  now.getMinutes().toString().padStart(2, '0') +
+  now.getSeconds().toString().padStart(2, '0');
+						const random = Math.floor(Math.random() * 1000); // exemple : 432
+						const invoiceNumber = `FACT-${formatted}${random}`;
 
+						const newReceivable: Omit<Receivable, 'id'> = {
+							client_id: data.id, // ← l'id du client existant
+							invoice_number: invoiceNumber, // numéro de série
+							amount: 0, // Montant 0 par défaut
+							due_date: new Date().toISOString(), // Date aujourd'hui
+							status: 'pending', // Par défaut une relance préventive
+							owner_id: user.id, // ← Owner existant
+							created_at: new Date().toISOString(),
+							updated_at: new Date().toISOString(),
+						};
+					
+						await AddReceivableToClient(newReceivable as Receivable);
+					}
+					
+					
 				if (error) throw error;
 				if (data && onClientAdded) {
 					onClientAdded(data);
@@ -191,55 +246,47 @@ export default function ClientForm({
 								{emails.map((email, index) => (
 									<div
 										className='flex gap-1 justify-between items-end'
-										key={email}
+										key={`email-${index}`}
 									>
 										<div className='w-full'>
 											<label className='block text-sm font-medium text-gray-700 mb-2'>
-												Email *
+												Email {index === 0 ? '*' : ''}
 											</label>
 											<input
-												type='email'
+												type='text'
 												required={index === 0}
-												defaultValue={email}
-												onChange={(e) => {
-													const newEmails = [...emails];
-													newEmails[index] = e.target.value;
-													setEmails(newEmails);
-													setFormData({
-														...formData,
-														email: newEmails
-															.filter((item) => item != '')
-															.join(','),
-													});
-												}}
-												className='w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+												value={email}
+												onChange={(e) => handleEmailChange(index, e.target.value)}
+												className={`w-full p-3 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent ${!isValidEmail(email) && email !== '' ? 'border-red-500' : 'border-gray-300'}`}
+												placeholder='exemple@domaine.com'
 											/>
-										</div>
-										<div>
-											{index !== emails.length - 1 ? (
-												<button
-													type='button'
-													onClick={() => handleEmailDelete(index)}
-													title='Ajouter un nouvel e-mail'
-													className='px-2 py-2 text-red-600 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-50 h-[50px]'
-												>
-													<Minus />
-												</button>
-											) : (
-												<button
-													className='px-2 py-2 text-blue-600 rounded-md  transition-colors disabled:opacity-50 h-[50px] hover:bg-gray-50'
-													type='button'
-													onClick={() =>
-														setEmails((prevEmails) => [...prevEmails, ''])
-													}
-													title="Supprimer l'e-mail"
-												>
-													<Plus />
-												</button>
+											{!isValidEmail(email) && email !== '' && (
+												<p className='text-red-500 text-sm mt-1'>
+													L'email doit contenir un @
+												</p>
 											)}
+										</div>
+										<div className='flex items-end'>
+											<button
+												type='button'
+												onClick={() => handleEmailDelete(index)}
+												title="Supprimer l'e-mail"
+												className='px-2 py-2 text-red-600 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-50 h-[50px]'
+												disabled={index === 0 && emails.length === 1}
+											>
+												<Minus />
+											</button>
 										</div>
 									</div>
 								))}
+								<button
+									type='button'
+									onClick={handleAddEmail}
+									className='mt-2 px-4 py-2 text-blue-600 border border-blue-600 rounded-md hover:bg-blue-50 transition-colors flex items-center gap-2 w-fit'
+								>
+									<Plus className='h-4 w-4' />
+									Ajouter un email
+								</button>
 							</div>
 						</div>
 
