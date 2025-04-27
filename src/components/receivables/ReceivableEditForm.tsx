@@ -183,7 +183,6 @@ export default function ReceivableEditForm({
 		}
 	};
 	useEffect(() => {
-		alert("EMAIL "+ receivable.email)
 	
 		if (!formData.email && clientEmails.length > 0) {
 		  setFormData((prev) => ({
