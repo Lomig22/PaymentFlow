@@ -18,7 +18,8 @@ import Settings from './components/settings/Settings';
 import UnknownClientList from './components/unknownClients/UnknownClientList';
 import ReminderList from './components/reminders/ReminderList';
 import ClientPage from './components/clients/ClientPage';
-
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css'; // Importer les styles
 function App() {
 	const [user, setUser] = useState<User | null>(null);
 	const [showAuth, setShowAuth] = useState(false);
@@ -31,12 +32,7 @@ function App() {
 				const currentUser = session?.user ?? null;
 				setUser(currentUser);
 	
-				if (currentUser && !intervalId) {
-					intervalId = setInterval(() => {
-						console.log("🕒 Vérification des relances automatiques...");
-						AutomaticallySendReminders();
-					}, 30 * 1000); // 30 secondes pour test
-				}
+		
 			} catch (error) {
 				console.error("Erreur lors de l'initialisation de l'auth:", error);
 			} finally {
@@ -80,7 +76,20 @@ function App() {
 	}
 
 	return (
+
+
 		<Router>
+					<ToastContainer
+		position="top-right"
+		autoClose={5000}
+		hideProgressBar={false}
+		newestOnTop={true}
+		closeOnClick
+		rtl={false}
+		pauseOnFocusLoss
+		draggable
+		pauseOnHover
+	/>
 			<Routes>
 				<Route element={<Layout />}>
 					<Route path='/' element={<Dashboard />} />

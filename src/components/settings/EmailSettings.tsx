@@ -98,8 +98,8 @@ export default function EmailSettings() {
   };
   const handleRestoreDefaults = () => {
     setFormData({
-      provider_type: 'custom',
-      smtp_username: 'noreply@payment-flow.fr',
+      provider_type: 'reset_defaults',
+      smtp_username: 'no-reply@payment-flow.fr',
       smtp_password: 'donthavetosaveit',
       smtp_server: 'my.smtpserver.com',
       smtp_port: 587,
@@ -212,20 +212,29 @@ export default function EmailSettings() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Fournisseur SMTP
-          </label>
-          <select
-            value={formData.provider_type}
-            onChange={(e) => handleProviderChange(e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="gmail">Gmail</option>
-            <option value="ovh">OVH</option>
-            <option value="custom">Personnalisé</option>
-          </select>
-        </div>
+      <div>
+  <label className="block text-sm font-medium text-gray-700 mb-2">
+    Fournisseur SMTP
+  </label>
+  <select
+    value={formData.provider_type}
+    onChange={(e) => {
+      const value = e.target.value;
+      if (value === 'reset_defaults') {
+        handleRestoreDefaults();
+        return; // ne change pas la valeur du formulaire
+      }
+      handleProviderChange(value);
+    }}
+    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+  >
+    <option value="gmail">Gmail</option>
+    <option value="ovh">OVH</option>
+    <option value="custom">Personnalisé</option>
+    <option value="reset_defaults">Par défaut</option>
+  </select>
+</div>
+
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -265,7 +274,7 @@ export default function EmailSettings() {
           )}
         </div>
 
-        {formData.provider_type === 'custom' && (
+        {(formData.provider_type === 'custom' || formData.provider_type==="reset_defaults" ) && (
           <>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -333,14 +342,7 @@ export default function EmailSettings() {
             <Send className="h-5 w-5 mr-2" />
             {testing ? 'Envoi en cours...' : 'Tester l\'envoi'}
           </button>
-          <button
-    type="button"
-    onClick={handleRestoreDefaults}
-    className="flex items-center px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors"
-  >
-    <RefreshCw className="h-5 w-5 mr-2" />
-    Restaurer par défaut
-  </button>
+        
           <button
             type="submit"
             disabled={saving}
