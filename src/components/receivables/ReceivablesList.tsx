@@ -74,17 +74,25 @@ function ReceivablesList() {
 
 	const fetchReceivables = async () => {
 		try {
-			const { data, error } = await supabase
-				.from('receivables')
-				.select(`*,client:clients(*)`)
-				.order('due_date', { ascending: false });
-			console.log("DATA: ",data);
-			
-			// Fetch profiles
 			const {
 				data: { user },
-			} = await supabase.auth.getUser();
-			if (!user) throw new Error('Utilisateur non authentifié');
+			  } = await supabase.auth.getUser();
+			  
+			  if (!user) throw new Error('Utilisateur non authentifié');
+			  
+			  const { data, error } = await supabase
+				.from('receivables')
+				.select(`*, client:clients(*)`)
+				.eq('owner_id', user.id) // <<< ici le filtre
+				.order('due_date', { ascending: false });
+			  
+			  if (error) {
+				throw error;
+			  }
+			console.log("DATA: ",data);
+			
+
+	
 
 			const { data: reminderPorfile } = await supabase
 				.from('reminder_profile')
