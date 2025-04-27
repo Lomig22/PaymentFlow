@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { AlertCircle, Save, HelpCircle, Send } from 'lucide-react';
+import { AlertCircle, Save, HelpCircle, Send,RefreshCw } from 'lucide-react';
 import { sendEmail } from '../../lib/email';
 
 const PROVIDER_PRESETS = {
@@ -71,12 +71,12 @@ export default function EmailSettings() {
 
       if (data) {
         setFormData({
-          provider_type: data.provider_type || 'gmail',
-          smtp_username: data.smtp_username || '',
-          smtp_password: data.smtp_password || '',
-          smtp_server: data.smtp_server || PROVIDER_PRESETS.gmail.smtp_server,
-          smtp_port: data.smtp_port || PROVIDER_PRESETS.gmail.smtp_port,
-          smtp_encryption: data.smtp_encryption || PROVIDER_PRESETS.gmail.smtp_encryption,
+          provider_type: data.provider_type || 'custom',
+          smtp_username: data.smtp_username || 'noreply@payment-flow.fr',
+          smtp_password: data.smtp_password || 'donthavetosaveit',
+          smtp_server: data.smtp_server || 'my.smtpserver.com',
+          smtp_port: data.smtp_port || 587,
+          smtp_encryption: data.smtp_encryption || 'TLS',
           email_signature: data.email_signature || ''
         });
       }
@@ -96,6 +96,18 @@ export default function EmailSettings() {
       smtp_encryption: preset.smtp_encryption
     }));
   };
+  const handleRestoreDefaults = () => {
+    setFormData({
+      provider_type: 'custom',
+      smtp_username: 'noreply@payment-flow.fr',
+      smtp_password: 'donthavetosaveit',
+      smtp_server: 'my.smtpserver.com',
+      smtp_port: 587,
+      smtp_encryption: 'tls',
+      email_signature: formData.email_signature || ''
+    });
+  };
+  
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -321,7 +333,14 @@ export default function EmailSettings() {
             <Send className="h-5 w-5 mr-2" />
             {testing ? 'Envoi en cours...' : 'Tester l\'envoi'}
           </button>
-
+          <button
+    type="button"
+    onClick={handleRestoreDefaults}
+    className="flex items-center px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors"
+  >
+    <RefreshCw className="h-5 w-5 mr-2" />
+    Restaurer par défaut
+  </button>
           <button
             type="submit"
             disabled={saving}
