@@ -198,7 +198,7 @@ function sendManualReminder(receivableId) {
                 case 5:
                     // Enregistrer la relance
                     _c.sent();
-                    // Mettre à jour le statut de la créance
+                    // Mettre à jour le status de la créance
                     return [4 /*yield*/, supabase_1.supabase
                             .from('receivables')
                             .update({
@@ -217,7 +217,7 @@ function sendManualReminder(receivableId) {
                         })
                             .eq('id', receivableId)];
                 case 6:
-                    // Mettre à jour le statut de la créance
+                    // Mettre à jour le status de la créance
                     _c.sent();
                     return [2 /*return*/, true];
                 case 7: return [2 /*return*/, false];

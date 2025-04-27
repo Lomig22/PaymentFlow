@@ -154,7 +154,7 @@ function ReceivablesList() {
 		}
 	};
 
-	// Fonction pour mettre à jour le statut de relance du client
+	// Fonction pour mettre à jour le status de relance du client
 	const updateClientReminderStatus = async (
 		clientId: string,
 		needsReminder: boolean
@@ -239,7 +239,7 @@ function ReceivablesList() {
 				if (selectedReceivable == null) return;
 				setSending(true);
 				if (selectedReceivable.status==="Relance finale"){
-					setError("Le statut de cette créance est déjà en relance finale");
+					setError("le status de cette créance est déjà en relance finale");
 				}
 				const success = await sendManualReminder(selectedReceivable.id);
 

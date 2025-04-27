@@ -79,7 +79,7 @@ export default function ReceivableEditForm({
 		}
 	};
 
-	// Fonction pour mettre à jour le statut de relance du client
+	// Fonction pour mettre à jour le status de relance du client
 	const updateClientReminderStatus = async (
 		clientId: string,
 		needsReminder: boolean
@@ -148,7 +148,7 @@ export default function ReceivableEditForm({
 
 			if (error) throw error;
 
-			// Si le statut passe à "payé" et n'était pas déjà payé
+			// Si le status passe à "payé" et n'était pas déjà payé
 			if (willBePaid && !wasAlreadyPaid) {
 				// Vérifier si le client a d'autres créances impayées
 				const noOtherUnpaidReceivables = await checkClientUnpaidReceivables(
@@ -183,12 +183,15 @@ export default function ReceivableEditForm({
 		}
 	};
 	useEffect(() => {
+		alert("EMAIL "+ receivable.email)
+	
 		if (!formData.email && clientEmails.length > 0) {
 		  setFormData((prev) => ({
 			...prev,
-			email: clientEmails[0], // ou une logique spécifique ici
-		  }));
-		}
+			email: receivable.email|| clientEmails[0], // ou une logique spécifique ici
+		  }))
+	
+		} 
 	  }, [clientEmails]);
 	  
 	return (
@@ -219,20 +222,25 @@ export default function ReceivableEditForm({
 								Email
 							</label>
 							<select
-								required
-								value={formData.email}
-								onChange={(e) =>
-									setFormData({ ...formData, email: e.target.value })
-								}
-								className='w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-							>
-								<option value=''>Sélectionner un email</option>
-								{clientEmails.map((email) => (
-									<option key={email} value={email}>
-										{email}
-									</option>
-								))}
-							</select>
+	required
+	value={formData.email}
+	onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+	className='w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+>
+	<option value=''>Sélectionner un email</option>
+
+	{/* Rajouter l'email de formData si jamais il n'est pas dans clientEmails */}
+	{!clientEmails.includes(formData.email) && formData.email && (
+		<option value={formData.email}>{formData.email} </option>
+	)}
+
+	{clientEmails.map((email) => (
+		<option key={email} value={email}>
+			{email}
+		</option>
+	))}
+</select>
+
 						</div>
 						<div>
 							<label className='block text-sm font-medium text-gray-700 mb-2'>

@@ -945,6 +945,9 @@ export default function CSVImportModal({
 					const toUpdate: any[] = [];
 					
 					for (const record of batch) {
+						//Jetemail
+					console.log("EMAIIIIIIIIIIIIL:",record.email);
+						
 						const key = `${record.owner_id}-${record.invoice_number}`;
 						if (existingMap.has(key)) {
 							//console.log(record);
@@ -959,6 +962,8 @@ export default function CSVImportModal({
 			
 					// INSERT uniquement les nouveaux
 					if (toInsert.length > 0) {
+						console.log("TOINSERT: ",toInsert);
+						
 						const { error: insertError } = await supabase
 							.from('receivables')
 							.insert(toInsert);
@@ -970,8 +975,10 @@ export default function CSVImportModal({
 						}
 					}
 			
-					// UPDATE les existants (sans changer le statut)
+					// UPDATE les existants (sans changer le status)
 					if (toUpdate.length > 0) {
+						console.log("TO UPDATE: ",toUpdate);
+						
 						const { error: updateError } = await supabase
 							.from('receivables')
 							.upsert(toUpdate, {

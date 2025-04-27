@@ -4,7 +4,7 @@
   1. Nouvelles fonctions
     - `process_reminder` : Traite une relance spécifique
     - `send_reminder_email` : Envoie un email de relance
-    - `update_reminder_status` : Met à jour le statut d'une relance
+    - `update_reminder_status` : Met à jour le status d'une relance
 
   2. Sécurité
     - Toutes les fonctions sont SECURITY DEFINER
@@ -59,7 +59,7 @@ BEGIN
   );
 
   IF v_email_sent THEN
-    -- Mettre à jour le statut
+    -- Mettre à jour le status
     PERFORM update_reminder_status(p_receivable_id, p_reminder_type);
     RETURN true;
   END IF;
@@ -100,7 +100,7 @@ EXCEPTION
 END;
 $$;
 
--- Fonction pour mettre à jour le statut d'une relance
+-- Fonction pour mettre à jour le status d'une relance
 CREATE OR REPLACE FUNCTION update_reminder_status(
   p_receivable_id uuid,
   p_reminder_type text
@@ -123,7 +123,7 @@ BEGIN
     true
   );
 
-  -- Mettre à jour le statut de la créance
+  -- Mettre à jour le status de la créance
   UPDATE receivables
   SET status = 'reminded',
       updated_at = now()
