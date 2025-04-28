@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Client,Receivable } from '../../types/database';
+import { confirmAlert } from "react-confirm-alert";
+ 
 import { Minus, Plus, X } from 'lucide-react';
-
+import "react-confirm-alert/src/react-confirm-alert.css";
+ 
 interface ClientFormProps {
 	onClose: () => void;
 	onClientAdded?: (client: Client) => void;
@@ -82,6 +85,40 @@ export default function ClientForm({
 	const isValidEmail = (email: string) => {
 		return email === '' || /^[^@]*@[^@]*$/.test(email);
 	};
+//suppresion créance
+const handleNeedReminders = async () => {
+	confirmAlert({
+	  title: "Confirmation",
+	  message: "Êtes-vous sûr de vouloir supprimer cet utilisateur ?",
+	  buttons: [
+		{
+		  label: "Oui",
+		  onClick: async () => { // Ajouter async ici
+			const { error: deleteError } = await supabase
+			  .from('receivables')
+			  .delete()
+			  .eq('client_id', client?.id);
+  
+			if (deleteError) {
+			  console.error('Erreur lors de la suppression des relances :', deleteError);
+			  return;
+			} else {
+			  console.log('Relance supprimée avec succès.');
+			}
+		  },
+		},
+		{
+		  label: "Non",
+		  className: "no-button",
+		  onClick:async()=>{
+			
+		  }
+		},
+	  ],
+	});
+  };
+  
+	//soumission
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		setLoading(true);
@@ -186,23 +223,7 @@ export default function ClientForm({
 			  }
 	  
 			  if (receivables && receivables.length > 0) {
-				const confirmation = window.confirm(
-				  "La relance associée à ce client sera supprimée. Voulez-vous continuer ?"
-				);
-	  
-				if (confirmation) {
-				  const { error: deleteError } = await supabase
-					.from('receivables')
-					.delete()
-					.eq('client_id', client?.id);
-	  
-				  if (deleteError) {
-					console.error('Erreur lors de la suppression des relances :', deleteError);
-					return;
-				  } else {
-					console.log('Relance supprimée avec succès.');
-				  }
-				}
+				handleNeedReminders()
 			  }
 			}
 	  
