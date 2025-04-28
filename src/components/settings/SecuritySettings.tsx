@@ -11,7 +11,18 @@ export default function SecuritySettings() {
     newPassword: '',
     confirmPassword: ''
   });
-
+  const showError = (message: string) => {
+    setError(message);
+    setTimeout(() => {
+      setError(null);
+    }, 3000);
+  }
+  const showSuccess = () => {
+    setSuccess(true)
+    setTimeout(() => {
+      setSuccess(false);
+    }, 3000);
+  }
   // Gestion de la touche Echap
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
@@ -33,7 +44,7 @@ export default function SecuritySettings() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.newPassword !== formData.confirmPassword) {
-      setError('Les nouveaux mots de passe ne correspondent pas');
+      showError('Les nouveaux mots de passe ne correspondent pas');
       return;
     }
 
@@ -48,7 +59,7 @@ export default function SecuritySettings() {
 
       if (error) throw error;
 
-      setSuccess(true);
+      showSuccess()
       setFormData({
         currentPassword: '',
         newPassword: '',
@@ -56,7 +67,7 @@ export default function SecuritySettings() {
       });
     } catch (error) {
       console.error('Erreur lors du changement de mot de passe:', error);
-      setError('Impossible de changer le mot de passe');
+      showError('Impossible de changer le mot de passe');
     } finally {
       setLoading(false);
     }
