@@ -202,7 +202,13 @@ export default function CSVImportModal({
 
 	// Plus de validation des en-têtes requis
 	const expectedHeaders: string[] = [];
-
+	const showError = (message: string) => {
+		setError(message);
+		setTimeout(() => {
+		  setError(null);
+		}, 3000);
+	  }
+	
 	// Désactiver le défilement du body quand la modale est ouverte
 	useEffect(() => {
 		document.body.style.overflow = 'hidden';
@@ -243,7 +249,7 @@ export default function CSVImportModal({
 			setClientMap(map);
 		} catch (error) {
 			console.error('Erreur lors du chargement des clients:', error);
-			setError('Impossible de charger la liste des clients');
+			showError('Impossible de charger la liste des clients');
 		}
 	};
 
@@ -259,7 +265,7 @@ export default function CSVImportModal({
 		}
 
 		if (missingHeaders.length > 0) {
-			setError(
+			showError(
 				`Le fichier CSV doit contenir une colonne "${missingHeaders.join(
 					','
 				)}" pour importer les données`
@@ -340,7 +346,7 @@ export default function CSVImportModal({
 			header: false,
 			skipEmptyLines: true,
 			error: (error) => {
-				setError(`Erreur lors de l'analyse du fichier: ${error.message}`);
+				showError(`Erreur lors de l'analyse du fichier: ${error.message}`);
 			},
 		});
 	};
@@ -681,7 +687,7 @@ export default function CSVImportModal({
 			setStep('preview');
 		} catch (error) {
 			console.error("Erreur lors de la génération de l'aperçu:", error);
-			setError("Impossible de générer l'aperçu");
+			showError("Impossible de générer l'aperçu");
 		}
 	};
 
@@ -1094,7 +1100,7 @@ export default function CSVImportModal({
 			}
 		} catch (error: any) {
 			console.error("Erreur lors de l'import des créances:", error);
-			setError(error.message || "Erreur lors de l'import des créances");
+			showError(error.message || "Erreur lors de l'import des créances");
 			setStep('preview'); // Return to preview step on error
 		} finally {
 			setImporting(false);

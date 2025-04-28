@@ -97,7 +97,12 @@ const CSVImport = ({
 		{ field: 'status', label: 'Statut', required: false },
 		{ field: 'date', label: 'Date', required: false },
 	];
-
+	const showError = (message: string) => {
+		setError(message);
+		setTimeout(() => {
+		  setError(null);
+		}, 3000);
+	  }
 	// Désactiver le défilement du body quand la modale est ouverte
 	useEffect(() => {
 		document.body.style.overflow = 'hidden';
@@ -163,7 +168,7 @@ const CSVImport = ({
 			header: false,
 			skipEmptyLines: true,
 			error: (error) => {
-				setError(`Erreur lors de l'analyse du fichier: ${error.message}`);
+				showError(`Erreur lors de l'analyse du fichier: ${error.message}`);
 			},
 		});
 	};
@@ -196,7 +201,7 @@ const CSVImport = ({
 			const dateIndex = csvHeaders.findIndex((h) => mapping[h] === 'date');
 
 			if (clientIndex === -1 || invoiceIndex === -1 || clientCodeIndex === -1) {
-				setError('Colonnes obligatoires manquantes dans le fichier CSV');
+				showError('Colonnes obligatoires manquantes dans le fichier CSV');
 				return;
 			}
 
@@ -238,7 +243,7 @@ const CSVImport = ({
 			setStep('preview');
 		} catch (error) {
 			console.error("Erreur lors de la génération de l'aperçu:", error);
-			setError("Impossible de générer l'aperçu");
+			showError("Impossible de générer l'aperçu");
 		}
 	};
 
@@ -392,7 +397,7 @@ const CSVImport = ({
 			}
 		} catch (error: any) {
 			console.error("Erreur lors de l'import des créances:", error);
-			setError(error.message || "Erreur lors de l'import des créances");
+			showError(error.message || "Erreur lors de l'import des créances");
 			setStep('preview'); // Return to preview step on error
 		} finally {
 			setImporting(false);

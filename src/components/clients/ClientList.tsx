@@ -49,7 +49,19 @@ function ClientList({
 		key: 'company_name',
 		sort: 'asc',
 	});
-
+	const [success, setSuccess] = useState<string | null>(null);
+	const showError = (message: string) => {
+		setError(message);
+		setTimeout(() => {
+		  setError(null);
+		}, 3000);
+	  }
+	  const showSuccess = (message: string) => {
+		setSuccess(message);
+		setTimeout(() => {
+		  setSuccess(null);
+		}, 3000);
+	  }
 	const fetchClients = async () => {
 		try {
 			const {
@@ -67,7 +79,7 @@ function ClientList({
 			setClients(clientsData || []);
 		} catch (error) {
 			console.error('Erreur lors du chargement des clients:', error);
-			setError('Impossible de charger la liste des clients');
+			showError('Impossible de charger la liste des clients');
 		} finally {
 			setLoading(false);
 		}
@@ -110,7 +122,7 @@ function ClientList({
 			setClientToDelete(null);
 		} catch (error) {
 			console.error('Erreur lors de la suppression du client:', error);
-			setError('Impossible de supprimer le client');
+			showError('Impossible de supprimer le client');
 		} finally {
 			setDeleting(false);
 		}

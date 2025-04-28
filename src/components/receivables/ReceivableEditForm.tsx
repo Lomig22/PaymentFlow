@@ -32,7 +32,13 @@ export default function ReceivableEditForm({
 		notes: receivable.notes || '',
 		email: receivable.email || '',
 	});
-
+	const showError = (message: string) => {
+		setError(message);
+		setTimeout(() => {
+		  setError(null);
+		}, 3000);
+	  }
+	
 	// Gestion de la touche Echap
 	useEffect(() => {
 		const handleEscape = (event: KeyboardEvent) => {
@@ -177,7 +183,7 @@ export default function ReceivableEditForm({
 			}
 		} catch (error) {
 			console.error('Erreur lors de la modification de la créance:', error);
-			setError('Impossible de modifier la créance');
+			showError('Impossible de modifier la créance');
 		} finally {
 			setLoading(false);
 		}
