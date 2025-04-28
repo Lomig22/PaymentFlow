@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase';
 import { X, Upload, AlertCircle, Info, Loader2 } from 'lucide-react';
 import { Receivable, Client } from '../../types/database';
 import Papa from 'papaparse';
+import { toast } from 'react-toastify';
 
 interface CSVImportModalProps {
 	onClose: () => void;
@@ -1100,27 +1101,29 @@ export default function CSVImportModal({
 		}
 	};
 
-	const saveMapping = async () => {
-		const {
-			data: { user },
-		} = await supabase.auth.getUser();
-		if (!user) throw new Error('Utilisateur non authentifié');
 
-		try {
-			setSavingSchema(true);
-			await supabase
-				.from('profiles')
-				.update({ receivables_mapping: JSON.stringify(mapping) })
-				.eq('id', user.id);
-			setSavingSchema(false);
-		} catch (err) {
-			console.error(
-				'Erreur lors de la suppression des créances manquantes:',
-				err
-			);
-			setSavingSchema(false);
-		}
+	const saveMapping = async () => {
+	  const {
+		data: { user },
+	  } = await supabase.auth.getUser();
+	  if (!user) throw new Error('Utilisateur non authentifié');
+	
+	  try {
+		setSavingSchema(true);
+		await supabase
+		  .from('profiles')
+		  .update({ receivables_mapping: JSON.stringify(mapping) })
+		  .eq('id', user.id);
+		
+		toast.success('Le mapping a été enregistré avec succès !'); // <-- Ajout du toast
+		setSavingSchema(false);
+	  } catch (err) {
+		console.error('Erreur lors de la suppression des créances manquantes:', err);
+		toast.error('Erreur lors de l\'enregistrement du mapping.'); // <-- Ajout du toast d'erreur
+		setSavingSchema(false);
+	  }
 	};
+	
 
 	const resetForm = () => {
 		setFile(null);

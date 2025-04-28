@@ -53,6 +53,8 @@ function ReceivablesList() {
 	const [showSettings, setShowSettings] = useState(false);
 	const [showImportModal, setShowImportModal] = useState(false);
 	const [importSuccess, setImportSuccess] = useState<string | null>(null);
+	const [sendSuccess, setSendSuccess] = useState(false);
+
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 	const [receivableToDelete, setReceivableToDelete] = useState<
 		(Receivable & { client: Client }) | null
@@ -114,6 +116,7 @@ function ReceivablesList() {
 		} catch (error) {
 			console.error('Erreur lors du chargement des créances:', error);
 			setError('Impossible de charger les créances');
+
 		} finally {
 			setLoading(false);
 		}
@@ -239,19 +242,42 @@ function ReceivablesList() {
 				if (selectedReceivable == null) return;
 				setSending(true);
 				if (selectedReceivable.status==="Relance finale"){
-					setError("le status de cette créance est déjà en relance finale");
-				}
+					setError("Le statut de cette créance est déjà en relance finale");
+
+					// Masquer l'erreur après 3 secondes
+					setTimeout(() => {
+					  setError(null);
+					}, 3000);
+				  }
+					
+				
 				const success = await sendManualReminder(selectedReceivable.id);
 
 				if (success) {
+					setSendSuccess(true);
+      
+					// Masquer le message après 3 secondes
+					setTimeout(() => {
+					  setSendSuccess(false);
+					}, 3000);
 					await fetchReceivables();
 				} else {
 					if (selectedReceivable.status==="Relance finale"){
 						setError("Le statut de cette créance est déjà en relance finale");
+						
+					// Masquer l'erreur après 3 secondes
+					setTimeout(() => {
+						setError(null);
+					  }, 3000);
 					} else{
 						setError(
 							"Impossible d'envoyer la relance. Vérifiez les paramètres email, la signature et les templates."
 						);
+
+					// Masquer l'erreur après 3 secondes
+					setTimeout(() => {
+						setError(null);
+					  }, 3000);
 					}
 				
 				}
@@ -420,6 +446,11 @@ function ReceivablesList() {
 				</div>
 			)}
 
+			{sendSuccess && (
+						<div className='mb-4 p-4 bg-green-50 border border-green-200 rounded-md text-green-700'>
+							Relançe manuelle effectuer correctement!
+						</div>
+					)}
 			<div className='relative mb-6'>
 				<Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5' />
 				<input

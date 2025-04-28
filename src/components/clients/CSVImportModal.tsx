@@ -92,6 +92,7 @@ export default function CSVImportModal({
 		{ field: 'created_at', label: 'Créé le', required: false },
 		{ field: 'updated_at', label: 'Mis à jour', required: false },
 	];
+	
 
 	// Désactiver le défilement du body quand la modale est ouverte
 	useEffect(() => {
@@ -114,7 +115,56 @@ export default function CSVImportModal({
 				(line) => line.length > 1 && line.some((cell) => cell.trim() !== '')
 			);
 	};
-
+	const initializeMapping = async (csvHeaders: string[], userId: string) => {
+		const autoMapping: Record<string, keyof CSVMapping> = {};
+		const headerLower = csvHeaders.map((h) => h.toLowerCase());
+	  
+		const { data: savedMapping } = await supabase
+		  .from('profiles')
+		  .select('client_mapping')
+		  .eq('id', userId);
+	  
+		if (
+		  savedMapping !== null &&
+		  savedMapping[0]?.client_mapping !== undefined &&
+		  savedMapping[0]?.client_mapping !== null
+		) {
+		  const decodedMapping = JSON.parse(savedMapping[0].client_mapping);
+	  
+		  Object.entries(decodedMapping).forEach(([key, value]) => {
+			autoMapping[key] = value as keyof CSVMapping;
+		  });
+		} else {
+		  const mappings: { [key: string]: string[] } = {
+			company_name: ['entreprise', 'société', 'company', 'nom', 'raison sociale', 'client'],
+			email: ['email', 'e-mail', 'courriel', 'mail'],
+			phone: ['téléphone', 'telephone', 'phone', 'tel', 'mobile'],
+			address: ['adresse', 'address', 'rue'],
+			city: ['ville', 'city', 'commune', 'localité'],
+			postal_code: ['code postal', 'cp', 'postal', 'zip'],
+			country: ['pays', 'country', 'nation'],
+			industry: ['secteur', 'activité', 'industry', 'business'],
+			website: ['site', 'web', 'website', 'url'],
+			needs_reminder: ['relance', 'reminder', 'rappel', 'suivi'],
+			created_at: ['créé le', 'crée le', 'cree le', 'created at', 'date de création', 'date creation'],
+			updated_at: ['mis à jour', 'mise à jour', 'updated at', 'date de modification', 'modifié le'],
+			client_code: ['client code']
+		  };
+	  
+		  for (const [key, variants] of Object.entries(mappings)) {
+			for (const variant of variants) {
+			  const index = headerLower.findIndex((h) => h.includes(variant));
+			  if (index !== -1) {
+				autoMapping[csvHeaders[index]] = key as keyof CSVMapping;
+				break;
+			  }
+			}
+		  }
+		}
+	  
+		return autoMapping;
+	  };
+	  
 	const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const selectedFile = e.target.files?.[0];
 		if (!selectedFile) return;
@@ -168,6 +218,7 @@ export default function CSVImportModal({
 					// Mapping pour le nom de l'entreprise
 					const companyNameVariants = [
 						'entreprise',
+						"nom de l'entreprise",
 						'société',
 						'company',
 						'nom',
@@ -646,12 +697,14 @@ console.log("DATA: ", data)
 		  .from('profiles')
 		  .update({ client_mapping: JSON.stringify(mapping) })
 		  .eq('id', user.id);
+		  console.log("Mapping: ",mapping);
+		  //si de nouveau entête apparaît, il faut pouvoir l'ajouter aux menues déroulantes
 	
 		// Réinitialiser l'erreur si le mapping est valide
 		setError(null);
 	
 		// Afficher le message de succès via toast
-		toast.success("Mapping sauvegardé avec succès");
+		toast.success("Mapping sauvegardé avec succès!");
 	
 		setSavingSchema(false);
 	  } catch (err) {
