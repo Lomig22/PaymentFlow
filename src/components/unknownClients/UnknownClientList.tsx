@@ -42,7 +42,12 @@ const UnknownClientList = ({
 		key: 'name',
 		sort: 'asc',
 	});
-
+	const showError = (message: string) => {
+		setError(message);
+		setTimeout(() => {
+		  setError(null);
+		}, 3000);
+	  }
 	const fetchClients = async () => {
 		try {
 			const {
@@ -62,7 +67,7 @@ const UnknownClientList = ({
 			setClients(clientsData || []);
 		} catch (error) {
 			console.error('Erreur lors du chargement des clients:', error);
-			setError('Impossible de charger la liste des clients');
+			showError('Impossible de charger la liste des clients');
 		} finally {
 			setIsLoading(false);
 		}
@@ -87,11 +92,11 @@ const UnknownClientList = ({
 
 			if (error) {
 				console.error('Erreur lors de la suppression du client:', error);
-				setError('Une erreur est survenue lors de la suppression du client');
+				showError('Une erreur est survenue lors de la suppression du client');
 			}
 		} catch (error) {
 			console.error('Erreur lors de la suppression du client:', error);
-			setError('Une erreur est survenue lors de la suppression du client');
+			showError('Une erreur est survenue lors de la suppression du client');
 		} finally {
 			setDeleting(false);
 			setSelectedClient(null);

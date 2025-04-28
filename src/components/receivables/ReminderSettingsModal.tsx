@@ -35,6 +35,13 @@ export default function ReminderSettingsModal({
 		pre_reminder_days: client.pre_reminder_days || 1,
 		pre_reminder_template: client.pre_reminder_template || '',
 	});
+	const showError = (message: string) => {
+		setError(message);
+		setTimeout(() => {
+		  setError(null);
+		}, 3000);
+	  }
+	
 	function convertJHMToMinutes(jhm: {j:number;h:number;m:number}| undefined): number {
 		if(!jhm){
 			return 60
@@ -110,7 +117,7 @@ export default function ReminderSettingsModal({
 			}, 1500);
 		} catch (error) {
 			console.error('Erreur lors de la mise à jour des paramètres:', error);
-			setError(error.message || 'Impossible de mettre à jour les paramètres');
+			showError(error.message || 'Impossible de mettre à jour les paramètres');
 		} finally {
 			setLoading(false);
 		}
@@ -127,7 +134,7 @@ export default function ReminderSettingsModal({
 			reminder_delay_1: selectedProfile?.delay1 || {j:0,h:0,m:1},
 			reminder_delay_2: selectedProfile?.delay2 || {j:0,h:0,m:1},
 			reminder_delay_3: selectedProfile?.delay3 || {j:0,h:0,m:1},
-			reminder_delay_final: selectedProfile?.delay4 || 60,
+			reminder_delay_final: selectedProfile?.delay4 || {j:0,h:0,m:1},
 		});
 	};
 
@@ -157,7 +164,7 @@ export default function ReminderSettingsModal({
 			setAutomaticReminder((prevState) => !prevState);
 		} catch (error) {
 			console.error('Erreur lors de la mise à jour des paramètres:', error);
-			setError(error.message || 'Impossible de mettre à jour les paramètres');
+			showError(error.message || 'Impossible de mettre à jour les paramètres');
 		} finally {
 			setLoading(false);
 		}

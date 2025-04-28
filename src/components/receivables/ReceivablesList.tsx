@@ -73,7 +73,13 @@ function ReceivablesList() {
 	});
 	const [showConfirmSendReminder, setShowConfirmReminder] = useState(false);
 	const [sending, setSending] = useState(false);
-
+	const showError = (message: string) => {
+		setError(message);
+		setTimeout(() => {
+		  setError(null);
+		}, 3000);
+	  }
+	 
 	const fetchReceivables = async () => {
 		try {
 			const {
@@ -115,7 +121,7 @@ function ReceivablesList() {
 			setReminderHistory(reminderHistroyData || []);
 		} catch (error) {
 			console.error('Erreur lors du chargement des créances:', error);
-			setError('Impossible de charger les créances');
+			showError('Impossible de charger les créances');
 
 		} finally {
 			setLoading(false);
@@ -228,7 +234,7 @@ function ReceivablesList() {
 			}
 		} catch (error) {
 			console.error('Erreur lors de la suppression:', error);
-			setError('Impossible de supprimer la créance');
+			showError('Impossible de supprimer la créance');
 		} finally {
 			setDeleting(false);
 		}
@@ -242,12 +248,9 @@ function ReceivablesList() {
 				if (selectedReceivable == null) return;
 				setSending(true);
 				if (selectedReceivable.status==="Relance finale"){
-					setError("Le statut de cette créance est déjà en relance finale");
+					showError("Le statut de cette créance est déjà en relance finale");
 
-					// Masquer l'erreur après 3 secondes
-					setTimeout(() => {
-					  setError(null);
-					}, 3000);
+					
 				  }
 					
 				
@@ -263,14 +266,14 @@ function ReceivablesList() {
 					await fetchReceivables();
 				} else {
 					if (selectedReceivable.status==="Relance finale"){
-						setError("Le statut de cette créance est déjà en relance finale");
+						showError("Le statut de cette créance est déjà en relance finale");
 						
 					// Masquer l'erreur après 3 secondes
 					setTimeout(() => {
 						setError(null);
 					  }, 3000);
 					} else{
-						setError(
+						showError(
 							"Impossible d'envoyer la relance. Vérifiez les paramètres email, la signature et les templates."
 						);
 
@@ -286,7 +289,7 @@ function ReceivablesList() {
 				setSelectedClient(null);
 			} catch (error: any) {
 				console.error('Error sending reminder:', error);
-				setError(error.message || "Erreur lors de l'envoi de la relance");
+				showError(error.message || "Erreur lors de l'envoi de la relance");
 				setSending(false);
 				setShowConfirmReminder(false);
 				setSelectedClient(null);

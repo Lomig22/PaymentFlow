@@ -65,14 +65,26 @@ export default function CSVImportModal({
 	const [step, setStep] = useState<
 		'upload' | 'mapping' | 'preview' | 'importing'
 	>('upload');
-	const [error, setError] = useState<string | null>(null);
 	const [preview, setPreview] = useState<Client[]>([]);
 	const [importing, setImporting] = useState(false);
 	const [importedCount, setImportedCount] = useState(0);
 	const [showHelp, setShowHelp] = useState(false);
 	const fileInputRef = useRef<HTMLInputElement>(null);
 	const [savingSchema, setSavingSchema] = useState(false);
-
+	const [success, setSuccess] = useState<string | null>(null);
+	const [error, setError] = useState<string | null>(null);
+	const showError = (message: string) => {
+		setError(message);
+		setTimeout(() => {
+		  setError(null);
+		}, 3000);
+	  }
+	  const showSuccess = (message: string) => {
+		setSuccess(message);
+		setTimeout(() => {
+		  setSuccess(null);
+		}, 3000);
+	  }
 	const mappingFields: MappingField[] = [
 		{ field: 'company_name', label: "entreprise", required: true },
 		{ field: 'client_code', label: 'Code Client', required: false },
@@ -101,6 +113,7 @@ export default function CSVImportModal({
 			document.body.style.overflow = 'unset';
 		};
 	}, []);
+
 
 	const parseCSV = (text: string): string[][] => {
 		// Gestion basique du CSV (pourrait être améliorée pour gérer les virgules dans les champs entre guillemets)
@@ -179,7 +192,7 @@ export default function CSVImportModal({
 				const parsedData = parseCSV(text);
 
 				if (parsedData.length < 2) {
-					setError(
+					showError(
 						"Le fichier CSV doit contenir au moins une ligne d'en-tête et une ligne de données"
 					);
 					return;
@@ -378,12 +391,12 @@ export default function CSVImportModal({
 				setStep('mapping');
 			} catch (error) {
 				console.error('Erreur lors de la lecture du fichier CSV:', error);
-				setError('Le format du fichier CSV est invalide');
+				showError('Le format du fichier CSV est invalide');
 			}
 		};
 
 		reader.onerror = () => {
-			setError('Erreur lors de la lecture du fichier');
+			showError('Erreur lors de la lecture du fichier');
 		};
 
 		reader.readAsText(selectedFile);
@@ -414,7 +427,7 @@ export default function CSVImportModal({
 		);
 
 		if (missingFields.length > 0) {
-			toast.error(
+			showError(
 				`Les champs suivants sont requis : ${missingFields
 					.map((f) => mappingFields.find((mf) => mf.field === f)?.label)
 					.join(', ')}`
@@ -477,7 +490,7 @@ export default function CSVImportModal({
 	  
 		  if (missingRequiredFields.length > 0) {
 			const missingFieldsLabels = missingRequiredFields.map((f) => f.label).join(', ');
-			toast.error(`Les champs obligatoires suivants ne sont pas mappés : ${missingFieldsLabels}`);
+			showError(`Les champs obligatoires suivants ne sont pas mappés : ${missingFieldsLabels}`);
 			return;
 		  }
 	  
@@ -529,7 +542,7 @@ export default function CSVImportModal({
 		  setError(null);
 		} catch (error) {
 		  console.error("Erreur lors de la génération de l'aperçu:", error);
-		  toast.error("Impossible de générer l'aperçu");
+		  showError("Impossible de générer l'aperçu");
 		}
 	  };
 	  
@@ -659,7 +672,7 @@ console.log("DATA: ", data)
 			}
 		} catch (error: any) {
 			console.error("Erreur lors de l'import des clients:", error);
-			setError(error.message || "Erreur lors de l'import des clients");
+			showError(error.message || "Erreur lors de l'import des clients");
 			setStep('preview'); // Return to preview step on error
 		} finally {
 			setImporting(false);
@@ -687,7 +700,7 @@ console.log("DATA: ", data)
 	
 		if (missingRequiredFields.length > 0) {
 		  const missingFieldsLabels = missingRequiredFields.map((f) => f.label).join(', ');
-		  toast.error(`Les champs obligatoires suivants ne sont pas mappés : ${missingFieldsLabels}`);
+		  showError(`Les champs obligatoires suivants ne sont pas mappés : ${missingFieldsLabels}`);
 		  return;  // Ne pas continuer si des champs obligatoires sont manquants
 		}
 	
@@ -704,14 +717,14 @@ console.log("DATA: ", data)
 		setError(null);
 	
 		// Afficher le message de succès via toast
-		toast.success("Mapping sauvegardé avec succès!");
+		showSuccess("Mapping sauvegardé avec succès!");
 	
 		setSavingSchema(false);
 	  } catch (err) {
 		console.error('Erreur lors de l\'enregistrement du mapping:', err);
 		setSavingSchema(false);
 		// Afficher le message d'erreur via toast
-		toast.error("Erreur lors de l'enregistrement du mapping");
+		showError("Erreur lors de l'enregistrement du mapping");
 	  }
 	};
 	
@@ -750,7 +763,11 @@ console.log("DATA: ", data)
 							<span>{error}</span>
 						</div>
 					)}
-
+					{success && (
+						<div className='mb-4 p-4 bg-green-50 border border-green-200 rounded-md text-green-700'>
+							{success}
+						</div>
+					)}
 					{step === 'upload' && (
 						<div className='space-y-6'>
 							<div className='border-2 border-dashed border-gray-300 rounded-lg p-8 text-center'>

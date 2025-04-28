@@ -11,6 +11,13 @@ const ReminderList = () => {
 	const [records, setRecords] = useState<
 		(Reminder & { receivable: Receivable & { client: Client } })[]
 	>([]);
+	const showError = (message: string) => {
+		setError(message);
+		setTimeout(() => {
+		  setError(null);
+		}, 3000);
+	  }
+	 
 	const fetchRecords = async () => {
 		try {
 			const {
@@ -30,7 +37,7 @@ const ReminderList = () => {
 			setRecords(clientsData || []);
 		} catch (error) {
 			console.error('Erreur lors du chargement des clients:', error);
-			setError('Impossible de charger la liste des clients');
+			showError('Impossible de charger la liste des clients');
 		} finally {
 			setIsLoading(false);
 		}

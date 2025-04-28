@@ -154,7 +154,7 @@ export default function EmailSettings() {
 
   const handleTestEmail = async () => {
     if (!formData.smtp_username || !formData.smtp_password) {
-      setError('Veuillez remplir tous les champs obligatoires');
+      showError('Veuillez remplir tous les champs obligatoires');
       return;
     }
 
@@ -186,7 +186,7 @@ export default function EmailSettings() {
         }, 3000);
     } catch (error: any) {
       console.error('Erreur lors du test d\'envoi:', error);
-      setError(error.message || 'Impossible d\'envoyer l\'email de test. Vérifiez vos paramètres.');
+      showError(error.message || 'Impossible d\'envoyer l\'email de test. Vérifiez vos paramètres.');
     } finally {
       setTesting(false);
     }

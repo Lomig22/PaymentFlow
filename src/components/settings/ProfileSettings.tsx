@@ -13,6 +13,12 @@ export default function ProfileSettings() {
     company: '',
     phone: ''
   });
+	const showError = (message: string) => {
+		setError(message);
+		setTimeout(() => {
+		  setError(null);
+		}, 3000);
+	  }
 
   useEffect(() => {
     loadProfile();
@@ -41,7 +47,7 @@ export default function ProfileSettings() {
       }
     } catch (error) {
       console.error('Erreur lors du chargement du profil:', error);
-      setError('Impossible de charger le profil');
+      showError('Impossible de charger le profil');
     } finally {
       setLoading(false);
     }
@@ -69,7 +75,7 @@ export default function ProfileSettings() {
       setSuccess(true);
     } catch (error) {
       console.error('Erreur lors de la sauvegarde:', error);
-      setError('Impossible de sauvegarder le profil');
+      showError('Impossible de sauvegarder le profil');
     } finally {
       setSaving(false);
     }
