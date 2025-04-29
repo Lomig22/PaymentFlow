@@ -719,15 +719,13 @@ console.log("DATA: ", data)
 	
 		// Afficher le message de succès via toast
 		showSuccess("Mapping sauvegardé avec succès!");
-		if (user.id) {
-			console.log("NOTIFICATION A SAUVEGARDER POUR:", user.id);
-			
+		if (user.id) {			
 		  try {
 			await saveNotification({
 			  owner_id: user.id,
 			  is_read: false,
 			  type: 'info',
-			  message: 'Importation réussie.',
+			  message: 'Sauvegarde du mapping réussie.',
 			});
 		  } catch (error:any) {
 			showError(error)
@@ -737,6 +735,19 @@ console.log("DATA: ", data)
 		setSavingSchema(false);
 	  } catch (err) {
 		console.error('Erreur lors de l\'enregistrement du mapping:', err);
+		if (user.id) {			
+			try {
+			  await saveNotification({
+				owner_id: user.id,
+				is_read: false,
+				type: 'erreur',
+				message: 'Erreur lors de l\'enregistrement du mapping: '+err,
+			  });
+			} catch (error:any) {
+			  showError(error)
+			  console.error('Erreur lors de l’enregistrement de la notification:', error);
+			}
+		  }
 		setSavingSchema(false);
 		// Afficher le message d'erreur via toast
 		showError("Erreur lors de l'enregistrement du mapping");
