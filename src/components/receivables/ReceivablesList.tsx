@@ -32,6 +32,7 @@ import { Link } from 'react-router-dom';
 import { dateCompare, numberCompare, stringCompare } from '../../lib/comparers';
 import SortableColHead from '../Common/SortableColHead';
 import { dateDiff } from '../../lib/dateDiff';
+import { saveNotification } from '../../lib/notification';
 
 type SortColumnConfig = {
 	key: keyof CSVMapping | 'client' | 'email' | 'Delay in Days';
@@ -243,6 +244,11 @@ function ReceivablesList() {
 	const handleSendReminder = async () =>
 		// receivable: Receivable & { client: Client }
 		{
+			const {
+				data: { user },
+			  } = await supabase.auth.getUser();
+			  
+			  if (!user) throw new Error('Utilisateur non authentifié');
 			try {
 				setError(null);
 				if (selectedReceivable == null) return;
@@ -258,7 +264,19 @@ function ReceivablesList() {
 
 				if (success) {
 					setSendSuccess(true);
-      
+					if (user.id) {			
+						try {
+						  await saveNotification({
+							owner_id: user.id,
+							is_read: false,
+							type: 'info',
+							message: "Relançe manuelle effectuer correctement",
+						  });
+						} catch (error:any) {
+						  showError(error)
+						  console.error('Erreur lors de l’enregistrement de la notification:', error);
+						}
+					  }
 					// Masquer le message après 3 secondes
 					setTimeout(() => {
 					  setSendSuccess(false);
