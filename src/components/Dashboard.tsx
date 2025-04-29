@@ -90,10 +90,15 @@ export default function Dashboard() {
 
   const fetchDashboardStats = async () => {
     try {
+      const {
+        data: { user },
+        } = await supabase.auth.getUser();
+      
       // Récupérer les clients
       const { data: clientsData, error: clientsError } = await supabase
         .from('clients')
-        .select('*');
+        .select('*')
+        .eq('owner_id', user?.id);
 
       if (clientsError) throw clientsError;
 
@@ -103,11 +108,13 @@ export default function Dashboard() {
         .select(`
           *,
           client:clients(*)
-        `);
+        `)
+        .eq('owner_id', user?.id);;
 
       if (receivablesError) throw receivablesError;
 
       // Calculer les statistiques
+      //Jet totalClients
       const totalClients = clientsData?.length || 0;
       const clientsNeedingReminder = clientsData?.filter(c => c.needs_reminder)?.length || 0;
 
@@ -144,13 +151,51 @@ export default function Dashboard() {
       receivables.forEach(receivable => {
         if (receivable.status === 'legal') {
           reminderSteps.legal++;
-        } else {
+        } /* else {
+          console.log("Status: ",receivable.status);
+          
           const step = getReminderStep(receivable);
           if (step) {
+
             reminderSteps[step as keyof typeof reminderSteps]++;
           }
-        }
+        } */
       });
+      receivables.forEach(receivable => {
+        if (receivable.status === 'legal') {
+          reminderSteps.legal++;
+        } /* else {
+          console.log("Status: ",receivable.status);
+          
+          const step = getReminderStep(receivable);
+          if (step) {
+
+            reminderSteps[step as keyof typeof reminderSteps]++;
+          }
+        } */
+      });
+      receivables.forEach(receivable => {
+        if (receivable.status === 'Relance 1') {
+          reminderSteps.first++;
+        } 
+      });
+      receivables.forEach(receivable => {
+        if (receivable.status === 'Relance 2') {
+          reminderSteps.second++;
+        } 
+      });
+      receivables.forEach(receivable => {
+        if (receivable.status === 'Relance 3') {
+          reminderSteps.third++;
+        } 
+      });
+      receivables.forEach(receivable => {
+        if (receivable.status === 'Relance finale') {
+          reminderSteps.final++;
+        } 
+      });
+      console.log("REMINDER STEP: ",reminderSteps);
+      
 
       setStats({
         totalClients,
