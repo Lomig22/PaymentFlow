@@ -87,13 +87,19 @@ export default function Dashboard() {
 
     return null;
   };
-  type NotificationType = {
-    id: string;
-    message: string;
-    is_read: boolean;
-    created_at: string;
+ 
+  const [openDetails, setOpenDetails] = useState(new Set());
+
+  const toggleDetails = (id) => {
+    const newSet = new Set(openDetails);
+    if (newSet.has(id)) {
+      newSet.delete(id);
+    } else {
+      newSet.add(id);
+    }
+    setOpenDetails(newSet);
   };
-  
+
   //const [notifications, setNotifications] = useState<NotificationType[]>([]);
 
   const markNotificationAsRead = async (id: string) => {
@@ -450,38 +456,51 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
-              {/* Notifications */}
-              <div className="bg-white rounded-lg shadow p-6">
-  <h3 className="text-lg font-semibold text-gray-900 mb-4">Notifications</h3>
-  {notifications.length === 0 ? (
-    <p className="text-gray-500 text-sm">Aucune notification pour le moment.</p>
-  ) : (
-    <ul className="divide-y divide-gray-200">
-      {notifications.map((notification) => (
-        <li key={notification.id} className="py-3">
-          <div className="flex justify-between items-center">
-            <div>
-              <p className="text-sm text-gray-800">{notification.message}</p>
-              <p className="text-xs text-gray-500">
-                {new Date(notification.created_at).toLocaleString('fr-FR')}
-              </p>
-            </div>
-            {!notification.is_read ? (
-              <button
-                onClick={() => markNotificationAsRead(notification.id)}
-                className="text-xs text-blue-600 hover:underline ml-4"
-              >
-                Marquer comme lue
-              </button>
-            ) : (
-              <span className="text-xs text-green-600 font-medium">Lue</span>
-            )}
-          </div>
-        </li>
-      ))}
-    </ul>
-  )}
-</div>
+        <div className="bg-white rounded-lg shadow p-6">
+      <h3 className="text-lg font-semibold text-gray-900 mb-4">Notifications</h3>
+      {notifications.length === 0 ? (
+        <p className="text-gray-500 text-sm">Aucune notification pour le moment.</p>
+      ) : (
+        <ul className="divide-y divide-gray-200">
+          {notifications.map((notification) => (
+            <li key={notification.id} className="py-3">
+              <div className="flex justify-between items-start">
+                <div className="flex-1">
+                  <p className="text-sm text-gray-800">{notification.message}</p>
+                  <p className="text-xs text-gray-500">
+                    {new Date(notification.created_at).toLocaleString('fr-FR')}
+                  </p>
+                  {openDetails.has(notification.id) && notification.details && (
+                    <p className="mt-2 text-sm text-gray-600 whitespace-pre-wrap">
+                      {notification.details}
+                    </p>
+                  )}
+                </div>
+                <div className="ml-4 flex flex-col items-end gap-1">
+                  <button
+                    onClick={() => toggleDetails(notification.id)}
+                    className="text-xs text-indigo-600 hover:underline"
+                  >
+                    {openDetails.has(notification.id) ? '-' : '+'}
+                  </button>
+                  {!notification.is_read ? (
+                    <button
+                      onClick={() => markNotificationAsRead(notification.id)}
+                      className="text-xs text-blue-600 hover:underline"
+                    >
+                      Marquer comme lue
+                    </button>
+                  ) : (
+                    <span className="text-xs text-green-600 font-medium">Lue</span>
+                  )}
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+
 
 
       </div>

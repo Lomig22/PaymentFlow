@@ -253,11 +253,11 @@ function ReceivablesList() {
 				setError(null);
 				if (selectedReceivable == null) return;
 				setSending(true);
-				if (selectedReceivable.status==="Relance finale"){
+	/* 			if (selectedReceivable.status==="Relance finale"){
 					showError("Le statut de cette créance est déjà en relance finale");
-
+					return
 					
-				  }
+				  } */
 					
 				
 				const success = await sendManualReminder(selectedReceivable.id);
@@ -266,15 +266,22 @@ function ReceivablesList() {
 					setSendSuccess(true);
 					if (user.id) {			
 						try {
-						  await saveNotification({
-							owner_id: user.id,
-							is_read: false,
-							type: 'info',
-							message: "Relançe manuelle effectuer correctement",
-						  });
+							await saveNotification({
+								owner_id: user.id,
+								is_read: false,
+								type: 'info',
+								message: "Relance effectuée correctement" ,
+								details:`Relance ${selectedReceivable.client.company_name}\nDestinataire : ${selectedReceivable.email}`,
+							});
 						} catch (error:any) {
+							await saveNotification({
+								owner_id: user.id,
+								is_read: false,
+								type: 'erreur',
+								message: "Relançe manuelle échouée",
+								details:"client: "+selectedReceivable.client.company_name+"\ndestinataire: "+selectedReceivable.email+"\nerreur: "+error
+							});
 						  showError(error)
-						  console.error('Erreur lors de l’enregistrement de la notification:', error);
 						}
 					  }
 					// Masquer le message après 3 secondes
@@ -284,21 +291,25 @@ function ReceivablesList() {
 					await fetchReceivables();
 				} else {
 					if (selectedReceivable.status==="Relance finale"){
-						showError("Le statut de cette créance est déjà en relance finale");
-						
-					// Masquer l'erreur après 3 secondes
-					setTimeout(() => {
-						setError(null);
-					  }, 3000);
+						await saveNotification({
+							owner_id: user.id,
+							is_read: false,
+							type: 'erreur',
+							message: "Relançe manuelle échouée",
+							details:"client: "+selectedReceivable.client.company_name+"\ndestinataire: "+selectedReceivable.email+"\nerreur: Le status de cette créance est déjà en relance finale"
+						});
+						showError("Le status de cette créance est déjà en relance finale");		
 					} else{
+						await saveNotification({
+							owner_id: user.id,
+							is_read: false,
+							type: 'erreur',
+							message: "Relançe manuelle échouée",
+							details:"client: "+selectedReceivable.client.company_name+"\ndestinataire: "+selectedReceivable.email+"\nerreur: Impossible d'envoyer la relance. Vérifiez les paramètres email, la signature et les templates."
+						});
 						showError(
 							"Impossible d'envoyer la relance. Vérifiez les paramètres email, la signature et les templates."
 						);
-
-					// Masquer l'erreur après 3 secondes
-					setTimeout(() => {
-						setError(null);
-					  }, 3000);
 					}
 				
 				}
@@ -306,7 +317,14 @@ function ReceivablesList() {
 				setShowConfirmReminder(false);
 				setSelectedClient(null);
 			} catch (error: any) {
-				console.error('Error sending reminder:', error);
+				
+				await saveNotification({
+					owner_id: user.id,
+					is_read: false,
+					type: 'erreur',
+					message: "Relançe manuelle échouée",
+					details:"client: "+selectedReceivable?.client.company_name+"\ndestinataire: "+selectedReceivable?.email+"\nerreur:"+error.message || "Erreur lors de l'envoi de la relance"
+				});
 				showError(error.message || "Erreur lors de l'envoi de la relance");
 				setSending(false);
 				setShowConfirmReminder(false);
@@ -314,8 +332,19 @@ function ReceivablesList() {
 			}
 		};
 
-	const handleImportSuccess = (importedCount: number) => {
+	const handleImportSuccess = async(importedCount: number) => {
 		setImportSuccess(`${importedCount} créance(s) importée(s) avec succès`);
+		const {
+			data: { user }, 
+		  } = await supabase.auth.getUser();
+		  
+		await saveNotification({
+			owner_id: user?.id,
+			is_read: false,
+			type: 'info',
+			message:  `importation de ${importedCount} créance(s)`,
+			details: ""
+		});
 		fetchReceivables();
 		setShowImportModal(false);
 	};
