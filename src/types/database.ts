@@ -105,5 +105,6 @@ export type Notification = {
 	is_read: boolean;
 	type: string;
 	message: string;
+	details:string;
   };
   
