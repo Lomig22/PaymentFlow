@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { X, Upload, AlertCircle, HelpCircle, Loader2 } from 'lucide-react';
-import { Client } from '../../types/database';
+import { Client,Notification } from '../../types/database';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css'; // Importer les styles
+import { saveNotification } from '../../lib/notification';
 
 interface CSVImportModalProps {
 	onClose: () => void;
@@ -718,7 +719,21 @@ console.log("DATA: ", data)
 	
 		// Afficher le message de succès via toast
 		showSuccess("Mapping sauvegardé avec succès!");
-	
+		if (user.id) {
+			console.log("NOTIFICATION A SAUVEGARDER POUR:", user.id);
+			
+		  try {
+			await saveNotification({
+			  owner_id: user.id,
+			  is_read: false,
+			  type: 'info',
+			  message: 'Importation réussie.',
+			});
+		  } catch (error:any) {
+			showError(error)
+			console.error('Erreur lors de l’enregistrement de la notification:', error);
+		  }
+		}
 		setSavingSchema(false);
 	  } catch (err) {
 		console.error('Erreur lors de l\'enregistrement du mapping:', err);

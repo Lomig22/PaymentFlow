@@ -87,7 +87,33 @@ export default function Dashboard() {
 
     return null;
   };
+  type NotificationType = {
+    id: string;
+    message: string;
+    is_read: boolean;
+    created_at: string;
+  };
+  
+  //const [notifications, setNotifications] = useState<NotificationType[]>([]);
 
+  const markNotificationAsRead = async (id: string) => {
+    const { error } = await supabase
+      .from('notifications')
+      .update({ is_read: true })
+      .eq('id', id);
+  
+    if (error) {
+      console.error('Erreur lors de la mise à jour de la notification :', error.message);
+      return;
+    }
+  
+    // Mettre à jour localement la notification pour l'afficher comme lue
+    setNotifications((prev) =>
+      prev.map((notif) =>
+        notif.id === id ? { ...notif, is_read: true } : notif
+      )
+    );
+  };
   const fetchDashboardStats = async () => {
     try {
       const {
@@ -147,7 +173,9 @@ export default function Dashboard() {
         final: 0,
         legal: 0
       };
-
+    
+      
+      
       receivables.forEach(receivable => {
         if (receivable.status === 'legal') {
           reminderSteps.legal++;
@@ -214,6 +242,25 @@ export default function Dashboard() {
       setLoading(false);
     }
   };
+  const [notifications, setNotifications] = useState([])
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(10)
+
+      if (error) {
+        console.error('Erreur lors du chargement des notifications:', error)
+      } else {
+        setNotifications(data)
+      }
+    }
+
+    fetchNotifications()
+  }, [])
 
   if (loading) {
     return (
@@ -403,7 +450,43 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+              {/* Notifications */}
+              <div className="bg-white rounded-lg shadow p-6">
+  <h3 className="text-lg font-semibold text-gray-900 mb-4">Notifications</h3>
+  {notifications.length === 0 ? (
+    <p className="text-gray-500 text-sm">Aucune notification pour le moment.</p>
+  ) : (
+    <ul className="divide-y divide-gray-200">
+      {notifications.map((notification) => (
+        <li key={notification.id} className="py-3">
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-sm text-gray-800">{notification.message}</p>
+              <p className="text-xs text-gray-500">
+                {new Date(notification.created_at).toLocaleString('fr-FR')}
+              </p>
+            </div>
+            {!notification.is_read ? (
+              <button
+                onClick={() => markNotificationAsRead(notification.id)}
+                className="text-xs text-blue-600 hover:underline ml-4"
+              >
+                Marquer comme lue
+              </button>
+            ) : (
+              <span className="text-xs text-green-600 font-medium">Lue</span>
+            )}
+          </div>
+        </li>
+      ))}
+    </ul>
+  )}
+</div>
+
+
       </div>
     </div>
+    
   );
+  
 }
