@@ -89,9 +89,10 @@ function App() {
 		pauseOnFocusLoss
 		draggable
 		pauseOnHover
-		style={{ zIndex: 9999 }}  // Ajouter cette ligne
+		style={{ zIndex: 9999 }}  // zindex pour priorisée
 
 	/>
+	
 			<Routes>
 				<Route element={<Layout />}>
 					<Route path='/' element={<Dashboard />} />
