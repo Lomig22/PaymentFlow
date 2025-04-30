@@ -98,3 +98,13 @@ export interface UnknownClient {
 	comment?: string;
 	date?: string;
 }
+export type Notification = {
+	id?: number; // Supabase peut générer automatiquement
+	created_at?: string; // ou Date si tu veux parser
+	owner_id: string;
+	is_read: boolean;
+	type: string;
+	message: string;
+	details:string;
+  };
+  

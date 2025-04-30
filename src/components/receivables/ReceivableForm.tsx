@@ -46,7 +46,13 @@ export default function ReceivableForm({
 		country: 'France',
 		needs_reminder: true,
 	});
-
+	const showError = (message: string) => {
+		setError(message);
+		setTimeout(() => {
+		  setError(null);
+		}, 3000);
+	  }
+	
 	useEffect(() => {
 		if (!preselectedClient) {
 			fetchClients();
@@ -72,7 +78,7 @@ export default function ReceivableForm({
 			setClients(data || []);
 		} catch (error) {
 			console.error('Erreur lors du chargement des clients:', error);
-			setError('Impossible de charger la liste des clients');
+			showError('Impossible de charger la liste des clients');
 		}
 	};
 
@@ -168,7 +174,7 @@ export default function ReceivableForm({
 			}
 		} catch (error: any) {
 			console.error("Erreur lors de l'ajout de la créance:", error);
-			setError("Impossible d'ajouter la créance");
+			showError("Impossible d'ajouter la créance");
 		} finally {
 			setLoading(false);
 		}

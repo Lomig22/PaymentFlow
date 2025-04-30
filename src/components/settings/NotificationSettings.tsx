@@ -14,7 +14,18 @@ export default function NotificationSettings() {
     daily_summary: false,
     weekly_summary: true
   });
-
+  const showError = (message: string) => {
+    setError(message);
+    setTimeout(() => {
+      setError(null);
+    }, 3000);
+  }
+  const showSuccess = () => {
+    setSuccess(true)
+    setTimeout(() => {
+      setSuccess(false);
+    }, 3000);
+  }
   useEffect(() => {
     loadNotificationSettings();
   }, []);
@@ -55,7 +66,7 @@ export default function NotificationSettings() {
       }
     } catch (error) {
       console.error('Erreur lors du chargement des paramètres:', error);
-      setError('Impossible de charger les paramètres de notification');
+      showError('Impossible de charger les paramètres de notification');
     } finally {
       setLoading(false);
     }
@@ -79,10 +90,10 @@ export default function NotificationSettings() {
         });
 
       if (error) throw error;
-      setSuccess(true);
+      showSuccess()
     } catch (error) {
       console.error('Erreur lors de la sauvegarde:', error);
-      setError('Impossible de sauvegarder les paramètres');
+      showError('Impossible de sauvegarder les paramètres');
     } finally {
       setSaving(false);
     }

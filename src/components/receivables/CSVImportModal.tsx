@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase';
 import { X, Upload, AlertCircle, Info, Loader2 } from 'lucide-react';
 import { Receivable, Client } from '../../types/database';
 import Papa from 'papaparse';
+import { toast } from 'react-toastify';
 
 interface CSVImportModalProps {
 	onClose: () => void;
@@ -201,7 +202,13 @@ export default function CSVImportModal({
 
 	// Plus de validation des en-têtes requis
 	const expectedHeaders: string[] = [];
-
+	const showError = (message: string) => {
+		setError(message);
+		setTimeout(() => {
+		  setError(null);
+		}, 3000);
+	  }
+	
 	// Désactiver le défilement du body quand la modale est ouverte
 	useEffect(() => {
 		document.body.style.overflow = 'hidden';
@@ -242,7 +249,7 @@ export default function CSVImportModal({
 			setClientMap(map);
 		} catch (error) {
 			console.error('Erreur lors du chargement des clients:', error);
-			setError('Impossible de charger la liste des clients');
+			showError('Impossible de charger la liste des clients');
 		}
 	};
 
@@ -258,7 +265,7 @@ export default function CSVImportModal({
 		}
 
 		if (missingHeaders.length > 0) {
-			setError(
+			showError(
 				`Le fichier CSV doit contenir une colonne "${missingHeaders.join(
 					','
 				)}" pour importer les données`
@@ -339,7 +346,7 @@ export default function CSVImportModal({
 			header: false,
 			skipEmptyLines: true,
 			error: (error) => {
-				setError(`Erreur lors de l'analyse du fichier: ${error.message}`);
+				showError(`Erreur lors de l'analyse du fichier: ${error.message}`);
 			},
 		});
 	};
@@ -680,7 +687,7 @@ export default function CSVImportModal({
 			setStep('preview');
 		} catch (error) {
 			console.error("Erreur lors de la génération de l'aperçu:", error);
-			setError("Impossible de générer l'aperçu");
+			showError("Impossible de générer l'aperçu");
 		}
 	};
 
@@ -945,6 +952,9 @@ export default function CSVImportModal({
 					const toUpdate: any[] = [];
 					
 					for (const record of batch) {
+						//Jetemail
+					console.log("EMAIIIIIIIIIIIIL:",record.email);
+						
 						const key = `${record.owner_id}-${record.invoice_number}`;
 						if (existingMap.has(key)) {
 							//console.log(record);
@@ -959,6 +969,8 @@ export default function CSVImportModal({
 			
 					// INSERT uniquement les nouveaux
 					if (toInsert.length > 0) {
+						console.log("TOINSERT: ",toInsert);
+						
 						const { error: insertError } = await supabase
 							.from('receivables')
 							.insert(toInsert);
@@ -970,8 +982,10 @@ export default function CSVImportModal({
 						}
 					}
 			
-					// UPDATE les existants (sans changer le statut)
+					// UPDATE les existants (sans changer le status)
 					if (toUpdate.length > 0) {
+						console.log("TO UPDATE: ",toUpdate);
+						
 						const { error: updateError } = await supabase
 							.from('receivables')
 							.upsert(toUpdate, {
@@ -1086,34 +1100,36 @@ export default function CSVImportModal({
 			}
 		} catch (error: any) {
 			console.error("Erreur lors de l'import des créances:", error);
-			setError(error.message || "Erreur lors de l'import des créances");
+			showError(error.message || "Erreur lors de l'import des créances");
 			setStep('preview'); // Return to preview step on error
 		} finally {
 			setImporting(false);
 		}
 	};
 
-	const saveMapping = async () => {
-		const {
-			data: { user },
-		} = await supabase.auth.getUser();
-		if (!user) throw new Error('Utilisateur non authentifié');
 
-		try {
-			setSavingSchema(true);
-			await supabase
-				.from('profiles')
-				.update({ receivables_mapping: JSON.stringify(mapping) })
-				.eq('id', user.id);
-			setSavingSchema(false);
-		} catch (err) {
-			console.error(
-				'Erreur lors de la suppression des créances manquantes:',
-				err
-			);
-			setSavingSchema(false);
-		}
+	const saveMapping = async () => {
+	  const {
+		data: { user },
+	  } = await supabase.auth.getUser();
+	  if (!user) throw new Error('Utilisateur non authentifié');
+	
+	  try {
+		setSavingSchema(true);
+		await supabase
+		  .from('profiles')
+		  .update({ receivables_mapping: JSON.stringify(mapping) })
+		  .eq('id', user.id);
+		
+		toast.success('Le mapping a été enregistré avec succès !'); // <-- Ajout du toast
+		setSavingSchema(false);
+	  } catch (err) {
+		console.error('Erreur lors de la suppression des créances manquantes:', err);
+		toast.error('Erreur lors de l\'enregistrement du mapping.'); // <-- Ajout du toast d'erreur
+		setSavingSchema(false);
+	  }
 	};
+	
 
 	const resetForm = () => {
 		setFile(null);

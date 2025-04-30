@@ -40,7 +40,12 @@ export default function EmailSettings() {
   const [testSuccess, setTestSuccess] = useState(false);
   const [formData, setFormData] = useState(DEFAULT_FORM_DATA);
   const [userId, setUserId] = useState<string | null>(null);
-
+  const showError = (message: string) => {
+    setError(message);
+    setTimeout(() => {
+      setError(null);
+    }, 3000);
+  };
   useEffect(() => {
     const initializeSettings = async () => {
       try {
@@ -50,7 +55,7 @@ export default function EmailSettings() {
         await loadEmailSettings(user.id);
       } catch (error) {
         console.error('Erreur lors de l\'initialisation:', error);
-        setError('Impossible de charger les paramètres email');
+        showError('Impossible de charger les paramètres email');
       } finally {
         setLoading(false);
       }
@@ -112,7 +117,7 @@ export default function EmailSettings() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!userId) {
-      setError('Utilisateur non authentifié');
+      showError('Utilisateur non authentifié');
       return;
     }
 
@@ -133,12 +138,15 @@ export default function EmailSettings() {
 
       if (error) throw error;
       setSuccess(true);
-      
+      setTimeout(() => {
+        setSuccess(false);
+      }, 3000);
       // Recharger les paramètres pour confirmer la mise à jour
       await loadEmailSettings(userId);
     } catch (error) {
       console.error('Erreur lors de la sauvegarde:', error);
-      setError('Impossible de sauvegarder les paramètres');
+      showError('Impossible de sauvegarder les paramètres');
+    
     } finally {
       setSaving(false);
     }
@@ -146,7 +154,7 @@ export default function EmailSettings() {
 
   const handleTestEmail = async () => {
     if (!formData.smtp_username || !formData.smtp_password) {
-      setError('Veuillez remplir tous les champs obligatoires');
+      showError('Veuillez remplir tous les champs obligatoires');
       return;
     }
 
@@ -172,9 +180,13 @@ export default function EmailSettings() {
       );
 
       setTestSuccess(true);
+         // Masquer le message après 3 secondes
+         setTimeout(() => {
+          setTestSuccess(false);
+        }, 3000);
     } catch (error: any) {
       console.error('Erreur lors du test d\'envoi:', error);
-      setError(error.message || 'Impossible d\'envoyer l\'email de test. Vérifiez vos paramètres.');
+      showError(error.message || 'Impossible d\'envoyer l\'email de test. Vérifiez vos paramètres.');
     } finally {
       setTesting(false);
     }
@@ -200,15 +212,18 @@ export default function EmailSettings() {
       )}
 
       {success && (
-        <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-md text-green-700">
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 mb-4 p-4 bg-green-50 border border-green-200 rounded-md text-green-700 z-50 max-w-4xl w-full">
           Paramètres sauvegardés avec succès
         </div>
       )}
 
       {testSuccess && (
-        <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-md text-green-700">
-          Email de test envoyé avec succès ! Vérifiez votre boîte de réception.
-        </div>
+      <div className="fixed top-4 left-1/2 transform -translate-x-1/2 mb-4 p-4 bg-green-50 border border-green-200 rounded-md text-green-700 z-50 max-w-4xl w-full">
+      Email de test envoyé avec succès ! Vérifiez votre boîte de réception.
+    </div>
+    
+      
+
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
