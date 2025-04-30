@@ -7,8 +7,6 @@ import {
 } from "react-router-dom";
 import { supabase, checkAuth } from "./lib/supabase";
 import { User } from "@supabase/supabase-js";
-import { startReminderService } from "./lib/reminderService";
-
 import LandingPage from "./pages/LandingPage";
 import SignupPage from "./pages/SignupPage";
 import Layout from "./components/Layout";
@@ -50,9 +48,7 @@ function App() {
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       const currentUser = session?.user ?? null;
       setUser(currentUser);
-      if (currentUser) {
-        startReminderService(currentUser.id);
-      }
+
     });
 
     return () => subscription?.unsubscribe();
