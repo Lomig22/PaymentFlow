@@ -121,11 +121,13 @@ export default function Dashboard() {
     );
   };
   const fetchDashboardStats = async () => {
+    const {
+      data: { user },
+      } = await supabase.auth.getUser();
+    console.log("user: ",user?.id);
+    
     try {
-      const {
-        data: { user },
-        } = await supabase.auth.getUser();
-      
+
       // Récupérer les clients
       const { data: clientsData, error: clientsError } = await supabase
         .from('clients')
@@ -249,12 +251,28 @@ export default function Dashboard() {
     }
   };
   const [notifications, setNotifications] = useState([])
+  const [filter, setFilter] = useState('unread'); // 'all', 'read', 'unread'
+  const [visibleCount, setVisibleCount] = useState(5);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
+  const filteredNotifications = notifications.filter((n) => {
+    if (filter === 'read') return n.is_read;
+    if (filter === 'unread') return !n.is_read;
+    return true;
+  });
+  
+  const visibleNotifications = filteredNotifications.slice(0, visibleCount);
+  
   useEffect(() => {
     const fetchNotifications = async () => {
+      const {
+        data: { user },
+        } = await supabase.auth.getUser();
+      console.log("user: ",user?.id);
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
+        .eq('owner_id',user?.id)
         .order('created_at', { ascending: false })
         .limit(10)
 
@@ -267,7 +285,7 @@ export default function Dashboard() {
 
     fetchNotifications()
   }, [])
-
+  
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -458,47 +476,154 @@ export default function Dashboard() {
         </div>
         <div className="bg-white rounded-lg shadow p-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">Notifications</h3>
-      {notifications.length === 0 ? (
-        <p className="text-gray-500 text-sm">Aucune notification pour le moment.</p>
-      ) : (
-        <ul className="divide-y divide-gray-200">
-          {notifications.map((notification) => (
-            <li key={notification.id} className="py-3">
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <p className="text-sm text-gray-800">{notification.message}</p>
-                  <p className="text-xs text-gray-500">
-                    {new Date(notification.created_at).toLocaleString('fr-FR')}
-                  </p>
-                  {openDetails.has(notification.id) && notification.details && (
-                    <p className="mt-2 text-sm text-gray-600 whitespace-pre-wrap">
-                      {notification.details}
-                    </p>
-                  )}
-                </div>
-                <div className="ml-4 flex flex-col items-end gap-1">
-                  <button
-                    onClick={() => toggleDetails(notification.id)}
-                    className="text-xs text-indigo-600 hover:underline"
-                  >
-                    {openDetails.has(notification.id) ? '-' : '+'}
-                  </button>
-                  {!notification.is_read ? (
-                    <button
-                      onClick={() => markNotificationAsRead(notification.id)}
-                      className="text-xs text-blue-600 hover:underline"
-                    >
-                      Marquer comme lue
-                    </button>
-                  ) : (
-                    <span className="text-xs text-green-600 font-medium">Lue</span>
-                  )}
-                </div>
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
+      <div className="mb-3 flex gap-2">
+      <div className="relative inline-block text-left mb-4">
+  <div>
+    <button
+      type="button"
+      className="inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
+      onClick={() => setDropdownOpen(!dropdownOpen)}
+    >
+      Filtre : {filter === 'all' ? 'Toutes' : filter === 'unread' ? 'Non lues' : 'Lues'}
+      <svg
+        className="-mr-1 ml-2 h-5 w-5"
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 20 20"
+        fill="currentColor"
+        aria-hidden="true"
+      >
+        <path
+          fillRule="evenodd"
+          d="M5.23 7.21a.75.75 0 011.06.02L10 11.584l3.71-4.354a.75.75 0 111.14.976l-4.25 5a.75.75 0 01-1.14 0l-4.25-5a.75.75 0 01.02-1.06z"
+          clipRule="evenodd"
+        />
+      </svg>
+    </button>
+  </div>
+
+  {dropdownOpen && (
+    <div className="absolute z-10 mt-2 w-40 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
+      <div className="py-1">
+        <button
+          onClick={() => {
+            setFilter('all');
+            setVisibleCount(5);
+            setDropdownOpen(false);
+          }}
+          className={`block w-full text-left px-4 py-2 text-sm ${
+            filter === 'all' ? 'bg-indigo-600 text-white' : 'text-gray-700 hover:bg-gray-100'
+          }`}
+        >
+          Toutes
+        </button>
+        <button
+          onClick={() => {
+            setFilter('unread');
+            setVisibleCount(5);
+            setDropdownOpen(false);
+          }}
+          className={`block w-full text-left px-4 py-2 text-sm ${
+            filter === 'unread' ? 'bg-indigo-600 text-white' : 'text-gray-700 hover:bg-gray-100'
+          }`}
+        >
+          Non lues
+        </button>
+        <button
+          onClick={() => {
+            setFilter('read');
+            setVisibleCount(5);
+            setDropdownOpen(false);
+          }}
+          className={`block w-full text-left px-4 py-2 text-sm ${
+            filter === 'read' ? 'bg-indigo-600 text-white' : 'text-gray-700 hover:bg-gray-100'
+          }`}
+        >
+          Lues
+        </button>
+      </div>
+    </div>
+  )}
+</div>
+
+</div>
+
+{visibleNotifications.length === 0 ? (
+  <p className="text-gray-500 text-sm">Aucune notification pour le moment.</p>
+) : (
+  <ul className="divide-y divide-gray-200">
+{visibleNotifications.map((notification) => (
+  <li key={notification.id} className="py-3">
+    <div className="flex justify-between items-start">
+      <div className="flex-1">
+        <p
+          className={`
+            text-sm 
+            ${
+              notification.type === 'erreur'
+                ? 'text-red-600'
+                : notification.type === 'info'
+                ? 'text-blue-600'
+                : 'text-gray-800'
+            }
+          `}
+        >
+          {notification.message}
+        </p>
+        <p className="text-xs text-gray-500">
+          {new Date(notification.created_at).toLocaleString('fr-FR')}
+        </p>
+        {openDetails.has(notification.id) && notification.details && (
+          <p className="mt-2 text-sm text-gray-600 whitespace-pre-wrap">
+            {notification.details}
+          </p>
+        )}
+      </div>
+      <div className="ml-4 flex flex-col items-end gap-1">
+        <button
+          onClick={() => toggleDetails(notification.id)}
+          className="text-xs text-indigo-600 hover:underline"
+        >
+          {openDetails.has(notification.id) ? '-' : '+'}
+        </button>
+        {!notification.is_read ? (
+          <button
+            onClick={() => markNotificationAsRead(notification.id)}
+            className="text-xs text-blue-600 hover:underline"
+          >
+            Marquer comme lue
+          </button>
+        ) : (
+          <span className="text-xs text-green-600 font-medium">Lue</span>
+        )}
+      </div>
+    </div>
+  </li>
+))}
+
+  </ul>
+)}
+
+{visibleCount < filteredNotifications.length && (
+  <div className="mt-4 text-center">
+    <button
+      onClick={() => setVisibleCount((prev) => prev + 5)}
+      className="text-sm text-indigo-600 hover:underline"
+    >
+      Afficher plus
+    </button>
+  </div>
+)}
+  {visibleCount > 5 && (
+    <div className="mt-4 text-center">
+    <button
+      onClick={() => setVisibleCount(Math.max(5, visibleCount - 5))}
+      className="text-sm text-indigo-600 hover:underline"
+    >
+      Afficher moins
+    </button>
+    </div>
+  )}
+
     </div>
 
 

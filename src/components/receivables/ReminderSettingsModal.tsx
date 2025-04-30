@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
+import { saveNotification } from '../../lib/notification';
 import { Client, Receivable, ReminderProfile } from '../../types/database';
 import { X, AlertCircle, Play, Pause } from 'lucide-react';
 import DelayInputJHM from '../settings/DelayInputJHM';
@@ -22,8 +23,10 @@ export default function ReminderSettingsModal({
 	const [automaticReminder, setAutomaticReminder] = useState<boolean>(
 		receivable.automatic_reminder ?? false
 	);
+
+
 	const [formData, setFormData] = useState({
-		reminder_delay_1: client.reminder_delay_1 || {j:0,h:0,m:1},
+		reminder_delay_1	: client.reminder_delay_1 || {j:0,h:0,m:1},
 		reminder_delay_2: client.reminder_delay_2 || {j:0,h:0,m:2},
 		reminder_delay_3: client.reminder_delay_3 || {j:0,h:0,m:3},
 		reminder_delay_final: client.reminder_delay_final || {j:0,h:0,m:3},
@@ -76,11 +79,14 @@ export default function ReminderSettingsModal({
 	}, []);
 
 	const handleSubmit = async (e: React.FormEvent) => {
+
 		e.preventDefault();
 		setLoading(true);
 		setError(null);
 		setSuccess(false);
-
+		const {
+			data: { user }
+		  } = await supabase.auth.getUser();
 		try {
 			// Validation des délais
 			if (
@@ -107,9 +113,35 @@ export default function ReminderSettingsModal({
 					pre_reminder_template: formData.pre_reminder_template,
 				})
 				.eq('id', client.id);
-
+				if (user?.id) {		
+					const details = JSON.stringify({
+						"Numéro de facture":`${receivable.invoice_number}`,
+						"Délai de relance 1": `${formData.reminder_delay_1.j||0}:${formData.reminder_delay_1.h||0}:${formData.reminder_delay_1.m||0} `,
+						"Délai de relance 2": `${formData.reminder_delay_2.j||0}:${formData.reminder_delay_2.h||0}:${formData.reminder_delay_2.m||0} `,
+						"Délai de relance 3": `${formData.reminder_delay_3.j||0}:${formData.reminder_delay_3.h||0}:${formData.reminder_delay_3.m||0} `,
+						"Délai de relance finale":`${formData.reminder_delay_final.j||0}:${formData.reminder_delay_final.h||0}:${formData.reminder_delay_final.m||0} `,
+						"Template de la relance 1": formData.reminder_template_1.trim(),
+						"Template de la relance 2": formData.reminder_template_2.trim(),
+						"Template de la relance 3": formData.reminder_template_3.trim(),
+						"Template de la relance finale": formData.reminder_template_final.trim(),
+						"Profil de relance": formData.reminder_profile,
+						"Délai de prérelance": `${formData.pre_reminder_days} jours`,
+						"Template de la prérelance": formData.pre_reminder_template.trim(),
+					  }, null, 2); // le 2 ajoute un peu d’indentation pour la lisibilité	
+					try {
+						await saveNotification({
+							owner_id: user.id,
+							is_read: false,
+							type: 'info',
+							message: "Mises à jour des paramètres de relance",
+							details: details,
+						  });
+					} catch (error:any) {
+					  showError(error)
+					}
+				  }
 			if (updateError) throw updateError;
-
+				
 			setSuccess(true);
 			// Attendre un peu avant de fermer pour montrer le message de succès
 			setTimeout(() => {
@@ -138,7 +170,7 @@ export default function ReminderSettingsModal({
 		});
 	};
 
-	const getTemplateExample = (step: number) => {
+	const getTemplateExample =  (step: number) => {
 		const examples = {
 			1: `Cher client,\n\nNous n'avons pas encore reçu le paiement de la facture {invoice_number} d'un montant de {amount}, échue depuis {days_late} jours.\n\nMerci de régulariser la situation dans les plus brefs délais.`,
 			2: `Cher client,\n\nMalgré notre première relance, la facture {invoice_number} d'un montant de {amount} reste impayée.\n\nNous vous prions de procéder au règlement sous 48h.`,
@@ -149,10 +181,15 @@ export default function ReminderSettingsModal({
 		return examples[step] || '';
 	};
 
+//Bouton Play/Pause
 	const handleAutomaticReminderToggle = async () => {
+		const {
+			data: { user }
+		  } = await supabase.auth.getUser();
 		try {
 			setLoading(true);
 			setError(null);
+			
 			// Update the receivable
 			const { error } = await supabase
 				.from('receivables')
@@ -161,9 +198,26 @@ export default function ReminderSettingsModal({
 				})
 				.eq('id', receivable.id);
 			if (error) throw error;
+			await saveNotification({
+				owner_id: user?.id,
+				is_read: false,
+				type: 'info',
+				message: "Mise à jour des paramètres de relance automatique" ,
+				details: automaticReminder ? `Les relances sont activés pour la relance ${receivable?.invoice_number}` : `Les relances sont en pause pour la relance ${receivable?.invoice_number}`,
+			});
+		
 			setAutomaticReminder((prevState) => !prevState);
-		} catch (error) {
+		} catch (error:any) {
 			console.error('Erreur lors de la mise à jour des paramètres:', error);
+			if (user?.id) {			
+					await saveNotification({
+						owner_id: user?.id,
+						is_read: false,
+						type: 'erreur',
+						message: "Mise à jour des paramètres de relance automatique échouée" ,
+						details:`${error}`
+					});
+				}
 			showError(error.message || 'Impossible de mettre à jour les paramètres');
 		} finally {
 			setLoading(false);
