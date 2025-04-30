@@ -10,6 +10,7 @@ interface AppHeaderProps {
   user: User | null;
 }
 
+
 export default function AppHeader({ user }: AppHeaderProps) {
   const navigate = useNavigate();
   const calendlyRef = useRef<any>(null);
@@ -87,39 +88,32 @@ export default function AppHeader({ user }: AppHeaderProps) {
           <span className="text-xl font-bold text-gray-900">PaymentFlow</span>
         </Link>
 
-        {/* Desktop Navigation */}
-        <div className="hidden md:flex space-x-8">
-          <button
-            onClick={() => handleNavToSection("features")}
-            className="text-gray-600 hover:text-gray-900"
-          >
-            Fonctionnalités
-          </button>
-          <button
-            onClick={() => handleNavToSection("testimonials")}
-            className="text-gray-600 hover:text-gray-900"
-          >
-            Témoignages
-          </button>
-          <Link to="/pricing" className="text-gray-600 hover:text-gray-900">
-            Tarifs
-          </Link>
-          <button
-            onClick={() => setShowContactModal(true)}
-            className="text-gray-600 hover:text-gray-900"
-          >
-            Contact
-          </button>
-          {/* Add Dashboard link here */}
-          {user?.email && (
-            <Link
-              to={`/dashboard/${encodeURIComponent(user.email)}`}
+        {/* Desktop Navigation (only if user is not logged in) */}
+        {!user && (
+          <div className="hidden md:flex space-x-8">
+            <button
+              onClick={() => handleNavToSection("features")}
               className="text-gray-600 hover:text-gray-900"
             >
-              Dashboard
+              Fonctionnalités
+            </button>
+            <button
+              onClick={() => handleNavToSection("testimonials")}
+              className="text-gray-600 hover:text-gray-900"
+            >
+              Témoignages
+            </button>
+            <Link to="/pricing" className="text-gray-600 hover:text-gray-900">
+              Tarifs
             </Link>
-          )}
-        </div>
+            <button
+              onClick={() => setShowContactModal(true)}
+              className="text-gray-600 hover:text-gray-900"
+            >
+              Contact
+            </button>
+          </div>
+        )}
 
         {/* Desktop Auth Buttons */}
         <div className="hidden md:flex items-center gap-2">
@@ -167,47 +161,44 @@ export default function AppHeader({ user }: AppHeaderProps) {
       {isMobileMenuOpen && (
         <div className="md:hidden bg-white border-t border-gray-200">
           <div className="px-2 pt-2 pb-3 space-y-1">
-            <button
-              onClick={() => scrollToSection("features")}
-              className="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md"
-            >
-              Fonctionnalités
-            </button>
-            <button
-              onClick={() => scrollToSection("testimonials")}
-              className="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md"
-            >
-              Témoignages
-            </button>
-            <Link
-              to="/pricing"
-              className="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md"
-            >
-              Tarifs
-            </Link>
-            <button
-              onClick={() => setShowContactModal(true)}
-              className="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md"
-            >
-              Contact
-            </button>
-            {/* Add Dashboard link here */}
-            {user?.email && (
-              <Link
-                to={`/dashboard/${encodeURIComponent(user.email)}`}
-                className="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md"
-              >
-                Dashboard
-              </Link>
+            {!user && (
+              <>
+                <button
+                  onClick={() => scrollToSection("features")}
+                  className="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md"
+                >
+                  Fonctionnalités
+                </button>
+                <button
+                  onClick={() => scrollToSection("testimonials")}
+                  className="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md"
+                >
+                  Témoignages
+                </button>
+                <Link
+                  to="/pricing"
+                  className="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md"
+                >
+                  Tarifs
+                </Link>
+                <button
+                  onClick={() => setShowContactModal(true)}
+                  className="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md"
+                >
+                  Contact
+                </button>
+              </>
             )}
-            {user ? (
+            {/* Add Dashboard link here */}
+            {user && (
               <button
                 onClick={handleSignOut}
                 className="block w-full text-left px-3 py-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md"
               >
                 Déconnexion
               </button>
-            ) : (
+            )}
+            {!user && (
               <>
                 <Link
                   to="/login"
@@ -228,7 +219,6 @@ export default function AppHeader({ user }: AppHeaderProps) {
       )}
 
       {/* Calendly Button - Adjusted for mobile */}
-
       {showContactModal && (
         <ContactModal onClose={() => setShowContactModal(false)} />
       )}
