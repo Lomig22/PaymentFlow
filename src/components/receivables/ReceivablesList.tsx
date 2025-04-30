@@ -274,13 +274,6 @@ function ReceivablesList() {
 								details:`Relance ${selectedReceivable.client.company_name}\nDestinataire : ${selectedReceivable.email}`,
 							});
 						} catch (error:any) {
-							await saveNotification({
-								owner_id: user.id,
-								is_read: false,
-								type: 'erreur',
-								message: "Relançe manuelle échouée",
-								details:"client: "+selectedReceivable.client.company_name+"\ndestinataire: "+selectedReceivable.email+"\nerreur: "+error
-							});
 						  showError(error)
 						}
 					  }
