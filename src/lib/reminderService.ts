@@ -212,7 +212,7 @@ export async function sendManualReminder(
 				email_content: emailContent,
 			});
 
-			// Mettre à jour le statut de la créance
+			// Mettre à jour le status de la créance
 			await supabase
 				.from('receivables')
 				.update({

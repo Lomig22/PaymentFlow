@@ -1,6 +1,6 @@
 import { Edit, Search, Trash2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { UnknownClient } from '../../types/database';
+import { UnknownClient,Notification } from '../../types/database';
 import { supabase } from '../../lib/supabase';
 import UnknownClientForm from './UnknownClientForm';
 import CSVImport, { CSVMapping } from './CSVImport';
@@ -42,7 +42,25 @@ const UnknownClientList = ({
 		key: 'name',
 		sort: 'asc',
 	});
-
+	const showError = (message: string) => {
+		setError(message);
+		setTimeout(() => {
+		  setError(null);
+		}, 3000);
+	  }
+	 async function saveNotification(notification:Notification) {
+		const { data, error } = await supabase
+		  .from('notifications')
+		  .insert([notification]);
+	  console.log("notifications: ",notification);
+	  
+		if (error) {
+		  console.error('Erreur lors de la sauvegarde de la notification :', error);
+		  throw error;
+		}
+	  
+		return data;
+	  }
 	const fetchClients = async () => {
 		try {
 			const {
@@ -62,7 +80,7 @@ const UnknownClientList = ({
 			setClients(clientsData || []);
 		} catch (error) {
 			console.error('Erreur lors du chargement des clients:', error);
-			setError('Impossible de charger la liste des clients');
+			showError('Impossible de charger la liste des clients');
 		} finally {
 			setIsLoading(false);
 		}
@@ -87,11 +105,11 @@ const UnknownClientList = ({
 
 			if (error) {
 				console.error('Erreur lors de la suppression du client:', error);
-				setError('Une erreur est survenue lors de la suppression du client');
+				showError('Une erreur est survenue lors de la suppression du client');
 			}
 		} catch (error) {
 			console.error('Erreur lors de la suppression du client:', error);
-			setError('Une erreur est survenue lors de la suppression du client');
+			showError('Une erreur est survenue lors de la suppression du client');
 		} finally {
 			setDeleting(false);
 			setSelectedClient(null);
@@ -99,12 +117,29 @@ const UnknownClientList = ({
 			fetchClients();
 		}
 	};
-
-	const handleImportSuccess = () => {
+	const handleImportSuccess = async () => {
+		if (userId) {
+			console.log("NOTIFICATION A SAUVEGARDER POUR:", userId);
+			
+		  try {
+			await saveNotification({
+			  owner_id: userId,
+			  is_read: false,
+			  type: 'info',
+			  message: 'Importation réussie.',
+			});
+		  } catch (error:any) {
+			showError(error)
+			console.error('Erreur lors de l’enregistrement de la notification:', error);
+		  }
+		}
+	  console.log("NO USERID!!!!!!!!!!!!");
+	  
 		setImportSuccess('Importation réussie');
 		setShowImportModal(false);
 		fetchClients();
-	};
+	  };
+	  
 
 	const handleSortOnClick = (key: keyof CSVMapping) => {
 		if (sortConfig?.key === key) {

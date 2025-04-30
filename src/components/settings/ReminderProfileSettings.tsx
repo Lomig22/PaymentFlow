@@ -34,7 +34,18 @@ const ReminderProfileSettings = () => {
 		  delay4: { j: 0, h: 0, m: 0 },
 		},
 	  });
-	  
+	  const showError = (message: string) => {
+		setError(message);
+		setTimeout(() => {
+		  setError(null);
+		}, 3000);
+	  }
+	  const showSuccess = () => {
+		setSuccess(true)
+		setTimeout(() => {
+		  setSuccess(false);
+		}, 3000);
+	  }
 	// const [reminderProfiles, setReminderProfiles] = useState<ReminderProfile[]>()
 
 	const fetchAndSetProfiles = async () => {
@@ -50,7 +61,7 @@ const ReminderProfileSettings = () => {
 			.eq('owner_id', user.id);
 
 		if (error) {
-			setError(error.message);
+			showError(error.message);
 		}
 
 		setUserId(user.id);
@@ -154,7 +165,7 @@ const ReminderProfileSettings = () => {
 				.from('reminder_profile')
 				.insert(prepareData);
 			if (error) {
-				setError(error.message);
+				showError(error.message);
 			}
 		} else {
 			const prepareData: ReminderProfile[] = [
@@ -204,18 +215,18 @@ const ReminderProfileSettings = () => {
 				.update(prepareData[2])
 				.eq('id', prepareData[2].id);
 			if (error1) {
-				setError(error1?.message);
+				showError(error1?.message);
 				return;
 			}
 			if (error2) {
-				setError(error2?.message);
+				showError(error2?.message);
 				return;
 			}
 			if (error3) {
-				setError(error3?.message);
+				showError(error3?.message);
 				return;
 			}
-			setSuccess(true);
+			showSuccess()
 		}
 		// Refetch the data to make sure its up to date
 		await fetchAndSetProfiles();

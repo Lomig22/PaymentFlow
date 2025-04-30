@@ -87,13 +87,50 @@ export default function Dashboard() {
 
     return null;
   };
+ 
+  const [openDetails, setOpenDetails] = useState(new Set());
 
+  const toggleDetails = (id) => {
+    const newSet = new Set(openDetails);
+    if (newSet.has(id)) {
+      newSet.delete(id);
+    } else {
+      newSet.add(id);
+    }
+    setOpenDetails(newSet);
+  };
+
+  //const [notifications, setNotifications] = useState<NotificationType[]>([]);
+
+  const markNotificationAsRead = async (id: string) => {
+    const { error } = await supabase
+      .from('notifications')
+      .update({ is_read: true })
+      .eq('id', id);
+  
+    if (error) {
+      console.error('Erreur lors de la mise à jour de la notification :', error.message);
+      return;
+    }
+  
+    // Mettre à jour localement la notification pour l'afficher comme lue
+    setNotifications((prev) =>
+      prev.map((notif) =>
+        notif.id === id ? { ...notif, is_read: true } : notif
+      )
+    );
+  };
   const fetchDashboardStats = async () => {
     try {
+      const {
+        data: { user },
+        } = await supabase.auth.getUser();
+      
       // Récupérer les clients
       const { data: clientsData, error: clientsError } = await supabase
         .from('clients')
-        .select('*');
+        .select('*')
+        .eq('owner_id', user?.id);
 
       if (clientsError) throw clientsError;
 
@@ -103,11 +140,13 @@ export default function Dashboard() {
         .select(`
           *,
           client:clients(*)
-        `);
+        `)
+        .eq('owner_id', user?.id);;
 
       if (receivablesError) throw receivablesError;
 
       // Calculer les statistiques
+      //Jet totalClients
       const totalClients = clientsData?.length || 0;
       const clientsNeedingReminder = clientsData?.filter(c => c.needs_reminder)?.length || 0;
 
@@ -140,17 +179,57 @@ export default function Dashboard() {
         final: 0,
         legal: 0
       };
-
+    
+      
+      
       receivables.forEach(receivable => {
         if (receivable.status === 'legal') {
           reminderSteps.legal++;
-        } else {
+        } /* else {
+          console.log("Status: ",receivable.status);
+          
           const step = getReminderStep(receivable);
           if (step) {
+
             reminderSteps[step as keyof typeof reminderSteps]++;
           }
-        }
+        } */
       });
+      receivables.forEach(receivable => {
+        if (receivable.status === 'legal') {
+          reminderSteps.legal++;
+        } /* else {
+          console.log("Status: ",receivable.status);
+          
+          const step = getReminderStep(receivable);
+          if (step) {
+
+            reminderSteps[step as keyof typeof reminderSteps]++;
+          }
+        } */
+      });
+      receivables.forEach(receivable => {
+        if (receivable.status === 'Relance 1') {
+          reminderSteps.first++;
+        } 
+      });
+      receivables.forEach(receivable => {
+        if (receivable.status === 'Relance 2') {
+          reminderSteps.second++;
+        } 
+      });
+      receivables.forEach(receivable => {
+        if (receivable.status === 'Relance 3') {
+          reminderSteps.third++;
+        } 
+      });
+      receivables.forEach(receivable => {
+        if (receivable.status === 'Relance finale') {
+          reminderSteps.final++;
+        } 
+      });
+      console.log("REMINDER STEP: ",reminderSteps);
+      
 
       setStats({
         totalClients,
@@ -169,6 +248,25 @@ export default function Dashboard() {
       setLoading(false);
     }
   };
+  const [notifications, setNotifications] = useState([])
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(10)
+
+      if (error) {
+        console.error('Erreur lors du chargement des notifications:', error)
+      } else {
+        setNotifications(data)
+      }
+    }
+
+    fetchNotifications()
+  }, [])
 
   if (loading) {
     return (
@@ -358,7 +456,56 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+        <div className="bg-white rounded-lg shadow p-6">
+      <h3 className="text-lg font-semibold text-gray-900 mb-4">Notifications</h3>
+      {notifications.length === 0 ? (
+        <p className="text-gray-500 text-sm">Aucune notification pour le moment.</p>
+      ) : (
+        <ul className="divide-y divide-gray-200">
+          {notifications.map((notification) => (
+            <li key={notification.id} className="py-3">
+              <div className="flex justify-between items-start">
+                <div className="flex-1">
+                  <p className="text-sm text-gray-800">{notification.message}</p>
+                  <p className="text-xs text-gray-500">
+                    {new Date(notification.created_at).toLocaleString('fr-FR')}
+                  </p>
+                  {openDetails.has(notification.id) && notification.details && (
+                    <p className="mt-2 text-sm text-gray-600 whitespace-pre-wrap">
+                      {notification.details}
+                    </p>
+                  )}
+                </div>
+                <div className="ml-4 flex flex-col items-end gap-1">
+                  <button
+                    onClick={() => toggleDetails(notification.id)}
+                    className="text-xs text-indigo-600 hover:underline"
+                  >
+                    {openDetails.has(notification.id) ? '-' : '+'}
+                  </button>
+                  {!notification.is_read ? (
+                    <button
+                      onClick={() => markNotificationAsRead(notification.id)}
+                      className="text-xs text-blue-600 hover:underline"
+                    >
+                      Marquer comme lue
+                    </button>
+                  ) : (
+                    <span className="text-xs text-green-600 font-medium">Lue</span>
+                  )}
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+
+
+
       </div>
     </div>
+    
   );
+  
 }

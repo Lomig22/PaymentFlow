@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { X, Upload, AlertCircle, HelpCircle, Loader2 } from 'lucide-react';
-import { Client } from '../../types/database';
+import { Client,Notification } from '../../types/database';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css'; // Importer les styles
+import { saveNotification } from '../../lib/notification';
 
 interface CSVImportModalProps {
 	onClose: () => void;
@@ -65,14 +66,26 @@ export default function CSVImportModal({
 	const [step, setStep] = useState<
 		'upload' | 'mapping' | 'preview' | 'importing'
 	>('upload');
-	const [error, setError] = useState<string | null>(null);
 	const [preview, setPreview] = useState<Client[]>([]);
 	const [importing, setImporting] = useState(false);
 	const [importedCount, setImportedCount] = useState(0);
 	const [showHelp, setShowHelp] = useState(false);
 	const fileInputRef = useRef<HTMLInputElement>(null);
 	const [savingSchema, setSavingSchema] = useState(false);
-
+	const [success, setSuccess] = useState<string | null>(null);
+	const [error, setError] = useState<string | null>(null);
+	const showError = (message: string) => {
+		setError(message);
+		setTimeout(() => {
+		  setError(null);
+		}, 3000);
+	  }
+	  const showSuccess = (message: string) => {
+		setSuccess(message);
+		setTimeout(() => {
+		  setSuccess(null);
+		}, 3000);
+	  }
 	const mappingFields: MappingField[] = [
 		{ field: 'company_name', label: "entreprise", required: true },
 		{ field: 'client_code', label: 'Code Client', required: false },
@@ -92,6 +105,7 @@ export default function CSVImportModal({
 		{ field: 'created_at', label: 'Créé le', required: false },
 		{ field: 'updated_at', label: 'Mis à jour', required: false },
 	];
+	
 
 	// Désactiver le défilement du body quand la modale est ouverte
 	useEffect(() => {
@@ -100,6 +114,7 @@ export default function CSVImportModal({
 			document.body.style.overflow = 'unset';
 		};
 	}, []);
+
 
 	const parseCSV = (text: string): string[][] => {
 		// Gestion basique du CSV (pourrait être améliorée pour gérer les virgules dans les champs entre guillemets)
@@ -114,7 +129,56 @@ export default function CSVImportModal({
 				(line) => line.length > 1 && line.some((cell) => cell.trim() !== '')
 			);
 	};
-
+	const initializeMapping = async (csvHeaders: string[], userId: string) => {
+		const autoMapping: Record<string, keyof CSVMapping> = {};
+		const headerLower = csvHeaders.map((h) => h.toLowerCase());
+	  
+		const { data: savedMapping } = await supabase
+		  .from('profiles')
+		  .select('client_mapping')
+		  .eq('id', userId);
+	  
+		if (
+		  savedMapping !== null &&
+		  savedMapping[0]?.client_mapping !== undefined &&
+		  savedMapping[0]?.client_mapping !== null
+		) {
+		  const decodedMapping = JSON.parse(savedMapping[0].client_mapping);
+	  
+		  Object.entries(decodedMapping).forEach(([key, value]) => {
+			autoMapping[key] = value as keyof CSVMapping;
+		  });
+		} else {
+		  const mappings: { [key: string]: string[] } = {
+			company_name: ['entreprise', 'société', 'company', 'nom', 'raison sociale', 'client'],
+			email: ['email', 'e-mail', 'courriel', 'mail'],
+			phone: ['téléphone', 'telephone', 'phone', 'tel', 'mobile'],
+			address: ['adresse', 'address', 'rue'],
+			city: ['ville', 'city', 'commune', 'localité'],
+			postal_code: ['code postal', 'cp', 'postal', 'zip'],
+			country: ['pays', 'country', 'nation'],
+			industry: ['secteur', 'activité', 'industry', 'business'],
+			website: ['site', 'web', 'website', 'url'],
+			needs_reminder: ['relance', 'reminder', 'rappel', 'suivi'],
+			created_at: ['créé le', 'crée le', 'cree le', 'created at', 'date de création', 'date creation'],
+			updated_at: ['mis à jour', 'mise à jour', 'updated at', 'date de modification', 'modifié le'],
+			client_code: ['client code']
+		  };
+	  
+		  for (const [key, variants] of Object.entries(mappings)) {
+			for (const variant of variants) {
+			  const index = headerLower.findIndex((h) => h.includes(variant));
+			  if (index !== -1) {
+				autoMapping[csvHeaders[index]] = key as keyof CSVMapping;
+				break;
+			  }
+			}
+		  }
+		}
+	  
+		return autoMapping;
+	  };
+	  
 	const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const selectedFile = e.target.files?.[0];
 		if (!selectedFile) return;
@@ -129,7 +193,7 @@ export default function CSVImportModal({
 				const parsedData = parseCSV(text);
 
 				if (parsedData.length < 2) {
-					setError(
+					showError(
 						"Le fichier CSV doit contenir au moins une ligne d'en-tête et une ligne de données"
 					);
 					return;
@@ -168,6 +232,7 @@ export default function CSVImportModal({
 					// Mapping pour le nom de l'entreprise
 					const companyNameVariants = [
 						'entreprise',
+						"nom de l'entreprise",
 						'société',
 						'company',
 						'nom',
@@ -327,12 +392,12 @@ export default function CSVImportModal({
 				setStep('mapping');
 			} catch (error) {
 				console.error('Erreur lors de la lecture du fichier CSV:', error);
-				setError('Le format du fichier CSV est invalide');
+				showError('Le format du fichier CSV est invalide');
 			}
 		};
 
 		reader.onerror = () => {
-			setError('Erreur lors de la lecture du fichier');
+			showError('Erreur lors de la lecture du fichier');
 		};
 
 		reader.readAsText(selectedFile);
@@ -363,7 +428,7 @@ export default function CSVImportModal({
 		);
 
 		if (missingFields.length > 0) {
-			toast.error(
+			showError(
 				`Les champs suivants sont requis : ${missingFields
 					.map((f) => mappingFields.find((mf) => mf.field === f)?.label)
 					.join(', ')}`
@@ -426,7 +491,7 @@ export default function CSVImportModal({
 	  
 		  if (missingRequiredFields.length > 0) {
 			const missingFieldsLabels = missingRequiredFields.map((f) => f.label).join(', ');
-			toast.error(`Les champs obligatoires suivants ne sont pas mappés : ${missingFieldsLabels}`);
+			showError(`Les champs obligatoires suivants ne sont pas mappés : ${missingFieldsLabels}`);
 			return;
 		  }
 	  
@@ -478,7 +543,7 @@ export default function CSVImportModal({
 		  setError(null);
 		} catch (error) {
 		  console.error("Erreur lors de la génération de l'aperçu:", error);
-		  toast.error("Impossible de générer l'aperçu");
+		  showError("Impossible de générer l'aperçu");
 		}
 	  };
 	  
@@ -608,7 +673,7 @@ console.log("DATA: ", data)
 			}
 		} catch (error: any) {
 			console.error("Erreur lors de l'import des clients:", error);
-			setError(error.message || "Erreur lors de l'import des clients");
+			showError(error.message || "Erreur lors de l'import des clients");
 			setStep('preview'); // Return to preview step on error
 		} finally {
 			setImporting(false);
@@ -636,7 +701,7 @@ console.log("DATA: ", data)
 	
 		if (missingRequiredFields.length > 0) {
 		  const missingFieldsLabels = missingRequiredFields.map((f) => f.label).join(', ');
-		  toast.error(`Les champs obligatoires suivants ne sont pas mappés : ${missingFieldsLabels}`);
+		  showError(`Les champs obligatoires suivants ne sont pas mappés : ${missingFieldsLabels}`);
 		  return;  // Ne pas continuer si des champs obligatoires sont manquants
 		}
 	
@@ -646,19 +711,46 @@ console.log("DATA: ", data)
 		  .from('profiles')
 		  .update({ client_mapping: JSON.stringify(mapping) })
 		  .eq('id', user.id);
+		  console.log("Mapping: ",mapping);
+		  //si de nouveau entête apparaît, il faut pouvoir l'ajouter aux menues déroulantes
 	
 		// Réinitialiser l'erreur si le mapping est valide
 		setError(null);
 	
 		// Afficher le message de succès via toast
-		toast.success("Mapping sauvegardé avec succès");
-	
+		showSuccess("Mapping sauvegardé avec succès!");
+		if (user.id) {			
+		  try {
+			await saveNotification({
+			  owner_id: user.id,
+			  is_read: false,
+			  type: 'info',
+			  message: 'Sauvegarde du mapping réussie.',
+			});
+		  } catch (error:any) {
+			showError(error)
+			console.error('Erreur lors de l’enregistrement de la notification:', error);
+		  }
+		}
 		setSavingSchema(false);
 	  } catch (err) {
 		console.error('Erreur lors de l\'enregistrement du mapping:', err);
+		if (user.id) {			
+			try {
+			  await saveNotification({
+				owner_id: user.id,
+				is_read: false,
+				type: 'erreur',
+				message: 'Erreur lors de l\'enregistrement du mapping: '+err,
+			  });
+			} catch (error:any) {
+			  showError(error)
+			  console.error('Erreur lors de l’enregistrement de la notification:', error);
+			}
+		  }
 		setSavingSchema(false);
 		// Afficher le message d'erreur via toast
-		toast.error("Erreur lors de l'enregistrement du mapping");
+		showError("Erreur lors de l'enregistrement du mapping");
 	  }
 	};
 	
@@ -697,7 +789,11 @@ console.log("DATA: ", data)
 							<span>{error}</span>
 						</div>
 					)}
-
+					{success && (
+						<div className='mb-4 p-4 bg-green-50 border border-green-200 rounded-md text-green-700'>
+							{success}
+						</div>
+					)}
 					{step === 'upload' && (
 						<div className='space-y-6'>
 							<div className='border-2 border-dashed border-gray-300 rounded-lg p-8 text-center'>

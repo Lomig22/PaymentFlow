@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Client,Receivable } from '../../types/database';
+import { confirmAlert } from "react-confirm-alert";
+ 
 import { Minus, Plus, X } from 'lucide-react';
-
+import "react-confirm-alert/src/react-confirm-alert.css";
+ 
 interface ClientFormProps {
 	onClose: () => void;
 	onClientAdded?: (client: Client) => void;
@@ -82,114 +85,207 @@ export default function ClientForm({
 	const isValidEmail = (email: string) => {
 		return email === '' || /^[^@]*@[^@]*$/.test(email);
 	};
+//suppresion créance
+const handleNeedReminders = async () => {
+	confirmAlert({
+	  title: "Confirmation",
+	  message: "Êtes-vous sûr de vouloir supprimer cet utilisateur ?",
+	  buttons: [
+		{
+		  label: "Oui",
+		  onClick: async () => { // Ajouter async ici
+			const { error: deleteError } = await supabase
+			  .from('receivables')
+			  .delete()
+			  .eq('client_id', client?.id);
+  
+			if (deleteError) {
+			  console.error('Erreur lors de la suppression des relances :', deleteError);
+			  return;
+			} else {
+			  console.log('Relance supprimée avec succès.');
+			}
+		  },
+		},
+		{
+		  label: "Non",
+		  className: "no-button",
+		  onClick:async()=>{
+			
+		  }
+		},
+	  ],
+	});
+  };
+  
+	//soumission
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		setLoading(true);
 		setError(null);
-
+	  
 		try {
-			const {
-				data: { user },
-			} = await supabase.auth.getUser();
-
-			if (!user) {
-				throw new Error('Utilisateur non authentifié');
+		  const {
+			data: { user },
+		  } = await supabase.auth.getUser();
+	  
+		  if (!user) {
+			throw new Error('Utilisateur non authentifié');
+		  }
+	  
+		  if (mode === 'create') {
+			// Récupérer le profil de rappel par défaut
+			const { data: reminderProfile } = await supabase
+			  .from('reminder_profile')
+			  .select()
+			  .eq('name', 'Default')
+			  .eq('owner_id', user.id);
+	  
+			const reminderProfileExist =
+			  reminderProfile !== null &&
+			  reminderProfile[0] !== null &&
+			  reminderProfile.length > 0;
+	  
+			const { data, error } = await supabase
+			  .from('clients')
+			  .insert([
+				{
+				  ...formData,
+				  reminder_profile: reminderProfileExist ? reminderProfile[0].id : null,
+				  reminder_delay_1: reminderProfileExist ? reminderProfile[0].delay1 : 15,
+				  reminder_delay_2: reminderProfileExist ? reminderProfile[0].delay2 : 30,
+				  reminder_delay_3: reminderProfileExist ? reminderProfile[0].delay3 : 45,
+				  reminder_delay_final: reminderProfileExist ? reminderProfile[0].delay4 : 60,
+				  owner_id: user.id,
+				},
+			  ])
+			  .select()
+			  .single();
+	  
+			if (error) throw error;
+	  
+			if (formData.needs_reminder) {
+			  const now = new Date();
+			  const formatted =
+				now.getFullYear().toString() +
+				(now.getMonth() + 1).toString().padStart(2, '0') +
+				now.getDate().toString().padStart(2, '0') +
+				now.getHours().toString().padStart(2, '0') +
+				now.getMinutes().toString().padStart(2, '0') +
+				now.getSeconds().toString().padStart(2, '0');
+	  
+			  const random = Math.floor(Math.random() * 1000);
+			  const invoiceNumber = `FACT-${formatted}${random}`;
+	  
+			  const newReceivable: Omit<Receivable, 'id'> = {
+				client_id: data.id,
+				invoice_number: invoiceNumber,
+				amount: 0,
+				due_date: new Date().toISOString(),
+				status: 'pending',
+				owner_id: user.id,
+				created_at: new Date().toISOString(),
+				updated_at: new Date().toISOString(),
+			  };
+	  
+			  await AddReceivableToClient(newReceivable as Receivable);
 			}
-
-			if (mode === 'create') {
-				// get the defalut reminder profile
-				const { data: reminderPorfile } = await supabase
-					.from('reminder_profile')
-					.select()
-					.eq('name', 'Default')
-					.eq('owner_id', user.id);
-
-				const reminderProfileExist =
-					reminderPorfile !== null &&
-					reminderPorfile[0] !== null &&
-					reminderPorfile.length > 0;
-
-				const { data, error } = await supabase
-					.from('clients')
-					.insert([
-						{
-							...formData,
-							reminder_profile: reminderProfileExist
-								? reminderPorfile[0].id
-								: null,
-							reminder_delay_1: reminderProfileExist
-								? reminderPorfile[0].delay1
-								: 15,
-							reminder_delay_2: reminderProfileExist
-								? reminderPorfile[0].delay2
-								: 30,
-							reminder_delay_3: reminderProfileExist
-								? reminderPorfile[0].delay3
-								: 45,
-							reminder_delay_final: reminderProfileExist
-								? reminderPorfile[0].delay4
-								: 60,
-							owner_id: user.id,
-						},
-					])
-					.select()
-					.single();
-					if (formData.needs_reminder) {
-						const now = new Date(); // exemple : 1714138580752
-						const formatted =
-  now.getFullYear().toString() +
-  (now.getMonth() + 1).toString().padStart(2, '0') +
-  now.getDate().toString().padStart(2, '0') +
-  now.getHours().toString().padStart(2, '0') +
-  now.getMinutes().toString().padStart(2, '0') +
-  now.getSeconds().toString().padStart(2, '0');
-						const random = Math.floor(Math.random() * 1000); // exemple : 432
-						const invoiceNumber = `FACT-${formatted}${random}`;
-
-						const newReceivable: Omit<Receivable, 'id'> = {
-							client_id: data.id, // ← l'id du client existant
-							invoice_number: invoiceNumber, // numéro de série
-							amount: 0, // Montant 0 par défaut
-							due_date: new Date().toISOString(), // Date aujourd'hui
-							status: 'pending', // Par défaut une relance préventive
-							owner_id: user.id, // ← Owner existant
-							created_at: new Date().toISOString(),
-							updated_at: new Date().toISOString(),
-						};
-					
-						await AddReceivableToClient(newReceivable as Receivable);
-					}
-					
-					
-				if (error) throw error;
-				if (data && onClientAdded) {
-					onClientAdded(data);
-				}
-			} else {
-				const { data, error } = await supabase
-					.from('clients')
-					.update(formData)
-					.eq('id', client?.id)
-					.select()
-					.single();
-
-				if (error) throw error;
-				if (data && onClientUpdated) {
-					onClientUpdated(data);
-				}
+	  
+			if (data && onClientAdded) {
+			  onClientAdded(data);
 			}
+		  } else {
+			const { data: clientBeforeUpdate } = await supabase
+			  .from('clients')
+			  .select('needs_reminder')
+			  .eq('id', client?.id)
+			  .single();
+	  
+			const { data, error } = await supabase
+			  .from('clients')
+			  .update(formData)
+			  .eq('id', client?.id)
+			  .select()
+			  .single();
+	  
+			if (error) throw error;
+	  
+			// Si needs_reminder était true et devient false
+			if (clientBeforeUpdate?.needs_reminder && !formData.needs_reminder) {
+			  const { data: receivables, error: receivableError } = await supabase
+				.from('receivables')
+				.select('*')
+				.eq('client_id', client?.id);
+	  
+			  if (receivableError) {
+				console.error('Erreur lors de la récupération des relances :', receivableError);
+				return;
+			  }
+	  
+			  if (receivables && receivables.length > 0) {
+				handleNeedReminders()
+			  }
+			}
+	  
+			if (formData.needs_reminder) {
+			  const { data: receivables, error: receivableError } = await supabase
+				.from('receivables')
+				.select('*')
+				.eq('client_id', client?.id);
+	  
+			  if (receivableError) {
+				console.error('Erreur lors de la récupération des relances :', receivableError);
+				return;
+			  }
+	  
+			  if (!receivables || receivables.length === 0) {
+				const now = new Date();
+				const formatted =
+				  now.getFullYear().toString() +
+				  (now.getMonth() + 1).toString().padStart(2, '0') +
+				  now.getDate().toString().padStart(2, '0') +
+				  now.getHours().toString().padStart(2, '0') +
+				  now.getMinutes().toString().padStart(2, '0') +
+				  now.getSeconds().toString().padStart(2, '0');
+	  
+				const random = Math.floor(Math.random() * 1000);
+				const invoiceNumber = `FACT-${formatted}${random}`;
+	  
+				const newReceivable: Omit<Receivable, 'id'> = {
+				  client_id: data.id,
+				  invoice_number: invoiceNumber,
+				  amount: 0,
+				  due_date: new Date().toISOString(),
+				  status: 'pending',
+				  owner_id: user.id,
+				  created_at: new Date().toISOString(),
+				  updated_at: new Date().toISOString(),
+				};
+	  
+				await AddReceivableToClient(newReceivable as Receivable);
+			  } else {
+				console.log('Le client possède déjà une relance, aucune création nécessaire.');
+			  }
+			}
+	  
+			if (data && onClientUpdated) {
+			  onClientUpdated(data);
+			}
+	  
 			onClose();
+		  }
 		} catch (error) {
-			console.error("Erreur lors de l'opération sur le client:", error);
-			setError(
-				`Une erreur est survenue lors de ${
-					mode === 'create' ? "l'ajout" : 'la modification'
-				} du client`
-			);
+		  console.error("Erreur lors de l'opération sur le client :", error);
+		  setError(
+			`Une erreur est survenue lors de ${
+			  mode === 'create' ? "l'ajout" : 'la modification'
+			} du client.`
+		  );
 		} finally {
-			setLoading(false);
+		  setLoading(false);
 		}
-	};
+	  };
+	  
 
 	return (
 		<div className='fixed inset-0 bg-gray-600 bg-opacity-50 z-50 overflow-y-scroll'>
