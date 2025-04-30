@@ -7,7 +7,6 @@ import {
 } from "react-router-dom";
 import { supabase, checkAuth } from "./lib/supabase";
 import { User } from "@supabase/supabase-js";
-import { startReminderService } from "./lib/reminderService";
 
 import LandingPage from "./pages/LandingPage";
 import SignupPage from "./pages/SignupPage";
@@ -33,9 +32,7 @@ function App() {
       try {
         const session = await checkAuth();
         setUser(session?.user ?? null);
-        if (session?.user) {
-          startReminderService(session.user.id);
-        }
+    
       } catch (error) {
         console.error("Auth initialization error:", error);
       } finally {
@@ -50,9 +47,7 @@ function App() {
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       const currentUser = session?.user ?? null;
       setUser(currentUser);
-      if (currentUser) {
-        startReminderService(currentUser.id);
-      }
+
     });
 
     return () => subscription?.unsubscribe();
@@ -71,7 +66,7 @@ function App() {
       <AppHeader user={user} onContactClick={() => {}} />
       <Routes>
         {/* Public routes */}
-        <Route path="/" element={<LandingPage onGetStarted={() => {}} />} />
+        <Route path="/" element={!user?<LandingPage onGetStarted={() => {}} />: <Navigate to="/dashboard" replace />} />
         <Route
           path="/signup"
           element={
