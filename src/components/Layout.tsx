@@ -59,12 +59,13 @@ export default function Layout() {
 	};
 
 	const navigation = [
-		{ name: 'Tableau de bord', href: '/', icon: Home },
+		{ name: 'Tableau de bord', href: '/dashboard', icon: Home },
 		{ name: 'Clients', href: '/clients', icon: Users },
 		{ name: 'Créances', href: '/receivables', icon: FileText },
 		{ name: 'Paramètres', href: '/settings', icon: Settings },
 	];
-
+	console.log('Current path:', JSON.stringify(location.pathname));
+	
 	return (
 		<div className='min-h-screen bg-gray-100'>
 			{/* Sidebar */}
@@ -79,28 +80,32 @@ export default function Layout() {
   </span>
 </Link>
 				<nav className='mt-6 px-4 space-y-1'>
-					{navigation.map((item) => {
-						const Icon = item.icon;
-						return (
-							<Link
-  key={item.name}
-  to={item.href}
-  className={`
-    group flex items-center px-4 py-3 text-sm font-medium rounded-md transition-all duration-300
-    ${location.pathname === item.href
-      ? 'bg-blue-50 text-blue-700'
-      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}
-  `}
->
-  <item.icon className='h-5 w-5 flex-shrink-0 text-inherit' />
-  <span className='ml-3 opacity-0 group-hover:opacity-100 whitespace-nowrap transition-opacity duration-300'>
-    {item.name}
-  </span>
-</Link>
+				{navigation.map((item) => {
+  const Icon = item.icon;
+  const isActive =
+    item.href === '/dashboard'
+      ? location.pathname.startsWith('/dashboard')
+      : location.pathname === item.href;
 
-						  
-						);
-					})}
+  return (
+    <Link
+      key={item.name}
+      to={item.href}
+      className={`
+        group flex items-center px-4 py-3 text-sm font-medium rounded-md transition-all duration-300
+        ${isActive
+          ? 'bg-blue-50 text-blue-700'
+          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}
+      `}
+    >
+      <Icon className='h-5 w-5 flex-shrink-0 text-inherit' />
+      <span className='ml-3 opacity-0 group-hover:opacity-100 whitespace-nowrap transition-opacity duration-300'>
+        {item.name}
+      </span>
+    </Link>
+  );
+})}
+
 				</nav>
 
 				<div className='absolute bottom-0 w-full p-4 border-t border-gray-200'>
@@ -118,7 +123,8 @@ export default function Layout() {
 			
 
 			{/* Main content */}
-			<div className='pl-64'>
+			<div className='pl-20 group-hover:pl-64 transition-all duration-200'>
+
 				<main className='py-6'>
 					<Outlet />
 				</main>
