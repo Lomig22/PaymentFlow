@@ -240,19 +240,18 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
 
   // Add this helper function to calculate prices
   const getPrice = (monthlyPrice: number) => {
-    const roundPrice = (price: number) => Math.round(price / 5) * 5; // Rounds to nearest 5
-
     if (billingInterval === "yearly") {
       const yearlyPrice = monthlyPrice * 12;
-      const discountedPrice = yearlyPrice * 0.9; // 10% discount
+      const discountedPrice = yearlyPrice * 0.9;
       return {
-        displayedPrice: roundPrice(discountedPrice),
-        originalPrice: roundPrice(yearlyPrice),
+        displayedPrice: Math.round(discountedPrice),
+        originalPrice: Math.round(yearlyPrice),
       };
     }
-
-    return { displayedPrice: roundPrice(monthlyPrice), originalPrice: null };
+  
+    return { displayedPrice: monthlyPrice, originalPrice: null };
   };
+  
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">

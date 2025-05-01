@@ -120,7 +120,8 @@ function App() {
 
   return (
     <Router>
-      <AppHeader user={user} onContactClick={() => {}} />
+      {!user && <AppHeader user={user} onContactClick={() => {}} />}
+      
       <Routes>
         {/* Public routes */}
         <Route path="/" element={!user?<LandingPage onGetStarted={() => {}} />: <Navigate to="/dashboard" replace />} />
