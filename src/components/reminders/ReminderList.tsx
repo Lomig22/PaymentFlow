@@ -27,11 +27,17 @@ const ReminderList = () => {
 			if (!user) throw new Error('Utilisateur non authentifié');
 
 			const { data: clientsData, error } = await supabase
-				.from('reminders')
-				.select('*, receivable:receivables(*, client:clients(*))')
-				.order('reminder_date', { ascending: false });
-				// .eq('owner_id', user.id)
-			 //	.order('name');
+			.from('reminders')
+			.select(`
+			  *,
+			  receivable:receivables(
+				*,
+				client:clients(*)
+			  )
+			`)
+			.eq('receivable.owner_id', user.id)
+			.order('reminder_date', { ascending: false });
+		  
 			if (error) throw error;
 			setRecords(clientsData || []);
 		} catch (error) {
