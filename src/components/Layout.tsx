@@ -59,62 +59,72 @@ export default function Layout() {
 	};
 
 	const navigation = [
-		{ name: 'Tableau de bord', href: '/', icon: Home },
+		{ name: 'Tableau de bord', href: '/dashboard', icon: Home },
 		{ name: 'Clients', href: '/clients', icon: Users },
 		{ name: 'Créances', href: '/receivables', icon: FileText },
 		{ name: 'Paramètres', href: '/settings', icon: Settings },
 	];
-
+	console.log('Current path:', JSON.stringify(location.pathname));
+	
 	return (
 		<div className='min-h-screen bg-gray-100'>
 			{/* Sidebar */}
-			<div className='fixed inset-y-0 left-0 w-64 bg-white shadow-lg'>
-				<Link
-					to='/'
-					className='flex items-center h-16 px-4 border-b border-gray-200'
-				>
-					<TrendingUp className='h-8 w-8 text-blue-600' />
-					<span className='ml-2 text-xl font-bold text-gray-900'>
-						PaymentFlow
-					</span>
-				</Link>
-
+			<div className="group fixed inset-y-0 left-0 bg-white shadow-lg transition-all duration-200 w-20 hover:w-64 z-40">
+			<Link
+  to='/'
+  className='group flex items-center h-16 px-4 border-b border-gray-200'
+>
+  <TrendingUp className='h-8 w-8 text-blue-600 flex-shrink-0' />
+  <span className='ml-2 text-xl font-bold text-gray-900 overflow-hidden whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200'>
+    PaymentFlow
+  </span>
+</Link>
 				<nav className='mt-6 px-4 space-y-1'>
-					{navigation.map((item) => {
-						const Icon = item.icon;
-						return (
-							<Link
-								key={item.name}
-								to={item.href}
-								className={`
-                  flex items-center px-4 py-3 text-sm font-medium rounded-md
-                  ${
-										location.pathname === item.href
-											? 'bg-blue-50 text-blue-700'
-											: 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-									}
-                `}
-							>
-								<Icon className='h-5 w-5 mr-3' />
-								{item.name}
-							</Link>
-						);
-					})}
+				{navigation.map((item) => {
+  const Icon = item.icon;
+  const isActive =
+    item.href === '/dashboard'
+      ? location.pathname.startsWith('/dashboard')
+      : location.pathname === item.href;
+
+  return (
+    <Link
+      key={item.name}
+      to={item.href}
+      className={`
+        group flex items-center px-4 py-3 text-sm font-medium rounded-md transition-all duration-300
+        ${isActive
+          ? 'bg-blue-50 text-blue-700'
+          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}
+      `}
+    >
+      <Icon className='h-5 w-5 flex-shrink-0 text-inherit' />
+      <span className='ml-3 opacity-0 group-hover:opacity-100 whitespace-nowrap transition-opacity duration-300'>
+        {item.name}
+      </span>
+    </Link>
+  );
+})}
+
 				</nav>
 
 				<div className='absolute bottom-0 w-full p-4 border-t border-gray-200'>
-					<button
-						onClick={() => setShowLogoutConfirm(true)}
-						className='flex items-center w-full px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-md'
-					>
-						<LogOut className='h-5 w-5 mr-3' />
-						Déconnexion
-					</button>
-				</div>
-			</div>
+  <button
+    onClick={() => setShowLogoutConfirm(true)}
+    className='group flex items-center w-full px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-md transition-all duration-300'
+  >
+    <LogOut className='h-5 w-5 flex-shrink-0 text-inherit' />
+    <span className='ml-3 opacity-0 group-hover:opacity-100 whitespace-nowrap transition-opacity duration-300'>
+      Déconnexion
+    </span>
+  </button>
+</div>
+</div>
+			
 
 			{/* Main content */}
-			<div className='pl-64'>
+			<div className='pl-20 group-hover:pl-64 transition-all duration-200'>
+
 				<main className='py-6'>
 					<Outlet />
 				</main>
