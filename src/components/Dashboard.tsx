@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { BarChart3, Users, AlertCircle, CheckCircle2, Clock, TrendingUp, AlertTriangle, BanknoteIcon } from 'lucide-react';
+import { BarChart3, Users, AlertCircle, CheckCircle2, Clock, TrendingUp, AlertTriangle, BanknoteIcon, Trash2 } from 'lucide-react';
 import { Client, Receivable } from '../types/database';
+import Swal from 'sweetalert2';
 
 interface DashboardStats {
   totalClients: number;
@@ -65,6 +66,7 @@ export default function Dashboard() {
     };
   }, []);
 
+  
   const getReminderStep = (receivable: Receivable & { client: Client }) => {
     const dueDate = new Date(receivable.due_date);
     const today = new Date();
@@ -118,6 +120,24 @@ export default function Dashboard() {
       prev.map((notif) =>
         notif.id === id ? { ...notif, is_read: true } : notif
       )
+    );
+  };
+  
+  const deleteNotification = async (id) => {
+    const { error } = await supabase
+      .from('notifications')
+      .delete()
+      .eq('id', id);
+  
+    if (error) {
+      console.error('Erreur lors de la suppression:', error.message);
+      // Optionnel : ajouter une notification d’erreur
+      return;
+    }
+  
+    // Mise à jour de l’état local
+    setNotifications((prev) =>
+      prev.filter((notification) => notification.id !== id)
     );
   };
   const fetchDashboardStats = async () => {
@@ -546,62 +566,99 @@ export default function Dashboard() {
 </div>
 
 </div>
-
+{/* notification */}
 {visibleNotifications.length === 0 ? (
   <p className="text-gray-500 text-sm">Aucune notification pour le moment.</p>
 ) : (
   <ul className="divide-y divide-gray-200">
-{visibleNotifications.map((notification) => (
-  <li key={notification.id} className="py-3">
-    <div className="flex justify-between items-start">
-      <div className="flex-1">
-        <p
-          className={`
-            text-sm 
-            ${
-              notification.type === 'erreur'
-                ? 'text-red-600'
-                : notification.type === 'info'
-                ? 'text-blue-600'
-                : 'text-gray-800'
-            }
-          `}
-        >
-          {notification.message}
-        </p>
-        <p className="text-xs text-gray-500">
-          {new Date(notification.created_at).toLocaleString('fr-FR')}
-        </p>
-        {openDetails.has(notification.id) && notification.details && (
-          <p className="mt-2 text-sm text-gray-600 whitespace-pre-wrap">
-            {notification.details}
-          </p>
-        )}
-      </div>
-      <div className="ml-4 flex flex-col items-end gap-1">
-        <button
-          onClick={() => toggleDetails(notification.id)}
-          className="text-xs text-indigo-600 hover:underline"
-        >
-          {openDetails.has(notification.id) ? '-' : '+'}
-        </button>
-        {!notification.is_read ? (
-          <button
-            onClick={() => markNotificationAsRead(notification.id)}
-            className="text-xs text-blue-600 hover:underline"
-          >
-            Marquer comme lue
-          </button>
-        ) : (
-          <span className="text-xs text-green-600 font-medium">Lue</span>
-        )}
-      </div>
-    </div>
-  </li>
-))}
+    {visibleNotifications.map((notification) => (
+      <li key={notification.id} className="py-3 hover:bg-gray-50 transition-colors duration-200 rounded-md px-2">
+        <div className="flex justify-between items-start">
+          {/* Contenu principal */}
+          <div className="flex-1">
+            <p
+              className={`text-sm font-medium ${
+                notification.type === 'erreur'
+                  ? 'text-red-600'
+                  : notification.type === 'info'
+                  ? 'text-blue-600'
+                  : 'text-gray-800'
+              }`}
+            >
+              {notification.message}
+            </p>
+            <p className="text-xs text-gray-500">
+              {new Date(notification.created_at).toLocaleString('fr-FR')}
+            </p>
+            {openDetails.has(notification.id) && notification.details && (
+              <p className="mt-2 text-sm text-gray-600 whitespace-pre-wrap">
+                {notification.details}
+              </p>
+            )}
+          </div>
 
+          {/* Actions */}
+          <div className="ml-4 flex flex-col items-end gap-1">
+            <div className="flex gap-2">
+              {/* Bouton détails */}
+              <button
+                onClick={() => toggleDetails(notification.id)}
+                className="text-sm px-2 py-1 text-indigo-600 hover:underline hover:text-indigo-800 border border-indigo-200 rounded"
+                title="Afficher/Masquer les détails"
+              >
+                {openDetails.has(notification.id) ? '–' : '+'}
+              </button>
+
+              {/* Bouton supprimer avec SweetAlert2 */}
+              <button
+                onClick={() => {
+                  Swal.fire({
+                    title: 'Supprimer cette notification ?',
+                    text: "Cette action est irréversible.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Oui, supprimer',
+                    cancelButtonText: 'Annuler'
+                  }).then((result) => {
+                    if (result.isConfirmed) {
+                      deleteNotification(notification.id);
+                      Swal.fire(
+                        'Supprimée !',
+                        'La notification a été supprimée.',
+                        'success'
+                      );
+                    }
+                  });
+                }}
+                className="text-red-600 hover:text-red-800"
+                title="Supprimer"
+              >
+                <Trash2 className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Marquer comme lue / lue */}
+            {!notification.is_read ? (
+              <button
+                onClick={() => markNotificationAsRead(notification.id)}
+                className="text-xs text-blue-600 hover:underline"
+              >
+                Marquer comme lue
+              </button>
+            ) : (
+              <span className="text-xs text-green-600 font-medium">Lue</span>
+            )}
+          </div>
+        </div>
+      </li>
+    ))}
   </ul>
 )}
+
+
+
 
 {visibleCount < filteredNotifications.length && (
   <div className="mt-4 text-center">
