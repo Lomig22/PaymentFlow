@@ -117,14 +117,7 @@ export default function AppHeader({ user }: AppHeaderProps) {
 
         {/* Desktop Auth Buttons */}
         <div className="hidden md:flex items-center gap-2">
-          {user ? (
-            <button
-              onClick={handleSignOut}
-              className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
-            >
-              Déconnexion
-            </button>
-          ) : (
+          {!user &&  (
             <>
               <Link
                 to="/login"
