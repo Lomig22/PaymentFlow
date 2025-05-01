@@ -24,7 +24,7 @@ interface EmailSettings {
 	return joursEnMinutes + heuresEnMinutes + minutes;
   }
 // Fonction pour récupérer les paramètres email de l'utilisateur
-async function getEmailSettings(userId: string): Promise<EmailSettings | null> {
+export async function getEmailSettings(userId: string): Promise<EmailSettings | null> {
 	try {
 		const { data, error } = await supabase
 			.from('email_settings')
@@ -147,6 +147,46 @@ function determineReminderLevel(
 	// Si aucun des cas ci-dessus ne s'applique, on retourne une relance préventive si disponible
 	return { level: 'pre', template: client.pre_reminder_template || null };
 }
+export  async function getReminderTemplate(
+	receivableId: string
+): Promise<{ level: string; template: string } | null> {
+	try {
+		// Récupérer la créance avec les détails du client
+		const { data: receivable, error: receivableError } = await supabase
+			.from('receivables')
+			.select('*, client:clients(*)')
+			.eq('id', receivableId)
+			.single();
+
+		if (receivableError) throw receivableError;
+		if (!receivable) return null;
+
+		const dueDate = new Date(receivable.due_date);
+		const today = new Date();
+		const daysLate = Math.floor(
+			(today.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24)
+		);
+
+		// Déterminer le niveau de relance (first, second, etc.)
+		const { level, template } = determineReminderLevel(
+			daysLate,
+			receivable.client,
+			receivable.status
+		);
+
+		if (!level || !template) return null;
+
+		// Retourner les informations pour la template
+		return {
+			level,
+			template
+		};
+
+	} catch (error) {
+		console.error("Erreur lors de la récupération de la template:", error);
+		return null;
+	}
+}
 
 
 // Fonction pour envoyer une relance manuelle
@@ -162,8 +202,6 @@ export async function sendManualReminder(
 
 		if (receivableError) throw receivableError;
 		if (!receivable) return false;
-	
-
 		const {
 			data: { user },
 		} = await supabase.auth.getUser();
