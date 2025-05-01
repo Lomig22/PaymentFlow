@@ -71,7 +71,7 @@ function App() {
   
       // Supprime les boutons flottants Chatling
       const chatlingButtonContainer = Array.from(document.querySelectorAll("div"))
-        .find(div => div.style.position === "fixed" && div.innerHTML.includes("chatling-open-chat-icon"));
+        .find(div => div.style.position === "fixed" && div.innerHTML.includes("chtl-open-chat-icon"));
       if (chatlingButtonContainer) chatlingButtonContainer.remove();
     };
   
@@ -93,7 +93,7 @@ function App() {
       // Observer si quelque chose est injecté après coup
       observer = new MutationObserver(() => {
         const iframe = document.querySelector("iframe[src*='chatling']");
-        const chatIcon = document.getElementById("chatling-open-chat-icon");
+        const chatIcon = document.getElementById("chtl-open-chat-icon");
   
         if (iframe || chatIcon) {
           removeChatlingElements();
