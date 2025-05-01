@@ -52,7 +52,20 @@ const ReminderList = () => {
 			</div>
 		);
 	}
-
+	const deleteReminder = async (id) => {
+		const { error } = await supabase
+		  .from('reminders')
+		  .delete()
+		  .eq('id', id);
+	  
+		if (error) {
+		  Swal.fire('Erreur', error.message, 'error');
+		} else {
+		  setRecords((prev) => prev.filter((record) => record.id !== id));
+		  Swal.fire('Supprimé !', 'La relance a bien été supprimée.', 'success');
+		}
+	  };
+	  
 	return (
 		<div className='p-6'>
 			<div className='flex gap-4 items-center mb-6'>
