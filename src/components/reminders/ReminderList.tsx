@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Client, Receivable, Reminder } from '../../types/database';
-import { AlertCircle, FileText } from 'lucide-react';
+import { AlertCircle, FileText, Mail, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { decodeReminderStatus } from '../../lib/decodeReminderStatus';
+import Swal from 'sweetalert2';
 
 const ReminderList = () => {
 	const [isLoading, setIsLoading] = useState(true);
@@ -29,10 +30,8 @@ const ReminderList = () => {
 				.from('reminders')
 				.select('*, receivable:receivables(*, client:clients(*))')
 				.order('reminder_date', { ascending: false });
-
-			// .eq('owner_id', user.id)
-			// .order('name');
-
+				// .eq('owner_id', user.id)
+			 //	.order('name');
 			if (error) throw error;
 			setRecords(clientsData || []);
 		} catch (error) {
@@ -107,36 +106,80 @@ const ReminderList = () => {
 							</tr>
 						</thead>
 						<tbody className='bg-white divide-y divide-gray-200'>
-							{records.map((record) => (
-								<tr key={record.id} className='hover:bg-gray-50'>
-									<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
-										{new Date(record.reminder_date).toLocaleString('fr-FR')}
-									</td>
-									<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
-										{record.receivable?.client?.company_name}
-									</td>
-									<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
-										{record.receivable?.client?.client_code}
-									</td>
-									<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
-										{record.receivable?.invoice_number}
-									</td>
-									<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
-										{decodeReminderStatus(record.reminder_type)}
-									</td>
-								</tr>
-							))}
-							{records.length === 0 && (
-								<tr>
-									<td
-										colSpan={13}
-										className='px-6 py-4 text-center text-gray-500'
-									>
-										Aucun client trouvé
-									</td>
-								</tr>
-							)}
-						</tbody>
+  {records.map((record) => (
+    <tr key={record.id} className='hover:bg-gray-50'>
+      <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
+        {new Date(record.reminder_date).toLocaleString('fr-FR')}
+      </td>
+      <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
+        {record.receivable?.client?.company_name}
+      </td>
+      <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
+        {record.receivable?.client?.client_code}
+      </td>
+      <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
+        {record.receivable?.invoice_number}
+      </td>
+      <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
+        {decodeReminderStatus(record.reminder_type)}
+      </td>
+
+      {/* Actions */}
+      <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900 flex gap-3'>
+        {/* Voir email */}
+        <button
+          onClick={() => {
+            Swal.fire({
+              title: 'Email envoyé',
+              html: `<pre style="text-align:left">${record.email_content || 'Aucun contenu.'}</pre>`,
+              confirmButtonText: 'Fermer',
+              customClass: {
+                popup: 'text-left',
+              },
+              width: '600px',
+            });
+          }}
+          className='text-blue-600 hover:text-blue-800'
+          title='Voir l’email'
+        >
+          <Mail className='h-5 w-5' />
+        </button>
+
+        {/* Supprimer */}
+        <button
+          onClick={() => {
+            Swal.fire({
+              title: 'Confirmer la suppression',
+              text: 'Voulez-vous vraiment supprimer cette relance ?',
+              showCancelButton: true,
+              confirmButtonColor: '#d33',
+              cancelButtonColor: '#3085d6',
+              confirmButtonText: 'Supprimer',
+              cancelButtonText: 'Annuler',
+            }).then((result) => {
+              if (result.isConfirmed) {
+                deleteReminder(record.id); // Assure-toi que cette fonction existe
+                Swal.fire('Supprimé!', 'La relance a été supprimée.', 'success');
+              }
+            });
+          }}
+          className='text-red-600 hover:text-red-800'
+          title='Supprimer'
+        >
+          <Trash2 className='h-5 w-5' />
+        </button>
+      </td>
+    </tr>
+  ))}
+  {records.length === 0 && (
+    <tr>
+      <td colSpan={13} className='px-6 py-4 text-center text-gray-500'>
+        Aucun client trouvé
+      </td>
+    </tr>
+  )}
+</tbody>
+
 					</table>
 				</div>
 			</div>
