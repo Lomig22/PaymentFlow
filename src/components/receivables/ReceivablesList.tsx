@@ -25,7 +25,7 @@ import {
 import ReceivableForm from './ReceivableForm';
 import ReceivableEditForm from './ReceivableEditForm';
 import ReminderSettingsModal from './ReminderSettingsModal';
-import { sendManualReminder } from '../../lib/reminderService';
+import { getReminderTemplate, sendManualReminder,getEmailSettings } from '../../lib/reminderService';
 import CSVImportModal, { CSVMapping } from './CSVImportModal';
 import ReminderHistory from './ReminderHistory';
 import { Link } from 'react-router-dom';
@@ -80,7 +80,9 @@ function ReceivablesList() {
 		  setError(null);
 		}, 3000);
 	  }
-	 
+	  const [content, setContent] = useState<string>('');
+	  const [subject, setSubject] = useState<string>('');
+	  const [signature, setSignature] = useState<string>('');
 	const fetchReceivables = async () => {
 		try {
 			const {
@@ -99,10 +101,6 @@ function ReceivablesList() {
 				throw error;
 			  }
 			console.log("DATA: ",data);
-			
-
-	
-
 			const { data: reminderPorfile } = await supabase
 				.from('reminder_profile')
 				.select()
@@ -141,6 +139,39 @@ function ReceivablesList() {
 			return () => clearTimeout(timer);
 		}
 	}, [importSuccess]);
+//récupération du template actuelle:
+useEffect(() => {
+	const fetchData = async () => {
+		if (!selectedReceivable) {
+			setContent('');
+			setSubject('');
+			setSignature('');
+			return;
+		}
+
+		const { data: { user }, error } = await supabase.auth.getUser();
+		if (error || !user) {
+			console.error('Utilisateur non connecté');
+			return;
+		}
+
+		// Récupérer la signature
+		const emailSettings = await getEmailSettings(user.id);
+		if (emailSettings?.email_signature) {
+			setSignature(emailSettings.email_signature);
+		}
+
+		// Récupérer le contenu et le niveau
+		const result = await getReminderTemplate(selectedReceivable.id);
+		if (result) {
+			const subjectLine = `Relance facture ${selectedReceivable.invoice_number}`;
+			setSubject(subjectLine);
+			setContent(result.template); // ou formatté si le template est déjà rempli
+		}
+	};
+
+	fetchData();
+}, [selectedReceivable]);
 
 	// Fonction pour vérifier si un client a des créances impayées
 	const checkClientUnpaidReceivables = async (
@@ -253,13 +284,6 @@ function ReceivablesList() {
 				setError(null);
 				if (selectedReceivable == null) return;
 				setSending(true);
-	/* 			if (selectedReceivable.status==="Relance finale"){
-					showError("Le statut de cette créance est déjà en relance finale");
-					return
-					
-				  } */
-					
-				
 				const success = await sendManualReminder(selectedReceivable.id);
 
 				if (success) {
@@ -888,7 +912,7 @@ function ReceivablesList() {
 					receivables={receivables}
 				/>
 			)}
-			{showConfirmSendReminder && selectedReceivable && (
+		{/* 	{showConfirmSendReminder && selectedReceivable && (
 				<div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
 					<div className='bg-white rounded-lg p-6 max-w-md w-full mx-4'>
 						<div className='flex justify-between items-center mb-4'>
@@ -931,7 +955,98 @@ function ReceivablesList() {
 						</div>
 					</div>
 				</div>
-			)}
+			)} */}
+{showConfirmSendReminder && selectedReceivable && (
+	<div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
+		<div className='bg-white rounded-lg p-6 max-w-md w-full mx-4'>
+			<div className='flex justify-between items-center mb-4'>
+				<h3 className='text-lg font-medium text-gray-900'>
+					Confirmation d'envoi
+				</h3>
+				<button
+					onClick={() => {
+						setShowConfirmReminder(false);
+						setSelectedReceivable(null);
+					}}
+					className='text-gray-400 hover:text-gray-500'
+				>
+					<X className='h-5 w-5' />
+				</button>
+			</div>
+
+			<p className='text-sm text-gray-500 mb-4'>
+				Êtes-vous sûr de vouloir envoyer la relance manuelle ?
+			</p>
+
+			<form className='space-y-4'>
+				<div>
+					<label htmlFor='subject' className='block text-sm font-medium text-gray-700'>
+						Objet
+					</label>
+					<input
+						type='text'
+						id='subject'
+						name='subject'
+						value={subject}
+						onChange={(e) => setSubject(e.target.value)}
+						className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm'
+						placeholder="Entrez l'objet"
+					/>
+				</div>
+
+				<div>
+					<label htmlFor='message' className='block text-sm font-medium text-gray-700'>
+						Message
+					</label>
+					<textarea
+						id='message'
+						name='message'
+						value={content}
+						onChange={(e) => setContent(e.target.value)}
+						rows={6}
+						className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm'
+						placeholder='Entrez votre message'
+					></textarea>
+				</div>
+
+				<div>
+					<label htmlFor='signature' className='block text-sm font-medium text-gray-700'>
+						Signature
+					</label>
+					<input
+						type='text'
+						id='signature'
+						name='signature'
+						value={signature}
+						onChange={(e) => setSignature(e.target.value)}
+						className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm'
+						placeholder='Entrez votre signature'
+					/>
+				</div>
+			</form>
+
+			<div className='flex justify-end space-x-4 mt-6'>
+				<button
+					onClick={() => {
+						setShowConfirmReminder(false);
+						setSelectedReceivable(null);
+					}}
+					className='px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 border border-gray-300 rounded-md'
+					disabled={sending}
+				>
+					Annuler
+				</button>
+				<button
+					onClick={handleSendReminder}
+					disabled={sending}
+					className='px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md disabled:opacity-50'
+				>
+					{sending ? 'Envoi...' : 'Envoyer la relance'}
+				</button>
+			</div>
+		</div>
+	</div>
+)}
 
 			{showDeleteConfirm && receivableToDelete && (
 				<div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
