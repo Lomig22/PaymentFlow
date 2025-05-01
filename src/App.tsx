@@ -20,6 +20,8 @@ import LoginPage from "./pages/LoginPage";
 import ForgotPassword from "./pages/ForgotPassword";
 import PricingPage from "./pages/PricingPage";
 import AppHeader from "./components/AppHeader";
+import ReminderList  from "./components/reminders/ReminderList"
+
 import ContactPage from "./pages/ContactPage";
 import PaymentSuccess from "./pages/PaymentSuccess";
 
@@ -159,6 +161,8 @@ function App() {
           <Route path="/clients" element={<ClientPage />} />
           <Route path="/receivables" element={<ReceivablesList />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path='/reminders' element={<ReminderList />} />
+
         </Route>
 
         {/* Redirects */}
