@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { Lock, Mail, Eye, EyeOff } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
@@ -118,6 +118,62 @@ export default function SignupPage() {
       setLoading(false);
     }
   };
+/*     const handlePostOAuth = async () => {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error || !session?.user) {
+        navigate("/login");
+        return;
+      }
+
+      const user = session.user;
+
+      // Vérifie si une subscription existe déjà
+      const { data: existingSub, error: subError } = await supabase
+        .from("subscriptions")
+        .select("id")
+        .eq("user_id", user.id);
+
+      if (subError) {
+        console.error("Erreur vérification subscription", subError);
+        navigate("/login");
+        return;
+      }
+
+      if (!existingSub || existingSub.length === 0) {
+        // Crée une nouvelle subscription pour cet utilisateur
+        const { error: insertError } = await supabase.from("subscriptions").insert({
+          user_id: user.id,
+          created_at: new Date().toISOString(), // ou autre champ nécessaire
+          status:"active",
+          plan:"free"
+        });
+
+        if (insertError) {
+          console.error("Erreur lors de la création de l'abonnement", insertError);
+          navigate("/login");
+          return;
+        }
+      }
+
+      // Tout est OK, redirige vers le dashboard
+      navigate(`/dashboard/`);
+    }; */
+
+    const handleGoogleSignup = async () => {
+      try {
+        alert("signup")
+        await supabase.auth.signInWithOAuth({
+          provider: "google",
+          options: {
+            redirectTo: "https://lomig.onirtech.com/signup/callback", // ton callback
+          },
+        });
+      } catch (err) {
+        console.error("Erreur auth Google", err);
+      }
+    };
+    
+
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -216,6 +272,7 @@ export default function SignupPage() {
                     <Eye className="h-5 w-5" />
                   )}
                 </button>
+
               </div>
             </div>
 
@@ -311,7 +368,19 @@ export default function SignupPage() {
           >
             {loading ? "Création en cours..." : "S'inscrire"}
           </button>
-
+          <button
+    type="button"
+    onClick={handleGoogleSignup}
+    disabled={loading}
+    className="w-full flex items-center justify-center gap-2 bg-white border border-gray-300 text-gray-700 p-3 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-50"
+  >
+    <img
+      src="https://www.svgrepo.com/show/475656/google-color.svg"
+      alt="Google"
+      className="h-5 w-5"
+    />
+    S'inscrire avec Google
+  </button>
           <div className="text-center text-sm">
             <Link
               to="/forgot-password"

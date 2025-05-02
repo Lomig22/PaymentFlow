@@ -69,6 +69,9 @@ export default function LoginPage() {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
+        options: {
+          redirectTo: "https://lomig.onirtech.com/dashboard/", // <-- ici
+        },
       });
   
       if (error) {
