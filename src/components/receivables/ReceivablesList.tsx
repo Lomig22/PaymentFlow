@@ -970,19 +970,20 @@ useEffect(() => {
 				</div>
 
 				<div>
-					<label htmlFor='signature' className='block text-sm font-medium text-gray-700'>
-						Signature
-					</label>
-					<input
-						type='text'
-						id='signature'
-						name='signature'
-						value={signature}
-						onChange={(e) => setSignature(e.target.value)}
-						className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm'
-						placeholder='Entrez votre signature'
-					/>
-				</div>
+	<label htmlFor='signature' className='block text-sm font-medium text-gray-700'>
+		Signature
+	</label>
+	<textarea
+		id='signature'
+		name='signature'
+		value={signature}
+		onChange={(e) => setSignature(e.target.value)}
+		rows={6}
+		className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm'
+		placeholder='Entrez votre signature'
+	></textarea>
+</div>
+
 			</form>
 
 			<div className='flex justify-end space-x-4 mt-6'>
