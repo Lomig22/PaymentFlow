@@ -191,7 +191,10 @@ export  async function getReminderTemplate(
 
 // Fonction pour envoyer une relance manuelle
 export async function sendManualReminder(
-	receivableId: string
+	receivableId: string,
+	subject?: string,
+	content?: string,
+	signature?: string
 ): Promise<boolean> {
 	try {
 		const { data: receivable, error: receivableError } = await supabase
@@ -202,6 +205,7 @@ export async function sendManualReminder(
 
 		if (receivableError) throw receivableError;
 		if (!receivable) return false;
+
 		const {
 			data: { user },
 		} = await supabase.auth.getUser();
@@ -223,7 +227,8 @@ export async function sendManualReminder(
 		);
 		if (!level || !template) return false;
 
-		const emailContent = formatTemplate(template, {
+		// ✅ Générer le contenu personnalisé ou utiliser le template par défaut
+		const defaultEmailContent = formatTemplate(template, {
 			company: receivable.client.company_name,
 			amount: receivable.amount,
 			invoice_number: receivable.invoice_number,
@@ -232,11 +237,17 @@ export async function sendManualReminder(
 			days_left: Math.max(0, -1 * daysLate),
 		});
 
+		const finalSubject =
+			subject || `Relance facture ${receivable.invoice_number}`;
+		const finalContent = content
+			? `${content}\n\n${signature || ''}`
+			: defaultEmailContent;
+
 		const emailSent = await sendEmail(
 			emailSettings,
-			receivable.email||receivable.client.email,
-			`Relance facture ${receivable.invoice_number}`,
-			emailContent,
+			receivable.email || receivable.client.email,
+			finalSubject,
+			finalContent,
 			receivable.invoice_pdf_url
 		);
 
@@ -247,10 +258,10 @@ export async function sendManualReminder(
 				reminder_type: level,
 				reminder_date: new Date().toISOString(),
 				email_sent: true,
-				email_content: emailContent,
+				email_content: finalContent,
 			});
 
-			// Mettre à jour le status de la créance
+			// Mettre à jour le statut
 			await supabase
 				.from('receivables')
 				.update({
@@ -279,6 +290,7 @@ export async function sendManualReminder(
 		return false;
 	}
 }
+
 
 // Fonction principale pour vérifier et envoyer les relances automatiques
 // Fonction qui vérifie les factures en attente de paiement pour un utilisateur donné,
