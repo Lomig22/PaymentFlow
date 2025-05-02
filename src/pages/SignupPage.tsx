@@ -161,12 +161,8 @@ export default function SignupPage() {
 
     const handleGoogleSignup = async () => {
       try {
-        alert("signup")
         await supabase.auth.signInWithOAuth({
           provider: "google",
-          options: {
-            redirectTo: "https://lomig.onirtech.com/signup/callback", // ton callback
-          },
         });
       } catch (err) {
         console.error("Erreur auth Google", err);
