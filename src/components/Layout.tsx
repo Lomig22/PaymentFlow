@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
 import {
 	TrendingUp,
@@ -65,6 +65,41 @@ export default function Layout() {
 		{ name: 'Paramètres', href: '/settings', icon: Settings },
 	];
 	console.log('Current path:', JSON.stringify(location.pathname));
+	const [checking, setChecking] = useState(true);
+
+	useEffect(() => {
+	  const verifySubscription = async () => {
+		const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+  
+		if (sessionError || !session) {
+		  navigate("/login");
+		  return;
+		}
+  
+		const user = session.user;
+  
+		const { data: subscriptions, error: subError } = await supabase
+		  .from("subscriptions")
+		  .select("id")
+		  .eq("user_id", user.id);
+  
+		if (subError || !subscriptions || subscriptions.length === 0) {
+		  await supabase.auth.signOut();
+		  navigate("/login");
+		 // alert("Accès refusé : aucun abonnement actif.");
+		  return;
+		}
+  
+		setChecking(false);
+	  };
+  
+	  verifySubscription();
+	}, []);
+  
+	if (checking) {
+	  return <div className="p-4">Vérification de l’abonnement...</div>;
+	}
+	  
 	
 	return (
 		<div className='min-h-screen bg-gray-100'>
@@ -174,3 +209,5 @@ export default function Layout() {
 		</div>
 	);
 }
+
+
