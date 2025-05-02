@@ -68,33 +68,40 @@ export default function Layout() {
 	const [checking, setChecking] = useState(true);
 
 	useEffect(() => {
-	  const verifySubscription = async () => {
-		const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-  
-		if (sessionError || !session) {
-		  navigate("/login");
-		  return;
-		}
-  
-		const user = session.user;
-  
-		const { data: subscriptions, error: subError } = await supabase
-		  .from("subscriptions")
-		  .select("id")
-		  .eq("user_id", user.id);
-  
-		if (subError || !subscriptions || subscriptions.length === 0) {
-		  await supabase.auth.signOut();
-		  navigate("/login");
-		 // alert("Accès refusé : aucun abonnement actif.");
-		  return;
-		}
-  
-		setChecking(false);
-	  };
-  
-	  verifySubscription();
-	}, []);
+		const verifySubscription = async () => {
+		  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+	  
+		  if (sessionError || !session) {
+			navigate("/login");
+			return;
+		  }
+	  
+		  const user = session.user;
+	  
+		  const { data: subscriptions, error: subError } = await supabase
+			.from("subscriptions")
+			.select("id")
+			.eq("user_id", user.id);
+	  
+		  if (subError) {
+			console.error("Erreur abonnement", subError);
+			await supabase.auth.signOut();
+			navigate("/login");
+			return;
+		  }
+	  
+		  if (!subscriptions || subscriptions.length === 0) {
+			// 👇 redirige vers la page de souscription
+			navigate("/subscribe", { replace: true });
+			return;
+		  }
+	  
+		  setChecking(false);
+		};
+	  
+		verifySubscription();
+	  }, []);
+	  
   
 	if (checking) {
 	  return <div className="p-4">Vérification de l’abonnement...</div>;

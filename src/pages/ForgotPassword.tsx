@@ -41,7 +41,7 @@ export default function ForgotPasswordPage() {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `https://payment-flow.fr/reset-password`,
+        redirectTo: `https://lomig.onirtech.com/reset-password`,
       });
 
       if (error) {
