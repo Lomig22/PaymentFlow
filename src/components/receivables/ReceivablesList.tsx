@@ -284,7 +284,10 @@ useEffect(() => {
 				setError(null);
 				if (selectedReceivable == null) return;
 				setSending(true);
-				const success = await sendManualReminder(selectedReceivable.id);
+				const success = await sendManualReminder(selectedReceivable.id,
+					subject?.trim() || undefined,
+					content?.trim() || undefined,
+					signature?.trim() || undefined);
 
 				if (success) {
 					setSendSuccess(true);
@@ -912,50 +915,7 @@ useEffect(() => {
 					receivables={receivables}
 				/>
 			)}
-		{/* 	{showConfirmSendReminder && selectedReceivable && (
-				<div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
-					<div className='bg-white rounded-lg p-6 max-w-md w-full mx-4'>
-						<div className='flex justify-between items-center mb-4'>
-							<h3 className='text-lg font-medium text-gray-900'>
-								Confirmation d'envoi
-							</h3>
-							<button
-								onClick={() => {
-									setShowConfirmReminder(false);
-									setSelectedReceivable(null);
-								}}
-								className='text-gray-400 hover:text-gray-500'
-							>
-								<X className='h-5 w-5' />
-							</button>
-						</div>
-
-						<p className='text-sm text-gray-500 mb-4'>
-							Êtes-vous sûr de vouloir envoyer la relance manuelle ?
-						</p>
-
-						<div className='flex justify-end space-x-4'>
-							<button
-								onClick={() => {
-									setShowConfirmReminder(false);
-									setSelectedReceivable(null);
-								}}
-								className='px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 border border-gray-300 rounded-md'
-								disabled={sending}
-							>
-								Annuler
-							</button>
-							<button
-								onClick={handleSendReminder}
-								disabled={sending}
-								className='px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md disabled:opacity-50'
-							>
-								{sending ? 'Envoi...' : 'Envoyer la relance'}
-							</button>
-						</div>
-					</div>
-				</div>
-			)} */}
+			
 {showConfirmSendReminder && selectedReceivable && (
 	<div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
 		<div className='bg-white rounded-lg p-6 max-w-md w-full mx-4'>
