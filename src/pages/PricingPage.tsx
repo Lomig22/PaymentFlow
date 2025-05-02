@@ -195,7 +195,7 @@ const PricingPage = () => {
                 </span>
               </div>
               <ul className="space-y-3 mb-8">
-                <FeatureItem text="Jusqu'à 50 clients" />
+                <FeatureItem text="Jusqu'à 50 créances actives" />
                 <FeatureItem text="3 modèles de relance" />
                 <FeatureItem text="Rapports mensuels" />
                 <FeatureItem text="Support par email" />
@@ -242,7 +242,7 @@ const PricingPage = () => {
                 </span>
               </div>
               <ul className="space-y-3 mb-8">
-                <FeatureItem text="Jusqu'à 200 clients" />
+                <FeatureItem text="Jusqu'à 200 créances actives" />
                 <FeatureItem text="10 modèles de relance" />
                 <FeatureItem text="Rapports hebdomadaires" />
                 <FeatureItem text="Support prioritaire" />
@@ -282,7 +282,7 @@ const PricingPage = () => {
                 </span>
               </div>
               <ul className="space-y-3 mb-8">
-                <FeatureItem text="Clients illimités" />
+                <FeatureItem text="créances actives illimités" />
                 <FeatureItem text="Modèles illimités" />
                 <FeatureItem text="Rapports personnalisés" />
                 <FeatureItem text="Support dédié 24/7" />
