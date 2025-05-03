@@ -24,7 +24,7 @@ export interface Client {
 	client_code: string;
 	notes?: string;
 	reminder_profile?: string;
-	pre_reminder_days?: number;
+	pre_reminder_delay?: { j: number; h: number; m: number };
 	pre_reminder_template?: string;
 }
 
