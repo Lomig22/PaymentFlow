@@ -88,9 +88,6 @@ export default function SignupPage() {
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-        },
       });
 
       if (signUpError) throw signUpError;
@@ -102,14 +99,35 @@ export default function SignupPage() {
         });
         return;
       }
+      
+      if (data?.user) {
+         const userId = data.user.id;
+const formatedEmail=email.toLowerCase()
+        const { error: upsertError } = await supabase.from('pending_profiles').upsert([
+          {
+            id: userId,
+            name,
+            phone,
+            company,
+            email:formatedEmail,
+          },
+         ], {
+         onConflict: 'id', // clé sur laquelle on veut faire le upsert
+       });
 
+  if (upsertError) {
+    console.error('Erreur lors du upsert dans profiles:', upsertError.message);
+  } else {
+    console.log('Profil mis à jour ou inséré avec succès !');
+  }
+      }
       setMessage({
         type: "success",
         text: "Un e-mail de confirmation vous a été envoyé. Veuillez vérifier votre boîte de réception.",
       });
 
       // Redirect after 3 seconds
-      setTimeout(() => navigate("/pricing"), 3000);
+      setTimeout(() => navigate("/login"), 3000);
     } catch (error: any) {
       setMessage({
         type: "error",
@@ -122,9 +140,27 @@ export default function SignupPage() {
     }
   };
 
-    const handleGoogleSignup = async () => {
+  const handleGoogleSignup = async () => {
+    const formatedEmail=email.toLowerCase()
       try {
-        await supabase.auth.signInWithOAuth({
+              // Maintenant, upsert dans la table pending_profiles en utilisant email comme clé de conflit
+      const { error: upsertError } = await supabase.from('pending_profiles').upsert([ 
+        {
+          email:formatedEmail,
+          name,
+          phone,
+          company,
+        },
+      ], {
+        onConflict: 'email', // On utilise l'email pour gérer les conflits
+      });
+
+      if (upsertError) {
+        console.error('Erreur lors du upsert dans pending_profiles:', upsertError.message);
+      } else {
+        console.log('Profil Google inséré ou mis à jour !');
+      }
+       await supabase.auth.signInWithOAuth({
           provider: "google",
         });
       } catch (err) {
