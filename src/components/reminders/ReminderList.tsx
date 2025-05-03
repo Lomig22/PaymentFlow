@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Client, Receivable, Reminder } from '../../types/database';
-import { AlertCircle, FileText, Mail, Trash2 } from 'lucide-react';
+import { AlertCircle, Eye, FileText, Mail, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { decodeReminderStatus } from '../../lib/decodeReminderStatus';
 import Swal from 'sweetalert2';
@@ -161,7 +161,7 @@ const ReminderList = () => {
           className='text-blue-600 hover:text-blue-800'
           title='Voir l’email'
         >
-          <Mail className='h-5 w-5' />
+          <Eye className='h-5 w-5' />
         </button>
 
         {/* Supprimer */}
@@ -169,7 +169,7 @@ const ReminderList = () => {
           onClick={() => {
             Swal.fire({
               title: 'Confirmer la suppression',
-              text: 'Voulez-vous vraiment supprimer cette relance ?',
+              text: "Voulez-vous vraiment supprimer cette ligne de l'historique des relances ?",
               showCancelButton: true,
               confirmButtonColor: '#d33',
               cancelButtonColor: '#3085d6',
