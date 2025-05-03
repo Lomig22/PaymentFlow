@@ -35,7 +35,7 @@ export default function ReminderSettingsModal({
 		reminder_template_3: client.reminder_template_3 || '',
 		reminder_template_final: client.reminder_template_final || '',
 		reminder_profile: client.reminder_profile || '',
-		pre_reminder_days: client.pre_reminder_days || 1,
+		pre_reminder_delay: client.pre_reminder_delay || {j:0,h:0,m:0},
 		pre_reminder_template: client.pre_reminder_template || '',
 	});
 	const showError = (message: string) => {
@@ -109,7 +109,7 @@ export default function ReminderSettingsModal({
 					reminder_template_3: formData.reminder_template_3.trim(),
 					reminder_template_final: formData.reminder_template_final.trim(),
 					reminder_profile: formData.reminder_profile,
-					pre_reminder_days: formData.pre_reminder_days,
+					pre_reminder_delay: formData.pre_reminder_delay,
 					pre_reminder_template: formData.pre_reminder_template,
 				})
 				.eq('id', client.id);
@@ -125,7 +125,7 @@ export default function ReminderSettingsModal({
 						"Template de la relance 3": formData.reminder_template_3.trim(),
 						"Template de la relance finale": formData.reminder_template_final.trim(),
 						"Profil de relance": formData.reminder_profile,
-						"Délai de prérelance": `${formData.pre_reminder_days} jours`,
+						"Délai de prérelance": `${formData.pre_reminder_delay}`,
 						"Template de la prérelance": formData.pre_reminder_template.trim(),
 					  }, null, 2); // le 2 ajoute un peu d’indentation pour la lisibilité	
 					try {
@@ -253,68 +253,70 @@ export default function ReminderSettingsModal({
 
 					<form onSubmit={handleSubmit} className='space-y-6'>
 						<div className='grid grid-cols-2 gap-6'>
-							<div className='col-span-2'>
-								<label className='block text-sm font-medium text-gray-700 mb-2'>
-									Profil de rappel
-								</label>
-								<select
-									required
-									value={formData.reminder_profile}
-									onChange={(e) => handleProfileChange(e.target.value)}
-									className='w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-								>
-									<option value=''>Sélectionner un profil de rappel</option>
-									{reminderProfiles.map((profile) => (
-										<option key={profile.id} value={profile.id}>
-											{profile.name}
-										</option>
-									))}
-								</select>
-							</div>
-							<div>
-							<DelayInputJHM
-	label="Délai première relance (Jours,Heures,Minutes)"
-	value={formData.reminder_delay_1}
-  />
-							</div>
+						<div className='col-span-2'>
+	<label className='block text-sm font-medium text-gray-700 mb-2'>
+		Profil de rappel
+	</label>
+	<input
+		type='text'
+		required
+		disabled 
+		value={
+			reminderProfiles.find(p => p.id === formData.reminder_profile)?.name || ''
+		}
+		className='w-full text-gray-500 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+	/>
+</div>
 
-							<div>
-							<DelayInputJHM
-	label="Délai deuxième relance (Jours,Heures,Minutes)"
-	value={formData.reminder_delay_2}
-  />
-							</div>
+						  {/* Délai première relance */}
+    <div>
+      <DelayInputJHM
+        label="Délai première relance (Jours,Heures,Minutes)"
+        value={formData.reminder_delay_1}
+        onChange={(value) => setFormData({ ...formData, reminder_delay_1: value })}
+        disabled={false}  // Assurez-vous que ce champ soit modifiable
+      />
+    </div>
 
-							<div>
-							<DelayInputJHM
-	label="Délai troisième relance (Jours,Heures,Minutes)"
-	value={formData.reminder_delay_3}
-  />
-							</div>
+    {/* Délai deuxième relance */}
+    <div>
+      <DelayInputJHM
+        label="Délai deuxième relance (Jours,Heures,Minutes)"
+        value={formData.reminder_delay_2}
+        onChange={(value) => setFormData({ ...formData, reminder_delay_2: value })}
+        disabled={false}  // Assurez-vous que ce champ soit modifiable
+      />
+    </div>
 
-							<div>
-							<DelayInputJHM
-	label="Délai  relance finale (Jours,Heures,Minutes)"
-	value={formData.reminder_delay_final}
-  />
-							</div>
-							<div>
-								<label className='block text-sm font-medium text-gray-700 mb-2'>
-									Pré relance (jours)
-								</label>
-								<input
-									type='number'
-									min='1'
-									value={formData.pre_reminder_days}
-									onChange={(e) =>
-										setFormData({
-											...formData,
-											pre_reminder_days: parseInt(e.target.value),
-										})
-									}
-									className='w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-								/>
-							</div>
+    {/* Délai troisième relance */}
+    <div>
+      <DelayInputJHM
+        label="Délai troisième relance (Jours,Heures,Minutes)"
+        value={formData.reminder_delay_3}
+        onChange={(value) => setFormData({ ...formData, reminder_delay_3: value })}
+        disabled={false}  // Assurez-vous que ce champ soit modifiable
+      />
+    </div>
+
+    {/* Délai relance finale */}
+    <div>
+      <DelayInputJHM
+        label="Délai relance finale (Jours,Heures,Minutes)"
+        value={formData.reminder_delay_final}
+        onChange={(value) => setFormData({ ...formData, reminder_delay_final: value })}
+        disabled={false}  // Assurez-vous que ce champ soit modifiable
+      />
+    </div>
+
+    {/* Pré relance */}
+    <div>
+      <DelayInputJHM
+        label="Pré relance"
+        value={formData.pre_reminder_delay}
+        onChange={(value) => setFormData({ ...formData, pre_reminder_delay: value })}
+        disabled={false}  // Assurez-vous que ce champ soit modifiable
+      />
+    </div>
 						</div>
 
 						<div className='space-y-4'>
