@@ -130,7 +130,6 @@ function App() {
         {/* Public routes */}
         <Route path="/" element={!user?<LandingPage onGetStarted={() => {}} />: <Navigate to="/dashboard" replace />} />
         <Route path="/subscribe" element={<SubscribePage />} />
-
         <Route
           path="/signup"
           element={

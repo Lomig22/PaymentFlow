@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { AuthSessionMissingError } from '@supabase/supabase-js';
+import { div } from 'framer-motion/client';
 
 export default function Layout() {
 	const location = useLocation();
@@ -65,8 +66,81 @@ export default function Layout() {
 		{ name: 'Paramètres', href: '/settings', icon: Settings },
 	];
 	console.log('Current path:', JSON.stringify(location.pathname));
-	const [checking, setChecking] = useState(true);
+	const handleSubscribe = async () => {
+		const { data: { session } } = await supabase.auth.getSession();
+		const user = session?.user;
+		if (!user) return;
+	
+		const { error } = await supabase.from("subscriptions").insert({
+		  user_id: user.id,
+		  created_at: new Date().toISOString(),
+		  status: "active",
+		  plan: "free",
+		});
+	
+		if (error) {
+		  console.error("Erreur création abonnement", error);
+		  return;
+		}
+	
+		navigate("/dashboard");
+	  };
+	  const [checking,setChecking]=useState(true)
 
+	  useEffect(() => {
+    const syncPendingProfile = async () => {
+      const {
+        data: { user },
+        error: authError
+      } = await supabase.auth.getUser();
+
+      if (authError || !user) return;
+      const { data: pending, error: fetchError } = await supabase
+        .from('pending_profiles')
+        .select('*')
+        .ilike('email', user.email)
+	
+	if (pending?.length===0  || !pending){
+	console.log("no  pending")
+	await supabase.auth.signOut();
+	navigate("/signup")
+	}else {
+		console.log("pending:",pending);
+		
+	}
+	const {data:existingProfile}=await supabase
+	.from('profiles')
+	.select('*')
+	.ilike('email', user.email)
+	.single()
+
+	if (!existingProfile.subscribe){
+		if (!fetchError && pending) {
+			const { error: upsertError } = await supabase.from('profiles').upsert([
+			  {
+				id: user.id,
+				email: user.email,
+				name: pending[0].name,
+				phone: pending[0].phone,
+				company: pending[0].company,
+				subscribe:true
+			  },
+			]);
+	
+		 if (upsertError)  {
+			  console.error('Erreur lors de l’upsert dans pending_profiles:', upsertError);
+			}
+		  } else if (fetchError) {
+			console.error('Erreur lors de la récupération de pending_profiles:', fetchError);
+			//navigate("/signup")
+		  }
+
+	}
+  
+    };
+
+    syncPendingProfile();
+  }, []); // ne s'exécute qu'une seule fois au montage
 	useEffect(() => {
 		const verifySubscription = async () => {
 		  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
@@ -86,29 +160,26 @@ export default function Layout() {
 		  if (subError) {
 			console.error("Erreur abonnement", subError);
 			await supabase.auth.signOut();
-			navigate("/login");
 			return;
 		  }
 	  
 		  if (!subscriptions || subscriptions.length === 0) {
-			// 👇 redirige vers la page de souscription
-			navigate("/subscribe", { replace: true });
-			return;
-		  }
-	  
-		  setChecking(false);
+			// 👇 créer un souscription gratuit
+			handleSubscribe()
+
+		}
+		setChecking(false)
+
 		};
 	  
 		verifySubscription();
 	  }, []);
 	  
-  
-	if (checking) {
-	  return <div className="p-4">Vérification de l’abonnement...</div>;
-	}
-	  
-	
+
 	return (
+<div>
+	{checking?(<div>Vérification de votre compte</div>):(
+	
 		<div className='min-h-screen bg-gray-100'>
 			{/* Sidebar */}
 			<div className="group fixed inset-y-0 left-0 bg-white shadow-lg transition-all duration-200 w-20 hover:w-64 z-40">
@@ -161,9 +232,7 @@ export default function Layout() {
     </span>
   </button>
 </div>
-</div>
-			
-
+</div>		
 			{/* Main content */}
 			<div className='pl-20 group-hover:pl-64 transition-all duration-200'>
 
@@ -213,8 +282,10 @@ export default function Layout() {
 					</div>
 				</div>
 			)}
-		</div>
-	);
+</div>
+	)}
+	</div>
+);
 }
 
 
