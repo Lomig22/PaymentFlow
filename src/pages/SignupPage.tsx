@@ -34,7 +34,10 @@ export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
-
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [company, setCompany] = useState('');
+  
   const validateForm = () => {
     if (!email.trim()) {
       setMessage({ type: "error", text: "Veuillez saisir votre email." });
@@ -118,46 +121,6 @@ export default function SignupPage() {
       setLoading(false);
     }
   };
-/*     const handlePostOAuth = async () => {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      if (error || !session?.user) {
-        navigate("/login");
-        return;
-      }
-
-      const user = session.user;
-
-      // Vérifie si une subscription existe déjà
-      const { data: existingSub, error: subError } = await supabase
-        .from("subscriptions")
-        .select("id")
-        .eq("user_id", user.id);
-
-      if (subError) {
-        console.error("Erreur vérification subscription", subError);
-        navigate("/login");
-        return;
-      }
-
-      if (!existingSub || existingSub.length === 0) {
-        // Crée une nouvelle subscription pour cet utilisateur
-        const { error: insertError } = await supabase.from("subscriptions").insert({
-          user_id: user.id,
-          created_at: new Date().toISOString(), // ou autre champ nécessaire
-          status:"active",
-          plan:"free"
-        });
-
-        if (insertError) {
-          console.error("Erreur lors de la création de l'abonnement", insertError);
-          navigate("/login");
-          return;
-        }
-      }
-
-      // Tout est OK, redirige vers le dashboard
-      navigate(`/dashboard/`);
-    }; */
 
     const handleGoogleSignup = async () => {
       try {
@@ -168,8 +131,7 @@ export default function SignupPage() {
         console.error("Erreur auth Google", err);
       }
     };
-    
-
+    const [step, setStep] = useState(1);
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -201,7 +163,75 @@ export default function SignupPage() {
           </div>
         )}
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+{/*multistep auth */}
+<form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+  {step === 1 && (
+    <div className="space-y-4">
+  <div className="space-y-4">
+    {/* Nom */}
+    <div>
+      <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+        Nom complet
+      </label>
+      <div className="mt-1 relative">
+        <input
+          id="name"
+          name="name"
+          type="text"
+          required
+          className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-md 
+            shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 
+            focus:border-blue-500 sm:text-sm"
+          placeholder="Jean Dupont"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+      </div>
+    </div>
+
+    {/* Téléphone */}
+    <div>
+      <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
+        Numéro de téléphone
+      </label>
+      <div className="mt-1 relative">
+        <input
+          id="phone"
+          name="phone"
+          type="tel"
+          required
+          className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-md 
+            shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 
+            focus:border-blue-500 sm:text-sm"
+          placeholder="+261 34 00 000 00"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+        />
+      </div>
+    </div>
+
+    {/* Entreprise */}
+    <div>
+      <label htmlFor="company" className="block text-sm font-medium text-gray-700">
+        Nom de l'entreprise
+      </label>
+      <div className="mt-1 relative">
+        <input
+          id="company"
+          name="company"
+          type="text"
+          required
+          className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-md 
+            shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 
+            focus:border-blue-500 sm:text-sm"
+          placeholder="Onirtech"
+          value={company}
+          onChange={(e) => setCompany(e.target.value)}
+        />
+      </div>
+    </div>
+    </div>
+    {/* Email */}
           <div className="space-y-4">
             <div>
               <label
@@ -227,8 +257,24 @@ export default function SignupPage() {
                 />
               </div>
             </div>
+      <button
+        type="button"
+        onClick={() => setStep(2)}
+        className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm 
+          text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none 
+          focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+      >
+        Suivant
+      </button>
+    </div>
+    </div>
 
-            <div>
+  )}
+
+  {step === 2 && (
+    <div className="space-y-4">
+
+<div>
               <label
                 htmlFor="password"
                 className="block text-sm font-medium text-gray-700"
@@ -309,8 +355,44 @@ export default function SignupPage() {
                 </button>
               </div>
             </div>
+            
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm 
+              text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none 
+              focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:opacity-50"
+          >
+            {loading ? "Création en cours..." : "S'inscrire"}
+          </button>
+          <button
+    type="button"
+    onClick={handleGoogleSignup}
+    disabled={loading}
+    className="w-full flex items-center justify-center gap-2 bg-white border border-gray-300 text-gray-700 p-3 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-50"
+  >
+    <img
+      src="https://www.svgrepo.com/show/475656/google-color.svg"
+      alt="Google"
+      className="h-5 w-5"
+    />
+    S'inscrire avec Google
+  </button>
+  <button
+        type="button"
+        onClick={() => setStep(1)}
+        className="text-sm text-blue-600 hover:underline"
+      >
+        ← Retour
+      </button> 
+      <div className="text-center text-sm">
+            <Link
+              to="/forgot-password"
+              className="font-medium text-blue-600 hover:text-blue-500"
+            >
+              Mot de passe oublié?
+            </Link>
           </div>
-
           {showPasswordRequirements && (
             <div className="p-4 bg-gray-50 rounded-md">
               <p className="text-sm font-medium text-gray-700 mb-2">
@@ -354,38 +436,13 @@ export default function SignupPage() {
               </ul>
             </div>
           )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm 
-              text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none 
-              focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:opacity-50"
-          >
-            {loading ? "Création en cours..." : "S'inscrire"}
-          </button>
-          <button
-    type="button"
-    onClick={handleGoogleSignup}
-    disabled={loading}
-    className="w-full flex items-center justify-center gap-2 bg-white border border-gray-300 text-gray-700 p-3 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-50"
-  >
-    <img
-      src="https://www.svgrepo.com/show/475656/google-color.svg"
-      alt="Google"
-      className="h-5 w-5"
-    />
-    S'inscrire avec Google
-  </button>
-          <div className="text-center text-sm">
-            <Link
-              to="/forgot-password"
-              className="font-medium text-blue-600 hover:text-blue-500"
-            >
-              Mot de passe oublié?
-            </Link>
           </div>
-        </form>
+          
+)}
+        
+   
+</form>
+
       </div>
     </div>
   );

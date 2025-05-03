@@ -161,7 +161,9 @@ export default function LoginPage() {
           >
             {loading ? "Connexion en cours..." : "Se connecter"}
           </button>
-
+          <div className="flex items-center justify-center">
+    <span className="text-sm text-gray-500">ou</span>
+  </div>
           <div className="space-y-4 mb-6">
   <button
     type="button"
@@ -177,9 +179,7 @@ export default function LoginPage() {
     Continuer avec Google
   </button>
 
-  <div className="flex items-center justify-center">
-    <span className="text-sm text-gray-500">ou</span>
-  </div>
+
 </div>
 
           <div className="text-center space-y-2">
