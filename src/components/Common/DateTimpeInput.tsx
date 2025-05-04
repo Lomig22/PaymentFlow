@@ -24,7 +24,7 @@ export default function DateTimeInput({ label, value, onChange }: DateTimeInputP
         timeFormat="HH:mm"
         timeConstraints={{
           hours: { min: 0, max: 23, step: 1 },
-          minutes: { min: 0, max: 59, step: 15 },
+          minutes: { min: 0, max: 59, step: 1 },
         }}
         inputProps={{ className: "w-full" }}
       />
