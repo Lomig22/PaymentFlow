@@ -408,7 +408,7 @@ useEffect(() => {
 		if (!sortConfig) return 0;
 		const { key, sort } = sortConfig;
 		if (key === 'client') {
-			return stringCompare(a.client.company_name, b.client.company_name, sort);
+			return stringCompare(a.client?.company_name ?? '', b.client?.company_name ?? '', sort);
 		}
 		if (key === 'client_code') {
 			return stringCompare(a.client.client_code, b.client.client_code, sort);
@@ -456,7 +456,7 @@ useEffect(() => {
 		.filter((receivable) => {
 			const searchLower = searchTerm.toLowerCase();
 			return (
-				receivable.client.company_name.toLowerCase().includes(searchLower) ||
+				receivable.client?.company_name.toLowerCase().includes(searchLower) ||
 				receivable.invoice_number.toLowerCase().includes(searchLower) ||
 				receivable.amount.toString().includes(searchLower)
 			);
@@ -696,8 +696,7 @@ useEffect(() => {
 													>
 														<Mail className='h-5 w-5' />
 													</button>
-													{!receivable.client.reminder_template_1 &&
-														receivable.client.needs_reminder && (
+													{!receivable.client?.reminder_template_1 && receivable.client?.needs_reminder && (
 															<div className='relative'>
 																<div
 																	className='text-yellow-500 cursor-help'
@@ -748,10 +747,10 @@ useEffect(() => {
 										</div>
 									</td>
 									<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
-										{receivable.client.company_name}
+									{receivable.client?.company_name ?? 'Client inconnu'}
 									</td>
 									<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
-										{receivable.client.client_code}
+										{receivable.client?.client_code??'inconnu'}
 									</td>
 									<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
 										{receivable.email||receivable.client.email.split(',')[0]}
@@ -1030,7 +1029,7 @@ useEffect(() => {
 						<p className='text-sm text-gray-500 mb-4'>
 							Êtes-vous sûr de vouloir supprimer la créance "
 							{receivableToDelete.invoice_number}" pour le client "
-							{receivableToDelete.client.company_name}" ? Cette action est
+							{receivableToDelete.client?.company_name ||"inconnue"}" ? Cette action est
 							irréversible.
 						</p>
 
