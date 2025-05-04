@@ -195,111 +195,160 @@ export async function sendManualReminder(
 	subject?: string,
 	content?: string,
 	signature?: string
-): Promise<boolean> {
+  ): Promise<boolean> {
 	try {
-		const { data: receivable, error: receivableError } = await supabase
-			.from('receivables')
-			.select('*, client:clients(*)')
-			.eq('id', receivableId)
-			.single();
-
-		if (receivableError) throw receivableError;
-		if (!receivable) return false;
-
-		const {
-			data: { user },
-		} = await supabase.auth.getUser();
-		if (!user) return false;
-
-		const emailSettings = await getEmailSettings(user.id);
-		if (!emailSettings) return false;
-
-		const dueDate = new Date(receivable.due_date);
-		const today = new Date();
-		const daysLate = Math.floor(
-			(today.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24)
-		);
-
-		const { level, template } = determineReminderLevel(
-			daysLate,
-			receivable.client,
-			receivable.status
-		);
-		if (!level || !template) return false;
-
-		// ✅ Générer le contenu personnalisé ou utiliser le template par défaut
-		const defaultEmailContent = formatTemplate(template, {
-			company: receivable.client.company_name,
-			amount: receivable.amount,
-			invoice_number: receivable.invoice_number,
-			due_date: receivable.due_date,
-			days_late: daysLate || 0,
-			days_left: Math.max(0, -1 * daysLate),
+	  // Récupérer la créance et les informations sur le client
+	  const { data: receivable, error: receivableError } = await supabase
+		.from('receivables')
+		.select('*, client:clients(*)')
+		.eq('id', receivableId)
+		.single();
+  
+	  if (receivableError) throw receivableError;
+	  if (!receivable) return false;
+  
+	  // Récupérer l'utilisateur connecté
+	  const {
+		data: { user },
+	  } = await supabase.auth.getUser();
+	  if (!user) return false;
+  
+	  // Récupérer les paramètres d'e-mail pour l'utilisateur
+	  const emailSettings = await getEmailSettings(user.id);
+	  if (!emailSettings) return false;
+  
+	  // Récupérer le profil de l'utilisateur et son compteur d'e-mails
+	  const { data: userProfile, error: profileError } = await supabase
+		.from('profiles')
+		.select('email_counter')
+		.eq('id', user.id)
+		.single();
+  
+	  if (profileError) throw profileError;
+	  if (!userProfile) return false;
+  
+	  // Récupérer les informations sur l'abonnement de l'utilisateur
+	  const { data: subscription, error: subscriptionError } = await supabase
+		.from('subscriptions')
+		.select('plan')
+		.eq('user_id', user.id)
+		.single();
+  
+	  if (subscriptionError) throw subscriptionError;
+	  if (!subscription) return false;
+  
+	  // Vérifier la limite d'e-mails pour le plan "free"
+	  const isFreePlan = subscription.plan === 'free';
+	  const maxEmails = isFreePlan ? 20 : Infinity; // Limite de 20 e-mails pour le plan gratuit
+  
+	  // Vérifier si le nombre maximal d'e-mails a été atteint
+	  if (userProfile.email_counter >= maxEmails) {
+		throw new Error("Le nombre maximal d'e-mails pour votre essai gratuit a été atteint.");
+	  }
+  
+	  // Calculer les jours de retard de la créance
+	  const dueDate = new Date(receivable.due_date);
+	  const today = new Date();
+	  const daysLate = Math.floor(
+		(today.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24)
+	  );
+  
+	  // Déterminer le niveau de la relance
+	  const { level, template } = determineReminderLevel(
+		daysLate,
+		receivable.client,
+		receivable.status
+	  );
+	  if (!level || !template) return false;
+  
+	  // ✅ Générer le contenu de l'e-mail
+	  const defaultEmailContent = formatTemplate(template, {
+		company: receivable.client.company_name,
+		amount: receivable.amount,
+		invoice_number: receivable.invoice_number,
+		due_date: receivable.due_date,
+		days_late: daysLate || 0,
+		days_left: Math.max(0, -1 * daysLate),
+	  });
+  
+	  if (content) {
+		content = formatTemplate(content, {
+		  company: receivable.client.company_name,
+		  amount: receivable.amount,
+		  invoice_number: receivable.invoice_number,
+		  due_date: receivable.due_date,
+		  days_late: daysLate || 0,
+		  days_left: Math.max(0, -1 * daysLate),
 		});
-		if (content){
-			content=formatTemplate(content, {
-				company: receivable.client.company_name,
-				amount: receivable.amount,
-				invoice_number: receivable.invoice_number,
-				due_date: receivable.due_date,
-				days_late: daysLate || 0,
-				days_left: Math.max(0, -1 * daysLate),
-			});
-		}
-
-		const finalSubject =
-			subject || `Relance facture ${receivable.invoice_number}`;
-		const finalContent = content
-			? `${content}\n\n${signature || ''}`
-			: defaultEmailContent;
-
-		const emailSent = await sendEmail(
-			emailSettings,
-			receivable.email || receivable.client.email,
-			finalSubject,
-			finalContent,
-			receivable.invoice_pdf_url
-		);
-
-		if (emailSent) {
-			// Enregistrer la relance
-			await supabase.from('reminders').insert({
-				receivable_id: receivableId,
-				reminder_type: level,
-				reminder_date: new Date().toISOString(),
-				email_sent: true,
-				email_content: finalContent,
-			});
-
-			// Mettre à jour le statut
-			await supabase
-				.from('receivables')
-				.update({
-					status:
-						level === 'first'
-							? 'Relance 1'
-							: level === 'second'
-							? 'Relance 2'
-							: level === 'third'
-							? 'Relance 3'
-							: level === 'final'
-							? 'Relance finale'
-							: level === 'pre'
-							? 'Relance préventive'
-							: 'Relance',
-					updated_at: new Date().toISOString(),
-				})
-				.eq('id', receivableId);
-
-			return true;
-		}
-
-		return false;
-	} catch (error) {
-		console.error("Erreur lors de l'envoi de la relance:", error);
-		return false;
+	  }
+  
+	  const finalSubject =
+		subject || `Relance facture ${receivable.invoice_number}`;
+	  const finalContent = content
+		? `${content}\n\n${signature || ''}`
+		: defaultEmailContent;
+  
+	  // Envoyer l'e-mail
+	  const emailSent = await sendEmail(
+		emailSettings,
+		receivable.email || receivable.client.email,
+		finalSubject,
+		finalContent,
+		receivable.invoice_pdf_url
+	  );
+  
+	  if (emailSent) {
+		// Enregistrer la relance dans la base de données
+		await supabase.from('reminders').insert({
+		  receivable_id: receivableId,
+		  reminder_type: level,
+		  reminder_date: new Date().toISOString(),
+		  email_sent: true,
+		  email_content: finalContent,
+		});
+  
+		// Mettre à jour le statut de la créance
+		await supabase
+		  .from('receivables')
+		  .update({
+			status:
+			  level === 'first'
+				? 'Relance 1'
+				: level === 'second'
+				? 'Relance 2'
+				: level === 'third'
+				? 'Relance 3'
+				: level === 'final'
+				? 'Relance finale'
+				: level === 'pre'
+				? 'Relance préventive'
+				: 'Relance',
+			updated_at: new Date().toISOString(),
+		  })
+		  .eq('id', receivableId);
+  
+		// Incrémenter le compteur d'e-mails dans le profil de l'utilisateur
+		await supabase
+		  .from('profiles')
+		  .update({
+			email_counter: userProfile.email_counter + 1,
+		  })
+		  .eq('user_id', user.id);
+  
+		return true;
+	  }
+  
+	  return false;
+	} catch (error:any) {
+	  console.error("Erreur lors de l'envoi de la relance:", error);
+	  // Si l'erreur est liée à la limite d'envoi d'e-mails, on la renvoie spécifiquement
+	  if (error.message === "Le nombre maximal d'e-mails pour votre essai gratuit a été atteint.") {
+		throw new Error(error.message);
+	  }
+	  return false;
 	}
-}
+  }
+  
 
 
 // Fonction principale pour vérifier et envoyer les relances automatiques

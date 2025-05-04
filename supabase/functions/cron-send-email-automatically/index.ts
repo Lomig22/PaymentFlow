@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { determineReminderLevel, formatTemplate, getEmailSettings } from './lib/reminderService';
 import { sendEmail } from './lib/email';
 import { Client } from './types/database';
-import { log } from 'console';
+import { log, profile } from 'console';
 // Typages explicites
 type Delay = {
   j?: number; // jours
@@ -127,93 +127,139 @@ async function shouldSendReminder(receivable: any): Promise<boolean> {
 	return now.getTime() >= nextReminderTime;
   }
   
-export async function sendManualReminder(
-	receivableId: string
-): Promise<boolean> {
+  export async function sendManualReminder(
+	receivableId: string,
+	userId: string // ID de l'utilisateur connecté
+  ): Promise<boolean> {
 	try {
-		const { data: receivable, error: receivableError } = await supabase
-			.from('receivables')
-			.select('*, client:clients(*)')
-			.eq('id', receivableId)
-			.single();
-
-		if (receivableError) throw receivableError;
-		if (!receivable) return false;
-		
-		const emailSettings = await getEmailSettings(receivable.owner_id);
-  //  console.log("CONFIGURATION MAIIIIIIIIIIIIIIL\n",emailSettings);
-
-		if (!emailSettings) return false;
-
-		const dueDate = new Date(receivable.due_date);
-		const today = new Date();
-		const daysLate = Math.floor(
-			(today.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24)
-		);
-
-		const { level, template } = determineReminderLevel(
-			daysLate,
-			receivable.client,
-			receivable.status
-		);
-		if (!level || !template) return false;
-
-		const emailContent = formatTemplate(template, {
-			company: receivable.client.company_name,
-			amount: receivable.amount,
-			invoice_number: receivable.invoice_number,
-			due_date: receivable.due_date,
-			days_late: daysLate || 0,
-			days_left: Math.max(0, -1 * daysLate),
+	  // Récupérer la créance et le client associés
+	  const { data: receivable, error: receivableError } = await supabase
+		.from('receivables')
+		.select('*, client:clients(*)')
+		.eq('id', receivableId)
+		.single();
+  
+	  if (receivableError) throw receivableError;
+	  if (!receivable) return false;
+  
+	  // Récupérer les paramètres de l'email de l'utilisateur connecté
+	  const emailSettings = await getEmailSettings(receivable.owner_id);
+	  if (!emailSettings) return false;
+  
+	  // Récupérer les informations de l'utilisateur connecté
+	  const { data: userProfile, error: profileError } = await supabase
+		.from('profiles')
+		.select('email_counter')
+		.eq('id', userId)
+		.single();
+  
+	  if (profileError) throw profileError;
+	  if (!userProfile) return false;
+  
+	  // Récupérer le type de souscription de l'utilisateur
+	  const { data: subscription, error: subscriptionError } = await supabase
+		.from('subscriptions')
+		.select('plan')
+		.eq('user_id', userId)
+		.single();
+  
+	  if (subscriptionError) throw subscriptionError;
+	  if (!subscription) return false;
+  
+	  // Vérifier la limite d'envois pour un utilisateur avec le plan "free"
+	  const isFreePlan = subscription.plan === 'free';
+	  const maxEmails = isFreePlan ? 20 : Infinity; // 20 pour le plan gratuit
+  
+	  if (userProfile.email_counter >= maxEmails) {
+		throw new Error("Le nombre maximal d'e-mails pour votre essai gratuit a été atteint.");
+	  }
+  
+	  // Calculer les jours de retard
+	  const dueDate = new Date(receivable.due_date);
+	  const today = new Date();
+	  const daysLate = Math.floor(
+		(today.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24)
+	  );
+  
+	  // Déterminer le niveau de relance
+	  const { level, template } = determineReminderLevel(
+		daysLate,
+		receivable.client,
+		receivable.status
+	  );
+	  if (!level || !template) return false;
+  
+	  // Formater le contenu de l'e-mail
+	  const emailContent = formatTemplate(template, {
+		company: receivable.client.company_name,
+		amount: receivable.amount,
+		invoice_number: receivable.invoice_number,
+		due_date: receivable.due_date,
+		days_late: daysLate || 0,
+		days_left: Math.max(0, -1 * daysLate),
+	  });
+  
+	  // Envoyer l'e-mail
+	  const emailSent = await sendEmail(
+		emailSettings,
+		receivable.email || receivable.client.email,
+		`Relance facture ${receivable.invoice_number}`,
+		emailContent,
+		receivable.invoice_pdf_url
+	  );
+  
+	  if (emailSent) {
+		// Enregistrer la relance
+		await supabase.from('reminders').insert({
+		  receivable_id: receivableId,
+		  reminder_type: level,
+		  reminder_date: new Date().toISOString(),
+		  email_sent: true,
+		  email_content: emailContent,
 		});
-
-		const emailSent = await sendEmail(
-			emailSettings,
-			receivable.email||receivable.client.email,
-			`Relance facture ${receivable.invoice_number}`,
-			emailContent,
-			receivable.invoice_pdf_url
-		);
-
-		if (emailSent) {
-			// Enregistrer la relance
-			await supabase.from('reminders').insert({
-				receivable_id: receivableId,
-				reminder_type: level,
-				reminder_date: new Date().toISOString(),
-				email_sent: true,
-				email_content: emailContent,
-			});
-
-			// Mettre à jour le status de la créance
-			await supabase
-				.from('receivables')
-				.update({
-					status:
-						level === 'first'
-							? 'Relance 1'
-							: level === 'second'
-							? 'Relance 2'
-							: level === 'third'
-							? 'Relance 3'
-							: level === 'final'
-							? 'Relance finale'
-							: level === 'pre'
-							? 'Relance préventive'
-							: 'Relance',
-					updated_at: new Date().toISOString(),
-				})
-				.eq('id', receivableId);
-
-			return true;
-		}
-
-		return false;
+  
+		// Mettre à jour le statut de la créance
+		await supabase
+		  .from('receivables')
+		  .update({
+			status:
+			  level === 'first'
+				? 'Relance 1'
+				: level === 'second'
+				? 'Relance 2'
+				: level === 'third'
+				? 'Relance 3'
+				: level === 'final'
+				? 'Relance finale'
+				: level === 'pre'
+				? 'Relance préventive'
+				: 'Relance',
+			updated_at: new Date().toISOString(),
+		  })
+		  .eq('id', receivableId);
+  
+		// Incrémenter le compteur d'e-mails envoyés
+		await supabase
+		  .from('profiles')
+		  .update({
+			email_counter: userProfile.email_counter + 1,
+		  })
+		  .eq('user_id', userId);
+  
+		return true;
+	  }
+  
+	  return false;
 	} catch (error) {
-		console.error("Erreur lors de l'envoi de la relance:", error);
-		return false;
+	  console.error("Erreur lors de l'envoi de la relance:", error);
+	  // Si l'erreur est liée à la limite d'e-mails, on retourne un message spécifique
+	  if (error.message === "Le nombre maximal d'e-mails pour votre essai gratuit a été atteint.") {
+		throw new Error(error.message);
+	  }
+	  return false;
 	}
-}
+  }
+  
 async function AutomaticallySendReminders(): Promise<void> {
 	try {
 		const { data: receivables, error } = await supabase
@@ -231,7 +277,7 @@ async function AutomaticallySendReminders(): Promise<void> {
 				console.log("sHOULD SEND REMINDERS TO "+receivable.client.company_name+" WITH CURRENT STATUS "+receivable.status);
 				console.log(receivable.id);
         
-				await sendManualReminder(receivable.id);
+				await sendManualReminder(receivable.id,receivable.owner_id);
 			}
 		
 		}
