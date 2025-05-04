@@ -259,7 +259,34 @@ export default function ReminderSettingsModal({
 		const m = totalMinutes % 60;
 		return { j, h, m };
 	  }
+	  function delayToDateTimeBefore(
+		delay: { j: number; h: number; m: number },
+		baseDate: Date
+	  ): Date {
+		if (!delay) return new Date(); // fallback
 	  
+		const result = new Date(baseDate);
+		result.setMinutes(
+		  result.getMinutes() -
+			((delay.j || 0) * 1440 + (delay.h || 0) * 60 + (delay.m || 0))
+		);
+		return result;
+	  }
+	  
+	  function dateTimeToDelayBefore(
+		target: Date,
+		baseDate: Date
+	  ): { j: number; h: number; m: number } {
+		const diffMs = baseDate.getTime() - target.getTime(); // inversé
+		const totalMinutes = Math.round(diffMs / 60000);
+		const j = Math.floor(totalMinutes / 1440);
+		const h = Math.floor((totalMinutes % 1440) / 60);
+		const m = totalMinutes % 60;
+		return { j, h, m };
+	  }
+	  
+	  const dueDate = new Date(receivable.due_date);
+		dueDate.setHours(0, 0, 0, 0);
 	  
 
 	return (
@@ -359,57 +386,59 @@ export default function ReminderSettingsModal({
     </div>
 						</div>
 						<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+							
 						<DateTimeInput
   label="Date/Heure d’envoi – Première relance"
-  value={delayToDateTime(formData.reminder_delay_1)}
+  value={delayToDateTime(formData.reminder_delay_1, dueDate)}
   onChange={(date) =>
     setFormData({
       ...formData,
-      reminder_delay_1: dateTimeToDelay(date),
+      reminder_delay_1: dateTimeToDelay(date, dueDate),
     })
   }
 />
 
+
 <DateTimeInput
   label="Date/Heure d’envoi – Deuxième relance"
-  value={delayToDateTime(formData.reminder_delay_2, delayToDateTime(formData.reminder_delay_1))}
+  value={delayToDateTime(formData.reminder_delay_2, delayToDateTime(formData.reminder_delay_1,dueDate))}
   onChange={(date) =>
     setFormData({
       ...formData,
-      reminder_delay_2: dateTimeToDelay(date, delayToDateTime(formData.reminder_delay_1)),
+      reminder_delay_2: dateTimeToDelay(date, delayToDateTime(formData.reminder_delay_1,dueDate)),
     })
   }
 />
 
 <DateTimeInput
   label="Date/Heure d’envoi – Troisième relance"
-  value={delayToDateTime(formData.reminder_delay_3, delayToDateTime(formData.reminder_delay_2))}
+  value={delayToDateTime(formData.reminder_delay_3, delayToDateTime(formData.reminder_delay_2,delayToDateTime(formData.reminder_delay_1,dueDate)))}
   onChange={(date) =>
     setFormData({
       ...formData,
-      reminder_delay_3: dateTimeToDelay(date, delayToDateTime(formData.reminder_delay_2)),
+      reminder_delay_3: dateTimeToDelay(date, delayToDateTime(formData.reminder_delay_2,delayToDateTime(formData.reminder_delay_1,dueDate))),
     })
   }
 />
 
 <DateTimeInput
   label="Date/Heure d’envoi – Relance finale"
-  value={delayToDateTime(formData.reminder_delay_final, delayToDateTime(formData.reminder_delay_3))}
+  value={delayToDateTime(formData.reminder_delay_final, delayToDateTime(formData.reminder_delay_3, delayToDateTime(formData.reminder_delay_2,delayToDateTime(formData.reminder_delay_1,dueDate))))}
   onChange={(date) =>
     setFormData({
       ...formData,
-      reminder_delay_final: dateTimeToDelay(date, delayToDateTime(formData.reminder_delay_3)),
+      reminder_delay_final: dateTimeToDelay(date, delayToDateTime(formData.reminder_delay_3, delayToDateTime(formData.reminder_delay_2,delayToDateTime(formData.reminder_delay_1,dueDate)))),
     })
   }
 />
 
 <DateTimeInput
   label="Date/Heure d’envoi – Pré-relance"
-  value={delayToDateTime(formData.pre_reminder_delay)}
+  value={delayToDateTimeBefore(formData.pre_reminder_delay, dueDate)}
   onChange={(date) =>
     setFormData({
       ...formData,
-      pre_reminder_delay: dateTimeToDelay(date),
+      pre_reminder_delay: dateTimeToDelayBefore(date, dueDate),
     })
   }
 />
