@@ -244,7 +244,7 @@ async function shouldSendReminder(receivable: any): Promise<boolean> {
 		  .update({
 			email_counter: userProfile.email_counter + 1,
 		  })
-		  .eq('user_id', userId);
+		  .eq('id', userId);
   
 		return true;
 	  }
