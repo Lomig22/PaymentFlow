@@ -55,61 +55,78 @@ async function getLastReminder(receivableId: string) {
 }
 
 async function shouldSendReminder(receivable: any): Promise<boolean> {
-  console.log("status: ", receivable.status, "due_date:", receivable.due_date);
-	
-  if (!receivable.status || !receivable.due_date) return false;
-  if (!receivable.automatic_reminder){
-	console.log("RAPELLE AUTOMATIQUE DESACTIVEE POUR LA CREANCE: ",receivable.id);
-	return false;
-  } 
-  const now = new Date();
-  const lastReminder = await getLastReminder(receivable.id);  // Récupérer la dernière relance via Supabase
+	console.log("status: ", receivable.status, "due_date:", receivable.due_date);
   
-  const lastReminderAt = lastReminder ? new Date(lastReminder.reminder_date) : null;
-
-  let delayMinutes = 0;
-console.log("RECEIVABLE STATUS: ",receivable.status);
-
-  switch (receivable.status) {
-    case 'pending':
-      console.log("pending state: ", receivable.client.company_name);
-    case 'Relance préventive':
-      const delay1 = receivable.client?.reminder_delay_1;
-      console.log("Reminder Delay 1: ", delay1); // Débogage : vérifiez la valeur avant conversion
-      delayMinutes = convertJHMToMinutes(delay1) ?? 0;
-      console.log("Relance préventive minutes: ", delayMinutes);
-      break;
-    case 'Relance 1':
-      const delay2 = receivable.client?.reminder_delay_2;
-      console.log("Reminder Delay 2: ", delay2); // Débogage : vérifiez la valeur avant conversion
-      delayMinutes = convertJHMToMinutes(delay2) ?? 0;
-      break;
-    case 'Relance 2':
-      const delay3 = receivable.client?.reminder_delay_3;
-      console.log("Reminder Delay 3: ", delay3); // Débogage : vérifiez la valeur avant conversion
-      delayMinutes = convertJHMToMinutes(delay3) ?? 0;
-      break;
-    case 'Relance 3':
-      const delayFinal = receivable.client?.reminder_delay_final;
-      console.log("Reminder Final Delay: ", delayFinal); // Débogage : vérifiez la valeur avant conversion
-      delayMinutes = convertJHMToMinutes(delayFinal) ?? 0;
-      break;
-    default:
-      return false;
+	if (!receivable.status || !receivable.due_date) return false;
+  
+	if (!receivable.automatic_reminder) {
+	  console.log("RAPPEL AUTOMATIQUE DESACTIVÉ POUR LA CRÉANCE: ", receivable.id);
+	  return false;
+	}
+  
+	const now = new Date();
+	const lastReminder = await getLastReminder(receivable.id);
+	const lastReminderAt = lastReminder ? new Date(lastReminder.reminder_date) : null;
+  
+	let delayMinutes = 0;
+	console.log("RECEIVABLE STATUS: ", receivable.status);
+  
+	switch (receivable.status) {
+		case 'pending': {
+			const delayPre = receivable.client?.pre_reminder_delay || { j: 1, h: 0, m: 0 };
+			console.log("Pré-reminder delay: ", delayPre);
+			delayMinutes = convertJHMToMinutes(delayPre);
+		  
+			const dueDate = new Date(receivable.due_date);
+			const reminderTime = new Date(dueDate.getTime() - delayMinutes * 60 * 1000);
+		  
+			console.log("Pré-reminder doit être envoyé à partir de : ", reminderTime);
+		  
+			// On n'envoie que si la date actuelle est >= à "due_date - délai"
+			return now >= reminderTime && now < dueDate;
+		  }		  
+  
+	  case 'Relance préventive': {
+		const delay1 = receivable.client?.reminder_delay_1;
+		console.log("Reminder Delay 1: ", delay1);
+		delayMinutes = convertJHMToMinutes(delay1) ?? 0;
+		break;
+	  }
+  
+	  case 'Relance 1': {
+		const delay2 = receivable.client?.reminder_delay_2;
+		console.log("Reminder Delay 2: ", delay2);
+		delayMinutes = convertJHMToMinutes(delay2) ?? 0;
+		break;
+	  }
+  
+	  case 'Relance 2': {
+		const delay3 = receivable.client?.reminder_delay_3;
+		console.log("Reminder Delay 3: ", delay3);
+		delayMinutes = convertJHMToMinutes(delay3) ?? 0;
+		break;
+	  }
+  
+	  case 'Relance 3': {
+		const delayFinal = receivable.client?.reminder_delay_final;
+		console.log("Reminder Final Delay: ", delayFinal);
+		delayMinutes = convertJHMToMinutes(delayFinal) ?? 0;
+		break;
+	  }
+  
+	  default:
+		return false;
+	}
+  
+	console.log("lastReminderAt: ", lastReminderAt);
+	console.log("delay minutes: ", delayMinutes);
+  
+	if (!lastReminderAt) return true;
+  
+	const nextReminderTime = lastReminderAt.getTime() + delayMinutes * 60 * 1000;
+	return now.getTime() >= nextReminderTime;
   }
   
-  
-  console.log("lastReminderAt: ", lastReminderAt);
-console.log("delay minutes: ",delayMinutes);
-
-  // 🟢 S’il n’y a jamais eu de relance => on envoie !
-  if (!lastReminderAt) return true;
-
-  const nextReminderTime = lastReminderAt.getTime() + delayMinutes * 60 * 1000;
-
-  return now.getTime() >= nextReminderTime;
-}
-
 export async function sendManualReminder(
 	receivableId: string
 ): Promise<boolean> {
