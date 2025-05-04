@@ -1,6 +1,12 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+.StripeElement {
+  display: block;
+  width: 100%;
+  padding: 12px;
+}
+
 /* Exemple de surcharge du style pour les titres et les boutons */
 .react-confirm-alert-overlay {
     background-color: rgba(0, 0, 0, 0.5); /* Changer la couleur de fond de l'overlay */

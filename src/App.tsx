@@ -26,6 +26,7 @@ import ContactPage from "./pages/ContactPage";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import OAuthCallback from "./pages/SubscribePage";
 import SubscribePage from "./pages/SubscribePage";
+import Success from "./components/settings/paymentSuccess";
 
 function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -165,6 +166,7 @@ function App() {
           <Route path="/receivables" element={<ReceivablesList />} />
           <Route path="/settings" element={<Settings />} />
           <Route path='/reminders' element={<ReminderList />} />
+          <Route path="/success" element={<Success />} />
 
         </Route>
 
