@@ -8,6 +8,10 @@ import ReactDateTimePicker from 'react-datetime-picker';
 import 'react-datetime-picker/dist/DateTimePicker.css';
 import 'react-calendar/dist/Calendar.css';
 import 'react-clock/dist/Clock.css';
+import Datetime from "react-datetime";
+import "react-datetime/css/react-datetime.css"; // si tu n'as pas encore importé le style
+import moment from "moment";
+import DateTimeInput from '../Common/DateTimpeInput';
 
 interface ReminderSettingsModalProps {
 	client: Client;
@@ -355,103 +359,61 @@ export default function ReminderSettingsModal({
     </div>
 						</div>
 						<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-  <div className="bg-white p-4 rounded-xl shadow">
-    <label className="block text-sm font-medium text-gray-700 mb-2">
-      Date/Heure d’envoi – Première relance
-    </label>
-    <ReactDateTimePicker
-      value={delayToDateTime(formData.reminder_delay_1)}
-      onChange={(date) => {
-        if (date instanceof Date && !isNaN(date.getTime())) {
-          setFormData({
-            ...formData,
-            reminder_delay_1: dateTimeToDelay(date),
-          });
-        }
-      }}
-      format="y-MM-dd h:mm a"
-      className="w-full"
-    />
-  </div>
+						<DateTimeInput
+  label="Date/Heure d’envoi – Première relance"
+  value={delayToDateTime(formData.reminder_delay_1)}
+  onChange={(date) =>
+    setFormData({
+      ...formData,
+      reminder_delay_1: dateTimeToDelay(date),
+    })
+  }
+/>
 
-  <div className="bg-white p-4 rounded-xl shadow">
-    <label className="block text-sm font-medium text-gray-700 mb-2">
-      Date/Heure d’envoi – Deuxième relance
-    </label>
-    <ReactDateTimePicker
+<DateTimeInput
+  label="Date/Heure d’envoi – Deuxième relance"
   value={delayToDateTime(formData.reminder_delay_2, delayToDateTime(formData.reminder_delay_1))}
-  onChange={(date) => {
-    const base = delayToDateTime(formData.reminder_delay_1);
-    if (date instanceof Date && !isNaN(date.getTime())) {
-      setFormData({
-        ...formData,
-        reminder_delay_2: dateTimeToDelay(date, base),
-      });
-    }
-  }}
-  format="y-MM-dd h:mm a"
-className="w-full"
+  onChange={(date) =>
+    setFormData({
+      ...formData,
+      reminder_delay_2: dateTimeToDelay(date, delayToDateTime(formData.reminder_delay_1)),
+    })
+  }
 />
-  </div>
 
-  <div className="bg-white p-4 rounded-xl shadow">
-    <label className="block text-sm font-medium text-gray-700 mb-2">
-      Date/Heure d’envoi – Troisième relance
-    </label>
-    <ReactDateTimePicker
+<DateTimeInput
+  label="Date/Heure d’envoi – Troisième relance"
   value={delayToDateTime(formData.reminder_delay_3, delayToDateTime(formData.reminder_delay_2))}
-  onChange={(date) => {
-    const base = delayToDateTime(formData.reminder_delay_2);
-    if (date instanceof Date && !isNaN(date.getTime())) {
-      setFormData({
-        ...formData,
-        reminder_delay_3: dateTimeToDelay(date, base),
-      });
-    }
-  }}
-  format="y-MM-dd h:mm a"
-className="w-full"
+  onChange={(date) =>
+    setFormData({
+      ...formData,
+      reminder_delay_3: dateTimeToDelay(date, delayToDateTime(formData.reminder_delay_2)),
+    })
+  }
 />
-  </div>
 
-  <div className="bg-white p-4 rounded-xl shadow">
-    <label className="block text-sm font-medium text-gray-700 mb-2">
-      Date/Heure d’envoi – Relance finale
-    </label>
-	<ReactDateTimePicker
+<DateTimeInput
+  label="Date/Heure d’envoi – Relance finale"
   value={delayToDateTime(formData.reminder_delay_final, delayToDateTime(formData.reminder_delay_3))}
-  onChange={(date) => {
-    const base = delayToDateTime(formData.reminder_delay_3);
-    if (date instanceof Date && !isNaN(date.getTime())) {
-      setFormData({
-        ...formData,
-        reminder_delay_final: dateTimeToDelay(date, base),
-      });
-    }
-  }}
-  format="y-MM-dd h:mm a"
-className="w-full"
+  onChange={(date) =>
+    setFormData({
+      ...formData,
+      reminder_delay_final: dateTimeToDelay(date, delayToDateTime(formData.reminder_delay_3)),
+    })
+  }
 />
-  </div>
 
-  <div className="bg-white p-4 rounded-xl shadow">
-    <label className="block text-sm font-medium text-gray-700 mb-2">
-      Date/Heure d’envoi – Pré-relance
-    </label>
-    <ReactDateTimePicker
-      value={delayToDateTime(formData.pre_reminder_delay)}
-      onChange={(date) => {
-        if (date instanceof Date && !isNaN(date.getTime())) {
-          setFormData({
-            ...formData,
-            pre_reminder_delay: dateTimeToDelay(date),
-          });
-        }
-      }}
-      format="y-MM-dd h:mm a"
-      className="w-full"
-    />
-  </div>
+<DateTimeInput
+  label="Date/Heure d’envoi – Pré-relance"
+  value={delayToDateTime(formData.pre_reminder_delay)}
+  onChange={(date) =>
+    setFormData({
+      ...formData,
+      pre_reminder_delay: dateTimeToDelay(date),
+    })
+  }
+/>
+
 </div>
 {/*end relance en calendrier */}
 						<div className='space-y-4'>
