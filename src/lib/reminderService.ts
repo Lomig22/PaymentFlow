@@ -333,7 +333,7 @@ export async function sendManualReminder(
 		  .update({
 			email_counter: userProfile.email_counter + 1,
 		  })
-		  .eq('user_id', user.id);
+		  .eq('id', user.id);
   
 		return true;
 	  }
