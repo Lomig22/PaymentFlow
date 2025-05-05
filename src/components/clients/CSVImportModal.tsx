@@ -923,19 +923,19 @@ console.log("DATA: ", data)
       >
         <option value=''>Ne pas importer</option>
         {mappingFields.map((field) => (
-          <option
-            key={field.field}
-            value={field.field}
-			disabled={
-				Object.entries(mapping)
-				  .filter(([key, value]) => Boolean(value) && key !== String(header))
-				  .some(([_, value]) => value === field.field)
-			  }
-			  
-          >
-            {field.label}
-            {field.required ? ' *' : ''}
-          </option>
+			<option
+  key={field.field}
+  value={field.field}
+  disabled={
+    field.label && Object.entries(mapping)
+      .filter(([key, value]) => Boolean(value) && key !== String(header))
+      .some(([_, value]) => value === field.field)
+  }
+>
+  {field.label}
+  {field.required ? ' *' : ''}
+</option>
+
         ))}
       </select>
     </div>

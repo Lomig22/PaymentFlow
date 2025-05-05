@@ -10,6 +10,7 @@ import {
 	dateCompare,
 	stringCompare,
 } from '../../lib/comparers';
+import Swal from 'sweetalert2';
 
 type ClientListProps = {
 	showForm: boolean;
@@ -50,6 +51,8 @@ function ClientList({
 		sort: 'asc',
 	});
 	const [success, setSuccess] = useState<string | null>(null);
+	const [selectedClientIds, setSelectedClientIds] = useState<string[]>([]);
+
 	const showError = (message: string) => {
 		setError(message);
 		setTimeout(() => {
@@ -156,6 +159,48 @@ useEffect(() => {
 		if (!dateString) return '-';
 		return new Date(dateString).toLocaleDateString('fr-FR');
 	};
+	const handleBulkDeleteConfirmation = async () => {
+		// Confirmation avant la suppression
+		const result = await Swal.fire({
+		  title: 'Es-tu sûr ?',
+		  text: "Cette action supprimera tous les clients sélectionnés. Cette action est irréversible !",
+		  showCancelButton: true,
+		  confirmButtonColor: '#d33',
+		  cancelButtonColor: '#3085d6',
+		  confirmButtonText: 'Oui, supprimer',
+		  cancelButtonText: 'Annuler'
+		});
+	  
+		if (result.isConfirmed) {
+		  await handleBulkDelete();
+		  Swal.fire('Supprimé!', 'Les clients sélectionnés ont été supprimés.', 'success');
+		}
+	  };
+	  
+	  const handleBulkDelete = async () => {
+		try {
+		  // Suppression des clients via Supabase
+		  const { data, error } = await supabase
+			.from('clients')  // Remplace 'clients' par le nom de ta table dans Supabase
+			.delete()
+			.in('id', selectedClientIds);  // `selectedClientIds` contient les IDs des clients à supprimer
+	  
+		  if (error) {
+			throw new Error(error.message);
+		  }
+	  
+		  // Tu peux aussi gérer la mise à jour de l'état des clients ici
+		  // Par exemple, filtrer les clients supprimés de la liste affichée
+		  console.log('Clients supprimés:', data);
+		} catch (error) {
+		  Swal.fire('Erreur', `Une erreur est survenue : ${error.message}`, 'error');
+		}
+		setSelectedClientIds([]);
+		//setSelectedAll(false);
+		fetchClients(); // ou ta méthode de rafraîchissement
+
+	  };
+	  
 
 	if (loading) {
 		return (
@@ -237,12 +282,40 @@ useEffect(() => {
 					className='pl-10 w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
 				/>
 			</div>
-
-			<div className='bg-white rounded-lg shadow overflow-hidden'>
+			<div className="mb-2 text-sm text-gray-700">
+    {selectedClientIds.length} client(s) sélectionné(s)
+    <button
+      type="button"
+      onClick={handleBulkDeleteConfirmation}
+      disabled={selectedClientIds.length === 0}
+      className={`ml-2 px-3 py-1 rounded text-sm font-medium ${
+        selectedClientIds.length === 0
+          ? "text-gray-400 cursor-not-allowed"
+          : "text-red-600 hover:underline"
+      }`}
+    >
+      Supprimer la sélection
+    </button>
+  </div>
+			<div className='ml-4 bg-white rounded-lg shadow overflow-hidden'>
 				<div className='overflow-x-auto'>
 					<table className='min-w-full divide-y divide-gray-200'>
-						<thead className='bg-gray-50'>
-							<tr>
+					<thead className='bg-gray-50'>
+  <tr>
+    <th className='px-4 py-3'>
+      <input
+        type='checkbox'
+        checked={selectedClientIds.length === filteredClients.length && filteredClients.length > 0}
+        onChange={(e) => {
+          if (e.target.checked) {
+            setSelectedClientIds(filteredClients.map((client) => client.id));
+          } else {
+            setSelectedClientIds([]);
+          }
+        }}
+      />
+    </th>
+
 								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 									Actions
 								</th>
@@ -342,9 +415,24 @@ useEffect(() => {
 							</tr>
 						</thead>
 						<tbody className='bg-white divide-y divide-gray-200'>
-							{filteredClients.map((client) => (
-								<tr key={client.id} className='hover:bg-gray-50'>
-								<td className="px-6 py-4 whitespace-nowrap">
+  {filteredClients.map((client) => (
+    <tr key={client.id} className='hover:bg-gray-50'>
+      <td className='px-4 py-4 whitespace-nowrap'>
+        <input
+          type='checkbox'
+          checked={selectedClientIds.includes(client.id)}
+          onChange={(e) => {
+            if (e.target.checked) {
+              setSelectedClientIds((prev) => [...prev, client.id]);
+            } else {
+              setSelectedClientIds((prev) =>
+                prev.filter((id) => id !== client.id)
+              );
+            }
+          }}
+        />
+      </td>
+	  <td className="px-6 py-4 whitespace-nowrap">
   <div className='px-6 py-2 whitespace-nowrap relative'>
     <button
       onClick={() =>
