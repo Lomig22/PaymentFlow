@@ -726,7 +726,7 @@ const handleSelectAll = () => {
 								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 									<SortableColHead
 										colKey='Delay in Days'
-										label='Délai en jours'
+										label='Délai'
 										onClick={(col: string) =>
 											handleSortOnClick(col as keyof CSVMapping)
 										}
