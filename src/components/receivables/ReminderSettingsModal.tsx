@@ -334,7 +334,7 @@ export default function ReminderSettingsModal({
 </div>
 
 						  {/* Délai première relance */}
-    <div>
+    <div className='hidden'>
       <DelayInputJHM
         label="Délai première relance (Jours,Heures,Minutes)"
         value={formData.reminder_delay_1}
@@ -346,7 +346,7 @@ export default function ReminderSettingsModal({
 	
 
     {/* Délai deuxième relance */}
-    <div>
+    <div className='hidden'>
       <DelayInputJHM
         label="Délai deuxième relance (Jours,Heures,Minutes)"
         value={formData.reminder_delay_2}
@@ -356,7 +356,7 @@ export default function ReminderSettingsModal({
     </div>
 
     {/* Délai troisième relance */}
-    <div>
+    <div className='hidden'>
       <DelayInputJHM
         label="Délai troisième relance (Jours,Heures,Minutes)"
         value={formData.reminder_delay_3}
@@ -366,7 +366,7 @@ export default function ReminderSettingsModal({
     </div>
 
     {/* Délai relance finale */}
-    <div>
+    <div className='hidden'>
       <DelayInputJHM
         label="Délai relance finale (Jours,Heures,Minutes)"
         value={formData.reminder_delay_final}
@@ -376,7 +376,7 @@ export default function ReminderSettingsModal({
     </div>
 
     {/* Pré relance */}
-    <div>
+    <div className='hidden'>
       <DelayInputJHM
         label="Pré relance"
         value={formData.pre_reminder_delay}
