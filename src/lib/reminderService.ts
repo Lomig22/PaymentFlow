@@ -243,20 +243,19 @@ export async function sendManualReminder(
 		.from('subscriptions')
 		.select('plan')
 		.eq('user_id', user.id)
-		.single();
-  
+		.limit(1);
 	  if (subscriptionError) throw subscriptionError;
 	  if (!subscription) return false;
-  
+
 	  // Vérifier la limite d'e-mails pour le plan "free"
-	  const isFreePlan = subscription.plan === 'free';
+	  const isFreePlan = subscription[0].plan === 'free';
 	  const maxEmails = isFreePlan ? 20 : Infinity; // Limite de 20 e-mails pour le plan gratuit
   
 	  // Vérifier si le nombre maximal d'e-mails a été atteint
 	  if (userProfile.email_counter >= maxEmails) {
 		throw new Error("Le nombre maximal d'e-mails pour votre essai gratuit a été atteint.");
+		return false
 	  }
-  
 	  // Calculer les jours de retard de la créance
 	  const dueDate = new Date(receivable.due_date);
 	  const today = new Date();
@@ -298,6 +297,7 @@ export async function sendManualReminder(
 	  const finalContent = content
 		? `${content}\n\n${signature || ''}`
 		: defaultEmailContent;
+		alert("emailSent: ",finalSubject)
   
 	  // Envoyer l'e-mail
 	  const emailSent = await sendEmail(
@@ -307,7 +307,7 @@ export async function sendManualReminder(
 		finalContent,
 		receivable.invoice_pdf_url
 	  );
-  
+
 	  if (emailSent) {
 		// Enregistrer la relance dans la base de données
 		await supabase.from('reminders').insert({
