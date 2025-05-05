@@ -39,6 +39,7 @@ import SortableColHead from '../Common/SortableColHead';
 import { dateDiff } from '../../lib/dateDiff';
 import { saveNotification } from '../../lib/notification';
 import { div } from 'framer-motion/client';
+import Swal from 'sweetalert2';
 
 type SortColumnConfig = {
 	key: keyof CSVMapping | 'client' | 'email' | 'Delay in Days';
@@ -277,7 +278,40 @@ useEffect(() => {
 			setDeleting(false);
 		}
 	};
-
+	const handleBulkDelete = async () => {
+		if (selectedIds.length === 0) return;
+	  
+		const { error } = await supabase
+		  .from("receivables")
+		  .delete()
+		  .in("id", selectedIds);
+	  
+		if (error) {
+		  console.error("Erreur lors de la suppression :", error.message);
+		} else {
+		  setSelectedIds([]);
+		  setSelectedAll(false);
+		  // Tu peux aussi recharger les données ici
+		  fetchReceivables(); // ou ta méthode de rafraîchissement
+		}
+	  };
+	  const handleBulkDeleteConfirmation = async () => {
+		const result = await Swal.fire({
+		  title: 'Es-tu sûr ?',
+		  text: "Cette action est irréversible !",
+		  icon: 'warning',
+		  showCancelButton: true,
+		  confirmButtonColor: '#d33',
+		  cancelButtonColor: '#3085d6',
+		  confirmButtonText: 'Oui, supprimer',
+		  cancelButtonText: 'Annuler'
+		});
+	  
+		if (result.isConfirmed) {
+		  handleBulkDelete();
+		  Swal.fire('Supprimé!', 'Les éléments sélectionnés ont été supprimés.', 'success');
+		}
+	  };
 	const handleSendReminder = async () =>
 		// receivable: Receivable & { client: Client }
 		{
@@ -479,7 +513,25 @@ useEffect(() => {
 	  }
 	}, [openDropdownId]);
 	
-	
+	const [selectedIds, setSelectedIds] = useState<string[]>([]);
+const [selectedAll, setSelectedAll] = useState(false);
+
+const handleSelectRow = (id: string) => {
+  setSelectedIds((prev) =>
+    prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+  );
+};
+
+const handleSelectAll = () => {
+  if (selectedAll) {
+    setSelectedIds([]);
+    setSelectedAll(false);
+  } else {
+    setSelectedIds(filteredReceivables.map((r) => r.id));
+    setSelectedAll(true);
+  }
+};
+
 
 	if (loading) {
 		return (
@@ -549,12 +601,38 @@ useEffect(() => {
 					className='pl-10 w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
 				/>
 			</div>
+			{selectedIds.length > 0 && (
+  <div className="mb-2 text-sm text-gray-700">
+  {selectedIds.length} élément(s) sélectionné(s)
+  <button
+	type="button"
+	onClick={handleBulkDeleteConfirmation}
+	disabled={selectedIds.length === 0}
+	className={`ml-2 px-3 py-1 rounded text-sm font-medium ${
+	  selectedIds.length === 0
+		? "text-gray-400 cursor-not-allowed"
+		: "text-red-600 hover:underline"
+	}`}
+  >
+	Supprimer la sélection
+  </button>
+</div>
+)}
 
-			<div className='bg-white rounded-lg shadow overflow-hidden'>
+			<div className='ml-4 bg-white rounded-lg shadow overflow-hidden'>
 				<div className='overflow-x-auto'>
 					<table className='min-w-full divide-y divide-gray-200'>
 						<thead className='bg-gray-50'>
 							<tr>
+							<th className="lpx-6 py-3">
+  <input
+    type="checkbox"
+    checked={selectedAll}
+    onChange={handleSelectAll}
+    className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
+    title="Tout sélectionner"
+  />
+</th>
 								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 									Actions
 								</th>
@@ -690,6 +768,15 @@ useEffect(() => {
 						<tbody className='bg-white divide-y divide-gray-200'>
 							{filteredReceivables.map((receivable) => (
 								<tr key={receivable.id} className='hover:bg-gray-50'>
+									<td className="px-6 py-4 whitespace-nowrap">
+  <input
+    type="checkbox"
+    checked={selectedIds.includes(receivable.id)}
+    onChange={() => handleSelectRow(receivable.id)}
+    className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
+  />
+</td>
+
 									<td className='px-6 py-4 whitespace-nowrap relative'>
   <div className="flex justify-center items-center ">
     {/* Bouton menu déroulant */}
