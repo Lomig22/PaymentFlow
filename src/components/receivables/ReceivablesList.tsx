@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import {
 	Receivable,
@@ -21,6 +21,11 @@ import {
 	ListRestart,
 	File,
 	Pause,
+	ChevronDown,
+	MoreVertical,
+	MoreHorizontal,
+	Clock10,
+	LucideClock12
 } from 'lucide-react';
 import ReceivableForm from './ReceivableForm';
 import ReceivableEditForm from './ReceivableEditForm';
@@ -462,6 +467,18 @@ useEffect(() => {
 			);
 		})
 		.sort(applySorting);
+		const dropdownRefs = useRef({});
+		const [openDropdownId, setOpenDropdownId] = useState(null);
+	useEffect(() => {
+	  if (openDropdownId && dropdownRefs.current[openDropdownId]) {
+		dropdownRefs.current[openDropdownId].scrollIntoView({
+		  behavior: 'smooth',
+		  block: 'nearest',
+		});
+	  }
+	}, [openDropdownId]);
+	
+	
 
 	if (loading) {
 		return (
@@ -470,7 +487,7 @@ useEffect(() => {
 			</div>
 		);
 	}
-
+	
 	return (
 		<div className='p-6'>
 			<div className='flex justify-between items-center mb-6'>
@@ -672,80 +689,91 @@ useEffect(() => {
 						<tbody className='bg-white divide-y divide-gray-200'>
 							{filteredReceivables.map((receivable) => (
 								<tr key={receivable.id} className='hover:bg-gray-50'>
-									<td className='px-6 py-4 whitespace-nowrap'>
-										<div className='flex space-x-3'>
-											<button
-												onClick={() => {
-													setShowEditForm(true);
-													setSelectedReceivable(receivable);
-												}}
-												className='text-blue-600 hover:text-blue-800'
-												title='Modifier'
-											>
-												<Edit className='h-5 w-5' />
-											</button>
-											{receivable.status !== 'paid' && (
-												<>
-													<button
-														onClick={() => {
-															setSelectedReceivable(receivable);
-															setShowConfirmReminder(true);
-														}}
-														className='text-yellow-600 hover:text-yellow-800'
-														title='Envoyer une relance'
-													>
-														<Mail className='h-5 w-5' />
-													</button>
-													{!receivable.client?.reminder_template_1 && receivable.client?.needs_reminder && (
-															<div className='relative'>
-																<div
-																	className='text-yellow-500 cursor-help'
-																	onMouseEnter={() =>
-																		handleMouseEnter(receivable.id)
-																	}
-																	onMouseLeave={handleMouseLeave}
-																>
-																	<Info className='h-5 w-5' />
-																</div>
-																{tooltipVisible === receivable.id && (
-																	<div className='absolute z-10 w-64 px-3 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm -left-32 bottom-full mb-1'>
-																		Paramètres de relance non configurés.
-																		Cliquez sur l'icône d'horloge pour
-																		configurer les modèles de relance.
-																	</div>
-																)}
-															</div>
-														)}
-												</>
-											)}
-											<button
-												onClick={() => {
-													setSelectedClient(receivable.client);
-													setSelectedReceivable(receivable);
-													setShowSettings(true);
-												}}
-												className='text-gray-600 hover:text-gray-800'
-												title='Paramètres de relance'
-											>
-												<Clock className='h-5 w-5' />
-											</button>
-											<button
-												onClick={() => {
-													setSelectedReceivable(receivable);
-													setShowReminderHistory(true);
-												}}
-											>
-												<ListRestart className='h-5 w-5' />
-											</button>
-											<button
-												onClick={() => handleDeleteClick(receivable)}
-												className='text-red-600 hover:text-red-800'
-												title='Supprimer'
-											>
-												<Trash2 className='h-5 w-5' />
-											</button>
-										</div>
-									</td>
+									<td className='px-6 py-4 whitespace-nowrap relative'>
+  <div className="flex justify-center items-center">
+    {/* Bouton menu déroulant */}
+    <div className="relative" >
+      <button
+        onClick={() => setOpenDropdownId(openDropdownId === receivable.id ? null : receivable.id)}
+        className="text-gray-600 hover:text-gray-800"
+        title="Actions"
+      >
+        <MoreHorizontal className="h-5 w-5" />
+
+      </button>
+
+      {openDropdownId === receivable.id && (
+        <div
+          className="absolute z-50 mt-2 w-48 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5"
+        >
+          <div className="py-1">
+            <button
+              onClick={() => {
+                setShowEditForm(true);
+                setSelectedReceivable(receivable);
+                setOpenDropdownId(null);
+              }}
+              className="flex items-center w-full px-2 py-2 text-sm text-gray-700 hover:bg-gray-100"
+            >
+              <Edit className="w-4 h-4 mr-2" /> Modifier
+            </button>
+            {receivable.status !== 'paid' && (
+              <>
+                <button
+                  onClick={() => {
+                    setSelectedReceivable(receivable);
+                    setShowConfirmReminder(true);
+                    setOpenDropdownId(null);
+                  }}
+                  className="flex items-center w-full px-2 py-2 text-sm text-yellow-600 hover:bg-yellow-100"
+                >
+                  <Mail className="w-4 h-4 mr-2" /> Envoyer une relance
+                </button>
+                {!receivable.client?.reminder_template_1 && receivable.client?.needs_reminder && (
+                  <div className="px-2 py-2 text-sm text-yellow-500 flex items-center cursor-default">
+                    <Info className="w-4 h-4 mr-2" />
+                    Paramètres non configurés
+                  </div>
+                )}
+              </>
+            )}
+            <button
+              onClick={() => {
+                setSelectedClient(receivable.client);
+                setSelectedReceivable(receivable);
+                setShowSettings(true);
+                setOpenDropdownId(null);
+              }}
+              className="flex items-center w-full px-2 py-2 text-sm text-gray-600 hover:bg-gray-100"
+            >
+              <Clock className="w-4 h-4 mr-2 " /> Paramètres de relance
+            </button>
+            <button
+              onClick={() => {
+                setSelectedReceivable(receivable);
+                setShowReminderHistory(true);
+                setOpenDropdownId(null);
+              }}
+              className="flex items-center w-full px-2 py-2 text-sm text-gray-600 hover:bg-gray-100"
+            >
+              <ListRestart className="w-4 h-4 mr-2" /> Historique des relances
+            </button>
+            <button
+              onClick={() => {
+                handleDeleteClick(receivable);
+                setOpenDropdownId(null);
+              }}
+              className="flex items-center w-full px-2 py-2 text-sm text-red-600 hover:bg-red-100"
+			  ref={(el) => (dropdownRefs.current[receivable.id] = el)}
+			>
+              <Trash2 className="w-4 h-4 mr-2" /> Supprimer
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+</td>
 									<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
 									{receivable.client?.company_name ?? 'Client inconnu'}
 									</td>
