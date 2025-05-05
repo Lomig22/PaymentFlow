@@ -328,7 +328,6 @@ useEffect(() => {
 					subject?.trim() || undefined,
 					content?.trim() || undefined,
 					signature?.trim() || undefined);
-
 				if (success) {
 					setSendSuccess(true);
 					if (user.id) {			
