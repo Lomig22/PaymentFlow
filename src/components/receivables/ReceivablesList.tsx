@@ -38,6 +38,7 @@ import { dateCompare, numberCompare, stringCompare } from '../../lib/comparers';
 import SortableColHead from '../Common/SortableColHead';
 import { dateDiff } from '../../lib/dateDiff';
 import { saveNotification } from '../../lib/notification';
+import { div } from 'framer-motion/client';
 
 type SortColumnConfig = {
 	key: keyof CSVMapping | 'client' | 'email' | 'Delay in Days';
@@ -690,17 +691,30 @@ useEffect(() => {
 							{filteredReceivables.map((receivable) => (
 								<tr key={receivable.id} className='hover:bg-gray-50'>
 									<td className='px-6 py-4 whitespace-nowrap relative'>
-  <div className="flex justify-center items-center">
+  <div className="flex justify-center items-center ">
     {/* Bouton menu déroulant */}
     <div className="relative" >
-      <button
-        onClick={() => setOpenDropdownId(openDropdownId === receivable.id ? null : receivable.id)}
-        className="text-gray-600 hover:text-gray-800"
-        title="Actions"
-      >
-        <MoreHorizontal className="h-5 w-5" />
+	<div className="flex items-center gap-2 relative z-10">
+    {/* Bouton d'action */}
+    <button
+      onClick={() =>
+        setOpenDropdownId(openDropdownId === receivable.id ? null : receivable.id)
+      }
+      className="text-gray-600 hover:text-gray-800"
+      title="Actions"
+    >
+      {(!receivable.client?.reminder_template_1 && receivable.client?.needs_reminder) ? (
+       
+		<div title="Paramètres non configurées" > <Info className="h-5 w-5 text-yellow-500" /></div>
+      ) : (
+		<div title="Actions"> <MoreHorizontal className="h-5 w-5" /></div>
+        
+      )}
+    </button>
 
-      </button>
+    {/* Tooltip affiché à côté de l’icône Info */}
+ 
+  </div>
 
       {openDropdownId === receivable.id && (
         <div
@@ -729,12 +743,7 @@ useEffect(() => {
                 >
                   <Mail className="w-4 h-4 mr-2" /> Envoyer une relance
                 </button>
-                {!receivable.client?.reminder_template_1 && receivable.client?.needs_reminder && (
-                  <div className="px-2 py-2 text-sm text-yellow-500 flex items-center cursor-default">
-                    <Info className="w-4 h-4 mr-2" />
-                    Paramètres non configurés
-                  </div>
-                )}
+
               </>
             )}
             <button

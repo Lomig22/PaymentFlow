@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Client, ReminderProfile } from '../../types/database';
-import { Search, Edit, Trash2, X, Info } from 'lucide-react';
+import { Search, Edit, Trash2, X, Info, MoreHorizontal } from 'lucide-react';
 import ClientForm from './ClientForm';
 import CSVImportModal, { CSVMapping } from './CSVImportModal';
 import SortableColHead from '../Common/SortableColHead';
@@ -97,6 +97,16 @@ function ClientList({
 			return () => clearTimeout(timer);
 		}
 	}, [importSuccess]);
+	const dropdownRefs = useRef({});
+	const [openDropdownId, setOpenDropdownId] = useState(null);
+useEffect(() => {
+  if (openDropdownId && dropdownRefs.current[openDropdownId]) {
+	dropdownRefs.current[openDropdownId].scrollIntoView({
+	  behavior: 'smooth',
+	  block: 'nearest',
+	});
+  }
+}, [openDropdownId]);
 
 	const handleDeleteClick = (client: Client) => {
 		setClientToDelete(client);
@@ -334,27 +344,46 @@ function ClientList({
 						<tbody className='bg-white divide-y divide-gray-200'>
 							{filteredClients.map((client) => (
 								<tr key={client.id} className='hover:bg-gray-50'>
-									<td className='px-6 py-4 whitespace-nowrap text-sm font-medium'>
-										<div className='flex space-x-3'>
-											<button
-												onClick={() => {
-													setSelectedClient(client);
-													setShowForm(true);
-												}}
-												className='text-blue-600 hover:text-blue-800'
-												title='Modifier'
-											>
-												<Edit className='h-5 w-5' />
-											</button>
-											<button
-												onClick={() => handleDeleteClick(client)}
-												className='text-red-600 hover:text-red-800'
-												title='Supprimer'
-											>
-												<Trash2 className='h-5 w-5' />
-											</button>
-										</div>
-									</td>
+								<td className="px-6 py-4 whitespace-nowrap">
+  <div className='px-6 py-2 whitespace-nowrap relative'>
+    <button
+      onClick={() =>
+        setOpenDropdownId(openDropdownId === client.id ? null : client.id)
+      }
+      className="text-gray-600 hover:text-gray-800"
+      title="Actions"
+    >
+      <MoreHorizontal className="h-5 w-5" />
+    </button>
+
+    {openDropdownId === client.id && (
+      <div className="absolute origin-top-right mt-2 w-40 z-50 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5">
+        <div className="py-1">
+          <button
+            onClick={() => {
+              setSelectedClient(client);
+              setShowForm(true);
+              setOpenDropdownId(null);
+            }}
+            className="flex items-center w-full px-4 py-2 text-sm text-blue-600 hover:bg-blue-50"
+          >
+            <Edit className="w-4 h-4 mr-2" /> Modifier
+          </button>
+          <button
+            onClick={() => {
+              handleDeleteClick(client);
+              setOpenDropdownId(null);
+            }}
+            className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-100"
+          >
+            <Trash2 className="w-4 h-4 mr-2" /> Supprimer
+          </button>
+        </div>
+      </div>
+    )}
+  </div>
+</td>
+
 									<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
 										{client.company_name}
 									</td>
