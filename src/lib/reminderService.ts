@@ -1,6 +1,7 @@
 import { supabase } from './supabase';
 import { Receivable, Client } from '../types/database';
 import { sendEmail } from './email';
+import EmailSettings from '../components/settings/EmailSettings';
 
 interface EmailSettings {
 	provider_type: string;
@@ -212,10 +213,20 @@ export async function sendManualReminder(
 		data: { user },
 	  } = await supabase.auth.getUser();
 	  if (!user) return false;
-  
+	  const DEFAULT_FORM_DATA = {
+		provider_type: 'reset_defaults',
+		smtp_username: 'no-reply@payment-flow.fr',
+		smtp_password: 'donthavetosaveit',
+		smtp_server: 'my.smtpserver.com',
+		smtp_port: 587,
+		smtp_encryption: 'tls',
+		email_signature: ''
+	  };
 	  // Récupérer les paramètres d'e-mail pour l'utilisateur
-	  const emailSettings = await getEmailSettings(user.id);
-	  if (!emailSettings) return false;
+	  let emailSettings = await getEmailSettings(user.id);
+	  if (!emailSettings){
+		emailSettings=DEFAULT_FORM_DATA
+	  } ;
   
 	  // Récupérer le profil de l'utilisateur et son compteur d'e-mails
 	  const { data: userProfile, error: profileError } = await supabase
