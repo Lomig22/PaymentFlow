@@ -540,7 +540,10 @@ const dropdownRef = useRef(null);
 		dropdownRef.current &&
 		!dropdownRef.current.contains(event.target)
 	  ) {
-	//	setOpenDropdownId(null);
+				// Donne un court délai pour laisser les onClick internes s'exécuter
+				setTimeout(() => {
+					setOpenDropdownId(null);
+				}, 50); 
 	  }
 	};
   
@@ -805,9 +808,9 @@ const dropdownRef = useRef(null);
 </td>
 
 									<td className='px-6 py-4 whitespace-nowrap relative' >
-  <div className="flex justify-center items-center " >
+  <div className="flex justify-center items-center "  >
     {/* Bouton menu déroulant */}
-	<div className="relative" ref={dropdownRef} >
+	<div className="relative"  >
 	<div className="flex items-center gap-2 relative z-10" >
   {/* Bouton d'action */}
   <button
@@ -831,7 +834,7 @@ const dropdownRef = useRef(null);
       {openDropdownId === receivable.id && (
         <div
           className="absolute z-50 mt-2 w-48 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5"
-        >
+		  ref={dropdownRef}  >
           <div className="py-1">
             <button
               onClick={() => {
