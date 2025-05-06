@@ -282,7 +282,8 @@ useEffect(() => {
 					className='pl-10 w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
 				/>
 			</div>
-			<div className="mb-2 text-sm text-gray-700">
+{selectedClientIds.length>0 &&
+	(		<div className="mb-2 text-sm text-gray-700">
     {selectedClientIds.length} client(s) sélectionné(s)
     <button
       type="button"
@@ -296,7 +297,9 @@ useEffect(() => {
     >
       Supprimer la sélection
     </button>
-  </div>
+  </div>)
+}
+	
 			<div className='ml-4 bg-white rounded-lg shadow overflow-hidden'>
 				<div className='overflow-x-auto'>
 					<table className='min-w-full divide-y divide-gray-200'>

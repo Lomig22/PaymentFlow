@@ -68,7 +68,7 @@ export function SubscriptionSettings() {
   return (
     <div className="space-y-4 max-w-md">
       <h2 className="text-lg font-semibold">Choix de l’abonnement</h2>
-      {['starter', 'intermediaire', 'entreprise'].map((p) => (
+      {['basic', 'pro', 'entreprise'].map((p) => (
         <div key={p} className="flex items-center space-x-2">
           <input
             type="radio"
@@ -79,7 +79,7 @@ export function SubscriptionSettings() {
             onChange={handleChange}
           />
           <label htmlFor={p} className="capitalize">
-            {p === 'starter' ? 'Starter' : p === 'intermediaire' ? 'Intermédiaire' : 'Entreprise'}
+            {p === 'basic' ? 'Basique' : p === 'pro' ? 'Pro' : 'Entreprise'}
           </label>
         </div>
       ))}
