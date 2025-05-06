@@ -534,13 +534,13 @@ const handleSelectAll = () => {
 };
 
 const dropdownRef = useRef(null);
-/* useEffect(() => {
+ useEffect(() => {
 	const handleClickOutside = (event) => {
 	  if (
 		dropdownRef.current &&
 		!dropdownRef.current.contains(event.target)
 	  ) {
-		setOpenDropdownId(null);
+	//	setOpenDropdownId(null);
 	  }
 	};
   
@@ -557,7 +557,7 @@ const dropdownRef = useRef(null);
 	  document.removeEventListener('mousedown', handleClickOutside);
 	  document.removeEventListener('keydown', handleEscape);
 	};
-  }, [dropdownRef]); */
+  }, [dropdownRef]); 
   
 	if (loading) {
 		return (
@@ -804,11 +804,11 @@ const dropdownRef = useRef(null);
   />
 </td>
 
-									<td className='px-6 py-4 whitespace-nowrap relative'>
-  <div className="flex justify-center items-center ">
+									<td className='px-6 py-4 whitespace-nowrap relative' >
+  <div className="flex justify-center items-center " >
     {/* Bouton menu déroulant */}
-	<div className="relative" ref={dropdownRef}>
-	<div className="flex items-center gap-2 relative z-10">
+	<div className="relative" ref={dropdownRef} >
+	<div className="flex items-center gap-2 relative z-10" >
   {/* Bouton d'action */}
   <button
     onClick={() =>
