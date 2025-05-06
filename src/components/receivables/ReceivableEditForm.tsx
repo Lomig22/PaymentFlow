@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Client, Receivable } from '../../types/database';
 import { X, Upload, FileUp } from 'lucide-react';
+import Swal from 'sweetalert2';
 
 interface ReceivableEditFormProps {
 	onClose: () => void;
@@ -110,31 +111,60 @@ export default function ReceivableEditForm({
 		setLoading(true);
 		setError(null);
 		let invoicePath = '';
-
+	
 		try {
 			const wasAlreadyPaid = receivable.status === 'paid';
 			const willBePaid = formData.status === 'paid';
-
+	
 			const {
 				data: { user },
 			} = await supabase.auth.getUser();
-
+	
 			if (!user) {
 				throw new Error('Utilisateur non authentifié');
 			}
-			// Upload the PDF file
+	
 			if (uploadedFile) {
+				const filePath = `${user.id}/${uploadedFile.name}`;
+				
+				// Vérifier si le fichier existe déjà
+				const { data: existingFile, error: statError } = await supabase
+					.storage
+					.from('invoices')
+					.list(user.id, {
+						limit: 100, // au besoin, ajuster selon la pagination
+					});
+	
+				if (statError) throw statError;
+	
+				const fileExists = existingFile?.some(file => file.name === uploadedFile.name);
+	
+				// Si le fichier existe déjà, demander confirmation
+				if (fileExists) {
+					const { isConfirmed } = await Swal.fire({
+						title: 'Écraser le fichier PDF existant ?',
+						text: `Un fichier nommé "${uploadedFile.name}" existe déjà. Voulez-vous le remplacer ?`,
+						showCancelButton: true,
+						confirmButtonText: 'Oui, écraser',
+						cancelButtonText: 'Annuler',
+					});
+	
+					if (!isConfirmed) {
+						setLoading(false);
+						return;
+					}
+				}
+	
 				const { error: uploadError } = await supabase.storage
 					.from('invoices')
-					.upload(`${user.id}/${uploadedFile.name}`, uploadedFile, {
-						upsert: true,
-					});
-
+					.upload(filePath, uploadedFile, { upsert: true });
+	
 				if (uploadError) {
 					throw uploadError;
 				}
+	
 				const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-				invoicePath = `${supabaseUrl}/storage/v1/object/public/invoices/${user.id}/${uploadedFile.name}`;
+				invoicePath = `${supabaseUrl}/storage/v1/object/public/invoices/${filePath}`;
 			}
 			// Mettre à jour la créance
 			const { data, error } = await supabase

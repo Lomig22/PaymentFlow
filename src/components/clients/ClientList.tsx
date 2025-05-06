@@ -112,7 +112,7 @@ useEffect(() => {
 }, [openDropdownId]);
 
 
-const dropdownRef = useRef(null);
+/* const dropdownRef = useRef(null);
 useEffect(() => {
 	const handleClickOutside = (event) => {
 	  if (
@@ -137,7 +137,7 @@ useEffect(() => {
 	  document.removeEventListener('keydown', handleEscape);
 	};
   }, [dropdownRef]);
-
+ */
 	const handleDeleteClick = (client: Client) => {
 		setClientToDelete(client);
 		setShowDeleteConfirm(true);
@@ -563,7 +563,7 @@ useEffect(() => {
         />
       </td>
 	  <td className="px-6 py-4 whitespace-nowrap">
-  <div className='px-6 py-2 whitespace-nowrap relative' ref={dropdownRef}>
+  <div className='px-6 py-2 whitespace-nowrap relative' >
     <button
       onClick={() =>
         setOpenDropdownId(openDropdownId === client.id ? null : client.id)
@@ -575,10 +575,11 @@ useEffect(() => {
     </button>
 
     {openDropdownId === client.id && (
-      <div className="absolute origin-top-right mt-2 w-40 z-50 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5">
+      <div onClick={(e=>{e.stopPropagation();})} className="absolute origin-top-right mt-2 w-40 z-50 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5">
         <div className="py-1">
           <button
-            onClick={() => {
+            onClick={(e) => {
+				e.stopPropagation();
               setSelectedClient(client);
               setShowForm(true);
               setOpenDropdownId(null);
@@ -588,11 +589,13 @@ useEffect(() => {
             <Edit className="w-4 h-4 mr-2" /> Modifier
           </button>
           <button
-            onClick={() => {
+            onMouseDown={(e) => {
+				e.stopPropagation();
               handleDeleteClick(client);
               setOpenDropdownId(null);
             }}
             className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-100"
+			ref={(el) => (dropdownRefs.current[client.id] = el)} 
           >
             <Trash2 className="w-4 h-4 mr-2" /> Supprimer
           </button>

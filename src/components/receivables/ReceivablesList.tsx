@@ -534,7 +534,7 @@ const handleSelectAll = () => {
 };
 
 const dropdownRef = useRef(null);
-useEffect(() => {
+/* useEffect(() => {
 	const handleClickOutside = (event) => {
 	  if (
 		dropdownRef.current &&
@@ -557,7 +557,7 @@ useEffect(() => {
 	  document.removeEventListener('mousedown', handleClickOutside);
 	  document.removeEventListener('keydown', handleEscape);
 	};
-  }, [dropdownRef]);
+  }, [dropdownRef]); */
   
 	if (loading) {
 		return (
