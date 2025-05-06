@@ -4,7 +4,7 @@ import { saveNotification } from '../../lib/notification';
 import { Client, Receivable, ReminderProfile } from '../../types/database';
 import { X, AlertCircle, Play, Pause } from 'lucide-react';
 import DelayInputJHM from '../settings/DelayInputJHM';
-import ReactDateTimePicker from 'react-datetime-picker';
+import { Accordion } from '@mantine/core';
 import 'react-datetime-picker/dist/DateTimePicker.css';
 import 'react-calendar/dist/Calendar.css';
 import 'react-clock/dist/Clock.css';
@@ -12,6 +12,8 @@ import Datetime from "react-datetime";
 import "react-datetime/css/react-datetime.css"; // si tu n'as pas encore importé le style
 import moment from "moment";
 import DateTimeInput from '../Common/DateTimpeInput';
+import { div } from 'framer-motion/client';
+import { isBefore } from 'date-fns';
 
 interface ReminderSettingsModalProps {
 	client: Client;
@@ -289,7 +291,26 @@ export default function ReminderSettingsModal({
 		dueDate.setHours(0, 0, 0, 0);
 	  
 
+		const now = new Date();
+	  
+		// Pré-calcul des dates
+		const firstReminderDate = delayToDateTime(formData.reminder_delay_1, dueDate);
+		const secondReminderDate = delayToDateTime(formData.reminder_delay_2, firstReminderDate);
+		const thirdReminderDate = delayToDateTime(formData.reminder_delay_3, secondReminderDate);
+		const finalReminderDate = delayToDateTime(formData.reminder_delay_final, thirdReminderDate);
+		const preReminderDate = delayToDateTimeBefore(formData.pre_reminder_delay, dueDate);
+		
+		// Détection des dates passées
+		const hasPastDate = [
+		  firstReminderDate,
+		  secondReminderDate,
+		  thirdReminderDate,
+		  finalReminderDate,
+		  preReminderDate,
+		].some((date) => isBefore(date, now));
+		
 	return (
+		
 		<div className='fixed inset-0 bg-gray-600 bg-opacity-50 z-50 overflow-y-scroll'>
 			<div className='min-h-screen py-8 px-4 flex items-center justify-center'>
 				<div className='relative bg-white rounded-lg shadow-xl p-8 w-full max-w-2xl mx-auto'>
@@ -301,6 +322,7 @@ export default function ReminderSettingsModal({
 					</button>
 
 					<h2 className='text-2xl font-bold mb-2'>Paramètres de relance</h2>
+
 					<div className='flex justify-between'>
 					<p className='text-gray-600 mb-6'>Client : {client.company_name}</p>
 					<div
@@ -320,7 +342,11 @@ export default function ReminderSettingsModal({
 								)}
 							</div>
 					</div>
-			
+					{hasPastDate && (
+  <div className="mb-4 p-4 border border-yellow-400 bg-yellow-100 text-yellow-800 rounded">
+    ⚠️ Certaines dates de relance sont antérieures à la date actuelle.
+  </div>
+)}			
 					{error && (
 						<div className='mb-4 p-4 bg-red-50 border border-red-200 rounded-md text-red-700 flex items-center'>
 							<AlertCircle className='h-5 w-5 mr-2' />
@@ -340,6 +366,7 @@ export default function ReminderSettingsModal({
 	<label className='block text-sm font-medium text-gray-700 mb-2'>
 		Profil de rappel
 	</label>
+
 	<input
 		type='text'
 		required
@@ -463,6 +490,7 @@ export default function ReminderSettingsModal({
 
 </div>
 {/*end relance en calendrier */}
+{/* accordéon*/}
 						<div className='space-y-4'>
 							<div>
 								<label className='block text-sm font-medium text-gray-700 mb-2'>

@@ -808,7 +808,7 @@ const dropdownRef = useRef(null);
 </td>
 
 									<td className='px-6 py-4 whitespace-nowrap relative' >
-  <div className="flex justify-center items-center "  >
+  <div className="flex  justify-start items-start "  >
     {/* Bouton menu déroulant */}
 	<div className="relative"  >
 	<div className="flex items-center gap-2 relative z-10" >
@@ -820,13 +820,22 @@ const dropdownRef = useRef(null);
     className="flex items-center gap-1 text-gray-600 hover:text-gray-800"
     title="Actions"
   >
+				{!receivable.automatic_reminder && (
+											<span
+												title='Automati Reminders disabled'
+												className='text-yellow-500 cursor-help'
+											>
+												<Pause className='h-5 w-5' />
+											</span>
+										)}
+	    {/* Icône d'avertissement si nécessaire */}
+		{(!receivable.client?.reminder_template_1 && receivable.client?.needs_reminder) && (
+      <Info className="h-5 w-5 text-yellow-500" title="Paramètres non configurés" />
+    )}
     {/* Icône principale */}
     <MoreHorizontal className="h-5 w-5" />
 
-    {/* Icône d'avertissement si nécessaire */}
-    {(!receivable.client?.reminder_template_1 && receivable.client?.needs_reminder) && (
-      <Info className="h-5 w-5 text-yellow-500" title="Paramètres non configurés" />
-    )}
+
   </button>
 </div>
 
@@ -968,14 +977,7 @@ const dropdownRef = useRef(null);
 											{receivable.status === 'Relance préventive' &&
 												'Pré-relancé'}
 										</span>
-										{!receivable.automatic_reminder && (
-											<span
-												title='Automati Reminders disabled'
-												className='text-yellow-500 cursor-help'
-											>
-												<Pause className='h-4 w-4' />
-											</span>
-										)}
+							
 									</td>
 									<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
 										{receivable.notes || '-'}
