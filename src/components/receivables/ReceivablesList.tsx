@@ -533,7 +533,32 @@ const handleSelectAll = () => {
   }
 };
 
-
+const dropdownRef = useRef(null);
+useEffect(() => {
+	const handleClickOutside = (event) => {
+	  if (
+		dropdownRef.current &&
+		!dropdownRef.current.contains(event.target)
+	  ) {
+		setOpenDropdownId(null);
+	  }
+	};
+  
+	const handleEscape = (event) => {
+	  if (event.key === 'Escape') {
+		setOpenDropdownId(null);
+	  }
+	};
+  
+	document.addEventListener('mousedown', handleClickOutside);
+	document.addEventListener('keydown', handleEscape);
+  
+	return () => {
+	  document.removeEventListener('mousedown', handleClickOutside);
+	  document.removeEventListener('keydown', handleEscape);
+	};
+  }, [dropdownRef]);
+  
 	if (loading) {
 		return (
 			<div className='flex items-center justify-center h-96'>
@@ -782,7 +807,7 @@ const handleSelectAll = () => {
 									<td className='px-6 py-4 whitespace-nowrap relative'>
   <div className="flex justify-center items-center ">
     {/* Bouton menu déroulant */}
-    <div className="relative" >
+	<div className="relative" ref={dropdownRef}>
 	<div className="flex items-center gap-2 relative z-10">
   {/* Bouton d'action */}
   <button

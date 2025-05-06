@@ -111,6 +111,33 @@ useEffect(() => {
   }
 }, [openDropdownId]);
 
+
+const dropdownRef = useRef(null);
+useEffect(() => {
+	const handleClickOutside = (event) => {
+	  if (
+		dropdownRef.current &&
+		!dropdownRef.current.contains(event.target)
+	  ) {
+		setOpenDropdownId(null);
+	  }
+	};
+  
+	const handleEscape = (event) => {
+	  if (event.key === 'Escape') {
+		setOpenDropdownId(null);
+	  }
+	};
+  
+	document.addEventListener('mousedown', handleClickOutside);
+	document.addEventListener('keydown', handleEscape);
+  
+	return () => {
+	  document.removeEventListener('mousedown', handleClickOutside);
+	  document.removeEventListener('keydown', handleEscape);
+	};
+  }, [dropdownRef]);
+
 	const handleDeleteClick = (client: Client) => {
 		setClientToDelete(client);
 		setShowDeleteConfirm(true);
@@ -536,7 +563,7 @@ useEffect(() => {
         />
       </td>
 	  <td className="px-6 py-4 whitespace-nowrap">
-  <div className='px-6 py-2 whitespace-nowrap relative'>
+  <div className='px-6 py-2 whitespace-nowrap relative' ref={dropdownRef}>
     <button
       onClick={() =>
         setOpenDropdownId(openDropdownId === client.id ? null : client.id)
