@@ -301,8 +301,26 @@ export default function ReminderSettingsModal({
 					</button>
 
 					<h2 className='text-2xl font-bold mb-2'>Paramètres de relance</h2>
+					<div className='flex justify-between'>
 					<p className='text-gray-600 mb-6'>Client : {client.company_name}</p>
-
+					<div
+								title='Stop sending automatic reminders'
+								onClick={handleAutomaticReminderToggle}
+							>
+								{automaticReminder ? (
+									<Pause
+										className='cursor-pointer hover:fill-blue-400 stroke-blue-400'
+										strokeWidth={2}
+									/>
+								) : (
+									<Play
+										className='cursor-pointer hover:fill-blue-400 stroke-blue-400'
+										strokeWidth={2}
+									/>
+								)}
+							</div>
+					</div>
+			
 					{error && (
 						<div className='mb-4 p-4 bg-red-50 border border-red-200 rounded-md text-red-700 flex items-center'>
 							<AlertCircle className='h-5 w-5 mr-2' />
@@ -613,40 +631,26 @@ export default function ReminderSettingsModal({
 								disabled={loading}
 								className='px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors'
 							> */}
-							<div
-								title='Stop sending automatic reminders'
-								onClick={handleAutomaticReminderToggle}
-							>
-								{automaticReminder ? (
-									<Pause
-										className='cursor-pointer hover:fill-blue-400 stroke-blue-400'
-										strokeWidth={2}
-									/>
-								) : (
-									<Play
-										className='cursor-pointer hover:fill-blue-400 stroke-blue-400'
-										strokeWidth={2}
-									/>
-								)}
-							</div>
+						
 							{/* </button> */}
-							<div className='flex space-x-4'>
-								<button
-									type='button'
-									onClick={onClose}
-									disabled={loading}
-									className='px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors'
-								>
-									Annuler
-								</button>
-								<button
-									type='submit'
-									disabled={loading}
-									className='px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50'
-								>
-									{loading ? 'Enregistrement...' : 'Enregistrer'}
-								</button>
-							</div>
+							<div className='w-full flex justify-end space-x-4 mt-4'>
+  <button
+    type='button'
+    onClick={onClose}
+    disabled={loading}
+    className='px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors'
+  >
+    Annuler
+  </button>
+  <button
+    type='submit'
+    disabled={loading}
+    className='px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50'
+  >
+    {loading ? 'Enregistrement...' : 'Enregistrer'}
+  </button>
+</div>
+
 						</div>
 					</form>
 				</div>
