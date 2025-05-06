@@ -114,7 +114,7 @@ export default function Layout() {
 	.ilike('email', user.email)
 	.single()
 
-	if (!existingProfile.subscribe){
+	if (!existingProfile?.subscribe){
 		if (!fetchError && pending) {
 			const { error: upsertError } = await supabase.from('profiles').upsert([
 			  {

@@ -1,16 +1,24 @@
 export const stringCompare = (
-	a: string,
-	b: string,
+	a: string | undefined | null,
+	b: string | undefined | null,
 	operation: 'asc' | 'desc' | 'none'
-) => {
+  ) => {
 	if (operation === 'none') return 0;
-	const result = a.localeCompare(b);
-	if (operation === 'asc') {
-		return result;
-	} else {
-		return result * -1;
-	}
-};
+  
+	const aVal = a?.trim() ?? '';
+	const bVal = b?.trim() ?? '';
+  
+	const aEmpty = aVal === '';
+	const bEmpty = bVal === '';
+  
+	if (aEmpty && !bEmpty) return operation === 'asc' ? -1 : 1;
+	if (!aEmpty && bEmpty) return operation === 'asc' ? 1 : -1;
+	if (aEmpty && bEmpty) return 0;
+  
+	const result = aVal.localeCompare(bVal);
+	return operation === 'asc' ? result : -result;
+  };
+  
 
 export const numberCompare = (
 	a: number,
