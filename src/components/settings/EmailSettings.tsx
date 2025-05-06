@@ -22,12 +22,12 @@ const PROVIDER_PRESETS = {
 };
 
 const DEFAULT_FORM_DATA = {
-  provider_type: 'reset_defaults',
-  smtp_username: 'no-reply@payment-flow.fr',
-  smtp_password: 'donthavetosaveit',
-  smtp_server: 'my.smtpserver.com',
-  smtp_port: 587,
-  smtp_encryption: 'tls',
+  provider_type: 'gmail',
+  smtp_username: '',
+  smtp_password: '',
+  smtp_server: PROVIDER_PRESETS.gmail.smtp_server,
+  smtp_port: PROVIDER_PRESETS.gmail.smtp_port,
+  smtp_encryption: PROVIDER_PRESETS.gmail.smtp_encryption,
   email_signature: ''
 };
 
@@ -63,43 +63,7 @@ export default function EmailSettings() {
 
     initializeSettings();
   }, []);
-  async function fetchSubscription(supabase:any, userId:any) {
-    const { data, error } = await supabase
-      .from('subscriptions')
-      .select('plan')
-      .eq('user_id', userId)
-      .limit(1);
-  
-    if (error) {
-      console.error('Erreur abonnement :', error.message);
-      return null;
-    }
-    return data;
-  }
-  const [isDisabled, setIsDisabled] = useState(false);
 
-  useEffect(() => {
-    const checkUserAndSubscription = async () => {
-      const {
-        data: { user },
-        error: authError
-      } = await supabase.auth.getUser();
-  
-      if (authError) {
-        console.error('Erreur d’authentification:', authError);
-        return;
-      }
-  
-      if (user?.id) {
-        const subscription = await fetchSubscription(supabase, user.id);
-        if (subscription[0]?.plan === 'free' || subscription[0]?.plan === 'basic') {
-          setIsDisabled(true);
-        }
-      }
-    };
-  
-    checkUserAndSubscription();
-  }, [supabase]);
   const loadEmailSettings = async (uid: string) => {
     try {
       const { data, error } = await supabase
@@ -148,7 +112,6 @@ export default function EmailSettings() {
       email_signature: formData.email_signature || ''
     });
   };
-  
   
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -229,6 +192,7 @@ export default function EmailSettings() {
     }
   };
 
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-48">
@@ -237,14 +201,8 @@ export default function EmailSettings() {
     );
   }
 
-  return (  
+  return (
     <div className="bg-white rounded-lg shadow p-6">
-      {isDisabled && (
-  <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md text-yellow-700">
-    Votre plan actuel ne permet pas de modifier ces paramètres. Passez à un plan supérieur pour débloquer cette fonctionnalité.
-  </div>
-)}
-
       <h2 className="text-xl font-bold mb-6">Paramètres email</h2>
 
       {error && (
@@ -274,8 +232,8 @@ export default function EmailSettings() {
   <label className="block text-sm font-medium text-gray-700 mb-2">
     Fournisseur SMTP
   </label>
-  <select disabled={isDisabled}
-    value={formData.provider_type||'reset_defaults'}
+  <select
+    value={formData.provider_type}
     onChange={(e) => {
       const value = e.target.value;
       if (value === 'reset_defaults') {
@@ -286,10 +244,10 @@ export default function EmailSettings() {
     }}
     className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
   >
-    <option value="reset_defaults">Par défaut</option>
     <option value="gmail">Gmail</option>
     <option value="ovh">OVH</option>
     <option value="custom">Personnalisé</option>
+    <option value="reset_defaults">Par défaut</option>
   </select>
 </div>
 
@@ -299,7 +257,6 @@ export default function EmailSettings() {
             Adresse email
           </label>
           <input
-          disabled={isDisabled}
             type="email"
             required
             value={formData.smtp_username}
@@ -319,7 +276,6 @@ export default function EmailSettings() {
             Mot de passe
           </label>
           <input
-          disabled={isDisabled}
             type="password"
             required
             value={formData.smtp_password}
@@ -341,7 +297,6 @@ export default function EmailSettings() {
                 Serveur SMTP
               </label>
               <input
-              disabled={isDisabled}
                 type="text"
                 required
                 value={formData.smtp_server}
@@ -355,7 +310,6 @@ export default function EmailSettings() {
                 Port SMTP
               </label>
               <input
-              disabled={isDisabled}
                 type="number"
                 required
                 value={formData.smtp_port}
@@ -369,7 +323,6 @@ export default function EmailSettings() {
                 Chiffrement SMTP
               </label>
               <select
-              disabled={isDisabled}
                 value={formData.smtp_encryption}
                 onChange={(e) => setFormData({ ...formData, smtp_encryption: e.target.value })}
                 className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -387,7 +340,6 @@ export default function EmailSettings() {
             Signature email
           </label>
           <textarea
-          disabled={isDisabled}
             rows={4}
             value={formData.email_signature}
             onChange={(e) => setFormData({ ...formData, email_signature: e.target.value })}
@@ -409,8 +361,7 @@ export default function EmailSettings() {
         
           <button
             type="submit"
-            disabled={isDisabled||saving}
-  
+            disabled={saving}
             className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
           >
             <Save className="h-5 w-5 mr-2" />
