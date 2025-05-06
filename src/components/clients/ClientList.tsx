@@ -285,18 +285,19 @@ useEffect(() => {
 {selectedClientIds.length>0 &&
 	(		<div className="mb-2 text-sm text-gray-700">
     {selectedClientIds.length} client(s) sélectionné(s)
-    <button
-      type="button"
-      onClick={handleBulkDeleteConfirmation}
-      disabled={selectedClientIds.length === 0}
-      className={`ml-2 px-3 py-1 rounded text-sm font-medium ${
-        selectedClientIds.length === 0
-          ? "text-gray-400 cursor-not-allowed"
-          : "text-red-600 hover:underline"
-      }`}
-    >
-      Supprimer la sélection
-    </button>
+	<button
+  type="button"
+  onClick={handleBulkDeleteConfirmation}
+  disabled={selectedClientIds.length === 0}
+  className={`ml-2 px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors duration-200 ${
+    selectedClientIds.length === 0
+      ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+      : "bg-red-100 text-red-700 hover:bg-red-200"
+  }`}
+>
+  🗑️ Supprimer la sélection
+</button>
+
   </div>)
 }
 	
