@@ -263,9 +263,13 @@ useEffect(() => {
 		if (key === 'country') {
 			return stringCompare(a.country, b.country, sort);
 		}
-		if (key === 'sector') {
-			return stringCompare(a.sector, b.sector, sort);
+		if (key === 'industry') {
+			return stringCompare(a.industry, b.industry, sort);
 		}
+		if (key === 'reminderProfile') {
+			return stringCompare(a.reminderProfile?.name, b.reminderProfile?.name, sort);
+		}
+		
 		if (key === 'website') {
 			return stringCompare(a.website, b.website, sort);
 		}
@@ -437,7 +441,7 @@ useEffect(() => {
 </th>
 <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
   <SortableColHead
-    colKey='sector'
+    colKey='industry'
     label='Secteur'
     onClick={(col: string) => handleSortOnClick(col as keyof CSVMapping)}
     selectedColKey={sortConfig?.key ?? ''}
@@ -477,8 +481,17 @@ useEffect(() => {
 									/>
 								</th>
 								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-									Profil de rappel
-								</th>
+	<SortableColHead
+		colKey='reminderProfile'
+		label='Profil de rappel'
+		onClick={(col: string) =>
+			handleSortOnClick(col as keyof CSVMapping)
+		}
+		selectedColKey={sortConfig?.key ?? ''}
+		sort={sortConfig?.sort ?? 'none'}
+	/>
+</th>
+
 								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 									<SortableColHead
 										colKey='needs_reminder'
