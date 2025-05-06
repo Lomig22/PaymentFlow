@@ -112,7 +112,7 @@ useEffect(() => {
 }, [openDropdownId]);
 
 
-/* const dropdownRef = useRef(null);
+const dropdownRef = useRef(null);
 useEffect(() => {
 	const handleClickOutside = (event) => {
 	  if (
@@ -137,7 +137,7 @@ useEffect(() => {
 	  document.removeEventListener('keydown', handleEscape);
 	};
   }, [dropdownRef]);
- */
+ 
 	const handleDeleteClick = (client: Client) => {
 		setClientToDelete(client);
 		setShowDeleteConfirm(true);
@@ -575,7 +575,7 @@ useEffect(() => {
     </button>
 
     {openDropdownId === client.id && (
-      <div onClick={(e=>{e.stopPropagation();})} className="absolute origin-top-right mt-2 w-40 z-50 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5">
+      <div onClick={(e=>{e.stopPropagation();})} ref={() => (dropdownRef)} className="absolute origin-top-right mt-2 w-40 z-50 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5">
         <div className="py-1">
           <button
             onClick={(e) => {
@@ -589,7 +589,7 @@ useEffect(() => {
             <Edit className="w-4 h-4 mr-2" /> Modifier
           </button>
           <button
-            onMouseDown={(e) => {
+            onClick={(e) => {
 				e.stopPropagation();
               handleDeleteClick(client);
               setOpenDropdownId(null);
