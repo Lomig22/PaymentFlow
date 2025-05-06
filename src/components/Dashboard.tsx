@@ -611,32 +611,40 @@ export default function Dashboard() {
 
               {/* Bouton supprimer avec SweetAlert2 */}
               <button
-                onClick={() => {
-                  Swal.fire({
-                    title: 'Supprimer cette notification ?',
-                    text: "Cette action est irréversible.",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#d33',
-                    cancelButtonColor: '#3085d6',
-                    confirmButtonText: 'Oui, supprimer',
-                    cancelButtonText: 'Annuler'
-                  }).then((result) => {
-                    if (result.isConfirmed) {
-                      deleteNotification(notification.id);
-                      Swal.fire(
-                        'Supprimée !',
-                        'La notification a été supprimée.',
-                        'success'
-                      );
-                    }
-                  });
-                }}
-                className="text-red-600 hover:text-red-800"
-                title="Supprimer"
-              >
-                <Trash2 className="h-5 w-5" />
-              </button>
+  onClick={() => {
+    Swal.fire({
+      title: 'Supprimer cette notification ?',
+      text: "Cette action est irréversible.",
+      showCancelButton: true,
+      confirmButtonText: 'Oui, supprimer',
+      cancelButtonText: 'Annuler',
+      buttonsStyling: false,
+      customClass: {
+        confirmButton: 'bg-red-600 text-white px-4 py-2 rounded mr-2 hover:bg-red-700',
+        cancelButton: 'bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700',
+      },
+    }).then((result) => {
+      if (result.isConfirmed) {
+        deleteNotification(notification.id);
+        Swal.fire({
+          title: 'Supprimée !',
+          text: 'La notification a été supprimée.',
+          icon: 'success',
+          confirmButtonText: 'OK',
+          buttonsStyling: false,
+          customClass: {
+            confirmButton: 'bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700',
+          },
+        });
+      }
+    });
+  }}
+  className="text-red-600 hover:text-red-800"
+  title="Supprimer"
+>
+  <Trash2 className="h-5 w-5" />
+</button>
+
             </div>
 
             {/* Marquer comme lue / lue */}

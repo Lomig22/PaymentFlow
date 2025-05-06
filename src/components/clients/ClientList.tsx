@@ -165,8 +165,11 @@ useEffect(() => {
 		  title: 'Es-tu sûr ?',
 		  text: "Cette action supprimera tous les clients sélectionnés. Cette action est irréversible !",
 		  showCancelButton: true,
-		  confirmButtonColor: '#d33',
-		  cancelButtonColor: '#3085d6',
+	      buttonsStyling: false,
+      customClass: {
+        confirmButton: 'bg-red-600 text-white px-4 py-2 rounded mr-2 hover:bg-red-700',
+        cancelButton: 'bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700',
+      },
 		  confirmButtonText: 'Oui, supprimer',
 		  cancelButtonText: 'Annuler'
 		});

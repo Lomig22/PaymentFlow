@@ -150,10 +150,12 @@ const ReminderList = () => {
           onClick={() => {
             Swal.fire({
               title: 'Email envoyé',
-              html: `<pre style="text-align:left">${record.email_content || 'Aucun contenu.'}</pre>`,
+              html: `<div style="text-align:left">${record.email_content || 'Aucun contenu.'}</div>`,
               confirmButtonText: 'Fermer',
               customClass: {
                 popup: 'text-left',
+				confirmButton: 'bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700',
+
               },
               width: '600px',
             });
