@@ -125,67 +125,85 @@ export default function Settings() {
 	const activeSubTab = activeSection?.subTabs.find((tab) => tab.id === activeSubTabId);
 	const ActiveComponent = activeSubTab?.component || (() => <div>Aucun composant</div>);
   
-	return (
-	  <div className='p-6'>
-		<h1 className='text-2xl font-bold text-gray-900 mb-6'>Paramètres</h1>
-		<div className='bg-white rounded-lg shadow flex'>
-		  {/* Menu latéral */}
-		  <div className='w-64 border-r border-gray-200 p-4'>
-			<nav className='flex flex-col space-y-2'>
-			  {sections.map((section) => {
-				const Icon = section.icon;
-				return (
-				  <button
-					key={section.id}
-					onClick={() => {
-					  setActiveSectionId(section.id);
-					  setActiveSubTabId(section.subTabs[0].id);
-					}}
-					className={`flex items-center px-4 py-2 rounded-md text-left ${
-					  activeSectionId === section.id
-						? 'bg-blue-100 text-blue-700 font-semibold'
-						: 'text-gray-600 hover:bg-gray-100'
-					}`}
-				  >
-					<Icon className='h-5 w-5 mr-3' />
-					{section.name}
-				  </button>
-				);
-			  })}
-			</nav>
-		  </div>
+  return (
+    <div className='p-6'>
+      <h1 className='text-3xl font-bold text-gray-900 mb-6'>Paramètres</h1>
+      <div className='bg-white rounded-lg shadow divide-y divide-gray-200'>
+        {sections.map((section) => {
+          const Icon = section.icon;
+          const isOpen = activeSectionId === section.id;
   
-		  {/* Zone de contenu */}
-		  <div className='flex-1 p-6'>
-			{/* Sous-onglets */}
-			<div className='flex space-x-4 border-b border-gray-200 mb-6'>
-			  {activeSection?.subTabs.map((tab) => (
-				<button
-				  key={tab.id}
-				  onClick={() => setActiveSubTabId(tab.id)}
-				  className={`pb-2 border-b-2 text-sm ${
-					activeSubTabId === tab.id
-					  ? 'border-blue-600 text-blue-600 font-semibold'
-					  : 'border-transparent text-gray-600 hover:text-gray-800'
-				  }`}
-				>
-				  {tab.name}
-				</button>
-			  ))}
-			</div>
+          return (
+            <div key={section.id}>
+              {/* En-tête de l'accordéon */}
+              <button
+                onClick={() => {
+                  setActiveSectionId(isOpen ? null : section.id);
+                  if (!isOpen) setActiveSubTabId(section.subTabs[0].id);
+                }}
+                className='w-full flex items-center justify-between px-6 py-4 text-left hover:bg-gray-50 focus:outline-none'
+              >
+                <div className='flex items-center space-x-4 text-gray-800 font-semibold'>
+                  <Icon className='h-5 w-5 text-blue-600' />
+                  <span>{section.name}</span>
+                </div>
+                <svg
+                  className={`h-5 w-5 text-gray-500 transform transition-transform ${
+                    isOpen ? 'rotate-180' : ''
+                  }`}
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 3a1 1 0 01.7.3l5 5a1 1 0 01-1.4 1.4L10 5.42 5.7 9.7A1 1 0 014.3 8.3l5-5A1 1 0 0110 3z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </button>
   
-			{/* Encapsuler le composant avec le provider Elements de Stripe */}
-			{activeSubTabId === 'payment_method' ? (
-			  <Elements stripe={stripePromise}>
-				<ActiveComponent />
-			  </Elements>
-			) : (
-			  <ActiveComponent />
-			)}
-		  </div>
-		</div>
-	  </div>
-	);
+              {/* Contenu de l'accordéon */}
+              {isOpen && (
+                <div className='px-6 pb-6'>
+                  <p className='text-sm text-gray-500 mb-4'>
+                    {section.description || "Ajustez les paramètres liés à cette section."}
+                  </p>
+                  <div className='space-y-2'>
+                    {section.subTabs.map((tab) => (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveSubTabId(tab.id)}
+                        className={`w-full text-left px-4 py-2 rounded-md text-sm ${
+                          activeSubTabId === tab.id
+                            ? 'bg-blue-100 text-blue-800 font-semibold'
+                            : 'text-gray-700 hover:bg-gray-100'
+                        }`}
+                      >
+                        {tab.name}
+                      </button>
+                    ))}
+                  </div>
+  
+                  {/* Affichage du composant sélectionné */}
+                  <div className='mt-4'>
+                    {activeSubTabId === 'payment_method' ? (
+                      <Elements stripe={stripePromise}>
+                        <ActiveComponent />
+                      </Elements>
+                    ) : (
+                      <ActiveComponent />
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+  
+  
   }
 
 
