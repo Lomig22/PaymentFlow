@@ -238,7 +238,7 @@ useEffect(() => {
 	) => {
 		if (!sortConfig) return 0;
 		const { key, sort } = sortConfig;
-
+	
 		if (key === 'company_name') {
 			return stringCompare(a.company_name, b.company_name, sort);
 		}
@@ -247,6 +247,27 @@ useEffect(() => {
 		}
 		if (key === 'email') {
 			return stringCompare(a.email, b.email, sort);
+		}
+		if (key === 'phone') {
+			return stringCompare(a.phone, b.phone, sort);
+		}
+		if (key === 'address') {
+			return stringCompare(a.address, b.address, sort);
+		}
+		if (key === 'city') {
+			return stringCompare(a.city, b.city, sort);
+		}
+		if (key === 'postal_code') {
+			return stringCompare(a.postal_code, b.postal_code, sort);
+		}
+		if (key === 'country') {
+			return stringCompare(a.country, b.country, sort);
+		}
+		if (key === 'sector') {
+			return stringCompare(a.sector, b.sector, sort);
+		}
+		if (key === 'website') {
+			return stringCompare(a.website, b.website, sort);
 		}
 		if (key === 'needs_reminder') {
 			return booleanCompare(a.needs_reminder, b.needs_reminder, sort);
@@ -257,9 +278,13 @@ useEffect(() => {
 		if (key === 'updated_at') {
 			return dateCompare(a.updated_at, b.updated_at, sort);
 		}
-
+		if (key === 'comment') {
+			return stringCompare(a.notes, b.notes, sort);
+		}
+		
 		return 0;
 	};
+	
 
 	const filteredClients = clients
 		.filter((client) => {
@@ -360,26 +385,75 @@ useEffect(() => {
 									/>
 								</th>
 								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-									Téléphone
-								</th>
-								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-									Adresse
-								</th>
-								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-									Ville
-								</th>
-								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-									Code postal
-								</th>
-								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-									Pays
-								</th>
-								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-									Secteur
-								</th>
-								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-									Site web
-								</th>
+  <SortableColHead
+    colKey='phone'
+    label='Téléphone'
+    onClick={(col: string) =>
+      handleSortOnClick(col as keyof CSVMapping)
+    }
+    selectedColKey={sortConfig?.key ?? ''}
+    sort={sortConfig?.sort ?? 'none'}
+  />
+</th>
+
+<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+  <SortableColHead
+    colKey='address'
+    label='Adresse'
+    onClick={(col: string) =>
+      handleSortOnClick(col as keyof CSVMapping)
+    }
+    selectedColKey={sortConfig?.key ?? ''}
+    sort={sortConfig?.sort ?? 'none'}
+  />
+</th>
+
+<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+  <SortableColHead
+    colKey='city'
+    label='Ville'
+    onClick={(col: string) => handleSortOnClick(col as keyof CSVMapping)}
+    selectedColKey={sortConfig?.key ?? ''}
+    sort={sortConfig?.sort ?? 'none'}
+  />
+</th>
+<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+  <SortableColHead
+    colKey='postal_code'
+    label='Code postal'
+    onClick={(col: string) => handleSortOnClick(col as keyof CSVMapping)}
+    selectedColKey={sortConfig?.key ?? ''}
+    sort={sortConfig?.sort ?? 'none'}
+  />
+</th>
+<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+  <SortableColHead
+    colKey='country'
+    label='Pays'
+    onClick={(col: string) => handleSortOnClick(col as keyof CSVMapping)}
+    selectedColKey={sortConfig?.key ?? ''}
+    sort={sortConfig?.sort ?? 'none'}
+  />
+</th>
+<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+  <SortableColHead
+    colKey='sector'
+    label='Secteur'
+    onClick={(col: string) => handleSortOnClick(col as keyof CSVMapping)}
+    selectedColKey={sortConfig?.key ?? ''}
+    sort={sortConfig?.sort ?? 'none'}
+  />
+</th>
+<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+  <SortableColHead
+    colKey='website'
+    label='Site web'
+    onClick={(col: string) => handleSortOnClick(col as keyof CSVMapping)}
+    selectedColKey={sortConfig?.key ?? ''}
+    sort={sortConfig?.sort ?? 'none'}
+  />
+</th>
+
 								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 									<SortableColHead
 										colKey='created_at'
@@ -417,8 +491,17 @@ useEffect(() => {
 									/>
 								</th>
 								<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-									Commentaire
-								</th>
+	<SortableColHead
+		colKey='comment'
+		label='Commentaire'
+		onClick={(col: string) =>
+			handleSortOnClick(col as keyof CSVMapping)
+		}
+		selectedColKey={sortConfig?.key ?? ''}
+		sort={sortConfig?.sort ?? 'none'}
+	/>
+</th>
+
 							</tr>
 						</thead>
 						<tbody className='bg-white divide-y divide-gray-200'>
