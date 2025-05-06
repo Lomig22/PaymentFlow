@@ -299,7 +299,6 @@ useEffect(() => {
 		const result = await Swal.fire({
 		  title: 'Es-tu sûr ?',
 		  text: "Cette action est irréversible !",
-		  icon: 'warning',
 		  showCancelButton: true,
 		  confirmButtonColor: '#d33',
 		  cancelButtonColor: '#3085d6',
@@ -601,21 +600,22 @@ const handleSelectAll = () => {
 				/>
 			</div>
 			{selectedIds.length > 0 && (
-  <div className="mb-2 text-sm text-gray-700">
+				<div className="mb-2 text-sm text-gray-700 flex items-center gap-3">
   {selectedIds.length} élément(s) sélectionné(s)
   <button
-	type="button"
-	onClick={handleBulkDeleteConfirmation}
-	disabled={selectedIds.length === 0}
-	className={`ml-2 px-3 py-1 rounded text-sm font-medium ${
-	  selectedIds.length === 0
-		? "text-gray-400 cursor-not-allowed"
-		: "text-red-600 hover:underline"
-	}`}
+    type="button"
+    onClick={handleBulkDeleteConfirmation}
+    disabled={selectedIds.length === 0}
+    className={`inline-flex items-center gap-1 px-4 py-1.5 rounded-lg text-sm font-semibold transition duration-200 ${
+      selectedIds.length === 0
+        ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+        : "bg-red-100 text-red-700 hover:bg-red-200"
+    }`}
   >
-	Supprimer la sélection
+    🗑️ Supprimer la sélection
   </button>
 </div>
+
 )}
 
 			<div className='ml-4 bg-white rounded-lg shadow overflow-hidden'>
@@ -781,26 +781,24 @@ const handleSelectAll = () => {
     {/* Bouton menu déroulant */}
     <div className="relative" >
 	<div className="flex items-center gap-2 relative z-10">
-    {/* Bouton d'action */}
-    <button
-      onClick={() =>
-        setOpenDropdownId(openDropdownId === receivable.id ? null : receivable.id)
-      }
-      className="text-gray-600 hover:text-gray-800"
-      title="Actions"
-    >
-      {(!receivable.client?.reminder_template_1 && receivable.client?.needs_reminder) ? (
-       
-		<div title="Paramètres non configurées" > <Info className="h-5 w-5 text-yellow-500" /></div>
-      ) : (
-		<div title="Actions"> <MoreHorizontal className="h-5 w-5" /></div>
-        
-      )}
-    </button>
+  {/* Bouton d'action */}
+  <button
+    onClick={() =>
+      setOpenDropdownId(openDropdownId === receivable.id ? null : receivable.id)
+    }
+    className="flex items-center gap-1 text-gray-600 hover:text-gray-800"
+    title="Actions"
+  >
+    {/* Icône principale */}
+    <MoreHorizontal className="h-5 w-5" />
 
-    {/* Tooltip affiché à côté de l’icône Info */}
- 
-  </div>
+    {/* Icône d'avertissement si nécessaire */}
+    {(!receivable.client?.reminder_template_1 && receivable.client?.needs_reminder) && (
+      <Info className="h-5 w-5 text-yellow-500" title="Paramètres non configurés" />
+    )}
+  </button>
+</div>
+
 
       {openDropdownId === receivable.id && (
         <div
