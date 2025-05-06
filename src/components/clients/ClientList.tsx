@@ -575,7 +575,7 @@ useEffect(() => {
     </button>
 
     {openDropdownId === client.id && (
-      <div onClick={(e=>{e.stopPropagation();})} ref={() => (dropdownRef)} className="absolute origin-top-right mt-2 w-40 z-50 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5">
+      <div onClick={(e=>{e.stopPropagation();})}  ref={dropdownRef} className="absolute origin-top-right mt-2 w-40 z-50 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5">
         <div className="py-1">
           <button
             onClick={(e) => {
