@@ -14,7 +14,7 @@ const ClientPage = () => {
 	// const [searchTerm, setSearchTerm] = useState<string>('');
 	return (
 		<div className='p-6'>
-			<div className='flex justify-between items-center mb-6'>
+			<div className='flex justify-between items-center mb-6 ml-4'>
 				<h1 className='text-2xl font-bold text-gray-900'>Clients</h1>
 				<div className='flex gap-4'>
 					<button
@@ -33,7 +33,7 @@ const ClientPage = () => {
 					</button>
 				</div>
 			</div>
-			<div className='flex items-center gap-2 mb-2'>
+			<div className='flex items-center gap-2 mb-2 ml-4'>
 				<button
 					type='button'
 					onClick={() => setTab('client')}
