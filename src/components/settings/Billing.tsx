@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {   useStripe,
     useElements,
     CardElement,
@@ -18,7 +18,6 @@ export function BillingInfoSettings() {
     console.log({ company, address, siret });
     // TODO: Envoi vers le backend
   };
-
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
@@ -60,12 +59,44 @@ export function BillingInfoSettings() {
 // Composant 2 : Choix de l’abonnement
 export function SubscriptionSettings() {
   const [plan, setPlan] = useState('starter');
+  const fetchSubscription = async () => {
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      console.error('Erreur utilisateur :', userError);
+      return;
+    }
+
+    const { data: subscription, error: subscriptionError } = await supabase
+      .from('subscriptions')
+      .select('plan')
+      .eq('user_id', user.id)
+      .limit(1)
+      .single();
+
+    if (subscriptionError) {
+      console.error('Erreur abonnement :', subscriptionError);
+      return;
+    }
+
+    if (subscription) {
+      setPlan(subscription.plan);
+    }
+  };
+
+  useEffect(() => {
+    fetchSubscription();
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPlan(e.target.value);
     console.log('Abonnement choisi :', e.target.value);
     // TODO: Enregistrer dans le backend
   };
+
   const handleStripePayment = async (plan: string) => {
     try {
       // Get current user from Supabase
@@ -94,24 +125,23 @@ export function SubscriptionSettings() {
         return;
       }
 
-/*       if (existingSubscriptions && existingSubscriptions.length > 0) {
-        alert("Vous avez déjà un abonnement actif.");
-        return;
-      } */
-
       // Add new subscription to Supabase
-      const { error: insertError } = await supabase
-        .from("subscriptions")
-        .insert([
+      const { error: upsertError } = await supabase
+      .from("subscriptions")
+      .upsert(
+        [
           {
             user_id: user.id,
             status: "active",
+            plan: plan,
           },
-        ]);
+        ],
+        { onConflict: 'user_id' } 
+      );
 
-      if (insertError) {
-        console.error("Error creating subscription:", insertError);
-        alert("Erreur lors de la création de l'abonnement");
+      if (upsertError) {
+        console.error("Error saving subscription:", upsertError);
+     //   alert("Erreur lors de la création de l'abonnement");
         return;
       }
 
@@ -128,7 +158,7 @@ export function SubscriptionSettings() {
             user.email ?? ""
           )}`;
           break;
-        case "entreprise":
+        case "enterprise":
           stripeUrl = `https://buy.stripe.com/test_dR66s9cgGcRgcQU3cc?prefilled_email=${encodeURIComponent(
             user.email ?? ""
           )}`;
@@ -145,6 +175,11 @@ export function SubscriptionSettings() {
   };
   return (
     <div className="space-y-4 max-w-md">
+      {(plan==="free")&&(
+         <div className="mb-4 p-4 border border-yellow-400 bg-yellow-100 text-yellow-800 rounded">
+         ⚠️ Vous n'êtes  souscrit à aucun abonnement pour le moment!
+       </div>)}
+      
       <h2 className="text-lg font-semibold">Choix de l’abonnement</h2>
       {['basic', 'pro', 'entreprise'].map((p) => (
         <div key={p} className="flex items-center space-x-2">
@@ -161,12 +196,11 @@ export function SubscriptionSettings() {
           </label>
         </div>
       ))}
-        <button onClick={()=>{handleStripePayment(plan)}} className="bg-blue-600 text-white px-4 py-2 rounded">
-  Valider
-</button>
+            <button onClick={()=>{handleStripePayment(plan)}} className="bg-blue-600 text-white px-4 py-2 rounded">
+        Enregistrer
+      </button>
     </div>
   );
-
 }
 
 // Composant 3 : Moyen de paiement

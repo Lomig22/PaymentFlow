@@ -103,6 +103,7 @@ export default function ReminderSettingsModal({
       const { error: updateError } = await supabase
         .from("clients")
         .update({
+		  
           reminder_delay_1: formData.reminder_delay_1,
           reminder_delay_2: formData.reminder_delay_2,
           reminder_delay_3: formData.reminder_delay_3,
@@ -167,7 +168,7 @@ export default function ReminderSettingsModal({
       }, 1500);
     } catch (error) {
       console.error("Erreur lors de la mise à jour des paramètres:", error);
-      showError(error.message || "Impossible de mettre à jour les paramètres");
+      showError( "Impossible de mettre à jour les paramètres, vérifier le profil du client!");
     } finally {
       setLoading(false);
     }
@@ -408,7 +409,7 @@ export default function ReminderSettingsModal({
                   value={
                     reminderProfiles.find(
                       (p) => p.id === formData.reminder_profile
-                    )?.name || ""
+                    )?.name || "Non configurée"
                   }
                   className="w-full text-gray-500 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
@@ -418,7 +419,7 @@ export default function ReminderSettingsModal({
               <div className='hidden'>
                 <DelayInputJHM
                   label="Délai première relance (Jours,Heures,Minutes)"
-                  value={formData.reminder_delay_1}
+                  value={formData.reminder_delay_1||{j:1,h:0,m:0}}
                   onChange={(value) =>
                     setFormData({ ...formData, reminder_delay_1: value })
                   }
@@ -430,7 +431,7 @@ export default function ReminderSettingsModal({
               <div className='hidden'>
                 <DelayInputJHM
                   label="Délai deuxième relance (Jours,Heures,Minutes)"
-                  value={formData.reminder_delay_2}
+                  value={formData.reminder_delay_2 ||{j:1,h:0,m:0}}
                   onChange={(value) =>
                     setFormData({ ...formData, reminder_delay_2: value })
                   }
@@ -442,7 +443,7 @@ export default function ReminderSettingsModal({
               <div className='hidden'>
                 <DelayInputJHM
                   label="Délai troisième relance (Jours,Heures,Minutes)"
-                  value={formData.reminder_delay_3}
+                  value={formData.reminder_delay_3||{j:1,h:0,m:0}}
                   onChange={(value) =>
                     setFormData({ ...formData, reminder_delay_3: value })
                   }
@@ -454,7 +455,7 @@ export default function ReminderSettingsModal({
               <div className='hidden'>
                 <DelayInputJHM
                   label="Délai relance finale (Jours,Heures,Minutes)"
-                  value={formData.reminder_delay_final}
+                  value={formData.reminder_delay_final ||{j:1,h:0,m:0}}
                   onChange={(value) =>
                     setFormData({ ...formData, reminder_delay_final: value })
                   }
@@ -466,7 +467,7 @@ export default function ReminderSettingsModal({
               <div className='hidden'>
                 <DelayInputJHM
                   label="Pré relance"
-                  value={formData.pre_reminder_delay}
+                  value={formData.pre_reminder_delay }
                   onChange={(value) =>
                     setFormData({ ...formData, pre_reminder_delay: value })
                   }
