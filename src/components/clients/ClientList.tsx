@@ -371,7 +371,7 @@ function ClientList({
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-4 py-3">
+                <th className="px-6 py-3">
                   <input
                     type="checkbox"
                     checked={
@@ -387,6 +387,8 @@ function ClientList({
                         setSelectedClientIds([]);
                       }
                     }}
+					className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
+					title="Tout sélectionner"
                   />
                 </th>
 
@@ -567,7 +569,7 @@ function ClientList({
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredClients.map((client) => (
                 <tr key={client.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-4 whitespace-nowrap">
+                  <td className="px-6 py-4 whitespace-nowrap">
                     <input
                       type="checkbox"
                       checked={selectedClientIds.includes(client.id)}
@@ -580,17 +582,19 @@ function ClientList({
                           );
                         }
                       }}
+					  className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
+
                     />
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="px-6 py-2 whitespace-nowrap relative">
+                <td className="px-6 py-4 whitespace-nowrap relative">
+                    <div className="flex items-center gap-2 relative z-10">
                       <button
                         onClick={() =>
                           setOpenDropdownId(
                             openDropdownId === client.id ? null : client.id
                           )
                         }
-                        className="text-gray-600 hover:text-gray-800"
+                        className="text-gray-600 hover:text-gray-800 "
                         title="Actions"
                       >
                         <MoreHorizontal className="h-5 w-5" />
@@ -612,7 +616,7 @@ function ClientList({
                                 setShowForm(true);
                                 setOpenDropdownId(null);
                               }}
-                              className="flex items-center w-full px-4 py-2 text-sm text-blue-600 hover:bg-blue-50"
+                              className="flex items-center w-full px-2 py-2 text-sm text-blue-600 hover:bg-blue-50"
                             >
                               <Edit className="w-4 h-4 mr-2" /> Modifier
                             </button>
@@ -635,7 +639,7 @@ function ClientList({
                     </div>
                   </td>
 
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {client.company_name}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -683,13 +687,13 @@ function ClientList({
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {formatDate(client.created_at)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {formatDate(client.updated_at)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {client.reminderProfile?.name || "-"}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <span
                         className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
@@ -725,7 +729,7 @@ function ClientList({
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {client.notes}
-                  </td>
+                  </td> 
                 </tr>
               ))}
               {filteredClients.length === 0 && (
