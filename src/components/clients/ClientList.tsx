@@ -338,7 +338,7 @@ function ClientList({
 
   return (
     <>
-      <div className="relative mb-6">
+      <div className="ml-4 relative mb-6">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
         <input
           type="text"
@@ -349,7 +349,7 @@ function ClientList({
         />
       </div>
       {selectedClientIds.length > 0 && (
-        <div className="mb-2 text-sm text-gray-700">
+        <div className="ml-4 mb-2 text-sm text-gray-700">
           {selectedClientIds.length} client(s) sélectionné(s)
           <button
             type="button"
@@ -358,10 +358,10 @@ function ClientList({
             className={`ml-2 px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors duration-200 ${
               selectedClientIds.length === 0
                 ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                : "bg-red-100 text-red-700 hover:bg-red-200"
+                : "bg-red-600 text-white hover:bg-red-200"
             }`}
           >
-            🗑️ Supprimer la sélection
+            Supprimer la sélection
           </button>
         </div>
       )}
