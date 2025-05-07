@@ -575,11 +575,11 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
                   </li>
                 </ul>
                 <button
-                  onClick={() => handleStripePayment("basic")}
-                  className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors"
-                >
-                  Souscrire
-                </button>
+      onClick={() => navigate("/signup")}
+      className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors"
+    >
+      Souscrire
+    </button>
               </motion.div>
 
               {/* Pro Plan */}
@@ -631,11 +631,11 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
                   </li>
                 </ul>
                 <button
-                  onClick={() => handleStripePayment("pro")}
-                  className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors"
-                >
-                  Souscrire
-                </button>
+      onClick={() => navigate("/signup")}
+      className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors"
+    >
+      Souscrire
+    </button>
               </motion.div>
 
               {/* Enterprise Plan */}
