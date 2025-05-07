@@ -57,8 +57,8 @@ const sections = [
     subTabs: [
        { id: 'billing_info', name: 'Informations de facturation', component: BillingInfoSettings },
       { id: 'subscription', name: 'Choix de l’abonnement', component: SubscriptionSettings },
-      { id: 'payment_method', name: 'Moyen de paiement', component: PaymentMethodSettings }, 
-    ],
+/*       { id: 'payment_method', name: 'Moyen de paiement', component: PaymentMethodSettings }, 
+ */    ],
   },
   {
     id: 'reminders',
@@ -102,7 +102,7 @@ const sections = [
     name: 'Paramètres avancés',
     icon: Shield,
     subTabs: [
-      { id: 'profile_rename', name: 'Renommer les profils', component: ReminderProfileSettings },
+      { id: 'profile_rename', name: 'Configuration des profils', component: ReminderProfileSettings },
     ],
   },
   {
