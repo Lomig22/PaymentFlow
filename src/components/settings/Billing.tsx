@@ -6,6 +6,7 @@ import {   useStripe,
     Elements,
  } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
+import { supabase } from '../../lib/supabase';
 // Composant 1 : Informations de facturation
 export function BillingInfoSettings() {
   const [company, setCompany] = useState('');
@@ -17,6 +18,7 @@ export function BillingInfoSettings() {
     console.log({ company, address, siret });
     // TODO: Envoi vers le backend
   };
+
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
@@ -64,7 +66,83 @@ export function SubscriptionSettings() {
     console.log('Abonnement choisi :', e.target.value);
     // TODO: Enregistrer dans le backend
   };
+  const handleStripePayment = async (plan: string) => {
+    try {
+      // Get current user from Supabase
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
 
+      if (userError || !user) {
+        alert("Veuillez vous connecter pour continuer");
+        return;
+      }
+
+      // Check for existing subscription
+      const { data: existingSubscriptions, error: subscriptionError } =
+        await supabase
+          .from("subscriptions")
+          .select("id")
+          .eq("user_id", user.id);
+
+      if (subscriptionError) {
+        console.error("Error checking subscriptions:", subscriptionError);
+        alert(
+          "Une erreur est survenue lors de la vérification de l'abonnement"
+        );
+        return;
+      }
+
+/*       if (existingSubscriptions && existingSubscriptions.length > 0) {
+        alert("Vous avez déjà un abonnement actif.");
+        return;
+      } */
+
+      // Add new subscription to Supabase
+      const { error: insertError } = await supabase
+        .from("subscriptions")
+        .insert([
+          {
+            user_id: user.id,
+            status: "active",
+          },
+        ]);
+
+      if (insertError) {
+        console.error("Error creating subscription:", insertError);
+        alert("Erreur lors de la création de l'abonnement");
+        return;
+      }
+
+      // Proceed to Stripe payment
+      let stripeUrl = "";
+      switch (plan) {
+        case "basic":
+          stripeUrl = `https://buy.stripe.com/test_dR66s9cgGcRgcQU3cc?prefilled_email=${encodeURIComponent(
+            user.email ?? ""
+          )}`;
+          break;
+        case "pro":
+          stripeUrl = `https://buy.stripe.com/test_dR66s9cgGcRgcQU3cc?prefilled_email=${encodeURIComponent(
+            user.email ?? ""
+          )}`;
+          break;
+        case "entreprise":
+          stripeUrl = `https://buy.stripe.com/test_dR66s9cgGcRgcQU3cc?prefilled_email=${encodeURIComponent(
+            user.email ?? ""
+          )}`;
+          break;
+        default:
+          return;
+      }
+
+      window.open(stripeUrl, "_blank");
+    } catch (error) {
+      console.error("Erreur de paiement:", error);
+      alert("Une erreur est survenue. Veuillez réessayer.");
+    }
+  };
   return (
     <div className="space-y-4 max-w-md">
       <h2 className="text-lg font-semibold">Choix de l’abonnement</h2>
@@ -83,8 +161,12 @@ export function SubscriptionSettings() {
           </label>
         </div>
       ))}
+        <button onClick={()=>{handleStripePayment(plan)}} className="bg-blue-600 text-white px-4 py-2 rounded">
+  Valider
+</button>
     </div>
   );
+
 }
 
 // Composant 3 : Moyen de paiement
