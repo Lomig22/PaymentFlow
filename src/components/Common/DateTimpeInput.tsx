@@ -5,28 +5,27 @@ import "react-datetime/css/react-datetime.css";
 interface DateTimeInputProps {
   label: string;
   value: Date;
+  datemin: Date;
+  datemax?: Date; // 👈 ajouté ici
   onChange: (date: Date) => void;
 }
 
-export default function DateTimeInput({ label, value, onChange }: DateTimeInputProps) {
+export default function DateTimeInput({ label, value, onChange, datemin, datemax }: DateTimeInputProps) {
+  const toDateTimeLocal = (date: Date) => {
+    const pad = (n: number) => n.toString().padStart(2, "0");
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  };
+
   return (
     <div className="bg-white p-4 rounded-xl shadow">
       <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
-      <Datetime
-        value={moment(value)}
-        onChange={(date) => {
-          const d = date && typeof date !== "string" && date.toDate ? date.toDate() : date;
-          if (d instanceof Date && !isNaN(d.getTime())) {
-            onChange(d);
-          }
-        }}
-        dateFormat="YYYY-MM-DD"
-        timeFormat="HH:mm"
-        timeConstraints={{
-          hours: { min: 0, max: 23, step: 1 },
-          minutes: { min: 0, max: 59, step: 1 },
-        }}
-        inputProps={{ className: "w-full" }}
+      <input
+        type="datetime-local"
+        value={toDateTimeLocal(value)}
+        min={datemin ? toDateTimeLocal(datemin) : undefined}
+        max={datemax ? toDateTimeLocal(datemax) : undefined} 
+        onChange={(e) => onChange(new Date(e.target.value))}
+        className="w-full border border-gray-300 rounded-md p-2"
       />
     </div>
   );
