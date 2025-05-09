@@ -122,6 +122,7 @@ function ClientList({
     const handleEscape = (event) => {
       if (event.key === "Escape") {
         setOpenDropdownId(null);
+        setSelectedClientIds([])
       }
     };
 
@@ -387,8 +388,8 @@ function ClientList({
                         setSelectedClientIds([]);
                       }
                     }}
-					className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
-					title="Tout sélectionner"
+                    className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
+                    title="Tout sélectionner"
                   />
                 </th>
 
@@ -582,11 +583,10 @@ function ClientList({
                           );
                         }
                       }}
-					  className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
-
+                      className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
                     />
                   </td>
-                <td className="px-6 py-4 whitespace-nowrap relative">
+                  <td className="px-6 py-4 whitespace-nowrap relative">
                     <div className="flex items-center gap-2 relative z-10">
                       <button
                         onClick={() =>
@@ -606,7 +606,7 @@ function ClientList({
                             e.stopPropagation();
                           }}
                           ref={dropdownRef}
-                          className="absolute origin-top-right mt-2 w-40 z-50 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5"
+                          className="fixed origin-top-right mt-2 w-40 z-50 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5"
                         >
                           <div className="py-1">
                             <button
@@ -639,7 +639,7 @@ function ClientList({
                     </div>
                   </td>
 
-                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {client.company_name}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -687,13 +687,13 @@ function ClientList({
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {formatDate(client.created_at)}
                   </td>
-                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {formatDate(client.updated_at)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {client.reminderProfile?.name || "-"}
                   </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <span
                         className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
@@ -729,7 +729,7 @@ function ClientList({
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {client.notes}
-                  </td> 
+                  </td>
                 </tr>
               ))}
               {filteredClients.length === 0 && (

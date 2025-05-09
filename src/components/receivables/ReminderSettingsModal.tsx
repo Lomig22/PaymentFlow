@@ -35,6 +35,38 @@ export default function ReminderSettingsModal({
     receivable.automatic_reminder ?? false
   );
 
+ const [defaultProfile, setDefaultProfile] = useState(null);
+
+  useEffect(() => {
+    const fetchDefaultProfile = async () => {
+      const {
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser();
+
+      if (authError || !user) return;
+
+      const { data, error } = await supabase
+        .from('reminder_profile')
+        .select('*')
+        .eq('name', 'Default')
+        .eq('owner_id', user.id)
+        .single(); // attend une seule ligne
+
+      if (error) {
+        if (error.code !== 'PGRST116') { // Pas de profil trouvé
+          alert("error: ",error)
+          showError(error.message);
+        }
+        setDefaultProfile(null);
+      } else {
+        setDefaultProfile(data);
+      }
+    };
+
+    fetchDefaultProfile();
+  console.log("DEFAULT PROFILE: ",defaultProfile)
+  }, []);
   const [formData, setFormData] = useState({
     reminder_delay_1: client.reminder_delay_1 || { j: 0, h: 0, m: 1 },
     reminder_delay_2: client.reminder_delay_2 || { j: 0, h: 0, m: 2 },
@@ -44,7 +76,7 @@ export default function ReminderSettingsModal({
     reminder_template_2: client.reminder_template_2 || "",
     reminder_template_3: client.reminder_template_3 || "",
     reminder_template_final: client.reminder_template_final || "",
-    reminder_profile: client.reminder_profile || "",
+    reminder_profile: client.reminder_profile || defaultProfile?.id,
     pre_reminder_delay: client.pre_reminder_delay || { j: 0, h: 0, m: 0 },
     pre_reminder_template: client.pre_reminder_template || "",
   });
@@ -378,7 +410,7 @@ export default function ReminderSettingsModal({
           </div>
           {hasPastDate && (
             <div className="mb-4 p-4 border border-yellow-400 bg-yellow-100 text-yellow-800 rounded">
-              ⚠️ Certaines dates de relance sont antérieures à la date actuelle.
+              Certaines dates de relance sont antérieures à la date actuelle.
             </div>
           )}
           {error && (
@@ -409,7 +441,7 @@ export default function ReminderSettingsModal({
                   value={
                     reminderProfiles.find(
                       (p) => p.id === formData.reminder_profile
-                    )?.name || "Non configurée"
+                    )?.name || "Aucun profil"
                   }
                   className="w-full text-gray-500 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
@@ -580,7 +612,7 @@ export default function ReminderSettingsModal({
                   formData.pre_reminder_delay,
                   dueDate
                 )}
-				datemax={dueDate}
+				datemax={delayToDateTime(formData.reminder_delay_1, dueDate)}
                 onChange={(date) =>
                   setFormData({
                     ...formData,

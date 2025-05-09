@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import {
   Receivable,
@@ -94,6 +94,8 @@ function ReceivablesList() {
   const [content, setContent] = useState<string>("");
   const [subject, setSubject] = useState<string>("");
   const [signature, setSignature] = useState<string>("");
+  const [isDropdownAbove, setIsDropdownAbove] = useState(false);
+
   const fetchReceivables = async () => {
     try {
       const {
@@ -105,7 +107,7 @@ function ReceivablesList() {
       const { data, error } = await supabase
         .from("receivables")
         .select(`*, client:clients(*)`)
-        .eq("owner_id", user.id) // <<< ici le filtre
+        .eq("owner_id", user.id)
         .order("due_date", { ascending: false });
 
       if (error) {
@@ -536,14 +538,47 @@ function ReceivablesList() {
     .sort(applySorting);
   const dropdownRefs = useRef({});
   const [openDropdownId, setOpenDropdownId] = useState(null);
-  useEffect(() => {
+  /*   useEffect(() => {
     if (openDropdownId && dropdownRefs.current[openDropdownId]) {
       dropdownRefs.current[openDropdownId].scrollIntoView({
         behavior: "smooth",
         block: "nearest",
       });
     }
-  }, [openDropdownId]);
+  }, [openDropdownId]); */
+
+  const buttonRefs = useRef({});
+  const tableRefs = useRef<HTMLTableElement | null>(null);
+  
+const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
+
+useLayoutEffect(() => {
+  if (openDropdownId && buttonRefs.current[openDropdownId] && dropdownRefs.current[openDropdownId]) {
+    const buttonRect = buttonRefs.current[openDropdownId]!.getBoundingClientRect();
+    const dropdown = dropdownRefs.current[openDropdownId];
+    const table = tableRefs.current;
+
+    if (!dropdown || !table) return;
+
+    const dropdownHeight = dropdown.getBoundingClientRect().height;
+    const dropdownTop = dropdown.getBoundingClientRect().top;
+    const tableHeight = table.offsetHeight;
+    const overflowHeight = dropdownTop + dropdownHeight - tableHeight;
+
+    if (overflowHeight > 0) {
+      setDropdownPosition({
+        top: buttonRect.top - dropdownHeight,
+        left: buttonRect.left,
+      });
+    } else {
+      setDropdownPosition({
+        top: buttonRect.top,
+        left: buttonRect.left,
+      });
+    }
+  }
+}, [openDropdownId]);
+
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [selectedAll, setSelectedAll] = useState(false);
@@ -564,31 +599,35 @@ function ReceivablesList() {
     }
   };
 
-  const dropdownRef = useRef(null);
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      const dropdown = dropdownRefs.current[openDropdownId];
+  
+      if (dropdown && !dropdown.contains(event.target)) {
         // Donne un court délai pour laisser les onClick internes s'exécuter
         setTimeout(() => {
           setOpenDropdownId(null);
         }, 50);
       }
     };
-
+  
     const handleEscape = (event) => {
       if (event.key === "Escape") {
+        setSelectedIds([]);
+        setSelectedAll(false);
         setOpenDropdownId(null);
       }
     };
-
+  
     document.addEventListener("mousedown", handleClickOutside);
     document.addEventListener("keydown", handleEscape);
-
+  
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
       document.removeEventListener("keydown", handleEscape);
     };
-  }, [dropdownRef]);
+  }, [openDropdownId]);
+  
 
   if (loading) {
     return (
@@ -645,7 +684,7 @@ function ReceivablesList() {
 
       {sendSuccess && (
         <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-md text-green-700">
-          Relançe manuelle effectuer correctement!
+          Relance manuelle effectuée correctement !
         </div>
       )}
       <div className="ml-4 relative mb-6">
@@ -660,7 +699,10 @@ function ReceivablesList() {
       </div>
       {selectedIds.length > 0 && (
         <div className="ml-4 mb-2 text-sm text-gray-700 flex items-center gap-3">
-          {selectedIds.length} élément(s) sélectionné(s)
+          {selectedIds.length}{" "}
+          {selectedIds.length > 1
+            ? "éléments sélectionnés"
+            : "élément sélectionné"}{" "}
           <button
             type="button"
             onClick={handleBulkDeleteConfirmation}
@@ -671,14 +713,14 @@ function ReceivablesList() {
                 : "bg-red-600 text-white  hover:bg-red-200"
             }`}
           >
-             Supprimer la sélection
+            Supprimer la sélection
           </button>
         </div>
       )}
 
       <div className="ml-4 bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
+          <table className="min-w-full divide-y divide-gray-200" ref={tableRefs}>
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3">
@@ -740,7 +782,7 @@ function ReceivablesList() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   <SortableColHead
                     colKey="amount"
-                    label="Montant devise"
+                    label="Montant"
                     onClick={(col: string) =>
                       handleSortOnClick(col as keyof CSVMapping)
                     }
@@ -751,7 +793,7 @@ function ReceivablesList() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   <SortableColHead
                     colKey="paid_amount"
-                    label="Montant Réglé devise"
+                    label="Montant Réglé"
                     onClick={(col: string) =>
                       handleSortOnClick(col as keyof CSVMapping)
                     }
@@ -784,7 +826,7 @@ function ReceivablesList() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   <SortableColHead
                     colKey="Delay in Days"
-                    label="Délai"
+                    label="Retard"
                     onClick={(col: string) =>
                       handleSortOnClick(col as keyof CSVMapping)
                     }
@@ -840,6 +882,7 @@ function ReceivablesList() {
                       <div className="relative">
                         <div className="flex items-center gap-2 relative z-10">
                           <button
+                            
                             onClick={() =>
                               setOpenDropdownId(
                                 openDropdownId === receivable.id
@@ -851,28 +894,36 @@ function ReceivablesList() {
                             title="Actions"
                           >
                             {/* Icône MoreHorizontal */}
-                            <span className="w-5 h-5 flex items-center justify-center">
+                            <span    ref={(el) => (buttonRefs.current[receivable.id] = el)} className="w-5 h-5 flex items-center justify-center">
                               <MoreHorizontal className="h-5 w-5" />
                             </span>
 
                             {/* Icône Info */}
-                            <span
+                            <span 
                               className="text-yellow-500 w-5 h-5 flex items-center justify-center"
                               title="Paramètres non configurés"
                             >
-								{(!receivable.client?.reminder_template_1 &&
-                                receivable.client?.needs_reminder)?<Info className="h-5 w-5" />:(!receivable.automatic_reminder)? <Pause className="h-5 w-5" />:""}
-                              
+                              {!receivable.client?.reminder_template_1 &&
+                              receivable.client?.needs_reminder ? (
+                                <Info className="h-5 w-5" />
+                              ) : !receivable.automatic_reminder ? (
+                                <Pause className="h-5 w-5" />
+                              ) : (
+                                ""
+                              )}
                             </span>
-         
                           </button>
                         </div>
 
                         {openDropdownId === receivable.id && (
-                          <div
-                            className="absolute z-50 mt-2 w-48 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5"
-                            ref={dropdownRef}
-                          >
+  <div
+    ref={(el) => (dropdownRefs.current[receivable.id] = el)}
+    className="fixed z-[51] w-48 origin-top-left rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-10 ml-2"
+     style={{
+      top: `${dropdownPosition.top}px`,
+      left: `${dropdownPosition.left}px`,
+    }} 
+  >
                             <div className="py-1">
                               <button
                                 onClick={() => {
@@ -1068,12 +1119,15 @@ function ReceivablesList() {
             setSelectedReceivable(null);
           }}
           onReceivableUpdated={(updatedReceivable) => {
-            setReceivables(
-              receivables.map((r) =>
-                r.id === updatedReceivable.id ? updatedReceivable : r
-              )
-            );
-            setSelectedReceivable(null);
+            setTimeout(() => {
+              setReceivables(
+                receivables.map((r) =>
+                  r.id === updatedReceivable.id ? updatedReceivable : r
+                )
+              );
+              setSelectedReceivable(null);
+            }, 2000);
+            
           }}
         />
       )}
