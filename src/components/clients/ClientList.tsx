@@ -186,13 +186,20 @@ useLayoutEffect(() => {
     try {
       setDeleting(true);
       setError(null);
-
-      const { error } = await supabase
-        .from("clients")
-        .delete()
-        .eq("id", clientToDelete.id);
-
-      if (error) throw error;
+      const { error: receivablesError } = await supabase
+      .from("receivables")
+      .delete()
+      .eq("client_id", clientToDelete.id);
+    
+    if (receivablesError) throw receivablesError;
+    
+    const { error: clientError } = await supabase
+      .from("clients")
+      .delete()
+      .eq("id", clientToDelete.id);
+    
+    if (clientError) throw clientError;
+    
 
       setClients(clients.filter((c) => c.id !== clientToDelete.id));
       setShowDeleteConfirm(false);
@@ -252,6 +259,12 @@ useLayoutEffect(() => {
 
   const handleBulkDelete = async () => {
     try {
+      const { error: receivablesError } = await supabase
+      .from("receivables")
+      .delete()
+      .in("client_id", selectedClientIds);
+    
+    if (receivablesError) throw receivablesError;
       // Suppression des clients via Supabase
       const { data, error } = await supabase
         .from("clients") // Remplace 'clients' par le nom de ta table dans Supabase
