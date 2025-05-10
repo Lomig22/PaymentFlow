@@ -287,21 +287,45 @@ function ReceivablesList() {
   };
   const handleBulkDelete = async () => {
     if (selectedIds.length === 0) return;
-
-    const { error } = await supabase
+  
+    // Étape 1 : Récupérer les receivables sélectionnés pour obtenir les client_id
+    const { data: receivablesToDelete, error: fetchError } = await supabase
+      .from("receivables")
+      .select("client_id")
+      .in("id", selectedIds);
+  
+    if (fetchError) {
+      console.error("Erreur lors de la récupération des données clients :", fetchError.message);
+      return;
+    }
+  
+    // Extraire les client_id uniques
+    const clientIds = [
+      ...new Set(receivablesToDelete.map((r: any) => r.client_id)),
+    ];
+  
+    // Étape 2 : Supprimer les receivables
+    const { error: deleteError } = await supabase
       .from("receivables")
       .delete()
       .in("id", selectedIds);
-
-    if (error) {
-      console.error("Erreur lors de la suppression :", error.message);
-    } else {
-      setSelectedIds([]);
-      setSelectedAll(false);
-      // Tu peux aussi recharger les données ici
-      fetchReceivables(); // ou ta méthode de rafraîchissement
+  
+    if (deleteError) {
+      console.error("Erreur lors de la suppression :", deleteError.message);
+      return;
     }
+  
+    // Étape 3 : Mettre à jour les statuts de relance des clients
+    for (const clientId of clientIds) {
+      await updateClientReminderStatus(clientId, false); // ou true selon ta logique
+    }
+  
+    // Étape 4 : Rafraîchir l'état local
+    setSelectedIds([]);
+    setSelectedAll(false);
+    fetchReceivables();
   };
+  
   const handleBulkDeleteConfirmation = async () => {
     const result = await Swal.fire({
       title: "Es-tu sûr ?",
@@ -538,15 +562,15 @@ function ReceivablesList() {
     .sort(applySorting);
   const dropdownRefs = useRef({});
   const [openDropdownId, setOpenDropdownId] = useState(null);
-  /*   useEffect(() => {
-    if (openDropdownId && dropdownRefs.current[openDropdownId]) {
-      dropdownRefs.current[openDropdownId].scrollIntoView({
-        behavior: "smooth",
-        block: "nearest",
-      });
-    }
-  }, [openDropdownId]); */
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  useEffect(() => {
+    const handleMouseMove = (event: MouseEvent) => {
+      setMousePosition({ x: event.clientX, y: event.clientY });
+    };
+    window.addEventListener("mousemove", handleMouseMove);
 
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, []);
   const buttonRefs = useRef({});
   const tableRefs = useRef<HTMLTableElement | null>(null);
   
@@ -561,11 +585,12 @@ useLayoutEffect(() => {
     if (!dropdown || !table) return;
 
     const dropdownHeight = dropdown.getBoundingClientRect().height;
-    const dropdownTop = dropdown.getBoundingClientRect().top;
     const tableHeight = table.offsetHeight;
-    const overflowHeight = dropdownTop + dropdownHeight - tableHeight;
+   
+   // const overflowHeight = dropdownTop + dropdownHeight - tableHeight;
+    //alert(`Position de la souris : X=${mousePosition.x}, Y=${mousePosition.y},table height=${tableHeight}`);
 
-    if (overflowHeight > 0) {
+    if (mousePosition.y > tableHeight) {
       setDropdownPosition({
         top: buttonRect.top - dropdownHeight,
         left: buttonRect.left,

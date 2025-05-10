@@ -1,16 +1,32 @@
-import Datetime from "react-datetime";
-import moment from "moment";
-import "react-datetime/css/react-datetime.css";
+import { useState } from "react";
 
 interface DateTimeInputProps {
   label: string;
   value: Date;
-  datemin: Date;
-  datemax?: Date; // 👈 ajouté ici
   onChange: (date: Date) => void;
+  datemin?: Date;
+  datemax?: Date;
+  optional?: boolean;
+  onToggleOptional?: (enabled: boolean) => void;
 }
 
-export default function DateTimeInput({ label, value, onChange, datemin, datemax }: DateTimeInputProps) {
+export default function DateTimeInput({
+  label,
+  value,
+  onChange,
+  datemin,
+  datemax,
+  optional = false,
+  onToggleOptional,
+}: DateTimeInputProps) {
+  const [enabled, setEnabled] = useState(!optional);
+
+  const handleToggle = () => {
+    const newEnabled = !enabled;
+    setEnabled(newEnabled);
+    if (onToggleOptional) onToggleOptional(newEnabled);
+  };
+
   const toDateTimeLocal = (date: Date) => {
     const pad = (n: number) => n.toString().padStart(2, "0");
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
@@ -18,14 +34,23 @@ export default function DateTimeInput({ label, value, onChange, datemin, datemax
 
   return (
     <div className="bg-white p-4 rounded-xl shadow">
-      <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
+      <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
+        <input
+          type="checkbox"
+          checked={enabled}
+          onChange={handleToggle}
+          className="mr-2"
+        />
+        {label} {optional && "(optionnel)"}
+      </label>
       <input
         type="datetime-local"
         value={toDateTimeLocal(value)}
         min={datemin ? toDateTimeLocal(datemin) : undefined}
-        max={datemax ? toDateTimeLocal(datemax) : undefined} 
+        max={datemax ? toDateTimeLocal(datemax) : undefined}
         onChange={(e) => onChange(new Date(e.target.value))}
         className="w-full border border-gray-300 rounded-md p-2"
+        disabled={!enabled}
       />
     </div>
   );
