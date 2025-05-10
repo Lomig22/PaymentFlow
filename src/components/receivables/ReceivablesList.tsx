@@ -586,18 +586,18 @@ useLayoutEffect(() => {
    // const overflowHeight = dropdownTop + dropdownHeight - tableHeight;
     //alert(`Position de la souris : X=${mousePosition.x}, Y=${mousePosition.y},table height=${tableHeight}`);
 
-    if (mousePosition.y > tableHeight) {
+  /*   if (mousePosition.y > tableHeight) {
       setDropdownPosition({
         top: buttonRect.top - dropdownHeight,
         left: buttonRect.left,
       });
-    } else {
+    } else { */
       setDropdownPosition({
         top: buttonRect.top,
         left: buttonRect.left,
       });
-    }
-  }
+  /*   }*/
+  } 
 }, [openDropdownId]);
 
 
