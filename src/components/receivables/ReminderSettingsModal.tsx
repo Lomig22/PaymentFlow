@@ -8,7 +8,7 @@ import "react-calendar/dist/Calendar.css";
 import "react-clock/dist/Clock.css";
 import "react-datetime/css/react-datetime.css"; // si tu n'as pas encore importé le style
 import DateTimeInput from "../Common/DateTimeInput";
-import { isBefore } from "date-fns";
+import { isBefore, startOfMinute } from "date-fns";
 
 interface ReminderSettingsModalProps {
   client: Client;
@@ -20,7 +20,6 @@ interface ReminderSettingsModalProps {
 export default function ReminderSettingsModal({
   client,
   onClose,
-  reminderProfiles,
   receivable,
 }: ReminderSettingsModalProps) {
   const [loading, setLoading] = useState(false);
@@ -115,7 +114,31 @@ export default function ReminderSettingsModal({
       document.body.style.overflow = "unset";
     };
   }, []);
+  const [hasPastDate,setHasPastDate]=useState(false)
 
+  useEffect(() => {
+    const now = startOfMinute(new Date()); // tronque à la minute près
+  
+    // Pré-calcul des dates
+    const {
+      reminder_date_1: firstReminderDate,
+      reminder_date_2: secondReminderDate,
+      reminder_date_3: thirdReminderDate,
+      reminder_date_final: finalReminderDate,
+      pre_reminder_date: preReminderDate,
+    } = formData;
+  
+    const isTherePastDate = [
+      firstReminderDate,
+      secondReminderDate,
+      thirdReminderDate,
+      finalReminderDate,
+      preReminderDate,
+    ].some((date) => date && isBefore(startOfMinute(new Date(date)), now)); // tronque aussi les dates
+  
+    setHasPastDate(isTherePastDate);
+  }, [formData]);
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -285,54 +308,10 @@ export default function ReminderSettingsModal({
   }
 
 
-  function delayToDateTimeBefore(
-    delay: { j: number; h: number; m: number },
-    baseDate: Date
-  ): Date {
-    if (!delay) return new Date(); // fallback
-
-    const result = new Date(baseDate);
-    result.setMinutes(
-      result.getMinutes() -
-        ((delay.j || 0) * 1440 + (delay.h || 0) * 60 + (delay.m || 0))
-    );
-    return result;
-  }
-
-
 
   const dueDate = new Date(receivable.due_date);
   dueDate.setHours(0, 0, 0, 0);
 
-  const now = new Date();
-
-  // Pré-calcul des dates
-  const firstReminderDate = delayToDateTime(formData.reminder_delay_1, dueDate);
-  const secondReminderDate = delayToDateTime(
-    formData.reminder_delay_2,
-    firstReminderDate
-  );
-  const thirdReminderDate = delayToDateTime(
-    formData.reminder_delay_3,
-    secondReminderDate
-  );
-  const finalReminderDate = delayToDateTime(
-    formData.reminder_delay_final,
-    thirdReminderDate
-  );
-  const preReminderDate = delayToDateTimeBefore(
-    formData.pre_reminder_delay,
-    dueDate
-  );
-
-  // Détection des dates passées
-  const hasPastDate = [
-    firstReminderDate,
-    secondReminderDate,
-    thirdReminderDate,
-    finalReminderDate,
-    preReminderDate,
-  ].some((date) => isBefore(date, now));
  
 
 
