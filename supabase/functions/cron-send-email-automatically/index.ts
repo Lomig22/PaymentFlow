@@ -36,7 +36,6 @@ function convertJHMToMinutes(jhm: { j?: number; h?: number; m: number } | undefi
   const minutes = jhm.m;  // m est toujours fourni
 
   const totalInMinutes = joursEnMinutes + heuresEnMinutes + minutes;
-  console.log("Total de minutes:", totalInMinutes);
   
   return totalInMinutes;
 }
@@ -55,7 +54,6 @@ async function getLastReminder(receivableId: string) {
 }
 
 async function shouldSendReminder(receivable: any): Promise<boolean> {
-	console.log("status: ", receivable.status, "due_date:", receivable.due_date);
   
 	if (!receivable.status || !receivable.due_date) return false;
   
@@ -69,48 +67,38 @@ async function shouldSendReminder(receivable: any): Promise<boolean> {
 	const lastReminderAt = lastReminder ? new Date(lastReminder.reminder_date) : null;
   
 	let delayMinutes = 0;
-	console.log("RECEIVABLE STATUS: ", receivable.status);
-  
+	let nextReminderTime= now.getTime()
 	switch (receivable.status) {
 		case 'pending': {
-			const delayPre = receivable.client?.pre_reminder_delay || { j: 1, h: 0, m: 0 };
-			console.log("Pré-reminder delay: ", delayPre);
-			delayMinutes = convertJHMToMinutes(delayPre);
 		  
 			const dueDate = new Date(receivable.due_date);
-			const reminderTime = new Date(dueDate.getTime() - delayMinutes * 60 * 1000);
-		  
-			console.log("Pré-reminder doit être envoyé à partir de : ", reminderTime);
-		  
+			const reminderTime = new Date(receivable.client?.pre_reminder_date).getTime();
+		  		  
 			// On n'envoie que si la date actuelle est >= à "due_date - délai"
-			return now >= reminderTime && now < dueDate;
+			return now.getTime() >= reminderTime;
 		  }		  
   
 	  case 'Relance préventive': {
 		const delay1 = receivable.client?.reminder_delay_1;
-		console.log("Reminder Delay 1: ", delay1);
-		delayMinutes = convertJHMToMinutes(delay1) ?? 0;
+		nextReminderTime=new Date(receivable.client?.reminder_date_1).getTime()
 		break;
 	  }
   
 	  case 'Relance 1': {
 		const delay2 = receivable.client?.reminder_delay_2;
-		console.log("Reminder Delay 2: ", delay2);
-		delayMinutes = convertJHMToMinutes(delay2) ?? 0;
+		nextReminderTime= new Date(receivable.client?.reminder_date_2).getTime()
 		break;
 	  }
   
 	  case 'Relance 2': {
 		const delay3 = receivable.client?.reminder_delay_3;
-		console.log("Reminder Delay 3: ", delay3);
-		delayMinutes = convertJHMToMinutes(delay3) ?? 0;
+		nextReminderTime= new Date(receivable.client?.reminder_date_3).getTime()
 		break;
 	  }
   
 	  case 'Relance 3': {
 		const delayFinal = receivable.client?.reminder_delay_final;
-		console.log("Reminder Final Delay: ", delayFinal);
-		delayMinutes = convertJHMToMinutes(delayFinal) ?? 0;
+		nextReminderTime= new Date(receivable.client?.reminder_date_final).getTime()
 		break;
 	  }
   
@@ -118,12 +106,8 @@ async function shouldSendReminder(receivable: any): Promise<boolean> {
 		return false;
 	}
   
-	console.log("lastReminderAt: ", lastReminderAt);
-	console.log("delay minutes: ", delayMinutes);
-  
 	if (!lastReminderAt) return true;
   
-	const nextReminderTime = lastReminderAt.getTime() + delayMinutes * 60 * 1000;
 	return now.getTime() >= nextReminderTime;
   }
   
@@ -138,13 +122,16 @@ async function shouldSendReminder(receivable: any): Promise<boolean> {
 		.select('*, client:clients(*)')
 		.eq('id', receivableId)
 		.single();
-  
+		console.log("ID de la créance pour la relance :", receivableId);
+
 	  if (receivableError) throw receivableError;
 	  if (!receivable) return false;
-  
+		console.log(receivable.owner_id)
 	  // Récupérer les paramètres de l'email de l'utilisateur connecté
 	  const emailSettings = await getEmailSettings(receivable.owner_id);
-	  if (!emailSettings) return false;
+	  if (!emailSettings) {
+		console.log("AUCUN  PARAMETRE d'email")
+		return false;}
   
 	  // Récupérer les informations de l'utilisateur connecté
 	  const { data: userProfile, error: profileError } = await supabase
@@ -237,7 +224,17 @@ async function shouldSendReminder(receivable: any): Promise<boolean> {
 			updated_at: new Date().toISOString(),
 		  })
 		  .eq('id', receivableId);
-  
+  //Jet
+  if (level==='final'){
+		// Mettre à jour le statut de la créance
+		await supabase
+		  .from('receivables')
+		  .update({
+			automatic_reminder:false,
+			updated_at: new Date().toISOString(),
+		  })
+		  .eq('id', receivableId);
+  }
 		// Incrémenter le compteur d'e-mails envoyés
 		await supabase
 		  .from('profiles')

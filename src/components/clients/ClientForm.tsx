@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Client,Receivable, ReminderProfile } from '../../types/database';
 import { confirmAlert } from "react-confirm-alert";
- 
 import { Minus, Plus, X } from 'lucide-react';
 import "react-confirm-alert/src/react-confirm-alert.css";
  
@@ -540,9 +539,11 @@ const handleNeedReminders = async () => {
 								>
 									<option value=''>Sélectionner un profil de rappel</option>
 									{reminderProfiles.map((profile) => (
-										<option key={profile.id} value={profile.id}>
+										(profile.name!=='Default')&&(
+											<option key={profile.id} value={profile.id}>
 											{profile.name}
 										</option>
+										)
 									))}
 								</select>
 							</div>
