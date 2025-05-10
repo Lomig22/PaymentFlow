@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { Client, ReminderProfile } from "../../types/database";
 import { Search, Edit, Trash2, X, Info, MoreHorizontal } from "lucide-react";
@@ -102,38 +102,78 @@ function ClientList({
   }, [importSuccess]);
   const dropdownRefs = useRef({});
   const [openDropdownId, setOpenDropdownId] = useState(null);
-  useEffect(() => {
-    if (openDropdownId && dropdownRefs.current[openDropdownId]) {
-      dropdownRefs.current[openDropdownId].scrollIntoView({
-        behavior: "smooth",
-        block: "nearest",
-      });
-    }
-  }, [openDropdownId]);
 
-  const dropdownRef = useRef(null);
+
+
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setOpenDropdownId(null);
+      const dropdown = dropdownRefs.current[openDropdownId];
+  
+      if (dropdown && !dropdown.contains(event.target)) {
+        // Donne un court délai pour laisser les onClick internes s'exécuter
+        setTimeout(() => {
+          setOpenDropdownId(null);
+        }, 50);
       }
     };
-
+  
     const handleEscape = (event) => {
       if (event.key === "Escape") {
+        setSelectedClientIds([]);
+     
         setOpenDropdownId(null);
-        setSelectedClientIds([])
       }
     };
-
+  
     document.addEventListener("mousedown", handleClickOutside);
     document.addEventListener("keydown", handleEscape);
-
+  
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
       document.removeEventListener("keydown", handleEscape);
     };
-  }, [dropdownRef]);
+  }, [openDropdownId]);
+
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  useEffect(() => {
+    const handleMouseMove = (event: MouseEvent) => {
+      setMousePosition({ x: event.clientX, y: event.clientY });
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, []);
+  const buttonRefs = useRef({});
+  const tableRefs = useRef<HTMLTableElement | null>(null);
+  
+const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
+
+useLayoutEffect(() => {
+  
+  if (openDropdownId && buttonRefs.current[openDropdownId] && dropdownRefs.current[openDropdownId]) {
+    const buttonRect = buttonRefs.current[openDropdownId]!.getBoundingClientRect();
+    const dropdown = dropdownRefs.current[openDropdownId];
+    const table = tableRefs.current;
+   
+
+    if (!dropdown) return;
+
+    const dropdownHeight = dropdown.getBoundingClientRect().height;
+    const tableHeight = table.offsetHeight;
+
+    if (mousePosition.y > tableHeight) {
+      setDropdownPosition({
+        top: buttonRect.top - dropdownHeight,
+        left: buttonRect.left,
+      });
+    } else {
+      setDropdownPosition({
+        top: buttonRect.top,
+        left: buttonRect.left,
+      });
+    }
+  }
+}, [openDropdownId]);
 
   const handleDeleteClick = (client: Client) => {
     setClientToDelete(client);
@@ -369,7 +409,7 @@ function ClientList({
 
       <div className="ml-4 bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
+          <table className="min-w-full divide-y divide-gray-200" ref={tableRefs}>
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3">
@@ -587,13 +627,14 @@ function ClientList({
                     />
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap relative">
-                    <div className="flex items-center gap-2 relative z-10">
+                    <div className="flex items-center gap-2 relative">
                       <button
                         onClick={() =>
                           setOpenDropdownId(
                             openDropdownId === client.id ? null : client.id
                           )
                         }
+                        ref={(el) => (buttonRefs.current[client.id] = el)}
                         className="text-gray-600 hover:text-gray-800 "
                         title="Actions"
                       >
@@ -605,9 +646,12 @@ function ClientList({
                           onClick={(e) => {
                             e.stopPropagation();
                           }}
-                          ref={dropdownRef}
-                          className="fixed origin-top-right mt-2 w-40 z-50 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5"
-                        >
+                          ref={(el) => (dropdownRefs.current[client.id] = el)}
+                          className="fixed z-[51] w-48 origin-top-left rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-10 ml-2"                          style={{
+                            top: `${dropdownPosition.top}px`,
+                            left: `${dropdownPosition.left}px`,
+                          }} 
+                       >
                           <div className="py-1">
                             <button
                               onClick={(e) => {
