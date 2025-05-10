@@ -161,18 +161,18 @@ useLayoutEffect(() => {
     const dropdownHeight = dropdown.getBoundingClientRect().height;
     const tableHeight = table.offsetHeight;
 
-    if (mousePosition.y > tableHeight) {
+   /*  if (mousePosition.y > tableHeight) {
       setDropdownPosition({
         top: buttonRect.top - dropdownHeight,
         left: buttonRect.left,
       });
-    } else {
+    } else { */
       setDropdownPosition({
         top: buttonRect.top,
         left: buttonRect.left,
       });
-    }
-  }
+ //    }
+  } 
 }, [openDropdownId]);
 
   const handleDeleteClick = (client: Client) => {
