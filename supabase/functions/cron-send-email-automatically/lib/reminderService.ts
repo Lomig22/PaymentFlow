@@ -79,7 +79,7 @@ export function formatTemplate(
 }
 
 // Fonction pour déterminer le niveau de relance approprié
-export function determineReminderLevel(
+function determineReminderLevel(
 	daysLate: number,
 	client: Client,
 	status: string
@@ -103,12 +103,13 @@ export function determineReminderLevel(
 		return { level: 'second', template: client.reminder_template_2 };
 	if (status === 'Relance préventive' && client.reminder_template_1 )
 		return { level: 'first', template: client.reminder_template_1 };
-//console.log(daysLate);
-
+	if (status ==='pending' && client.pre_reminder_template && daysLate<=0){
+		alert("pending")
+		return { level: 'pre', template: client.pre_reminder_template }; 
+	}
 	// Si aucun statut de relance encore, on peut proposer un pré-reminder
- 	if (client.pre_reminder_template){
-		return { level: 'pre', template: client.pre_reminder_template };
-		
+ 	if (status==="pending" && client.reminder_template_1 && daysLate>0){
+		return { level: 'first', template: client.reminder_template_1 };
 	} 
 		
 
