@@ -720,7 +720,7 @@ console.log("DATA: ", data)
 		setError(null);
 	
 		// Afficher le message de succès via toast
-		showSuccess("Mapping sauvegardé avec succès!");
+		showSuccess("Le mapping a été enregistré avec succès.");
 		if (user.id) {			
 		  try {
 			await saveNotification({
@@ -787,7 +787,6 @@ console.log("DATA: ", data)
 
 					{error && (
 						<div className='mb-6 p-4 bg-red-50 border border-red-200 rounded-md text-red-700 flex items-center'>
-							<AlertCircle className='h-5 w-5 mr-2 flex-shrink-0' />
 							<span>{error}</span>
 						</div>
 					)}
