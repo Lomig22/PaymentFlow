@@ -1,13 +1,13 @@
-import { useState } from "react";
-
-interface DateTimeInputProps {
+import { useEffect, useState } from "react";
+// types.ts ou dans ton fichier composant
+export interface DateTimeInputProps {
   label: string;
   value: Date;
   onChange: (date: Date) => void;
   datemin?: Date;
   datemax?: Date;
   optional?: boolean;
-  onToggleOptional?: (enabled: boolean) => void;
+  onToggleOptional?: (checked: boolean) => void;
 }
 
 export default function DateTimeInput({
@@ -20,6 +20,10 @@ export default function DateTimeInput({
   onToggleOptional,
 }: DateTimeInputProps) {
   const [enabled, setEnabled] = useState(!optional);
+
+  useEffect(() => {
+    setEnabled(optional);
+  }, [optional]);
 
   const handleToggle = () => {
     const newEnabled = !enabled;
@@ -41,7 +45,7 @@ export default function DateTimeInput({
           onChange={handleToggle}
           className="mr-2"
         />
-        {label} {optional && "(optionnel)"}
+        {label} {/* optional && "(optionnel)" */}
       </label>
       <input
         type="datetime-local"
