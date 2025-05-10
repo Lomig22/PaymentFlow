@@ -21,11 +21,7 @@ import {
   ListRestart,
   File,
   Pause,
-  ChevronDown,
-  MoreVertical,
   MoreHorizontal,
-  Clock10,
-  LucideClock12,
 } from "lucide-react";
 import ReceivableForm from "./ReceivableForm";
 import ReceivableEditForm from "./ReceivableEditForm";
@@ -42,9 +38,9 @@ import { dateCompare, numberCompare, stringCompare } from "../../lib/comparers";
 import SortableColHead from "../Common/SortableColHead";
 import { dateDiff } from "../../lib/dateDiff";
 import { saveNotification } from "../../lib/notification";
-import { div } from "framer-motion/client";
 import Swal from "sweetalert2";
-
+import { getReminderStatus } from "../../lib/function";
+import { isBefore } from "date-fns";
 type SortColumnConfig = {
   key: keyof CSVMapping | "client" | "email" | "Delay in Days";
   sort: "none" | "asc" | "desc";
@@ -652,7 +648,8 @@ useLayoutEffect(() => {
       document.removeEventListener("keydown", handleEscape);
     };
   }, [openDropdownId]);
-  
+  const [status,setStatus] = useState({})
+
 
   if (loading) {
     return (
@@ -924,19 +921,72 @@ useLayoutEffect(() => {
                             </span>
 
                             {/* Icône Info */}
-                            <span 
-                              className="text-yellow-500 w-5 h-5 flex items-center justify-center"
-                              title="Paramètres non configurés"
-                            >
-                              {!receivable.client?.reminder_template_1 &&
-                              receivable.client?.needs_reminder ? (
-                                <Info className="h-5 w-5" />
-                              ) : !receivable.automatic_reminder ? (
-                                <Pause className="h-5 w-5" />
-                              ) : (
-                                ""
-                              )}
-                            </span>
+<span
+  className="text-yellow-500 w-5 h-5 flex items-center justify-center"
+  title={(() => {
+    const now = new Date();
+    const issues: string[] = [];
+
+    // Vérification des templates manquants
+    if (receivable.client?.pre_reminder_enable && !receivable.client?.pre_reminder_template)
+      issues.push("la pré-relance est activée sans template");
+    if (receivable.client?.reminder_enable_1 && !receivable.client?.reminder_template_1)
+      issues.push("la relance 1 est activée sans template");
+    if (receivable.client?.reminder_enable_2 && !receivable.client?.reminder_template_2)
+      issues.push("la relance 2 est activée sans template");
+    if (receivable.client?.reminder_enable_3 && !receivable.client?.reminder_template_3)
+      issues.push("la relance 3 est activée sans template");
+    if (receivable.client?.reminder_enable_final && !receivable.client?.reminder_template_final)
+      issues.push("la relance finale est activée sans template");
+
+    // Vérification des dates passées
+    const datesToCheck = [
+      receivable.client.pre_reminder_date,
+      receivable.client.reminder_date_1,
+      receivable.client.reminder_date_2,
+      receivable.client.reminder_date_3,
+      receivable.client.reminder_date_final
+    ];
+
+    const hasPastDate = datesToCheck.some(date => date && isBefore(new Date(date), now));
+    if (hasPastDate) issues.push("une ou plusieurs dates de relance sont dépassées");
+
+    // Vérification relance désactivée
+    if (!receivable.automatic_reminder && issues.length === 0) {
+      return "Relance en pause";
+    }
+
+    return issues.length > 0 ? issues.join(", ") : "";
+  })()}
+>
+  {
+    (
+      receivable.client?.pre_reminder_enable && !receivable.client?.pre_reminder_template ||
+      receivable.client?.reminder_enable_1 && !receivable.client?.reminder_template_1 ||
+      receivable.client?.reminder_enable_2 && !receivable.client?.reminder_template_2 ||
+      receivable.client?.reminder_enable_3 && !receivable.client?.reminder_template_3 ||
+      receivable.client?.reminder_enable_final && !receivable.client?.reminder_template_final ||
+      (
+        [
+          receivable.client.pre_reminder_date,
+          receivable.client.reminder_date_1,
+          receivable.client.reminder_date_2,
+          receivable.client.reminder_date_3,
+          receivable.client.reminder_date_final
+        ].some(date => date && isBefore(new Date(date), new Date()))
+      )
+    ) ? (
+      <Info className="h-5 w-5" />
+    ) : !receivable.automatic_reminder ? (
+      <Pause className="h-5 w-5" />
+    ) : (
+      ""
+    )
+  }
+</span>
+
+
+
                           </button>
                         </div>
 

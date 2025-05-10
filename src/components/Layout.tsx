@@ -65,7 +65,7 @@ export default function Layout() {
     { name: "Créances", href: "/receivables", icon: FileText },
     { name: "Paramètres", href: "/settings", icon: Settings },
   ];
-  console.log("Current path:", JSON.stringify(location.pathname));
+//  console.log("Current path:", JSON.stringify(location.pathname));
   const handleSubscribe = async () => {
     const {
       data: { session },
