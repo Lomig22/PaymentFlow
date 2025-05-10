@@ -3,16 +3,11 @@ import { supabase } from "../../lib/supabase";
 import { saveNotification } from "../../lib/notification";
 import { Client, Receivable, ReminderProfile } from "../../types/database";
 import { X, AlertCircle, Play, Pause } from "lucide-react";
-import DelayInputJHM from "../settings/DelayInputJHM";
-import { Accordion } from "@mantine/core";
 import "react-datetime-picker/dist/DateTimePicker.css";
 import "react-calendar/dist/Calendar.css";
 import "react-clock/dist/Clock.css";
-import Datetime from "react-datetime";
 import "react-datetime/css/react-datetime.css"; // si tu n'as pas encore importé le style
-import moment from "moment";
-import DateTimeInput from "../Common/DateTimpeInput";
-import { div } from "framer-motion/client";
+import DateTimeInput from "../Common/DateTimeInput";
 import { isBefore } from "date-fns";
 
 interface ReminderSettingsModalProps {
@@ -75,8 +70,18 @@ export default function ReminderSettingsModal({
     reminder_template_1: client.reminder_template_1 || "",
     reminder_template_2: client.reminder_template_2 || "",
     reminder_template_3: client.reminder_template_3 || "",
+    pre_reminder_enable:client.pre_reminder_enable,
+    reminder_enable_1:client.reminder_enable_1,
+    reminder_enable_2:client.reminder_enable_2,
+    reminder_enable_3:client.reminder_enable_3,
+    reminder_enable_final:client.reminder_enable_final,
     reminder_template_final: client.reminder_template_final || "",
     reminder_profile: client.reminder_profile || defaultProfile?.id,
+    reminder_date_1: client.reminder_date_1 ?? new Date().toISOString(),
+  reminder_date_2: client.reminder_date_2 ?? new Date().toISOString(),
+  reminder_date_3: client.reminder_date_3 ?? new Date().toISOString(),
+  reminder_date_final: client.reminder_date_final ?? new Date().toISOString(),
+  pre_reminder_date: client.pre_reminder_date ?? new Date().toISOString(),
     pre_reminder_delay: client.pre_reminder_delay || { j: 0, h: 0, m: 0 },
     pre_reminder_template: client.pre_reminder_template || "",
   });
@@ -87,18 +92,7 @@ export default function ReminderSettingsModal({
     }, 3000);
   };
 
-  function convertJHMToMinutes(
-    jhm: { j: number; h: number; m: number } | undefined
-  ): number {
-    if (!jhm) {
-      return 60;
-    }
-    const joursEnMinutes = jhm.j * 24 * 60;
-    const heuresEnMinutes = jhm.h * 60;
-    const minutes = jhm.m;
-
-    return joursEnMinutes + heuresEnMinutes + minutes;
-  }
+ 
 
   // Gestion de la touche Echap
   useEffect(() => {
@@ -144,6 +138,16 @@ export default function ReminderSettingsModal({
           reminder_template_2: formData.reminder_template_2.trim(),
           reminder_template_3: formData.reminder_template_3.trim(),
           reminder_template_final: formData.reminder_template_final.trim(),
+          pre_reminder_enable:formData.pre_reminder_enable,
+          reminder_enable_1:formData.reminder_enable_1,
+          reminder_enable_2:formData.reminder_enable_2,
+          reminder_enable_3:formData.reminder_enable_3,
+          reminder_enable_final:formData.reminder_enable_final,
+          reminder_date_1:formData.reminder_date_1,
+          reminder_date_2:formData.reminder_date_2,
+          reminder_date_3:formData.reminder_date_3,
+          reminder_date_final:formData.reminder_date_final,
+          pre_reminder_date:formData.pre_reminder_date,
           reminder_profile: formData.reminder_profile,
           pre_reminder_delay: formData.pre_reminder_delay,
           pre_reminder_template: formData.pre_reminder_template,
@@ -294,17 +298,7 @@ export default function ReminderSettingsModal({
     return result;
   }
 
-  function dateTimeToDelay(
-    target: Date,
-    baseDate: Date = new Date()
-  ): { j: number; h: number; m: number } {
-    const diffMs = target.getTime() - baseDate.getTime();
-    const totalMinutes = Math.round(diffMs / 60000); // arrondi à la minute près
-    const j = Math.floor(totalMinutes / 1440);
-    const h = Math.floor((totalMinutes % 1440) / 60);
-    const m = totalMinutes % 60;
-    return { j, h, m };
-  }
+
   function delayToDateTimeBefore(
     delay: { j: number; h: number; m: number },
     baseDate: Date
@@ -319,17 +313,7 @@ export default function ReminderSettingsModal({
     return result;
   }
 
-  function dateTimeToDelayBefore(
-    target: Date,
-    baseDate: Date
-  ): { j: number; h: number; m: number } {
-    const diffMs = baseDate.getTime() - target.getTime(); // inversé
-    const totalMinutes = Math.round(diffMs / 60000);
-    const j = Math.floor(totalMinutes / 1440);
-    const h = Math.floor((totalMinutes % 1440) / 60);
-    const m = totalMinutes % 60;
-    return { j, h, m };
-  }
+
 
   const dueDate = new Date(receivable.due_date);
   dueDate.setHours(0, 0, 0, 0);
@@ -363,18 +347,8 @@ export default function ReminderSettingsModal({
     finalReminderDate,
     preReminderDate,
   ].some((date) => isBefore(date, now));
-  const toDateTimeLocal = (date: Date) => {
-    const pad = (n: number) => n.toString().padStart(2, "0");
-    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(
-      date.getDate()
-    )}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
-  };
-  const dateTimeLocalToDate = (dateTimeLocal: string): Date => {
-    const [datePart, timePart] = toDateTimeLocal(dateTimeLocal).split("T");
-    const [year, month, day] = datePart.split("-").map(Number);
-    const [hour, minute] = timePart.split(":").map(Number);
-    return new Date(year, month - 1, day, hour, minute);
-  };
+ 
+
 
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 z-50 overflow-y-scroll">
@@ -432,98 +406,95 @@ export default function ReminderSettingsModal({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <DateTimeInput
                 label="Date/Heure d’envoi – Première relance"
-                value={delayToDateTime(formData.reminder_delay_1, dueDate)}
+                value={new Date(formData.reminder_date_1)}
                 onChange={(date) =>
                   setFormData({
                     ...formData,
-                    reminder_delay_1: dateTimeToDelay(
-                      dateTimeLocalToDate(date),
-                      dueDate
-                    ),
+                    reminder_date_1:date.toISOString() ,
                   })
 
+                }
+                optional={formData.reminder_enable_1}
+                onToggleOptional={(checked) =>
+                  setFormData({
+                    ...formData,
+                    reminder_enable_1: checked,
+                  })
                 }
               />
 
               <DateTimeInput
                 label="Date/Heure d’envoi – Deuxième relance"
-                value={delayToDateTime(
-                  formData.reminder_delay_2,
-                  delayToDateTime(formData.reminder_delay_1, dueDate)
-                )}
+                value={new Date(formData.reminder_date_2)}
 				
                 onChange={(date) =>
                   setFormData({
                     ...formData,
-                    reminder_delay_2: dateTimeToDelay(
-                      dateTimeLocalToDate(date),
-                      delayToDateTime(formData.reminder_delay_1, dueDate)
-                    ),
+                    reminder_date_2: date.toISOString(),
+                  })
+                }
+                optional={formData.reminder_enable_2}
+                onToggleOptional={(checked) =>
+                  setFormData({
+                    ...formData,
+                    reminder_enable_2: checked,
                   })
                 }
               />
 
               <DateTimeInput
                 label="Date/Heure d’envoi – Troisième relance"
-                value={delayToDateTime(
-                  formData.reminder_delay_3,
-                  delayToDateTime(
-                    formData.reminder_delay_2,
-                    delayToDateTime(formData.reminder_delay_1, dueDate)
-                  )
-                )}
-
+                value={new Date(formData.reminder_date_3)}
                 onChange={(date) =>
                   setFormData({
                     ...formData,
-                    reminder_delay_3: dateTimeToDelay(
-                      date,
-                      delayToDateTime(
-                        formData.reminder_delay_2,
-                        delayToDateTime(formData.reminder_delay_1, dueDate)
-                      )
-                    ),
+                    reminder_date_3: date.toISOString(),
+                  })
+                }
+                optional={formData.reminder_enable_3}
+                onToggleOptional={(checked) =>
+                  setFormData({
+                    ...formData,
+                    reminder_enable_3: checked,
                   })
                 }
               />
 
               <DateTimeInput
                 label="Date/Heure d’envoi – Relance finale"
-                value={delayToDateTime(
-                  formData.reminder_delay_final,
-                  delayToDateTime(
-                    formData.reminder_delay_3,
-                    delayToDateTime(
-                      formData.reminder_delay_2,
-                      delayToDateTime(formData.reminder_delay_1, dueDate)
-                    )
-                  )
-                )}
-	
+                value={new Date(formData.reminder_date_final)}
                 onChange={(date) =>
                   setFormData({
                     ...formData,
-                    reminder_delay_final: dateTimeToDelay(
-                      date,
-                      delayToDateTime(
-                        formData.reminder_delay_3,
-                        delayToDateTime(
-                          formData.reminder_delay_2,
-                          delayToDateTime(formData.reminder_delay_1, dueDate)
-                        )
-                      )
-                    ),
+                    reminder_date_final: date.toISOString(),
                   })
                 }
+                optional={formData.reminder_enable_final}
+                onToggleOptional={(checked) =>
+                  setFormData({
+                    ...formData,
+                    reminder_enable_final: checked,
+                  })
+                }              
+                
               />
 
               <DateTimeInput
                 label="Date/Heure d’envoi – Pré-relance"
-                value={delayToDateTimeBefore(
-                  formData.pre_reminder_delay,
-                  dueDate
-                )}
-
+                value={new Date(formData.pre_reminder_date)}
+                onChange={(date) =>
+                  setFormData({
+                    ...formData,
+                    pre_reminder_date: date.toISOString(),
+                  })
+                }
+                optional={formData.pre_reminder_enable}
+                onToggleOptional={(checked) =>
+                  setFormData({
+                    ...formData,
+                    pre_reminder_enable: checked,
+                  })
+                }
               />
             </div>
             {/*end relance en calendrier */}
