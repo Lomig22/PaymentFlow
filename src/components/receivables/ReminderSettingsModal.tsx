@@ -210,20 +210,6 @@ export default function ReminderSettingsModal({
     }
   };
 
-  const handleProfileChange = (profileId: string) => {
-    if (profileId === null || profileId === undefined) return;
-    const selectedProfile = reminderProfiles.find(
-      (profile) => profile.id === profileId
-    );
-    setFormData({
-      ...formData,
-      reminder_profile: profileId,
-      reminder_delay_1: selectedProfile?.delay1 || { j: 0, h: 0, m: 1 },
-      reminder_delay_2: selectedProfile?.delay2 || { j: 0, h: 0, m: 1 },
-      reminder_delay_3: selectedProfile?.delay3 || { j: 0, h: 0, m: 1 },
-      reminder_delay_final: selectedProfile?.delay4 || { j: 0, h: 0, m: 1 },
-    });
-  };
 
   const getTemplateExample = (step: number) => {
     const examples = {
@@ -499,167 +485,174 @@ export default function ReminderSettingsModal({
             </div>
             {/*end relance en calendrier */}
             {/* accordéon*/}
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Template Pré relance
-                </label>
-                <div className="relative">
-                  <textarea
-                    rows={4}
-                    value={formData.pre_reminder_template}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        pre_reminder_template: e.target.value,
-                      })
-                    }
-                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Utilisez {company}, {amount}, {invoice_number}, {due_date}, {days_late} comme variables"
-                  />
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setFormData({
-                        ...formData,
-                        pre_reminder_template: getTemplateExample(5),
-                      })
-                    }
-                    className="absolute right-2 bottom-2 text-sm text-blue-600 hover:text-blue-800"
-                  >
-                    Utiliser un exemple
-                  </button>
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Template première relance
-                </label>
-                <div className="relative">
-                  <textarea
-                    rows={4}
-                    value={formData.reminder_template_1}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        reminder_template_1: e.target.value,
-                      })
-                    }
-                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Utilisez {company}, {amount}, {invoice_number}, {due_date}, {days_late} comme variables"
-                  />
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setFormData({
-                        ...formData,
-                        reminder_template_1: getTemplateExample(1),
-                      })
-                    }
-                    className="absolute right-2 bottom-2 text-sm text-blue-600 hover:text-blue-800"
-                  >
-                    Utiliser un exemple
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Template deuxième relance
-                </label>
-                <div className="relative">
-                  <textarea
-                    rows={4}
-                    value={formData.reminder_template_2}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        reminder_template_2: e.target.value,
-                      })
-                    }
-                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Utilisez {company}, {amount}, {invoice_number}, {due_date}, {days_late} comme variables"
-                  />
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setFormData({
-                        ...formData,
-                        reminder_template_2: getTemplateExample(2),
-                      })
-                    }
-                    className="absolute right-2 bottom-2 text-sm text-blue-600 hover:text-blue-800"
-                  >
-                    Utiliser un exemple
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Template troisième relance
-                </label>
-                <div className="relative">
-                  <textarea
-                    rows={4}
-                    value={formData.reminder_template_3}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        reminder_template_3: e.target.value,
-                      })
-                    }
-                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Utilisez {company}, {amount}, {invoice_number}, {due_date}, {days_late} comme variables"
-                  />
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setFormData({
-                        ...formData,
-                        reminder_template_3: getTemplateExample(3),
-                      })
-                    }
-                    className="absolute right-2 bottom-2 text-sm text-blue-600 hover:text-blue-800"
-                  >
-                    Utiliser un exemple
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Template relance finale
-                </label>
-                <div className="relative">
-                  <textarea
-                    rows={4}
-                    value={formData.reminder_template_final}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        reminder_template_final: e.target.value,
-                      })
-                    }
-                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Utilisez {company}, {amount}, {invoice_number}, {due_date}, {days_late} comme variables"
-                  />
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setFormData({
-                        ...formData,
-                        reminder_template_final: getTemplateExample(4),
-                      })
-                    }
-                    className="absolute right-2 bottom-2 text-sm text-blue-600 hover:text-blue-800"
-                  >
-                    Utiliser un exemple
-                  </button>
-                </div>
-              </div>
-            </div>
-
+            {formData.pre_reminder_enable &&(
+ <div className="space-y-4">
+ <div>
+   <label className="block text-sm font-medium text-gray-700 mb-2">
+     Template Pré relance
+   </label>
+   <div className="relative">
+     <textarea
+       rows={4}
+       value={formData.pre_reminder_template}
+       onChange={(e) =>
+         setFormData({
+           ...formData,
+           pre_reminder_template: e.target.value,
+         })
+       }
+       className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+       placeholder="Utilisez {company}, {amount}, {invoice_number}, {due_date}, {days_late} comme variables"
+     />
+     <button
+       type="button"
+       onClick={() =>
+         setFormData({
+           ...formData,
+           pre_reminder_template: getTemplateExample(5),
+         })
+       }
+       className="absolute right-2 bottom-2 text-sm text-blue-600 hover:text-blue-800"
+     >
+       Utiliser un exemple
+     </button>
+   </div>
+ </div>
+</div>
+            )}
+           
+{formData.reminder_enable_1 && (
+ <div>
+ <label className="block text-sm font-medium text-gray-700 mb-2">
+   Template première relance
+ </label>
+ <div className="relative">
+   <textarea
+     rows={4}
+     value={formData.reminder_template_1}
+     onChange={(e) =>
+       setFormData({
+         ...formData,
+         reminder_template_1: e.target.value,
+       })
+     }
+     className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+     placeholder="Utilisez {company}, {amount}, {invoice_number}, {due_date}, {days_late} comme variables"
+   />
+   <button
+     type="button"
+     onClick={() =>
+       setFormData({
+         ...formData,
+         reminder_template_1: getTemplateExample(1),
+       })
+     }
+     className="absolute right-2 bottom-2 text-sm text-blue-600 hover:text-blue-800"
+   >
+     Utiliser un exemple
+   </button>
+ </div>
+</div> 
+)}
+{formData.reminder_enable_2 && (
+   <div>
+   <label className="block text-sm font-medium text-gray-700 mb-2">
+     Template deuxième relance
+   </label>
+   <div className="relative">
+     <textarea
+       rows={4}
+       value={formData.reminder_template_2}
+       onChange={(e) =>
+         setFormData({
+           ...formData,
+           reminder_template_2: e.target.value,
+         })
+       }
+       className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+       placeholder="Utilisez {company}, {amount}, {invoice_number}, {due_date}, {days_late} comme variables"
+     />
+     <button
+       type="button"
+       onClick={() =>
+         setFormData({
+           ...formData,
+           reminder_template_2: getTemplateExample(2),
+         })
+       }
+       className="absolute right-2 bottom-2 text-sm text-blue-600 hover:text-blue-800"
+     >
+       Utiliser un exemple
+     </button>
+   </div>
+ </div>
+)}
+{formData.reminder_enable_3 && (
+   <div>
+   <label className="block text-sm font-medium text-gray-700 mb-2">
+     Template troisième relance
+   </label>
+   <div className="relative">
+     <textarea
+       rows={4}
+       value={formData.reminder_template_3}
+       onChange={(e) =>
+         setFormData({
+           ...formData,
+           reminder_template_3: e.target.value,
+         })
+       }
+       className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+       placeholder="Utilisez {company}, {amount}, {invoice_number}, {due_date}, {days_late} comme variables"
+     />
+     <button
+       type="button"
+       onClick={() =>
+         setFormData({
+           ...formData,
+           reminder_template_3: getTemplateExample(3),
+         })
+       }
+       className="absolute right-2 bottom-2 text-sm text-blue-600 hover:text-blue-800"
+     >
+       Utiliser un exemple
+     </button>
+   </div>
+ </div>
+)}
+{formData.reminder_enable_final && (
+   <div>
+   <label className="block text-sm font-medium text-gray-700 mb-2">
+     Template relance finale
+   </label>
+   <div className="relative">
+     <textarea
+       rows={4}
+       value={formData.reminder_template_final}
+       onChange={(e) =>
+         setFormData({
+           ...formData,
+           reminder_template_final: e.target.value,
+         })
+       }
+       className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+       placeholder="Utilisez {company}, {amount}, {invoice_number}, {due_date}, {days_late} comme variables"
+     />
+     <button
+       type="button"
+       onClick={() =>
+         setFormData({
+           ...formData,
+           reminder_template_final: getTemplateExample(4),
+         })
+       }
+       className="absolute right-2 bottom-2 text-sm text-blue-600 hover:text-blue-800"
+     >
+       Utiliser un exemple
+     </button>
+   </div>
+ </div>
+)}
             <div className="flex justify-between space-x-4">
               {/* <button
 								type='button'
