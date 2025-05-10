@@ -428,90 +428,11 @@ export default function ReminderSettingsModal({
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-2 gap-6">
-              <div className="col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Profil de rappel
-                </label>
 
-                <input
-                  type="text"
-                  required
-                  disabled
-                  value={
-                    reminderProfiles.find(
-                      (p) => p.id === formData.reminder_profile
-                    )?.name || "Aucun profil"
-                  }
-                  className="w-full text-gray-500 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-
-              {/* Délai première relance */}
-              <div className='hidden'>
-                <DelayInputJHM
-                  label="Délai première relance (Jours,Heures,Minutes)"
-                  value={formData.reminder_delay_1||{j:1,h:0,m:0}}
-                  onChange={(value) =>
-                    setFormData({ ...formData, reminder_delay_1: value })
-                  }
-                  disabled={false} // Assurez-vous que ce champ soit modifiable
-                />
-              </div>
-
-              {/* Délai deuxième relance */}
-              <div className='hidden'>
-                <DelayInputJHM
-                  label="Délai deuxième relance (Jours,Heures,Minutes)"
-                  value={formData.reminder_delay_2 ||{j:1,h:0,m:0}}
-                  onChange={(value) =>
-                    setFormData({ ...formData, reminder_delay_2: value })
-                  }
-                  disabled={false} // Assurez-vous que ce champ soit modifiable
-                />
-              </div>
-
-              {/* Délai troisième relance */}
-              <div className='hidden'>
-                <DelayInputJHM
-                  label="Délai troisième relance (Jours,Heures,Minutes)"
-                  value={formData.reminder_delay_3||{j:1,h:0,m:0}}
-                  onChange={(value) =>
-                    setFormData({ ...formData, reminder_delay_3: value })
-                  }
-                  disabled={false} // Assurez-vous que ce champ soit modifiable
-                />
-              </div>
-
-              {/* Délai relance finale */}
-              <div className='hidden'>
-                <DelayInputJHM
-                  label="Délai relance finale (Jours,Heures,Minutes)"
-                  value={formData.reminder_delay_final ||{j:1,h:0,m:0}}
-                  onChange={(value) =>
-                    setFormData({ ...formData, reminder_delay_final: value })
-                  }
-                  disabled={false} // Assurez-vous que ce champ soit modifiable
-                />
-              </div>
-
-              {/* Pré relance */}
-              <div className='hidden'>
-                <DelayInputJHM
-                  label="Pré relance"
-                  value={formData.pre_reminder_delay }
-                  onChange={(value) =>
-                    setFormData({ ...formData, pre_reminder_delay: value })
-                  }
-                  disabled={false} // Assurez-vous que ce champ soit modifiable
-                />
-              </div>
-            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <DateTimeInput
                 label="Date/Heure d’envoi – Première relance"
                 value={delayToDateTime(formData.reminder_delay_1, dueDate)}
-				datemin={dueDate}
                 onChange={(date) =>
                   setFormData({
                     ...formData,
@@ -530,7 +451,6 @@ export default function ReminderSettingsModal({
                   formData.reminder_delay_2,
                   delayToDateTime(formData.reminder_delay_1, dueDate)
                 )}
-				datemin={delayToDateTime(formData.reminder_delay_1, dueDate)}
 				
                 onChange={(date) =>
                   setFormData({
@@ -552,10 +472,7 @@ export default function ReminderSettingsModal({
                     delayToDateTime(formData.reminder_delay_1, dueDate)
                   )
                 )}
-				datemin={delayToDateTime(
-					formData.reminder_delay_2,
-					delayToDateTime(formData.reminder_delay_1, dueDate)
-				  )}
+
                 onChange={(date) =>
                   setFormData({
                     ...formData,
@@ -582,13 +499,7 @@ export default function ReminderSettingsModal({
                     )
                   )
                 )}
-				datemin={delayToDateTime(
-					formData.reminder_delay_3,
-					delayToDateTime(
-					  formData.reminder_delay_2,
-					  delayToDateTime(formData.reminder_delay_1, dueDate)
-					)
-				  )}
+	
                 onChange={(date) =>
                   setFormData({
                     ...formData,
@@ -612,13 +523,7 @@ export default function ReminderSettingsModal({
                   formData.pre_reminder_delay,
                   dueDate
                 )}
-				datemax={delayToDateTime(formData.reminder_delay_1, dueDate)}
-                onChange={(date) =>
-                  setFormData({
-                    ...formData,
-                    pre_reminder_delay: dateTimeToDelayBefore(date, dueDate),
-                  })
-                }
+
               />
             </div>
             {/*end relance en calendrier */}
