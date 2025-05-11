@@ -68,7 +68,14 @@ async function shouldSendReminder(receivable: any): Promise<boolean> {
     );
     return false;
   }
-
+  const isLastStatus=(status:string)=>{
+    const lastStatus=receivable.client?.reminder_enable_final?
+    'Relance finale':receivable.client?.reminder_enable_3?
+    'Relance 3':  receivable.client?.reminder_enable_2?
+    'Relance 2': receivable.client?.reminder_enable_1?
+    'Relance 1':'Relance préventive'
+    return  status===lastStatus
+  }
   const now = new Date();
   const lastReminder = await getLastReminder(receivable.id);
   const lastReminderAt = lastReminder
@@ -103,6 +110,9 @@ async function shouldSendReminder(receivable: any): Promise<boolean> {
     }
 
     case "Relance préventive": {
+      if (isLastStatus("Relance préventive")){
+        return false
+      }
       if (receivable.client?.reminder_enable_1===false) {
         await supabase
           .from("receivables")
@@ -120,6 +130,9 @@ async function shouldSendReminder(receivable: any): Promise<boolean> {
     }
 
     case "Relance 1": {
+      if (isLastStatus("Relance 1")){
+        return false
+      }
       if (receivable.client?.reminder_enable_2===false) {
         await supabase
           .from("receivables")
@@ -137,6 +150,9 @@ async function shouldSendReminder(receivable: any): Promise<boolean> {
     }
 
     case "Relance 2": {
+      if (isLastStatus("Relance 2")){
+        return false
+      }
       if (receivable.client?.reminder_enable_3===false) {
         await supabase
           .from("receivables")
@@ -155,6 +171,9 @@ async function shouldSendReminder(receivable: any): Promise<boolean> {
     }
     //Jet rel3
     case "Relance 3": {
+      if (isLastStatus("Relance 3")){
+        return false
+      }
       if (receivable.client?.reminder_enable_final===false) {
         await supabase
           .from("receivables")
@@ -280,11 +299,7 @@ export async function sendManualReminder(
         email_sent: true,
         email_content: emailContent,
       });
-      const lastStatus=receivable.client?.reminder_enable_final?
-      'Relance finale':receivable.client?.reminder_enable_3?
-      'Relance 3':  receivable.client?.reminder_enable_2?
-      'Relance 2': receivable.client?.reminder_enable_1?
-      'Relance 1':'Relance préventive'
+     
       // Mettre à jour le statut de la créance
       await supabase
         .from("receivables")
