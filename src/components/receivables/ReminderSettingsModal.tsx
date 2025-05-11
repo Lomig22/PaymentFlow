@@ -61,29 +61,50 @@ export default function ReminderSettingsModal({
     fetchDefaultProfile();
   console.log("DEFAULT PROFILE: ",defaultProfile)
   }, []);
-  const [formData, setFormData] = useState({
-    reminder_delay_1: client.reminder_delay_1 || { j: 0, h: 0, m: 1 },
-    reminder_delay_2: client.reminder_delay_2 || { j: 0, h: 0, m: 2 },
-    reminder_delay_3: client.reminder_delay_3 || { j: 0, h: 0, m: 3 },
-    reminder_delay_final: client.reminder_delay_final || { j: 0, h: 0, m: 3 },
-    reminder_template_1: client.reminder_template_1 || "",
-    reminder_template_2: client.reminder_template_2 || "",
-    reminder_template_3: client.reminder_template_3 || "",
-    pre_reminder_enable:client.pre_reminder_enable,
-    reminder_enable_1:client.reminder_enable_1,
-    reminder_enable_2:client.reminder_enable_2,
-    reminder_enable_3:client.reminder_enable_3,
-    reminder_enable_final:client.reminder_enable_final,
-    reminder_template_final: client.reminder_template_final || "",
-    reminder_profile: client.reminder_profile || defaultProfile?.id,
-    reminder_date_1: client.reminder_date_1 ?? new Date().toISOString(),
-  reminder_date_2: client.reminder_date_2 ?? new Date().toISOString(),
-  reminder_date_3: client.reminder_date_3 ?? new Date().toISOString(),
-  reminder_date_final: client.reminder_date_final ?? new Date().toISOString(),
-  pre_reminder_date: client.pre_reminder_date ?? new Date().toISOString(),
-    pre_reminder_delay: client.pre_reminder_delay || { j: 0, h: 0, m: 0 },
-    pre_reminder_template: client.pre_reminder_template || "",
-  });
+ 
+// Valeurs par défaut des délais (si non fournis)
+const delay1 = client.reminder_delay_1 || { j: 1, h: 0, m: 0 };
+const delay2 = client.reminder_delay_2 || { j: 1, h: 0, m: 0 };
+const delay3 = client.reminder_delay_3 || { j: 1, h: 0, m: 0 };
+const delayFinal = client.reminder_delay_final || { j: 1, h: 0, m: 0 };
+
+// Calcul des dates à partir des délais
+const reminder_date_1 = client.reminder_date_1 ?? addJHMToDate(new Date().toISOString(), delay1);
+const reminder_date_2 = client.reminder_date_2 ?? addJHMToDate(reminder_date_1, delay2);
+const reminder_date_3 = client.reminder_date_3 ?? addJHMToDate(reminder_date_2, delay3);
+const reminder_date_final = client.reminder_date_final ?? addJHMToDate(reminder_date_3, delayFinal);
+const pre_reminder_date = client.pre_reminder_date ?? new Date().toISOString();
+
+// Initialisation du formData
+const [formData, setFormData] = useState({
+  reminder_delay_1: delay1,
+  reminder_delay_2: delay2,
+  reminder_delay_3: delay3,
+  reminder_delay_final: delayFinal,
+
+  reminder_template_1: client.reminder_template_1 || "",
+  reminder_template_2: client.reminder_template_2 || "",
+  reminder_template_3: client.reminder_template_3 || "",
+  reminder_template_final: client.reminder_template_final || "",
+
+  reminder_enable_1: client.reminder_enable_1,
+  reminder_enable_2: client.reminder_enable_2,
+  reminder_enable_3: client.reminder_enable_3,
+  reminder_enable_final: client.reminder_enable_final,
+  pre_reminder_enable: client.pre_reminder_enable,
+
+  reminder_profile: client.reminder_profile || defaultProfile?.id,
+
+  reminder_date_1,
+  reminder_date_2,
+  reminder_date_3,
+  reminder_date_final,
+  pre_reminder_date,
+
+  pre_reminder_delay: client.pre_reminder_delay || { j: 0, h: 0, m: 0 },
+  pre_reminder_template: client.pre_reminder_template || "",
+});
+
   const showError = (message: string) => {
     setError(message);
     setTimeout(() => {
@@ -92,7 +113,20 @@ export default function ReminderSettingsModal({
   };
 
  
-
+  function addJHMToDate(
+    dateIsoString: string,
+    jhm?: { j?: number; h?: number; m?: number }
+  ): string {
+    const { j = 0, h = 0, m = 0 } = jhm ?? {};
+    const baseDate = new Date(dateIsoString);
+  
+    const totalMs = ((j * 24 + h) * 60 + m) * 60 * 1000;
+    const newDate = new Date(baseDate.getTime() + totalMs);
+  
+    return newDate.toISOString();
+  }
+  
+  
   // Gestion de la touche Echap
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
@@ -289,25 +323,6 @@ export default function ReminderSettingsModal({
       setLoading(false);
     }
   };
-  function delayToDateTime(
-    delay: { j: number; h: number; m: number },
-    baseDate: Date = new Date()
-  ): Date {
-    if (!delay) return new Date(); // fallback
-
-    const result = new Date(baseDate);
-    result.setMinutes(
-      result.getMinutes() +
-        (delay.j || 0) * 1440 +
-        (delay.h || 0) * 60 +
-        (delay.m || 0)
-    );
-    //	console.log("Datetime: ",result);
-
-    return result;
-  }
-
-
 
   const dueDate = new Date(receivable.due_date);
   dueDate.setHours(0, 0, 0, 0);
