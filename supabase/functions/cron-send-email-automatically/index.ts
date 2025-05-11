@@ -280,7 +280,11 @@ export async function sendManualReminder(
         email_sent: true,
         email_content: emailContent,
       });
-
+      const lastStatus=receivable.client?.reminder_enable_final?
+      'Relance finale':receivable.client?.reminder_enable_3?
+      'Relance 3':  receivable.client?.reminder_enable_2?
+      'Relance 2': receivable.client?.reminder_enable_1?
+      'Relance 1':'Relance préventive'
       // Mettre à jour le statut de la créance
       await supabase
         .from("receivables")
