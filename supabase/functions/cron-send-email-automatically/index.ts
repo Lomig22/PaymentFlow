@@ -77,6 +77,7 @@ async function shouldSendReminder(receivable: any): Promise<boolean> {
 
   let delayMinutes = 0;
   let nextReminderTime = now.getTime();
+  let lastStatus='';
   switch (receivable.status) {
     case "pending": {
       if (receivable.client?.pre_reminder_enable===false) {
@@ -88,11 +89,8 @@ async function shouldSendReminder(receivable: any): Promise<boolean> {
             updated_at: new Date().toISOString(),
           })
           .eq("id", receivable.id);
-        const delay1 = receivable.client?.reminder_delay_1;
-        nextReminderTime = new Date(
-          receivable.client?.reminder_date_1
-        ).getTime();
-        break;
+
+        return false
       }
       console.log("prérelance activé")
       const dueDate = new Date(receivable.due_date);
@@ -113,13 +111,7 @@ async function shouldSendReminder(receivable: any): Promise<boolean> {
             updated_at: new Date().toISOString(),
           })
           .eq("id", receivable.id);
-        const delay2 = receivable.client?.reminder_delay_2;
-        nextReminderTime = new Date(
-          receivable.client?.reminder_date_2
-        ).getTime();
-        console.log("relance 1 désactivée: ",receivable.client?.reminder_enable_1)
-
-        break;
+          return false
       }
       console.log("relance1 activée")
       const delay1 = receivable.client?.reminder_delay_1;
@@ -136,13 +128,7 @@ async function shouldSendReminder(receivable: any): Promise<boolean> {
             updated_at: new Date().toISOString(),
           })
           .eq("id", receivable.id);
-        const delay3 = receivable.client?.reminder_delay_3;
-        nextReminderTime = new Date(
-          receivable.client?.reminder_date_3
-        ).getTime();
-        console.log("relance 2 désactivée: ",receivable.client?.reminder_enable_2)
-
-        break;
+          return false
       }
       console.log("relance 2 activée")
       const delay2 = receivable.client?.reminder_delay_2;
@@ -159,13 +145,7 @@ async function shouldSendReminder(receivable: any): Promise<boolean> {
             updated_at: new Date().toISOString(),
           })
           .eq("id", receivable.id);
-        const delayFinal = receivable.client?.reminder_delay_final;
-        nextReminderTime = new Date(
-          receivable.client?.reminder_date_final
-        ).getTime();
-        console.log("relance 3 désactivée: ",receivable.client?.reminder_enable_3)
-
-        break;
+          return false
       }
       console.log("relance 3 activée")
 
@@ -184,8 +164,8 @@ async function shouldSendReminder(receivable: any): Promise<boolean> {
           })
           .eq("id", receivable.id);
           console.log("relance finale désactivée: ",receivable.client?.reminder_enable_final)
-        break;
-      }
+          return false
+        }
       console.log("relance finale activée")
 
       const delayFinal = receivable.client?.reminder_delay_final;
