@@ -79,6 +79,10 @@ function ReceivablesList() {
     key: "client",
     sort: "asc",
   });
+  const [reminderTitles, setReminderTitles] = useState<Record<string, string>>(
+    {}
+  );
+
   const [showConfirmSendReminder, setShowConfirmReminder] = useState(false);
   const [sending, setSending] = useState(false);
   const showError = (message: string) => {
@@ -462,14 +466,6 @@ function ReceivablesList() {
     setShowImportModal(false);
   };
 
-  const handleMouseEnter = (receivableId: string) => {
-    setTooltipVisible(receivableId);
-  };
-
-  const handleMouseLeave = () => {
-    setTooltipVisible(null);
-  };
-
   const formatDate = (dateString: string | null | undefined) => {
     if (!dateString) return "-";
     return new Date(dateString).toLocaleDateString("fr-FR");
@@ -572,7 +568,12 @@ function ReceivablesList() {
   }, []);
   const buttonRefs = useRef({});
   const tableRefs = useRef<HTMLTableElement | null>(null);
-
+  const [reminder1AlreadySend, setReminder1AlreadySend] = useState(false);
+  const [reminder2AlreadySend, setReminder2AlreadySend] = useState(false);
+  const [reminder3AlreadySend, setReminder3AlreadySend] = useState(false);
+  const [reminderFinalAlreadySend, setReminderFinalAlreadySend] =
+    useState(false);
+  const [preAlreadySend, setPreAlreadySend] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
 
   useLayoutEffect(() => {
@@ -627,6 +628,116 @@ function ReceivablesList() {
     }
   };
 
+  // Vérifie si un type de relance a déjà été envoyé
+  const alreadySend = async (receivableId: string, reminderType: string) => {
+    const { data, error } = await supabase
+      .from("reminders")
+      .select("id")
+      .eq("receivable_id", receivableId)
+      .eq("reminder_type", reminderType)
+      .limit(1);
+    if (error) {
+      console.error("Erreur Supabase :", error);
+      return false;
+    }
+    return data.length > 0;
+  };
+
+  // Vérifie et stocke l'état des relances déjà envoyées
+  const fetchReminderStatus = async (receivableId: string) => {
+    const pre = await alreadySend(receivableId, "pre");
+    const first = await alreadySend(receivableId, "first");
+    const second = await alreadySend(receivableId, "second");
+    const third = await alreadySend(receivableId, "third");
+    const final = await alreadySend(receivableId, "final");
+    setPreAlreadySend(pre);
+    setReminder1AlreadySend(first);
+    setReminder2AlreadySend(second);
+    setReminder3AlreadySend(third);
+    setReminderFinalAlreadySend(final);
+  };
+
+  // Génère la description des problèmes détectés
+  const detectIssues = (receivable: any) => {
+    const now = new Date();
+    const issues: string[] = [];
+
+    const client = receivable.client || {};
+
+    if (client.pre_reminder_enable && !client.pre_reminder_template)
+      issues.push("la pré-relance est activée sans template");
+    if (client.reminder_enable_1 && !client.reminder_template_1)
+      issues.push("la relance 1 est activée sans template");
+    if (client.reminder_enable_2 && !client.reminder_template_2)
+      issues.push("la relance 2 est activée sans template");
+    if (client.reminder_enable_3 && !client.reminder_template_3)
+      issues.push("la relance 3 est activée sans template");
+    if (client.reminder_enable_final && !client.reminder_template_final)
+      issues.push("la relance finale est activée sans template");
+
+    // Vérifier chaque relance individuellement
+    if (client.pre_reminder_enable && !preAlreadySend && client.pre_reminder_date) {
+      console.log("client: ",client.company_name," preAlreadySend:",preAlreadySend)
+      if (isBefore(new Date(client.pre_reminder_date), now)) {
+        issues.push("La pré-relance est dépassée");
+      }
+    }
+    
+    if (client.reminder_enable_1 && !reminder1AlreadySend && client.reminder_date_1) {
+
+      if (isBefore(new Date(client.reminder_date_1), now)) {
+        issues.push("La relance 1 est dépassée");
+      }
+    }
+    
+    if (client.reminder_enable_2 && !reminder2AlreadySend && client.reminder_date_2) {
+      console.log("relance 2 already send:",reminder2AlreadySend)
+
+      if (isBefore(new Date(client.reminder_date_2), now)) {
+        issues.push("La relance 2 est dépassée");
+      }
+    }
+    
+    if (client.reminder_enable_3 && !reminder3AlreadySend && client.reminder_date_3) {
+      console.log("relance 3 already send:",reminder3AlreadySend)
+
+      if (isBefore(new Date(client.reminder_date_3), now)) {
+        issues.push("La relance 3 est dépassée");
+      }
+    }
+    
+    if (client.reminder_enable_final && !reminderFinalAlreadySend && client.reminder_date_final) {
+      console.log("relance final already send:",reminderFinalAlreadySend)
+
+      if (isBefore(new Date(client.reminder_date_final), now)) {
+        issues.push("La relance finale est dépassée");
+      }
+    }
+    
+   
+
+    return issues.length > 0 ? issues.join(", ") : "";
+  };
+
+  // Effet principal
+
+  useEffect(() => {
+    const updateAllReminderStates = async () => {
+      const titles: Record<string, string> = {};
+
+      for (const receivable of receivables) {
+        await fetchReminderStatus(receivable.id);
+        const result = detectIssues(receivable);
+        titles[receivable.id] = result;
+      }
+
+      setReminderTitles(titles);
+    };
+
+    if (receivables.length > 0) {
+      updateAllReminderStates();
+    }
+  }, [receivables]);
   useEffect(() => {
     const handleClickOutside = (event) => {
       const dropdown = dropdownRefs.current[openDropdownId];
@@ -655,7 +766,6 @@ function ReceivablesList() {
       document.removeEventListener("keydown", handleEscape);
     };
   }, [openDropdownId]);
-  const [status, setStatus] = useState({});
 
   if (loading) {
     return (
@@ -934,95 +1044,9 @@ function ReceivablesList() {
                             </span>
 
                             {/* Icône Info */}
-                            <span
+                            {/*       <span
                               className="text-yellow-500 w-5 h-5 flex items-center justify-center"
-                              title={(() => {
-                                const now = new Date();
-                                const issues: string[] = [];
-
-                                // Vérification des templates manquants
-                                if (
-                                  receivable.client?.pre_reminder_enable &&
-                                  !receivable.client?.pre_reminder_template
-                                )
-                                  issues.push(
-                                    "la pré-relance est activée sans template"
-                                  );
-                                if (
-                                  receivable.client?.reminder_enable_1 &&
-                                  !receivable.client?.reminder_template_1
-                                )
-                                  issues.push(
-                                    "la relance 1 est activée sans template"
-                                  );
-                                if (
-                                  receivable.client?.reminder_enable_2 &&
-                                  !receivable.client?.reminder_template_2
-                                )
-                                  issues.push(
-                                    "la relance 2 est activée sans template"
-                                  );
-                                if (
-                                  receivable.client?.reminder_enable_3 &&
-                                  !receivable.client?.reminder_template_3
-                                )
-                                  issues.push(
-                                    "la relance 3 est activée sans template"
-                                  );
-                                if (
-                                  receivable.client?.reminder_enable_final &&
-                                  !receivable.client?.reminder_template_final
-                                )
-                                  issues.push(
-                                    "la relance finale est activée sans template"
-                                  );
-
-                  
-                                const {
-                                  pre_reminder_enable,
-                                  reminder_enable_1,
-                                  reminder_enable_2,
-                                  reminder_enable_3,
-                                  reminder_enable_final,
-                                  pre_reminder_date,
-                                  reminder_date_1,
-                                  reminder_date_2,
-                                  reminder_date_3,
-                                  reminder_date_final,
-                                } = receivable.client;
-
-                                const datesToCheck = [
-                                  pre_reminder_enable && pre_reminder_date,
-                                  reminder_enable_1 && reminder_date_1,
-                                  reminder_enable_2 && reminder_date_2,
-                                  reminder_enable_3 && reminder_date_3,
-                                  reminder_enable_final && reminder_date_final,
-                                ];
-
-                                const hasPastDate = datesToCheck.some(
-                                  (date) =>
-                                    date && isBefore(new Date(date), now)
-                                );
-
-                                if (hasPastDate) {
-                                  console.log(datesToCheck)
-                                  issues.push(
-                                    "une ou plusieurs dates de relance sont dépassées"
-                                  );
-                                }
-
-                                // Vérification relance désactivée
-                                if (
-                                  !receivable.automatic_reminder &&
-                                  issues.length === 0
-                                ) {
-                                  return "Relance en pause";
-                                }
-
-                                return issues.length > 0
-                                  ? issues.join(", ")
-                                  : "";
-                              })()}
+                              title={}
                             >
                               {(receivable.client?.pre_reminder_enable &&
                                 !receivable.client?.pre_reminder_template) ||
@@ -1046,6 +1070,30 @@ function ReceivablesList() {
                               ) ? (
                                 <Info className="h-5 w-5" />
                               ) : !receivable.automatic_reminder ? (
+                                <Pause className="h-5 w-5" />
+                              ) : (
+                                ""
+                              )}
+                            </span> */}
+                            {reminderTitles[receivable.id] && (
+                              <span
+                                key={receivable.id}
+                                className="text-yellow-500 w-5 h-5 flex items-center justify-center"
+                                title={reminderTitles[receivable.id] || ""}
+                              >
+                                <Info className="h-5 w-5" />
+                              </span>
+                            )}
+                    
+                            <span
+                              className={`text-yellow-500 w-5 h-5 flex items-center justify-center`} // Ajoute une classe conditionnelle pour styler si la relance est en pause
+                              title={
+                                !receivable.automatic_reminder
+                                  ? "Relance en pause"
+                                  : ""
+                              }
+                            >
+                              {!receivable.automatic_reminder ? (
                                 <Pause className="h-5 w-5" />
                               ) : (
                                 ""
