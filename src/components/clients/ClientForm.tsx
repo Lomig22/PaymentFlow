@@ -532,7 +532,6 @@ const handleNeedReminders = async () => {
 									Profil de rappel
 								</label>
 								<select
-									required
 									value={formData.reminder_profile}
 									onChange={(e) => handleProfileChange(e.target.value)}
 									className='w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'

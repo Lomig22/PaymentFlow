@@ -12,16 +12,97 @@ export function BillingInfoSettings() {
   const [company, setCompany] = useState('');
   const [address, setAddress] = useState('');
   const [siret, setSiret] = useState('');
+  const [success, setSuccess] = useState<string | null>(null);
+	const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const showError = (message: string) => {
+    setError(message);
+    setTimeout(() => {
+      setError(null);
+    }, 3000);
+  };
+  const showSuccess = (message: string) => {
+    setSuccess(message);
+    setTimeout(() => {
+      setSuccess(null);
+    }, 3000);
+  };
+  useEffect(() => {
+    const fetchSettings = async () => {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+      if (userError) {
+        console.error("Erreur récupération user :", userError);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("facturation_settings")
+        .select("*")
+        .eq("owner_id", user?.id)
+        .single(); // on suppose un seul enregistrement par utilisateur
+
+      if (error) {
+        console.error("Erreur chargement données :", error);
+        return;
+      }
+
+      if (data) {
+        setCompany(data.entreprise || "");
+        setAddress(data.adresse || "");
+        setSiret(data.siret || "");
+      }
+    };
+
+    fetchSettings();
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log({ company, address, siret });
-    // TODO: Envoi vers le backend
+  
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+  
+    if (userError) {
+      showError('Erreur lors de la récupération de l’utilisateur :', userError);
+      return;
+    }
+    const { error } = await supabase
+      .from('facturation_settings')
+      .upsert({
+        owner_id:user?.id,
+        entreprise: company,
+        adresse: address,
+        siret: siret,
+      },{onConflict:"owner_id"})
+    
+  
+    if (error) {
+      showError('Erreur lors de la mise à jour :'+ error);
+    } else {
+      showSuccess('Mise à jour réussie !');
+    }
   };
+  
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
       <h2 className="text-lg font-semibold">Informations de facturation</h2>
+      {success && (
+						<div className='mb-4 p-4 bg-green-50 border border-green-200 rounded-md text-green-700'>
+							{success}
+						</div>
+					)}
+					{error && (
+						<div className='mb-4 p-4 bg-red-50 border border-red-200 rounded-md text-red-700'>
+							{error}
+						</div>
+					)}
       <div>
         <label className="block font-medium">Entreprise</label>
         <input
