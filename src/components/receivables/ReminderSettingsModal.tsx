@@ -148,29 +148,35 @@ const [formData, setFormData] = useState({
       document.body.style.overflow = "unset";
     };
   }, []);
-  const [hasPastDate,setHasPastDate]=useState(false)
+  const [hasPastDateEnable,setHasPastDateEnable]=useState(false)
 
   useEffect(() => {
     const now = startOfMinute(new Date()); // tronque à la minute près
   
-    // Pré-calcul des dates
     const {
       reminder_date_1: firstReminderDate,
       reminder_date_2: secondReminderDate,
       reminder_date_3: thirdReminderDate,
       reminder_date_final: finalReminderDate,
       pre_reminder_date: preReminderDate,
+      reminder_enable_1,
+      reminder_enable_2,
+      reminder_enable_3,
+      reminder_enable_final,
+      pre_reminder_enable,
     } = formData;
-  
+        
     const isTherePastDate = [
-      firstReminderDate,
-      secondReminderDate,
-      thirdReminderDate,
-      finalReminderDate,
-      preReminderDate,
-    ].some((date) => date && isBefore(startOfMinute(new Date(date)), now)); // tronque aussi les dates
-  
-    setHasPastDate(isTherePastDate);
+      reminder_enable_1 && firstReminderDate,
+      reminder_enable_2 && secondReminderDate,
+      reminder_enable_3 && thirdReminderDate,
+      reminder_enable_final && finalReminderDate,
+      pre_reminder_enable && preReminderDate,
+    ].some(
+      (date) => date && isBefore(startOfMinute(new Date(date)), now)
+    );
+    
+    setHasPastDateEnable(isTherePastDate);
   }, [formData]);
   
   const handleSubmit = async (e: React.FormEvent) => {
@@ -362,7 +368,7 @@ const [formData, setFormData] = useState({
               )}
             </div>
           </div>
-          {hasPastDate && (
+          {hasPastDateEnable && (
             <div className="mb-4 p-4 border border-yellow-400 bg-yellow-100 text-yellow-800 rounded">
               Certaines dates de relance sont antérieures à la date actuelle.
             </div>
