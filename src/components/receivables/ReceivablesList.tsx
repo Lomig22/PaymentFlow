@@ -283,45 +283,48 @@ function ReceivablesList() {
   };
   const handleBulkDelete = async () => {
     if (selectedIds.length === 0) return;
-  
+
     // Étape 1 : Récupérer les receivables sélectionnés pour obtenir les client_id
     const { data: receivablesToDelete, error: fetchError } = await supabase
       .from("receivables")
       .select("client_id")
       .in("id", selectedIds);
-  
+
     if (fetchError) {
-      console.error("Erreur lors de la récupération des données clients :", fetchError.message);
+      console.error(
+        "Erreur lors de la récupération des données clients :",
+        fetchError.message
+      );
       return;
     }
-  
+
     // Extraire les client_id uniques
     const clientIds = [
       ...new Set(receivablesToDelete.map((r: any) => r.client_id)),
     ];
-  
+
     // Étape 2 : Supprimer les receivables
     const { error: deleteError } = await supabase
       .from("receivables")
       .delete()
       .in("id", selectedIds);
-  
+
     if (deleteError) {
       console.error("Erreur lors de la suppression :", deleteError.message);
       return;
     }
-  
+
     // Étape 3 : Mettre à jour les statuts de relance des clients
     for (const clientId of clientIds) {
       await updateClientReminderStatus(clientId, false); // ou true selon ta logique
     }
-  
+
     // Étape 4 : Rafraîchir l'état local
     setSelectedIds([]);
     setSelectedAll(false);
     fetchReceivables();
   };
-  
+
   const handleBulkDeleteConfirmation = async () => {
     const result = await Swal.fire({
       title: "Es-tu sûr ?",
@@ -569,24 +572,29 @@ function ReceivablesList() {
   }, []);
   const buttonRefs = useRef({});
   const tableRefs = useRef<HTMLTableElement | null>(null);
-  
-const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
 
-useLayoutEffect(() => {
-  if (openDropdownId && buttonRefs.current[openDropdownId] && dropdownRefs.current[openDropdownId]) {
-    const buttonRect = buttonRefs.current[openDropdownId]!.getBoundingClientRect();
-    const dropdown = dropdownRefs.current[openDropdownId];
-    const table = tableRefs.current;
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
 
-    if (!dropdown || !table) return;
+  useLayoutEffect(() => {
+    if (
+      openDropdownId &&
+      buttonRefs.current[openDropdownId] &&
+      dropdownRefs.current[openDropdownId]
+    ) {
+      const buttonRect =
+        buttonRefs.current[openDropdownId]!.getBoundingClientRect();
+      const dropdown = dropdownRefs.current[openDropdownId];
+      const table = tableRefs.current;
 
-    const dropdownHeight = dropdown.getBoundingClientRect().height;
-    const tableHeight = table.offsetHeight;
-   
-   // const overflowHeight = dropdownTop + dropdownHeight - tableHeight;
-    //alert(`Position de la souris : X=${mousePosition.x}, Y=${mousePosition.y},table height=${tableHeight}`);
+      if (!dropdown || !table) return;
 
-  /*   if (mousePosition.y > tableHeight) {
+      const dropdownHeight = dropdown.getBoundingClientRect().height;
+      const tableHeight = table.offsetHeight;
+
+      // const overflowHeight = dropdownTop + dropdownHeight - tableHeight;
+      //alert(`Position de la souris : X=${mousePosition.x}, Y=${mousePosition.y},table height=${tableHeight}`);
+
+      /*   if (mousePosition.y > tableHeight) {
       setDropdownPosition({
         top: buttonRect.top - dropdownHeight,
         left: buttonRect.left,
@@ -596,10 +604,9 @@ useLayoutEffect(() => {
         top: buttonRect.top,
         left: buttonRect.left,
       });
-  /*   }*/
-  } 
-}, [openDropdownId]);
-
+      /*   }*/
+    }
+  }, [openDropdownId]);
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [selectedAll, setSelectedAll] = useState(false);
@@ -623,7 +630,7 @@ useLayoutEffect(() => {
   useEffect(() => {
     const handleClickOutside = (event) => {
       const dropdown = dropdownRefs.current[openDropdownId];
-  
+
       if (dropdown && !dropdown.contains(event.target)) {
         // Donne un court délai pour laisser les onClick internes s'exécuter
         setTimeout(() => {
@@ -631,7 +638,7 @@ useLayoutEffect(() => {
         }, 50);
       }
     };
-  
+
     const handleEscape = (event) => {
       if (event.key === "Escape") {
         setSelectedIds([]);
@@ -639,17 +646,16 @@ useLayoutEffect(() => {
         setOpenDropdownId(null);
       }
     };
-  
+
     document.addEventListener("mousedown", handleClickOutside);
     document.addEventListener("keydown", handleEscape);
-  
+
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
       document.removeEventListener("keydown", handleEscape);
     };
   }, [openDropdownId]);
-  const [status,setStatus] = useState({})
-
+  const [status, setStatus] = useState({});
 
   if (loading) {
     return (
@@ -742,7 +748,10 @@ useLayoutEffect(() => {
 
       <div className="ml-4 bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200" ref={tableRefs}>
+          <table
+            className="min-w-full divide-y divide-gray-200"
+            ref={tableRefs}
+          >
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3">
@@ -904,7 +913,6 @@ useLayoutEffect(() => {
                       <div className="relative">
                         <div className="flex items-center gap-2 relative z-10">
                           <button
-                            
                             onClick={() =>
                               setOpenDropdownId(
                                 openDropdownId === receivable.id
@@ -916,89 +924,147 @@ useLayoutEffect(() => {
                             title="Actions"
                           >
                             {/* Icône MoreHorizontal */}
-                            <span    ref={(el) => (buttonRefs.current[receivable.id] = el)} className="w-5 h-5 flex items-center justify-center">
+                            <span
+                              ref={(el) =>
+                                (buttonRefs.current[receivable.id] = el)
+                              }
+                              className="w-5 h-5 flex items-center justify-center"
+                            >
                               <MoreHorizontal className="h-5 w-5" />
                             </span>
 
                             {/* Icône Info */}
-<span
-  className="text-yellow-500 w-5 h-5 flex items-center justify-center"
-  title={(() => {
-    const now = new Date();
-    const issues: string[] = [];
+                            <span
+                              className="text-yellow-500 w-5 h-5 flex items-center justify-center"
+                              title={(() => {
+                                const now = new Date();
+                                const issues: string[] = [];
 
-    // Vérification des templates manquants
-    if (receivable.client?.pre_reminder_enable && !receivable.client?.pre_reminder_template)
-      issues.push("la pré-relance est activée sans template");
-    if (receivable.client?.reminder_enable_1 && !receivable.client?.reminder_template_1)
-      issues.push("la relance 1 est activée sans template");
-    if (receivable.client?.reminder_enable_2 && !receivable.client?.reminder_template_2)
-      issues.push("la relance 2 est activée sans template");
-    if (receivable.client?.reminder_enable_3 && !receivable.client?.reminder_template_3)
-      issues.push("la relance 3 est activée sans template");
-    if (receivable.client?.reminder_enable_final && !receivable.client?.reminder_template_final)
-      issues.push("la relance finale est activée sans template");
+                                // Vérification des templates manquants
+                                if (
+                                  receivable.client?.pre_reminder_enable &&
+                                  !receivable.client?.pre_reminder_template
+                                )
+                                  issues.push(
+                                    "la pré-relance est activée sans template"
+                                  );
+                                if (
+                                  receivable.client?.reminder_enable_1 &&
+                                  !receivable.client?.reminder_template_1
+                                )
+                                  issues.push(
+                                    "la relance 1 est activée sans template"
+                                  );
+                                if (
+                                  receivable.client?.reminder_enable_2 &&
+                                  !receivable.client?.reminder_template_2
+                                )
+                                  issues.push(
+                                    "la relance 2 est activée sans template"
+                                  );
+                                if (
+                                  receivable.client?.reminder_enable_3 &&
+                                  !receivable.client?.reminder_template_3
+                                )
+                                  issues.push(
+                                    "la relance 3 est activée sans template"
+                                  );
+                                if (
+                                  receivable.client?.reminder_enable_final &&
+                                  !receivable.client?.reminder_template_final
+                                )
+                                  issues.push(
+                                    "la relance finale est activée sans template"
+                                  );
 
-    // Vérification des dates passées
-    const datesToCheck = [
-      receivable.client.pre_reminder_date,
-      receivable.client.reminder_date_1,
-      receivable.client.reminder_date_2,
-      receivable.client.reminder_date_3,
-      receivable.client.reminder_date_final
-    ];
+                  
+                                const {
+                                  pre_reminder_enable,
+                                  reminder_enable_1,
+                                  reminder_enable_2,
+                                  reminder_enable_3,
+                                  reminder_enable_final,
+                                  pre_reminder_date,
+                                  reminder_date_1,
+                                  reminder_date_2,
+                                  reminder_date_3,
+                                  reminder_date_final,
+                                } = receivable.client;
 
-    const hasPastDate = datesToCheck.some(date => date && isBefore(new Date(date), now));
-    if (hasPastDate) issues.push("une ou plusieurs dates de relance sont dépassées");
+                                const datesToCheck = [
+                                  pre_reminder_enable && pre_reminder_date,
+                                  reminder_enable_1 && reminder_date_1,
+                                  reminder_enable_2 && reminder_date_2,
+                                  reminder_enable_3 && reminder_date_3,
+                                  reminder_enable_final && reminder_date_final,
+                                ];
 
-    // Vérification relance désactivée
-    if (!receivable.automatic_reminder && issues.length === 0) {
-      return "Relance en pause";
-    }
+                                const hasPastDate = datesToCheck.some(
+                                  (date) =>
+                                    date && isBefore(new Date(date), now)
+                                );
 
-    return issues.length > 0 ? issues.join(", ") : "";
-  })()}
->
-  {
-    (
-      receivable.client?.pre_reminder_enable && !receivable.client?.pre_reminder_template ||
-      receivable.client?.reminder_enable_1 && !receivable.client?.reminder_template_1 ||
-      receivable.client?.reminder_enable_2 && !receivable.client?.reminder_template_2 ||
-      receivable.client?.reminder_enable_3 && !receivable.client?.reminder_template_3 ||
-      receivable.client?.reminder_enable_final && !receivable.client?.reminder_template_final ||
-      (
-        [
-          receivable.client.pre_reminder_date,
-          receivable.client.reminder_date_1,
-          receivable.client.reminder_date_2,
-          receivable.client.reminder_date_3,
-          receivable.client.reminder_date_final
-        ].some(date => date && isBefore(new Date(date), new Date()))
-      )
-    ) ? (
-      <Info className="h-5 w-5" />
-    ) : !receivable.automatic_reminder ? (
-      <Pause className="h-5 w-5" />
-    ) : (
-      ""
-    )
-  }
-</span>
+                                if (hasPastDate) {
+                                  console.log(datesToCheck)
+                                  issues.push(
+                                    "une ou plusieurs dates de relance sont dépassées"
+                                  );
+                                }
 
+                                // Vérification relance désactivée
+                                if (
+                                  !receivable.automatic_reminder &&
+                                  issues.length === 0
+                                ) {
+                                  return "Relance en pause";
+                                }
 
-
+                                return issues.length > 0
+                                  ? issues.join(", ")
+                                  : "";
+                              })()}
+                            >
+                              {(receivable.client?.pre_reminder_enable &&
+                                !receivable.client?.pre_reminder_template) ||
+                              (receivable.client?.reminder_enable_1 &&
+                                !receivable.client?.reminder_template_1) ||
+                              (receivable.client?.reminder_enable_2 &&
+                                !receivable.client?.reminder_template_2) ||
+                              (receivable.client?.reminder_enable_3 &&
+                                !receivable.client?.reminder_template_3) ||
+                              (receivable.client?.reminder_enable_final &&
+                                !receivable.client?.reminder_template_final) ||
+                              [
+                                receivable.client.pre_reminder_date,
+                                receivable.client.reminder_date_1,
+                                receivable.client.reminder_date_2,
+                                receivable.client.reminder_date_3,
+                                receivable.client.reminder_date_final,
+                              ].some(
+                                (date) =>
+                                  date && isBefore(new Date(date), new Date())
+                              ) ? (
+                                <Info className="h-5 w-5" />
+                              ) : !receivable.automatic_reminder ? (
+                                <Pause className="h-5 w-5" />
+                              ) : (
+                                ""
+                              )}
+                            </span>
                           </button>
                         </div>
 
                         {openDropdownId === receivable.id && (
-  <div
-    ref={(el) => (dropdownRefs.current[receivable.id] = el)}
-    className="fixed z-[51] w-48 origin-top-left rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-10 ml-2"
-     style={{
-      top: `${dropdownPosition.top}px`,
-      left: `${dropdownPosition.left}px`,
-    }} 
-  >
+                          <div
+                            ref={(el) =>
+                              (dropdownRefs.current[receivable.id] = el)
+                            }
+                            className="fixed z-[51] w-48 origin-top-left rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-10 ml-2"
+                            style={{
+                              top: `${dropdownPosition.top}px`,
+                              left: `${dropdownPosition.left}px`,
+                            }}
+                          >
                             <div className="py-1">
                               <button
                                 onClick={() => {
@@ -1202,7 +1268,6 @@ useLayoutEffect(() => {
               );
               setSelectedReceivable(null);
             }, 2000);
-            
           }}
         />
       )}

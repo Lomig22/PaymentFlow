@@ -103,12 +103,9 @@ export default function Layout() {
         .ilike("email", user.email);
 
       if (pending?.length === 0 || !pending) {
-        console.log("no  pending");
         await supabase.auth.signOut();
         navigate("/signup");
-      } else {
-        console.log("pending:", pending);
-      }
+      } 
       const { data: existingProfile } = await supabase
         .from("profiles")
         .select("*")
