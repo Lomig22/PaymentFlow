@@ -5,6 +5,7 @@ import { AlertCircle, Eye, FileText, Mail, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { decodeReminderStatus } from "../../lib/decodeReminderStatus";
 import Swal from "sweetalert2";
+import { File} from "lucide-react";
 
 const ReminderList = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -204,6 +205,9 @@ const ReminderList = () => {
                   numéro de facture
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  facture
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   type de Relance
                 </th>
               </tr>
@@ -232,7 +236,27 @@ const ReminderList = () => {
                     {record.receivable?.invoice_number}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {decodeReminderStatus(record.reminder_type)}
+
+                                       {record?.receivable.invoice_pdf_url ? (
+                      <a
+                        href={record?.receivable.invoice_pdf_url}
+                        target="_blank"
+                        rel="noopenner noreferrer"
+                        className="grid"
+                      >
+                        <button
+                          className="text-gray-600 hover:text-gray-800"
+                          title="View Invoice"
+                        >
+                          <File className="h-5 w-5" />
+                        </button>
+                      </a>
+                    ) : (
+                      "-"
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {decodeReminderStatus(record.reminder_type) }
                   </td>
 
                   {/* Actions */}
