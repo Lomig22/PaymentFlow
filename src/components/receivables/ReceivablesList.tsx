@@ -42,6 +42,7 @@ import { saveNotification } from "../../lib/notification";
 import Swal from "sweetalert2";
 import { getReminderStatus } from "../../lib/function";
 import { isBefore } from "date-fns";
+import ReceivableStatusBadge from "./receivableStatusBadge";
 type SortColumnConfig = {
   key: keyof CSVMapping | "client" | "email" | "Delay in Days";
   sort: "none" | "asc" | "desc";
@@ -698,7 +699,35 @@ setOpenDropdownId(null)
       document.removeEventListener("keydown", handleEscape);
     };
   }, [openDropdownId]);
-  const [status, setStatus] = useState({});
+  const resolveStatus = (receivable) => {
+    const { status, client } = receivable;
+  
+    const statusLevels = [
+      { value: "Relance finale", enabled: client?.reminder_enable_final },
+      { value: "Relance 3", enabled: client?.reminder_enable_3 },
+      { value: "Relance 2", enabled: client?.reminder_enable_2 },
+      { value: "Relance 1", enabled: client?.reminder_enable_1 },
+      { value: "relanced", enabled: true },
+    ];
+  
+    // Si préventive est désactivée, fallback vers "pending"
+    if (status === "Relance préventive" && client?.pre_reminder_enable === false) {
+      return "pending";
+    }
+  
+    // Si le statut est une relance, on cherche le plus haut niveau activé
+    const index = statusLevels.findIndex(s => s.value === status);
+    if (index !== -1) {
+      for (let i = index; i < statusLevels.length; i++) {
+        if (statusLevels[i].enabled) return statusLevels[i].value;
+      }
+      return "pending";
+    }
+  
+    // Statut standard (non concerné par la logique de relance)
+    return status;
+  };
+  
 
   if (loading) {
     return (
@@ -1233,37 +1262,8 @@ setOpenDropdownId(null)
                     {receivable.installment_number || "-"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap flex gap-1 items-center">
-                    <span
-                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        receivable.status === "paid"
-                          ? "bg-green-100 text-green-800"
-                          : receivable.status === "late"
-                          ? "bg-red-100 text-red-800"
-                          : receivable.status === "reminded" ||
-                            receivable.status === "Relance 1" ||
-                            receivable.status === "Relance 2" ||
-                            receivable.status === "Relance 3" ||
-                            receivable.status === "Relance finale" ||
-                            receivable.status === "Relance préventive"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : receivable.status === "legal"
-                          ? "bg-purple-100 text-purple-800"
-                          : "bg-gray-100 text-gray-800"
-                      }`}
-                    >
-                      {receivable.status === "paid" && "Payé"}
-                      {receivable.status === "late" && "En retard"}
-                      {receivable.status === "reminded" && "Relancé"}
-                      {receivable.status === "pending" && "En attente"}
-                      {receivable.status === "legal" && "Contentieux"}
-                      {receivable.status === "Relance 1" && "Relance 1"}
-                      {receivable.status === "Relance 2" && "Relance 2"}
-                      {receivable.status === "Relance 3" && "Relance 3"}
-                      {receivable.status === "Relance finale" &&
-                        "Relance finale"}
-                      {receivable.status === "Relance préventive" &&
-                        "Pré-relancé"}
-                    </span>
+                    {/*jet status */}
+                    < ReceivableStatusBadge receivable={receivable}/>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {receivable.notes || "-"}
