@@ -76,4 +76,50 @@ Tout était correct **à l'exception de la prérelance**, qui est partie **1 min
   - `Play` en **orange** pour inciter à cliquer
   - `Pause` en **vert**
 
+## Teste 5- Lancement Play/pause
+** Date:**13/05/2025
+**Client :** Cldépde
+**Numéro de facture :** 2
+**Heures :**
+- 13:57: Prérelance
+- 13:58: Relance 1
+- 13:59: Relance 2
+- 14:00: Relance 3
+- 14:01: Relance 4
+
+**Remarques:**
+- Toute a été envoyée correctement
+
+## Teste 6- Désactivation relance finale
+**Date: **13/05/2025
+**Client:**Lomig GUEGUENIA
+**Numéro de facture:**4
+**Heure :**
+-14:15: Prérelance  
+-14:17: Relance 1 (oui 14:17)
+-14:18: Relance 2
+-14:19: Relance 3
+-14:20: Relance 4 (décoché)
+
+**Remarques:**
+- La relance finale n'a pas été envoyée
+
+
+## Teste 7- Décochage croisée
+**Date: ** 13/05/2025
+**Client :** Beriz Jazz
+**Numéro de facture:**3
+**Heure:**
+-14:25: Prérelance (désactivé)
+-14:26: Relance 1 (activé)
+-14:27: Relance 2 (désactivé)
+-14:28: Relance 3 (activé)
+-14:29: Relance finale(activé)
+
+**Remarques:**
+- La relance 3 et la prérelance n'a pas été envoyés (positif)
+- La prérelance et relance2 n'a pas été sauvegardés dans historique de relance (positif)
+- Pendant un la période d'attente de relance 3 , relance 2  s'affiche dans status si on actualise la page (négatif)
+**Précaution prise**
+- Il faut mettre un condition dans la table pour que pendant la période de transition la relance désactivé ne s'affiche pas dans le statut
 ---
