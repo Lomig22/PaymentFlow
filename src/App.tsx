@@ -24,6 +24,9 @@ import ReminderList  from "./components/reminders/ReminderList"
 
 import ContactPage from "./pages/ContactPage";
 import PaymentSuccess from "./pages/PaymentSuccess";
+import OAuthCallback from "./pages/SubscribePage";
+import SubscribePage from "./pages/SubscribePage";
+import Success from "./components/settings/paymentSuccess";
 
 function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -127,6 +130,7 @@ function App() {
       <Routes>
         {/* Public routes */}
         <Route path="/" element={!user?<LandingPage onGetStarted={() => {}} />: <Navigate to="/dashboard" replace />} />
+        <Route path="/subscribe" element={<SubscribePage />} />
         <Route
           path="/signup"
           element={
@@ -162,6 +166,7 @@ function App() {
           <Route path="/receivables" element={<ReceivablesList />} />
           <Route path="/settings" element={<Settings />} />
           <Route path='/reminders' element={<ReminderList />} />
+          <Route path="/success" element={<Success />} />
 
         </Route>
 
