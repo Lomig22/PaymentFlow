@@ -37,8 +37,9 @@ export default function DateTimeInput({
   };
 
   return (
-    <div className="bg-white p-4 rounded-xl shadow">
-      <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
+<div className="bg-white p-4 rounded-xl shadow ">  {/* ou 130px selon ton rendu */}
+<div className="min-h-[40px] mb-2">
+<label className="flex items-start text-sm font-medium text-gray-700  w-full break-words whitespace-normal ">
         <input
           type="checkbox"
           checked={enabled}
@@ -47,6 +48,8 @@ export default function DateTimeInput({
         />
         {label} {/* optional && "(optionnel)" */}
       </label>
+</div>
+
       <input
         type="datetime-local"
         value={toDateTimeLocal(value)}

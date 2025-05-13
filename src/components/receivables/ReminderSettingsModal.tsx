@@ -153,15 +153,16 @@ export default function ReminderSettingsModal({
     };
   }, []);
   const [hasPastDateEnable, setHasPastDateEnable] = useState(false);
-  const [reminder1AlreadySend,setReminder1AlreadySend]=useState(false)
-  const [reminder2AlreadySend,setReminder2AlreadySend]=useState(false)
-  const [reminder3AlreadySend,setReminder3AlreadySend]=useState(false)
-  const [reminderFinalAlreadySend,setReminderFinalAlreadySend]=useState(false)
-  const [preAlreadySend,setPreAlreadySend]=useState(false)
+  const [reminder1AlreadySend, setReminder1AlreadySend] = useState(false);
+  const [reminder2AlreadySend, setReminder2AlreadySend] = useState(false);
+  const [reminder3AlreadySend, setReminder3AlreadySend] = useState(false);
+  const [reminderFinalAlreadySend, setReminderFinalAlreadySend] =
+    useState(false);
+  const [preAlreadySend, setPreAlreadySend] = useState(false);
   useEffect(() => {
     const checkReminders = async () => {
       const now = startOfMinute(new Date()); // tronque à la minute près
-  
+
       const alreadySend = async (reminderType: string) => {
         const { data, error } = await supabase
           .from("reminders")
@@ -169,25 +170,25 @@ export default function ReminderSettingsModal({
           .eq("receivable_id", receivable.id)
           .eq("reminder_type", reminderType)
           .limit(1);
-  
+
         if (error) {
           console.error("Erreur Supabase :", error);
           return false;
         }
-  
+
         return data.length > 0;
       };
-  
+
       const pre_already_send = await alreadySend("pre");
       const reminder_1_already_send = await alreadySend("first");
       const reminder_2_already_send = await alreadySend("second");
       const reminder_3_already_send = await alreadySend("third");
       const reminder_final_already_send = await alreadySend("final");
-      setPreAlreadySend(pre_already_send)
-      setReminder1AlreadySend(reminder_1_already_send)
-      setReminder2AlreadySend(reminder_2_already_send)
-      setReminder3AlreadySend(reminder_3_already_send)
-      setReminderFinalAlreadySend(reminder_final_already_send)
+      setPreAlreadySend(pre_already_send);
+      setReminder1AlreadySend(reminder_1_already_send);
+      setReminder2AlreadySend(reminder_2_already_send);
+      setReminder3AlreadySend(reminder_3_already_send);
+      setReminderFinalAlreadySend(reminder_final_already_send);
       const {
         reminder_date_1: firstReminderDate,
         reminder_date_2: secondReminderDate,
@@ -200,22 +201,29 @@ export default function ReminderSettingsModal({
         reminder_enable_final,
         pre_reminder_enable,
       } = formData;
-  
+
       const isTherePastDate = [
-        (reminder_enable_1 && reminder_1_already_send===false) &&firstReminderDate  ,
-        (reminder_enable_2 && reminder_2_already_send===false) &&secondReminderDate ,
-       (reminder_enable_3 && reminder_3_already_send===false)&& thirdReminderDate ,
-        (reminder_enable_final && reminder_final_already_send===false) && finalReminderDate ,
-        (pre_reminder_enable && pre_already_send===false) && preReminderDate ,
+        reminder_enable_1 &&
+          reminder_1_already_send === false &&
+          firstReminderDate,
+        reminder_enable_2 &&
+          reminder_2_already_send === false &&
+          secondReminderDate,
+        reminder_enable_3 &&
+          reminder_3_already_send === false &&
+          thirdReminderDate,
+        reminder_enable_final &&
+          reminder_final_already_send === false &&
+          finalReminderDate,
+        pre_reminder_enable && pre_already_send === false && preReminderDate,
       ].some((date) => date && isBefore(startOfMinute(new Date(date)), now));
-      
 
       setHasPastDateEnable(isTherePastDate);
     };
-  
+
     checkReminders();
   }, [formData, receivable.id]);
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -421,136 +429,135 @@ export default function ReminderSettingsModal({
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="relative">
-  <DateTimeInput
-    label="Date/Heure d’envoi – Première relance"
-    value={new Date(formData.reminder_date_1)}
-    onChange={(date) =>
-      setFormData({
-        ...formData,
-        reminder_date_1: date.toISOString(),
-      })
-    }
-    optional={formData.reminder_enable_1}
-    onToggleOptional={(checked) =>
-      setFormData({
-        ...formData,
-        reminder_enable_1: checked,
-      })
-    }
-  />
+              <div className="relative  min-h-[124px]">
+                <DateTimeInput
+                  label="Date/Heure d’envoi – Pré-relance"
+                  value={new Date(formData.pre_reminder_date)}
+                  onChange={(date) =>
+                    setFormData({
+                      ...formData,
+                      pre_reminder_date: date.toISOString(),
+                    })
+                  }
+                  optional={formData.pre_reminder_enable}
+                  onToggleOptional={(checked) =>
+                    setFormData({
+                      ...formData,
+                      pre_reminder_enable: checked,
+                    })
+                  }
+                />
 
-  {reminder1AlreadySend && (
-    <span className="absolute top-0 right-0 text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
-      Déjà envoyée
-    </span>
-  )}
-</div>
+                {preAlreadySend && (
+                  <span className="absolute top-0 right-0 text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
+                    Déjà envoyée
+                  </span>
+                )}
+              </div>
 
-<div className="relative">
-  <DateTimeInput
-    label="Date/Heure d’envoi – Deuxième relance"
-    value={new Date(formData.reminder_date_2)}
-    onChange={(date) =>
-      setFormData({
-        ...formData,
-        reminder_date_2: date.toISOString(),
-      })
-    }
-    optional={formData.reminder_enable_2}
-    onToggleOptional={(checked) =>
-      setFormData({
-        ...formData,
-        reminder_enable_2: checked,
-      })
-    }
-  />
+              <div className="relative  min-h-[124px]">
+                <DateTimeInput
+                  label="Date/Heure d’envoi – Première relance"
+                  value={new Date(formData.reminder_date_1)}
+                  onChange={(date) =>
+                    setFormData({
+                      ...formData,
+                      reminder_date_1: date.toISOString(),
+                    })
+                  }
+                  optional={formData.reminder_enable_1}
+                  onToggleOptional={(checked) =>
+                    setFormData({
+                      ...formData,
+                      reminder_enable_1: checked,
+                    })
+                  }
+                />
 
-  {reminder2AlreadySend && (
-    <span className="absolute top-0 right-0 text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
-      Déjà envoyée
-    </span>
-  )}
-</div>
+                {reminder1AlreadySend && (
+                  <span className="absolute top-0 right-0 text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
+                    Déjà envoyée
+                  </span>
+                )}
+              </div>
 
-<div className="relative">
-  <DateTimeInput
-    label="Date/Heure d’envoi – Troisième relance"
-    value={new Date(formData.reminder_date_3)}
-    onChange={(date) =>
-      setFormData({
-        ...formData,
-        reminder_date_3: date.toISOString(),
-      })
-    }
-    optional={formData.reminder_enable_3}
-    onToggleOptional={(checked) =>
-      setFormData({
-        ...formData,
-        reminder_enable_3: checked,
-      })
-    }
-  />
+              <div className="relative  min-h-[124px]">
+                <DateTimeInput
+                  label="Date/Heure d’envoi – Deuxième relance"
+                  value={new Date(formData.reminder_date_2)}
+                  onChange={(date) =>
+                    setFormData({
+                      ...formData,
+                      reminder_date_2: date.toISOString(),
+                    })
+                  }
+                  optional={formData.reminder_enable_2}
+                  onToggleOptional={(checked) =>
+                    setFormData({
+                      ...formData,
+                      reminder_enable_2: checked,
+                    })
+                  }
+                />
 
-  {reminder3AlreadySend && (
-    <span className="absolute top-0 right-0 text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
-      Déjà envoyée
-    </span>
-  )}
-</div>
+                {reminder2AlreadySend && (
+                  <span className="absolute top-0 right-0 text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
+                    Déjà envoyée
+                  </span>
+                )}
+              </div>
 
-<div className="relative">
-  <DateTimeInput
-    label="Date/Heure d’envoi – Relance finale"
-    value={new Date(formData.reminder_date_final)}
-    onChange={(date) =>
-      setFormData({
-        ...formData,
-        reminder_date_final: date.toISOString(),
-      })
-    }
-    optional={formData.reminder_enable_final}
-    onToggleOptional={(checked) =>
-      setFormData({
-        ...formData,
-        reminder_enable_final: checked,
-      })
-    }
-  />
+              <div className="relative  min-h-[124px]">
+                <DateTimeInput
+                  label="Date/Heure d’envoi – Troisième relance"
+                  value={new Date(formData.reminder_date_3)}
+                  onChange={(date) =>
+                    setFormData({
+                      ...formData,
+                      reminder_date_3: date.toISOString(),
+                    })
+                  }
+                  optional={formData.reminder_enable_3}
+                  onToggleOptional={(checked) =>
+                    setFormData({
+                      ...formData,
+                      reminder_enable_3: checked,
+                    })
+                  }
+                />
 
-  {reminderFinalAlreadySend && (
-    <span className="absolute top-0 right-0 text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
-      Déjà envoyée
-    </span>
-  )}
-</div>
+                {reminder3AlreadySend && (
+                  <span className="absolute top-0 right-0 text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
+                    Déjà envoyée
+                  </span>
+                )}
+              </div>
 
-<div className="relative">
-  <DateTimeInput
-    label="Date/Heure d’envoi – Pré-relance"
-    value={new Date(formData.pre_reminder_date)}
-    onChange={(date) =>
-      setFormData({
-        ...formData,
-        pre_reminder_date: date.toISOString(),
-      })
-    }
-    optional={formData.pre_reminder_enable}
-    onToggleOptional={(checked) =>
-      setFormData({
-        ...formData,
-        pre_reminder_enable: checked,
-      })
-    }
-  />
+              <div className="relative">
+                <DateTimeInput
+                  label="Date/Heure d’envoi – Relance finale"
+                  value={new Date(formData.reminder_date_final)}
+                  onChange={(date) =>
+                    setFormData({
+                      ...formData,
+                      reminder_date_final: date.toISOString(),
+                    })
+                  }
+                  optional={formData.reminder_enable_final}
+                  onToggleOptional={(checked) =>
+                    setFormData({
+                      ...formData,
+                      reminder_enable_final: checked,
+                    })
+                  }
+                />
 
-  {preAlreadySend && (
-    <span className="absolute top-0 right-0 text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
-      Déjà envoyée
-    </span>
-  )}
-</div>
-
+                {reminderFinalAlreadySend && (
+                  <span className="absolute top-0 right-0 text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
+                    Déjà envoyée
+                  </span>
+                )}
+              </div>
             </div>
             {/*end relance en calendrier */}
             {/* accordéon*/}
