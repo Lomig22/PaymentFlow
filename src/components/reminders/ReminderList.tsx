@@ -237,7 +237,7 @@ const ReminderList = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
 
-                                       {record?.receivable.invoice_pdf_url ? (
+                                       {record?.receivable?.invoice_pdf_url ? (
                       <a
                         href={record?.receivable.invoice_pdf_url}
                         target="_blank"
