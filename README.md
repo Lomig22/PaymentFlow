@@ -95,11 +95,11 @@ Tout était correct **à l'exception de la prérelance**, qui est partie **1 min
 **Client:**Lomig GUEGUENIA
 **Numéro de facture:**4
 **Heure :**
-- 14:15: Prérelance  
-- 14:17: Relance 1 (oui 14:17)
-- 14:18: Relance 2
-- 14:19: Relance 3
-- 14:20: Relance 4 (décoché)
+-14:15: Prérelance  
+-14:17: Relance 1 (oui 14:17)
+-14:18: Relance 2
+-14:19: Relance 3
+-14:20: Relance 4 (décoché)
 
 **Remarques:**
 - La relance finale n'a pas été envoyée
@@ -110,11 +110,11 @@ Tout était correct **à l'exception de la prérelance**, qui est partie **1 min
 **Client :** Beriz Jazz
 **Numéro de facture:**3
 **Heure:**
-- 14:25: Prérelance (désactivé)
-- 14:26: Relance 1 (activé)
-- 14:27: Relance 2 (désactivé)
-- 14:28: Relance 3 (activé)
-- 14:29: Relance finale(activé)
+-14:25: Prérelance (désactivé)
+-14:26: Relance 1 (activé)
+-14:27: Relance 2 (désactivé)
+-14:28: Relance 3 (activé)
+-14:29: Relance finale(activé)
 
 **Remarques:**
 - La relance 3 et la prérelance n'a pas été envoyés (positif)
@@ -127,11 +127,11 @@ Tout était correct **à l'exception de la prérelance**, qui est partie **1 min
 **Client :** Lomig GUEGUENIA
 **Numéro de facture:**4
 **Heure:**
-- 15:05: Prérelance (activé)
-- 15:06: Relance 1 (activé)
-- 15:07: Relance 2 (désactivé)
-- 15:08: Relance 3 (désactivé)
-- 15:09: Relance finale(activé)
+-15:05: Prérelance (activé)
+-15:06: Relance 1 (activé)
+-15:07: Relance 2 (désactivé)
+-15:08: Relance 3 (désactivé)
+-15:09: Relance finale(activé)
 
 **Remarques: **
 - J'ai oublié d'appuyer sur play 
@@ -141,17 +141,17 @@ Tout était correct **à l'exception de la prérelance**, qui est partie **1 min
 - Des précautions sont disponible mais avant, il faut vérifier si c'est vraiment la cause en supprimant totalement la créances avant de modifié le process
 **Précautions à prendre: **
 - Supprimer les données de l'anciens process à modifier
-- Message de confirmation: "vous essayez de modifier un process qui a déjà été terminée, elle reprendra depuis le début, voulez-vous continuez?"
+- Message de confirmation: "vous risquez d' écraser les anciens configurations de cette relance?Voulez-vous continuez?"
 ## Test 9- Décochage croisée (avec réimportation du créance cible)
 **Date: ** 13/05/2025
 **Client :** Lomig GUEGUENIA
 **Numéro de facture:**4
 **Heure:**
-- 15:28: Prérelance (activé)
-- 15:29: Relance 1 (activé)
-- 15:30: Relance 2 (désactivé)
-- 15:31: Relance 3 (désactivé)
-- 15:32: Relance finale(activé)
+-15:28: Prérelance (activé)
+-15:29: Relance 1 (activé)
+-15:30: Relance 2 (désactivé)
+-15:31: Relance 3 (désactivé)
+-15:32: Relance finale(activé)
 
 ** Remarques: **
 - Toute a été fonctionnelle à un détails pré, vu que les paramètres utilise par défaut les anciens dates, lorsqu'on a changer Prérelance et
@@ -159,6 +159,8 @@ Relance1 on a un erreur "Relance 2 doit-être avant relance 1", relance 2 pourta
 
 - Vu la comportement correcte lorsqu'on a fait une réimportation il est nécessaire comme cité dans la test 8 de vidé les anciens données lors des modifications
 
+
+## Test 10- Modification de relance déjà en cours
 
 
 ---

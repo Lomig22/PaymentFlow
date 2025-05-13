@@ -9,6 +9,7 @@ import "react-clock/dist/Clock.css";
 import "react-datetime/css/react-datetime.css"; // si tu n'as pas encore importé le style
 import DateTimeInput from "../Common/DateTimeInput";
 import { isBefore, startOfMinute } from "date-fns";
+import Swal from "sweetalert2";
 
 interface ReminderSettingsModalProps {
   client: Client;
@@ -281,9 +282,39 @@ if (reminder_enable_final) {
     } = await supabase.auth.getUser();
   
     try {
+      // Supposons que "alreadySent" est un tableau contenant les relances déjà envoyées
+if (preAlreadySend||reminder1AlreadySend||reminder2AlreadySend||reminder3AlreadySend||reminderFinalAlreadySend) {
+  const result = await Swal.fire({
+    title: "Modification du process",
+    text: "Modifier les paramètres réinitialisera le processus!\n Il est conseillé de décocher les relances non souhaitées",
+    showCancelButton: true,
+    confirmButtonText: "Continuer",
+    cancelButtonText: "Annuler",
+    customClass: {
+      confirmButton: "bg-red-600 text-white hover:bg-red-700 px-4 py-2 rounded mr-2",
+      cancelButton: "px-4 py-2 rounded text-white border bg-blue-600 border-gray-300",
+    },
+    buttonsStyling: false,
+  });
+
+  if (result.isConfirmed) {
+    const { error } = await supabase
+    .from("reminders")
+    .delete()
+    .eq("receivable_id", receivable.id);
+
+  if (error) throw error;
+  }else{
+    setLoading(false);
+    return;
+  }
+}
+if (hasPastDateEnable){
+showError("Des dates de relance antérieures sont activés. Veuillez les corriger !")
+return
+}
   
-  
-      const { error: updateError } = await supabase
+const { error: updateError } = await supabase
         .from("clients")
         .update({
           reminder_delay_1: formData.reminder_delay_1,
