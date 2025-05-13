@@ -22,6 +22,7 @@ import {
   File,
   Pause,
   MoreHorizontal,
+  Play,
 } from "lucide-react";
 import ReceivableForm from "./ReceivableForm";
 import ReceivableEditForm from "./ReceivableEditForm";
@@ -548,7 +549,49 @@ function ReceivablesList() {
 
     return 0;
   };
-
+  {/*play/pause */}
+  const handleAutomaticReminderToggle = async (receivable) => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    try {
+     // setLoading(true);
+      setError(null);
+setOpenDropdownId(null)
+      // Update the receivable
+      const { error } = await supabase
+        .from("receivables")
+        .update({
+          automatic_reminder: !receivable.automatic_reminder,
+        })
+        .eq("id", receivable.id);
+      if (error) throw error;
+      await saveNotification({
+        owner_id: user?.id,
+        is_read: false,
+        type: "info",
+        message: "Mise à jour des paramètres de relance automatique",
+        details: receivable?.automatic_reminder
+          ? `Les relances sont activés pour la relance ${receivable?.invoice_number}`
+          : `Les relances sont en pause pour la relance ${receivable?.invoice_number}`,
+      });
+      fetchReceivables()
+    } catch (error: any) {
+      console.error("Erreur lors de la mise à jour des paramètres:", error);
+      if (user?.id) {
+        await saveNotification({
+          owner_id: user?.id,
+          is_read: false,
+          type: "erreur",
+          message: "Mise à jour des paramètres de relance automatique échouée",
+          details: `${error}`,
+        });
+      }
+      showError(error.message || "Impossible de mettre à jour les paramètres");
+    } finally {
+      setLoading(false);
+    }
+  };
   const filteredReceivables = receivables
     .filter((receivable) => {
       const searchLower = searchTerm.toLowerCase();
@@ -913,15 +956,9 @@ function ReceivablesList() {
                       <div className="relative">
                         <div className="flex items-center gap-2 relative z-10">
                           <button
-                            onClick={() =>
-                              setOpenDropdownId(
-                                openDropdownId === receivable.id
-                                  ? null
-                                  : receivable.id
-                              )
-                            }
+
                             className="flex items-center gap-1 text-gray-600 hover:text-gray-800"
-                            title="Actions"
+                            
                           >
                             {/* Icône MoreHorizontal */}
                             <span
@@ -929,6 +966,14 @@ function ReceivablesList() {
                                 (buttonRefs.current[receivable.id] = el)
                               }
                               className="w-5 h-5 flex items-center justify-center"
+                              onClick={() =>
+                                setOpenDropdownId(
+                                  openDropdownId === receivable.id
+                                    ? null
+                                    : receivable.id
+                                )
+                              }
+                              title="Actions"
                             >
                               <MoreHorizontal className="h-5 w-5" />
                             </span>
@@ -1045,12 +1090,26 @@ function ReceivablesList() {
                                   date && isBefore(new Date(date), new Date())
                               ) ? (
                                 <Info className="h-5 w-5" />
-                              ) : !receivable.automatic_reminder ? (
-                                <Pause className="h-5 w-5" />
                               ) : (
                                 ""
                               )}
                             </span>
+                            {/*play/pause */}
+                            <span className="w-5 h-5 flex items-center justify-center"
+              onClick={()=>{handleAutomaticReminderToggle(receivable)}}
+            >
+              {receivable.automatic_reminder ? (
+                <Pause
+                  className="cursor-pointer hover:fill-green-400 stroke-green-400"
+                  strokeWidth={2}
+                />
+              ) : (
+                <Play
+                  className="cursor-pointer hover:fill-orange-400 stroke-orange-400"
+                  strokeWidth={2}
+                />
+              )}
+            </span>
                           </button>
                         </div>
 
