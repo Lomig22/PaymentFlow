@@ -31,10 +31,7 @@ En conséquence :
 - Relances suivantes envoyées à **09:24, 09:25, 09:26, 09:27**
 
 **Précautions prises :**
-- Ajout d'un **avertissement** et **blocage** de la saisie de la prérelance après relance 1
-
-➡️ Désormais, une **notification d'erreur** est affichée si l'ordre est incorrect, et la prérelance est déplacée automatiquement.
-
+➡️ Désormais, une **notification d'erreur** est affichée si l'ordre est incorrect
 ---
 
 ## Teste 3
