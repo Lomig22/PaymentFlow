@@ -162,5 +162,9 @@ Relance1 on a un erreur "Relance 2 doit-être avant relance 1", relance 2 pourta
 
 ## Test 10- Modification de relance déjà en cours
 
+Actuellement si on modifie des relances déjà en cours, il demande des validations,
+Si certains dates sont passés alors que le status d'un relance est actif il affiches un erreurs
+Le dernier problème c'est que parfois la vérification des anciens dates prends 2 secondes et si on sauvegarde très rapidement le système n'a pas le temps de vérifié, il faut un petit mécanisme de await ou de loader
+
 
 ---
