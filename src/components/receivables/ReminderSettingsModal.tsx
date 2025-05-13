@@ -229,10 +229,42 @@ export default function ReminderSettingsModal({
     setLoading(true);
     setError(null);
     setSuccess(false);
+  
+    // Vérification de l'ordre des dates
+    const {
+      pre_reminder_date,
+      reminder_date_1,
+      reminder_date_2,
+      reminder_date_3,
+      reminder_date_final,
+    } = formData;
+  
+    // On convertit en timestamps pour comparer facilement
+    const dates = [
+      { label: "Prérelance", date: new Date(pre_reminder_date) },
+      { label: "Relance 1", date: new Date(reminder_date_1) },
+      { label: "Relance 2", date: new Date(reminder_date_2) },
+      { label: "Relance 3", date: new Date(reminder_date_3) },
+      { label: "Relance finale", date: new Date(reminder_date_final) },
+    ];
+  
+    for (let i = 0; i < dates.length - 1; i++) {
+      if (dates[i].date >= dates[i + 1].date) {
+        showError(
+          `La date de "${dates[i].label}" doit être avant la date de "${dates[i + 1].label}".`
+        );
+        setLoading(false);
+        return;
+      }
+    }
+  
     const {
       data: { user },
     } = await supabase.auth.getUser();
+  
     try {
+  
+  
       const { error: updateError } = await supabase
         .from("clients")
         .update({
@@ -410,19 +442,18 @@ export default function ReminderSettingsModal({
             </div>
           </div>
           {hasPastDateEnable && (
-            <div className="mb-4 p-4 border border-yellow-400 bg-yellow-100 text-yellow-800 rounded">
+            <div className="fixed top-0 left-1/2 -translate-x-1/2 mb-4 p-4 border border-yellow-400 bg-yellow-100 text-yellow-800 rounded">
               Certaines dates de relance sont antérieures à la date actuelle
             </div>
           )}
           {error && (
-            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md text-red-700 flex items-center">
-              <AlertCircle className="h-5 w-5 mr-2" />
+            <div className="fixed top-0 left-1/2 -translate-x-1/2  mb-4 p-4 bg-red-50 border border-red-200 rounded-md text-red-700 flex items-center z-[51]">
               {error}
             </div>
           )}
 
           {success && (
-            <div className="fixed top-0 left-1/2 -translate-x-1/2 mb-4 p-4 bg-green-50 border border-green-200 rounded-md text-green-700 z-[9999999999999999999999999999]">
+            <div className="fixed top-0 left-1/2 -translate-x-1/2 mb-4 p-4 bg-green-50 border border-green-200 rounded-md text-green-700 z-[51]">
               Paramètres sauvegardés avec succès
             </div>
           )}
