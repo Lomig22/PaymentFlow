@@ -987,7 +987,7 @@ setOpenDropdownId(null)
                           <button
 
                             className="flex items-center gap-1 text-gray-600 hover:text-gray-800"
-                            
+                            title="bug"
                           >
                             {/* Icône MoreHorizontal */}
                             <span
