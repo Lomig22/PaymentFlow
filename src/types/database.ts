@@ -10,6 +10,11 @@ export interface Client {
 	industry?: string;
 	website?: string;
 	needs_reminder: boolean;
+	pre_reminder_enable:boolean,
+    reminder_enable_1:boolean,
+    reminder_enable_2:boolean,
+    reminder_enable_3:boolean,
+	reminder_enable_final:boolean,
 	reminder_delay_1?: { j: number; h: number; m: number };
 	reminder_delay_2?: { j: number; h: number; m: number };
 	reminder_delay_3?: { j: number; h: number; m: number };
@@ -18,13 +23,18 @@ export interface Client {
 	reminder_template_2?: string;
 	reminder_template_3?: string;
 	reminder_template_final?: string;
+	reminder_date_1?: string;
+	reminder_date_2?: string;
+	reminder_date_3?: string;
+	reminder_date_final?: string;
+	pre_reminder_date?:string;
 	created_at: string;
 	updated_at: string;
 	owner_id: string;
 	client_code: string;
 	notes?: string;
 	reminder_profile?: string;
-	pre_reminder_days?: number;
+	pre_reminder_delay?: { j: number; h: number; m: number };
 	pre_reminder_template?: string;
 }
 

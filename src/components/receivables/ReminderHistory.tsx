@@ -59,7 +59,7 @@ const ReminderHistory = ({
 											colSpan={13}
 											className='px-6 py-4 text-center text-gray-500'
 										>
-											Aucun client trouvé
+											Aucune relance trouvée
 										</td>
 									</tr>
 								)}

@@ -47,7 +47,11 @@ export default function LoginPage() {
         console.error("Subscription check error:", subError);
         throw new Error("Erreur de vérification de l'abonnement");
       }
-
+      if (!subscriptions || subscriptions.length === 0) {
+        await supabase.auth.signOut();
+        throw new Error("Vous n'avez pas d'abonnement actif.");
+      }
+      
       navigate(`/dashboard/${encodeURIComponent(user.email)}`);
     } catch (error: any) {
       setMessage({
@@ -58,7 +62,33 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
-
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    setMessage(null);
+  
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: "https://lomig.onirtech.com/dashboard/", // <-- ici
+        },
+      });
+  
+      if (error) {
+        throw error;
+      }
+  
+      // L'utilisateur est redirigé automatiquement via l'OAuth callback.
+    } catch (error: any) {
+      setMessage({
+        type: "error",
+        text: error.message || "Une erreur est survenue avec Google",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+  
   return (
     <div className="min-h-screen bg-gray-100/80 backdrop-blur-sm flex items-center justify-center p-4 fixed inset-0 z-50">
       <div className="max-w-md w-full bg-white rounded-lg shadow-xl p-8 relative">
@@ -131,6 +161,26 @@ export default function LoginPage() {
           >
             {loading ? "Connexion en cours..." : "Se connecter"}
           </button>
+          <div className="flex items-center justify-center">
+    <span className="text-sm text-gray-500">ou</span>
+  </div>
+          <div className="space-y-4 mb-6">
+  <button
+    type="button"
+    onClick={handleGoogleLogin}
+    disabled={loading}
+    className="w-full flex items-center justify-center gap-2 bg-white border border-gray-300 text-gray-700 p-3 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-50"
+  >
+    <img
+      src="https://www.svgrepo.com/show/475656/google-color.svg"
+      alt="Google"
+      className="h-5 w-5"
+    />
+    Continuer avec Google
+  </button>
+
+
+</div>
 
           <div className="text-center space-y-2">
             <p className="text-sm text-gray-600">
