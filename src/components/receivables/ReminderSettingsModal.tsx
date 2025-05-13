@@ -442,7 +442,7 @@ export default function ReminderSettingsModal({
             </div>
           </div>
           {hasPastDateEnable && (
-            <div className="fixed top-0 left-1/2 -translate-x-1/2 mb-4 p-4 border border-yellow-400 bg-yellow-100 text-yellow-800 rounded">
+            <div className=" mb-4 p-4 border border-yellow-400 bg-yellow-100 text-yellow-800 rounded">
               Certaines dates de relance sont antérieures à la date actuelle
             </div>
           )}
