@@ -32,7 +32,6 @@ En conséquence :
 
 **Précautions prises :**
 - Ajout d'un **avertissement** et **blocage** de la saisie de la prérelance après relance 1
-- **Déplacement automatique** de la prérelance avant relance 1 pour limiter les erreurs
 
 ➡️ Désormais, une **notification d'erreur** est affichée si l'ordre est incorrect, et la prérelance est déplacée automatiquement.
 
