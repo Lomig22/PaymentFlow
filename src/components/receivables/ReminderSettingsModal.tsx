@@ -229,7 +229,14 @@ export default function ReminderSettingsModal({
     setLoading(true);
     setError(null);
     setSuccess(false);
-  
+    const {
+      pre_reminder_enable,
+      reminder_enable_1,
+      reminder_enable_2,
+      reminder_enable_3,
+      reminder_enable_final,
+    } = formData;
+    
     // Vérification de l'ordre des dates
     const {
       pre_reminder_date,
@@ -239,15 +246,26 @@ export default function ReminderSettingsModal({
       reminder_date_final,
     } = formData;
   
-    // On convertit en timestamps pour comparer facilement
-    const dates = [
-      { label: "Prérelance", date: new Date(pre_reminder_date) },
-      { label: "Relance 1", date: new Date(reminder_date_1) },
-      { label: "Relance 2", date: new Date(reminder_date_2) },
-      { label: "Relance 3", date: new Date(reminder_date_3) },
-      { label: "Relance finale", date: new Date(reminder_date_final) },
-    ];
   
+  // Construire dynamiquement la liste des dates activées
+const dates = [];
+
+if (pre_reminder_enable) {
+  dates.push({ label: "Prérelance", date: new Date(pre_reminder_date) });
+}
+if (reminder_enable_1) {
+  dates.push({ label: "Relance 1", date: new Date(reminder_date_1) });
+}
+if (reminder_enable_2) {
+  dates.push({ label: "Relance 2", date: new Date(reminder_date_2) });
+}
+if (reminder_enable_3) {
+  dates.push({ label: "Relance 3", date: new Date(reminder_date_3) });
+}
+if (reminder_enable_final) {
+  dates.push({ label: "Relance finale", date: new Date(reminder_date_final) });
+}
+
     for (let i = 0; i < dates.length - 1; i++) {
       if (dates[i].date >= dates[i + 1].date) {
         showError(
@@ -320,7 +338,7 @@ export default function ReminderSettingsModal({
           },
           null,
           2
-        ); // le 2 ajoute un peu d’indentation pour la lisibilité
+        ); 
         try {
           await saveNotification({
             owner_id: user.id,
