@@ -916,6 +916,7 @@ export default function CSVImportModal({
 							due_date: dueDate || new Date().toISOString().split('T')[0],
 							installment_number: installmentNumber || 1,
 							email:email,
+							automatic_reminder:false,
 							//status: status !== null ? status : undefined,
 							owner_id: user.id,
 							created_at: new Date().toISOString(),
