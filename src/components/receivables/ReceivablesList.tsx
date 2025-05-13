@@ -1102,12 +1102,15 @@ setOpenDropdownId(null)
                 <Pause
                   className="cursor-pointer hover:fill-green-400 stroke-green-400"
                   strokeWidth={2}
-                />
+                >  <title>Mettre en pause</title>
+                </Pause>
               ) : (
                 <Play
                   className="cursor-pointer hover:fill-orange-400 stroke-orange-400"
                   strokeWidth={2}
-                />
+                >
+                <title>Activer les relances</title>
+                </Play>
               )}
             </span>
                           </button>
