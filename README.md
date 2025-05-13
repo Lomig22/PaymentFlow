@@ -58,7 +58,7 @@ Tout était correct **à l'exception de la prérelance**, qui est partie **1 min
 **Heures :**
 - 10:52 : Prérelance
 - 10:53 : Relance 1
-- 10:22 : Relance 2 ❌
+- 10:22 : Relance 2 
 - 10:54 : Relance 3
 - 10:55 : Relance 4
 
@@ -72,7 +72,7 @@ Tout était correct **à l'exception de la prérelance**, qui est partie **1 min
 **Précautions prises :**
 - **Mettre les relances en pause par défaut** après chargement
 - **Réinitialiser les dates** avec des **valeurs par défaut** (date actuelle)
-- **Déplacer le bouton pause/play dans la table**
+- **Déplacer le bouton pause/play dans la table** (ces modifications sera effectué dans 002-1 pour éviter des erreurs imprévues)
   - `Play` en **orange** pour inciter à cliquer
   - `Pause` en **vert**
 
