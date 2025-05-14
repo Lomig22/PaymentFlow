@@ -166,5 +166,5 @@ Actuellement si on modifie des relances déjà en cours, il demande des validati
 Si certains dates sont passés alors que le status d'un relance est actif il affiches un erreurs
 Le dernier problème c'est que parfois la vérification des anciens dates prends 2 secondes et si on sauvegarde très rapidement le système n'a pas le temps de vérifié, il faut un petit mécanisme de await ou de loader
 
-
+ 
 ---
