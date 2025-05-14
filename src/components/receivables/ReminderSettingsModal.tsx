@@ -283,7 +283,7 @@ if (reminder_enable_final) {
   
     try {
       // Supposons que "alreadySent" est un tableau contenant les relances déjà envoyées
-if (preAlreadySend||reminder1AlreadySend||reminder2AlreadySend||reminder3AlreadySend||reminderFinalAlreadySend) {
+if ((receivable.status!=='pending')||preAlreadySend||reminder1AlreadySend||reminder2AlreadySend||reminder3AlreadySend||reminderFinalAlreadySend) {
   const result = await Swal.fire({
     title: "Modification du process",
     text: "Modifier les paramètres réinitialisera le processus!\n Il est conseillé de décocher les relances non souhaitées",
@@ -298,12 +298,25 @@ if (preAlreadySend||reminder1AlreadySend||reminder2AlreadySend||reminder3Already
   });
 
   if (result.isConfirmed) {
-    const { error } = await supabase
-    .from("reminders")
-    .delete()
-    .eq("receivable_id", receivable.id);
+// Supprimer les rappels
+const { error: deleteError } = await supabase
+  .from("reminders")
+  .delete()
+  .eq("receivable_id", receivable.id);
 
-  if (error) throw error;
+if (deleteError) throw deleteError;
+
+// Mettre à jour le receivable
+const { error: updateError } = await supabase
+  .from("receivables")
+  .update({
+    automatic_reminder: false,
+    status: "pending",
+  })
+  .eq("id", receivable.id);
+
+if (updateError) throw updateError;
+
   }else{
     setLoading(false);
     return;
@@ -424,6 +437,7 @@ const { error: updateError } = await supabase
         .from("receivables")
         .update({
           automatic_reminder: !receivable.automatic_reminder,
+         
         })
         .eq("id", receivable.id);
       if (error) throw error;
