@@ -32,18 +32,16 @@ const PricingPage = () => {
 
   // Price calculation helper
   const getPrice = (monthlyPrice: number) => {
-    const roundPrice = (price: number) => Math.round(price / 5) * 5; // Rounds to nearest 5
-
     if (billingInterval === "yearly") {
       const yearlyPrice = monthlyPrice * 12;
-      const discountedPrice = yearlyPrice * 0.9; // 10% discount
+      const discountedPrice = yearlyPrice * 0.9;
       return {
-        displayedPrice: roundPrice(discountedPrice),
-        originalPrice: roundPrice(yearlyPrice),
+        displayedPrice: Math.round(discountedPrice),
+        originalPrice: Math.round(yearlyPrice),
       };
     }
-
-    return { displayedPrice: roundPrice(monthlyPrice), originalPrice: null };
+  
+    return { displayedPrice: monthlyPrice, originalPrice: null };
   };
 
   const handleStripePayment = async (plan: string) => {
@@ -197,7 +195,7 @@ const PricingPage = () => {
                 </span>
               </div>
               <ul className="space-y-3 mb-8">
-                <FeatureItem text="Jusqu'à 50 clients" />
+                <FeatureItem text="Jusqu'à 50 créances actives" />
                 <FeatureItem text="3 modèles de relance" />
                 <FeatureItem text="Rapports mensuels" />
                 <FeatureItem text="Support par email" />
@@ -244,7 +242,7 @@ const PricingPage = () => {
                 </span>
               </div>
               <ul className="space-y-3 mb-8">
-                <FeatureItem text="Jusqu'à 200 clients" />
+                <FeatureItem text="Jusqu'à 200 créances actives" />
                 <FeatureItem text="10 modèles de relance" />
                 <FeatureItem text="Rapports hebdomadaires" />
                 <FeatureItem text="Support prioritaire" />
@@ -284,7 +282,7 @@ const PricingPage = () => {
                 </span>
               </div>
               <ul className="space-y-3 mb-8">
-                <FeatureItem text="Clients illimités" />
+                <FeatureItem text="créances actives illimités" />
                 <FeatureItem text="Modèles illimités" />
                 <FeatureItem text="Rapports personnalisés" />
                 <FeatureItem text="Support dédié 24/7" />

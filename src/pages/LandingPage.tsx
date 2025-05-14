@@ -559,7 +559,7 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
                 <ul className="space-y-3 mb-8">
                   <li className="flex items-start">
                     <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
-                    <span>Jusqu'à 50 clients</span>
+                    <span>Jusqu'à 50 créances actives</span>
                   </li>
                   <li className="flex items-start">
                     <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
@@ -575,11 +575,11 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
                   </li>
                 </ul>
                 <button
-                  onClick={() => handleStripePayment("basic")}
-                  className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors"
-                >
-                  Souscrire
-                </button>
+      onClick={() => navigate("/signup")}
+      className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors"
+    >
+      Souscrire
+    </button>
               </motion.div>
 
               {/* Pro Plan */}
@@ -611,7 +611,7 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
                 <ul className="space-y-3 mb-8">
                   <li className="flex items-start">
                     <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
-                    <span>Jusqu'à 200 clients</span>
+                    <span>Jusqu'à 200 créances actives</span>
                   </li>
                   <li className="flex items-start">
                     <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
@@ -631,11 +631,11 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
                   </li>
                 </ul>
                 <button
-                  onClick={() => handleStripePayment("pro")}
-                  className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors"
-                >
-                  Souscrire
-                </button>
+      onClick={() => navigate("/signup")}
+      className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors"
+    >
+      Souscrire
+    </button>
               </motion.div>
 
               {/* Enterprise Plan */}
@@ -664,7 +664,7 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
                 <ul className="space-y-3 mb-8">
                   <li className="flex items-start">
                     <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
-                    <span>Clients illimités</span>
+                    <span>Créances actives illimités</span>
                   </li>
                   <li className="flex items-start">
                     <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
@@ -678,10 +678,7 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
                     <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
                     <span>Support dédié 24/7</span>
                   </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
-                    <span>API complète</span>
-                  </li>
+  
                 </ul>
                 <button
                   onClick={() => handleStripePayment("enterprise")}
