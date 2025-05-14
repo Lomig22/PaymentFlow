@@ -199,6 +199,7 @@ export default function CSVImportModal({
 	const fileInputRef = useRef<HTMLInputElement>(null);
 	const [mapping, setMapping] = useState<Record<string, keyof CSVMapping>>({});
 	const [savingSchema, setSavingSchema] = useState(false);
+	const [success, setSuccess] = useState<string | null>(null);
 
 	// Plus de validation des en-têtes requis
 	const expectedHeaders: string[] = [];
@@ -238,7 +239,7 @@ export default function CSVImportModal({
 			if (error) throw error;
 
 			setClients(data || []);
-
+			
 			// Créer un map pour un accès rapide par ID et par nom d'entreprise
 			const map: Record<string, Client> = {};
 			data?.forEach((client) => {
@@ -252,7 +253,12 @@ export default function CSVImportModal({
 			showError('Impossible de charger la liste des clients');
 		}
 	};
-
+	const showSuccess = (message: string) => {
+		setSuccess(message);
+		setTimeout(() => {
+		  setSuccess(null);
+		}, 3000);
+	  }
 	const handleMapping = async (header: string[]) => {
 		const headerMap = new Map(
 			header.map((item) => [columnMapping[item], true])
@@ -910,6 +916,7 @@ export default function CSVImportModal({
 							due_date: dueDate || new Date().toISOString().split('T')[0],
 							installment_number: installmentNumber || 1,
 							email:email,
+							automatic_reminder:false,
 							//status: status !== null ? status : undefined,
 							owner_id: user.id,
 							created_at: new Date().toISOString(),
@@ -1120,12 +1127,12 @@ export default function CSVImportModal({
 		  .from('profiles')
 		  .update({ receivables_mapping: JSON.stringify(mapping) })
 		  .eq('id', user.id);
-		
-		toast.success('Le mapping a été enregistré avec succès !'); // <-- Ajout du toast
+		  showSuccess("Le mapping a été enregistré avec succès.")
+
 		setSavingSchema(false);
 	  } catch (err) {
 		console.error('Erreur lors de la suppression des créances manquantes:', err);
-		toast.error('Erreur lors de l\'enregistrement du mapping.'); // <-- Ajout du toast d'erreur
+		showError('Erreur lors de l\'enregistrement du mapping.'); // <-- Ajout du toast d'erreur
 		setSavingSchema(false);
 	  }
 	};
@@ -1145,7 +1152,9 @@ export default function CSVImportModal({
 
 	return (
 		<div className='fixed inset-0 bg-gray-600 bg-opacity-50 z-50 overflow-y-auto'>
+		
 			<div className='min-h-screen py-8 px-4 flex items-center justify-center'>
+			
 				<div className='relative bg-white rounded-lg shadow-xl p-8 w-full max-w-4xl mx-auto'>
 					<button
 						onClick={onClose}
@@ -1159,12 +1168,15 @@ export default function CSVImportModal({
 					</h2>
 
 					{error && (
-						<div className='mb-6 p-4 bg-red-50 border border-red-200 rounded-md text-red-700 flex items-center'>
-							<AlertCircle className='h-5 w-5 mr-2 flex-shrink-0' />
-							<span>{error}</span>
+										<div className='fixed mb-6 p-4 bg-red-50 border border-red-200 rounded-md text-red-700 flex items-center'>
+											<span>{error}</span>
+										</div>
+									)}
+			{success && (
+						<div className='fixed mb-4 p-4 bg-green-50 border border-green-200 rounded-md text-green-700'>
+							{success}
 						</div>
 					)}
-
 					{step === 'upload' && (
 						<div className='space-y-6'>
 							<div className='border-2 border-dashed border-gray-300 rounded-lg p-8 text-center'>

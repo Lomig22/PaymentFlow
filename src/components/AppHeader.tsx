@@ -103,9 +103,13 @@ export default function AppHeader({ user }: AppHeaderProps) {
             >
               Témoignages
             </button>
-            <Link to="/pricing" className="text-gray-600 hover:text-gray-900">
+            <button
+              onClick={() => handleNavToSection("pricing")}
+              className="text-gray-600 hover:text-gray-900"
+            >
               Tarifs
-            </Link>
+            </button>
+
             <button
               onClick={() => setShowContactModal(true)}
               className="text-gray-600 hover:text-gray-900"

@@ -23,8 +23,10 @@ export interface CSVMapping {
 	industry: string | null;
 	website: string | null;
 	needs_reminder: string | null;
+	comment: string|null;
 	created_at: string | null;
 	updated_at: string | null;
+	reminderProfile:string|null;
 }
 
 interface MappingField {
@@ -718,7 +720,7 @@ console.log("DATA: ", data)
 		setError(null);
 	
 		// Afficher le message de succès via toast
-		showSuccess("Mapping sauvegardé avec succès!");
+		showSuccess("Le mapping a été enregistré avec succès.");
 		if (user.id) {			
 		  try {
 			await saveNotification({
@@ -785,7 +787,6 @@ console.log("DATA: ", data)
 
 					{error && (
 						<div className='mb-6 p-4 bg-red-50 border border-red-200 rounded-md text-red-700 flex items-center'>
-							<AlertCircle className='h-5 w-5 mr-2 flex-shrink-0' />
 							<span>{error}</span>
 						</div>
 					)}
@@ -923,19 +924,19 @@ console.log("DATA: ", data)
       >
         <option value=''>Ne pas importer</option>
         {mappingFields.map((field) => (
-          <option
-            key={field.field}
-            value={field.field}
-			disabled={
-				Object.entries(mapping)
-				  .filter(([key, value]) => Boolean(value) && key !== String(header))
-				  .some(([_, value]) => value === field.field)
-			  }
-			  
-          >
-            {field.label}
-            {field.required ? ' *' : ''}
-          </option>
+			<option
+  key={field.field}
+  value={field.field}
+  disabled={
+    field.label && Object.entries(mapping)
+      .filter(([key, value]) => Boolean(value) && key !== String(header))
+      .some(([_, value]) => value === field.field)
+  }
+>
+  {field.label}
+  {field.required ? ' *' : ''}
+</option>
+
         ))}
       </select>
     </div>

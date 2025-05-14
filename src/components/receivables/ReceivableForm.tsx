@@ -399,7 +399,7 @@ export default function ReceivableForm({
 
 						<div>
 							<label className='block text-sm font-medium text-gray-700 mb-2'>
-								Montant devise (€) *
+								Montant (€) *
 							</label>
 							<input
 								type='number'
@@ -416,7 +416,7 @@ export default function ReceivableForm({
 
 						<div>
 							<label className='block text-sm font-medium text-gray-700 mb-2'>
-								Montant Réglé devise (€) *
+								Montant Réglé (€) *
 							</label>
 							<input
 								type='number'

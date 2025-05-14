@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Client,Receivable } from '../../types/database';
+import { Client,Receivable, ReminderProfile } from '../../types/database';
 import { confirmAlert } from "react-confirm-alert";
- 
 import { Minus, Plus, X } from 'lucide-react';
 import "react-confirm-alert/src/react-confirm-alert.css";
  
@@ -35,6 +34,7 @@ export default function ClientForm({
 		country: client?.country || 'France',
 		industry: client?.industry || '',
 		website: client?.website || '',
+		reminder_profile:client?.reminder_profile||'',
 		needs_reminder: client?.needs_reminder || false,
 		client_code: client?.client_code || '',
 		notes: client?.notes || '',
@@ -285,8 +285,50 @@ const handleNeedReminders = async () => {
 		  setLoading(false);
 		}
 	  };
-	  
 
+	  const [reminderProfiles, setReminderProfiles] = useState<ReminderProfile[]>([]);
+
+	  const fetchReminderProfiles = async () => {
+		  const {
+			  data: { user },
+			  error: userError,
+		  } = await supabase.auth.getUser();
+  
+		  if (userError || !user) {
+			  console.error('Erreur lors de la récupération de l’utilisateur', userError);
+			  return;
+		  }
+  
+		  const { data, error } = await supabase
+			  .from('reminder_profile')
+			  .select()
+			  .eq('owner_id', user.id);
+  
+		  if (error) {
+			  console.error('Erreur lors de la récupération des profils de rappel', error);
+			  return;
+		  }
+  
+		  setReminderProfiles(data || []);
+	  };
+  
+	  useEffect(() => {
+		  fetchReminderProfiles();
+	  }, []);
+	  const handleProfileChange = (profileId: string) => {
+		if (profileId === null || profileId === undefined) return;
+		const selectedProfile = reminderProfiles.find(
+			(profile) => profile.id === profileId
+		);
+		setFormData({
+			...formData,
+			reminder_profile: profileId,
+			reminder_delay_1: selectedProfile?.delay1 || {j:0,h:0,m:1},
+			reminder_delay_2: selectedProfile?.delay2 || {j:0,h:0,m:1},
+			reminder_delay_3: selectedProfile?.delay3 || {j:0,h:0,m:1},
+			reminder_delay_final: selectedProfile?.delay4 || {j:0,h:0,m:1},
+		});
+	};
 	return (
 		<div className='fixed inset-0 bg-gray-600 bg-opacity-50 z-50 overflow-y-scroll'>
 			<div className='min-h-screen py-8 px-4 flex items-center justify-center'>
@@ -485,6 +527,25 @@ const handleNeedReminders = async () => {
 								placeholder='https://...'
 							/>
 						</div>
+						<div className='col-span-2'>
+								<label className='block text-sm font-medium text-gray-700 mb-2'>
+									Profil de rappel
+								</label>
+								<select
+									value={formData.reminder_profile}
+									onChange={(e) => handleProfileChange(e.target.value)}
+									className='w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+								>
+									<option value=''>Sélectionner un profil de rappel</option>
+									{reminderProfiles.map((profile) => (
+										(profile.name!=='Default')&&(
+											<option key={profile.id} value={profile.id}>
+											{profile.name}
+										</option>
+										)
+									))}
+								</select>
+							</div>
 						<div>
 							<label className='block text-sm font-medium text-gray-700 mb-2'>
 								Commentaire

@@ -24,7 +24,7 @@ interface EmailSettings {
 	return joursEnMinutes + heuresEnMinutes + minutes;
   }
 // Fonction pour récupérer les paramètres email de l'utilisateur
-async function getEmailSettings(userId: string): Promise<EmailSettings | null> {
+export async function getEmailSettings(userId: string): Promise<EmailSettings | null> {
 	try {
 		const { data, error } = await supabase
 			.from('email_settings')
@@ -103,10 +103,13 @@ function determineReminderLevel(
 		return { level: 'second', template: client.reminder_template_2 };
 	if (status === 'Relance préventive' && client.reminder_template_1 )
 		return { level: 'first', template: client.reminder_template_1 };
-
+	if (status ==='pending' && client.pre_reminder_template && daysLate<=0){
+		alert("pending")
+		return { level: 'pre', template: client.pre_reminder_template }; 
+	}
 	// Si aucun statut de relance encore, on peut proposer un pré-reminder
- 	if (client.pre_reminder_template && daysLate<=0){
-		return { level: 'pre', template: client.pre_reminder_template };
+ 	if (status==="pending" && client.reminder_template_1 && daysLate>0){
+		return { level: 'first', template: client.reminder_template_1 };
 	} 
 		
 
@@ -147,11 +150,54 @@ function determineReminderLevel(
 	// Si aucun des cas ci-dessus ne s'applique, on retourne une relance préventive si disponible
 	return { level: 'pre', template: client.pre_reminder_template || null };
 }
+export  async function getReminderTemplate(
+	receivableId: string
+): Promise<{ level: string; template: string } | null> {
+	try {
+		// Récupérer la créance avec les détails du client
+		const { data: receivable, error: receivableError } = await supabase
+			.from('receivables')
+			.select('*, client:clients(*)')
+			.eq('id', receivableId)
+			.single();
+
+		if (receivableError) throw receivableError;
+		if (!receivable) return null;
+
+		const dueDate = new Date(receivable.due_date);
+		const today = new Date();
+		const daysLate = Math.floor(
+			(today.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24)
+		);
+
+		// Déterminer le niveau de relance (first, second, etc.)
+		const { level, template } = determineReminderLevel(
+			daysLate,
+			receivable.client,
+			receivable.status
+		);
+
+		if (!level || !template) return null;
+
+		// Retourner les informations pour la template
+		return {
+			level,
+			template
+		};
+
+	} catch (error) {
+		console.error("Erreur lors de la récupération de la template:", error);
+		return null;
+	}
+}
 
 
 // Fonction pour envoyer une relance manuelle
 export async function sendManualReminder(
-	receivableId: string
+	receivableId: string,
+	subject?: string,
+	content?: string,
+	signature?: string
 ): Promise<boolean> {
 	try {
 		const { data: receivable, error: receivableError } = await supabase
@@ -162,7 +208,6 @@ export async function sendManualReminder(
 
 		if (receivableError) throw receivableError;
 		if (!receivable) return false;
-	
 
 		const {
 			data: { user },
@@ -185,7 +230,8 @@ export async function sendManualReminder(
 		);
 		if (!level || !template) return false;
 
-		const emailContent = formatTemplate(template, {
+		// ✅ Générer le contenu personnalisé ou utiliser le template par défaut
+		const defaultEmailContent = formatTemplate(template, {
 			company: receivable.client.company_name,
 			amount: receivable.amount,
 			invoice_number: receivable.invoice_number,
@@ -193,12 +239,28 @@ export async function sendManualReminder(
 			days_late: daysLate || 0,
 			days_left: Math.max(0, -1 * daysLate),
 		});
+		if (content){
+			content=formatTemplate(content, {
+				company: receivable.client.company_name,
+				amount: receivable.amount,
+				invoice_number: receivable.invoice_number,
+				due_date: receivable.due_date,
+				days_late: daysLate || 0,
+				days_left: Math.max(0, -1 * daysLate),
+			});
+		}
+
+		const finalSubject =
+			subject || `Relance facture ${receivable.invoice_number}`;
+		const finalContent = content
+			? `${content}\n\n${signature || ''}`
+			: defaultEmailContent;
 
 		const emailSent = await sendEmail(
 			emailSettings,
-			receivable.email||receivable.client.email,
-			`Relance facture ${receivable.invoice_number}`,
-			emailContent,
+			receivable.email || receivable.client.email,
+			finalSubject,
+			finalContent,
 			receivable.invoice_pdf_url
 		);
 
@@ -209,10 +271,10 @@ export async function sendManualReminder(
 				reminder_type: level,
 				reminder_date: new Date().toISOString(),
 				email_sent: true,
-				email_content: emailContent,
+				email_content: finalContent,
 			});
 
-			// Mettre à jour le status de la créance
+			// Mettre à jour le statut
 			await supabase
 				.from('receivables')
 				.update({
@@ -241,6 +303,7 @@ export async function sendManualReminder(
 		return false;
 	}
 }
+
 
 // Fonction principale pour vérifier et envoyer les relances automatiques
 // Fonction qui vérifie les factures en attente de paiement pour un utilisateur donné,
