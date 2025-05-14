@@ -166,5 +166,24 @@ Actuellement si on modifie des relances déjà en cours, il demande des validati
 Si certains dates sont passés alors que le status d'un relance est actif il affiches un erreurs
 Le dernier problème c'est que parfois la vérification des anciens dates prends 2 secondes et si on sauvegarde très rapidement le système n'a pas le temps de vérifié, il faut un petit mécanisme de await ou de loader
 
- 
+## Test 11- Test d'envoie de rappels manuels tous relance activés
+**Date: ** 13/05/2025
+**Client :** Beriz Jazz
+**Numéro de facture:**3
+**Heure:**
+-11:05: Prérelance 
+-11:08: Relance 1 
+-11:09: Relance 2 
+-11:10 Relance 3 
+-11:11: Relance finale
+
+**Remarques**
+On a reparamétrée directement la relance, puis on a sauvegardé, on a envoyé la relance manuellement et çà a échouée,
+la raison est que la statut de la relance était déjà en relance finale (anciens status).
+Du coup on a supprimée la relance, et tous les relances sont de nouveau fonctionnels en envoie manuels
+
+**Précautions prises**
+Remettre la status de la relance en pending quand on enregistre
+Intégrer cette logique à la confirmation d'écrasement de la configuration actuelles
+
 ---

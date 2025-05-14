@@ -216,7 +216,18 @@ function ReceivablesList() {
     try {
       const { error } = await supabase
         .from("clients")
-        .update({ needs_reminder: needsReminder })
+        .update({ needs_reminder: needsReminder,
+          reminder_date_1:null,
+          reminder_date_2:null,
+          reminder_date_3:null,
+          reminder_date_final:null,
+          pre_reminder_date:null,
+          pre_reminder_enable:false,
+          reminder_enable_1: false,
+          reminder_enable_2:false,
+          reminder_enable_3:false,
+          reminder_enable_final:false
+         })
         .eq("id", clientId);
 
       if (error) throw error;
@@ -270,6 +281,16 @@ function ReceivablesList() {
                 client: {
                   ...r.client,
                   needs_reminder: false,
+                  reminder_date_1:null,
+                  reminder_date_2:null,
+                  reminder_date_3:null,
+                  reminder_date_final:null,
+                  pre_reminder_date:null,
+                  pre_reminder_enable:false,
+                  reminder_enable_1: false,
+                  reminder_enable_2:false,
+                  reminder_enable_3:false,
+                  reminder_enable_final:false
                 },
               };
             }
@@ -774,7 +795,9 @@ function ReceivablesList() {
     if (!receivable.automatic_reminder && issues.length === 0) {
       return "Relance en pause";
     }
-
+    if (!receivable.reminder_enable_1 && !receivable.reminder_enable_2 && !receivable.reminder_enable_3 && !receivable.reminder_enable_final && !receivable.pre_reminder_enable){
+       return "Aucune relance n'est activée!"
+    }
     return issues.join(", ");
   }
 
