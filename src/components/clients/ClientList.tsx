@@ -103,12 +103,10 @@ function ClientList({
   const dropdownRefs = useRef({});
   const [openDropdownId, setOpenDropdownId] = useState(null);
 
-
-
   useEffect(() => {
     const handleClickOutside = (event) => {
       const dropdown = dropdownRefs.current[openDropdownId];
-  
+
       if (dropdown && !dropdown.contains(event.target)) {
         // Donne un court délai pour laisser les onClick internes s'exécuter
         setTimeout(() => {
@@ -116,18 +114,18 @@ function ClientList({
         }, 50);
       }
     };
-  
+
     const handleEscape = (event) => {
       if (event.key === "Escape") {
         setSelectedClientIds([]);
-     
+
         setOpenDropdownId(null);
       }
     };
-  
+
     document.addEventListener("mousedown", handleClickOutside);
     document.addEventListener("keydown", handleEscape);
-  
+
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
       document.removeEventListener("keydown", handleEscape);
@@ -145,23 +143,26 @@ function ClientList({
   }, []);
   const buttonRefs = useRef({});
   const tableRefs = useRef<HTMLTableElement | null>(null);
-  
-const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
 
-useLayoutEffect(() => {
-  
-  if (openDropdownId && buttonRefs.current[openDropdownId] && dropdownRefs.current[openDropdownId]) {
-    const buttonRect = buttonRefs.current[openDropdownId]!.getBoundingClientRect();
-    const dropdown = dropdownRefs.current[openDropdownId];
-    const table = tableRefs.current;
-   
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
 
-    if (!dropdown) return;
+  useLayoutEffect(() => {
+    if (
+      openDropdownId &&
+      buttonRefs.current[openDropdownId] &&
+      dropdownRefs.current[openDropdownId]
+    ) {
+      const buttonRect =
+        buttonRefs.current[openDropdownId]!.getBoundingClientRect();
+      const dropdown = dropdownRefs.current[openDropdownId];
+      const table = tableRefs.current;
 
-    const dropdownHeight = dropdown.getBoundingClientRect().height;
-    const tableHeight = table.offsetHeight;
+      if (!dropdown) return;
 
-   /*  if (mousePosition.y > tableHeight) {
+      const dropdownHeight = dropdown.getBoundingClientRect().height;
+      const tableHeight = table.offsetHeight;
+
+      /*  if (mousePosition.y > tableHeight) {
       setDropdownPosition({
         top: buttonRect.top - dropdownHeight,
         left: buttonRect.left,
@@ -171,9 +172,9 @@ useLayoutEffect(() => {
         top: buttonRect.top,
         left: buttonRect.left,
       });
- //    }
-  } 
-}, [openDropdownId]);
+      //    }
+    }
+  }, [openDropdownId]);
 
   const handleDeleteClick = (client: Client) => {
     setClientToDelete(client);
@@ -187,19 +188,18 @@ useLayoutEffect(() => {
       setDeleting(true);
       setError(null);
       const { error: receivablesError } = await supabase
-      .from("receivables")
-      .delete()
-      .eq("client_id", clientToDelete.id);
-    
-    if (receivablesError) throw receivablesError;
-    
-    const { error: clientError } = await supabase
-      .from("clients")
-      .delete()
-      .eq("id", clientToDelete.id);
-    
-    if (clientError) throw clientError;
-    
+        .from("receivables")
+        .delete()
+        .eq("client_id", clientToDelete.id);
+
+      if (receivablesError) throw receivablesError;
+
+      const { error: clientError } = await supabase
+        .from("clients")
+        .delete()
+        .eq("id", clientToDelete.id);
+
+      if (clientError) throw clientError;
 
       setClients(clients.filter((c) => c.id !== clientToDelete.id));
       setShowDeleteConfirm(false);
@@ -231,17 +231,17 @@ useLayoutEffect(() => {
     return new Date(dateString).toLocaleDateString("fr-FR");
   };
   const handleBulkDeleteConfirmation = async () => {
-    // Confirmation avant la suppression
     const result = await Swal.fire({
       title: "Es-tu sûr ?",
       text: "Cette action supprimera tous les clients sélectionnés. Cette action est irréversible !",
+      icon: "warning",
       showCancelButton: true,
       buttonsStyling: false,
       customClass: {
         confirmButton:
-          "bg-red-600 text-white px-4 py-2 rounded mr-2 hover:bg-red-700",
+          "bg-red-600 text-white px-4 py-2 rounded mr-2 hover:bg-red-700 focus:outline-none",
         cancelButton:
-          "bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700",
+          "bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 focus:outline-none",
       },
       confirmButtonText: "Oui, supprimer",
       cancelButtonText: "Annuler",
@@ -249,34 +249,49 @@ useLayoutEffect(() => {
 
     if (result.isConfirmed) {
       await handleBulkDelete();
-      Swal.fire(
-        "Supprimé!",
-        "Les clients sélectionnés ont été supprimés.",
-        "success"
-      );
+      Swal.fire({
+        title: "Supprimé !",
+        text: "Les clients sélectionnés ont été supprimés.",
+        icon: "success",
+        buttonsStyling: false,
+        customClass: {
+          confirmButton:
+            "bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700",
+          icon: "text-blue-500",
+        },
+        confirmButtonText: "OK",
+      });
     }
   };
 
   const handleBulkDelete = async () => {
     try {
       const { error: receivablesError } = await supabase
-      .from("receivables")
-      .delete()
-      .in("client_id", selectedClientIds);
-    
-    if (receivablesError) throw receivablesError;
-      // Suppression des clients via Supabase
-      const { data, error } = await supabase
-        .from("clients") // Remplace 'clients' par le nom de ta table dans Supabase
+        .from("receivables")
         .delete()
-        .in("id", selectedClientIds); // `selectedClientIds` contient les IDs des clients à supprimer
+        .in("client_id", selectedClientIds);
+
+      if (receivablesError) throw receivablesError;
+      const { data, error } = await supabase
+        .from("clients")
+        .delete()
+        .in("id", selectedClientIds);
 
       if (error) {
         throw new Error(error.message);
       }
-
-      // Tu peux aussi gérer la mise à jour de l'état des clients ici
-      // Par exemple, filtrer les clients supprimés de la liste affichée
+      // Swal.fire({
+      //   title: "Supprimé !",
+      //   text: "Le client a été supprimé.",
+      //   icon: "success",
+      //   buttonsStyling: false,
+      //   customClass: {
+      //     confirmButton:
+      //       "bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700",
+      //     icon: "text-blue-500",
+      //   },
+      //   confirmButtonText: "OK",
+      // });
       console.log("Clients supprimés:", data);
     } catch (error) {
       Swal.fire(
@@ -422,7 +437,10 @@ useLayoutEffect(() => {
 
       <div className="ml-4 bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200" ref={tableRefs}>
+          <table
+            className="min-w-full divide-y divide-gray-200"
+            ref={tableRefs}
+          >
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3">
@@ -464,6 +482,29 @@ useLayoutEffect(() => {
                   <SortableColHead
                     colKey="client_code"
                     label="Code Client"
+                    onClick={(col: string) =>
+                      handleSortOnClick(col as keyof CSVMapping)
+                    }
+                    selectedColKey={sortConfig?.key ?? ""}
+                    sort={sortConfig?.sort ?? "none"}
+                  />
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
+                  <SortableColHead
+                    colKey="reminderProfile"
+                    label="Profil de rappel"
+                    onClick={(col: string) =>
+                      handleSortOnClick(col as keyof CSVMapping)
+                    }
+                    selectedColKey={sortConfig?.key ?? ""}
+                    sort={sortConfig?.sort ?? "none"}
+                  />
+                </th>
+
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
+                  <SortableColHead
+                    colKey="needs_reminder"
+                    label="Relance"
                     onClick={(col: string) =>
                       handleSortOnClick(col as keyof CSVMapping)
                     }
@@ -584,29 +625,7 @@ useLayoutEffect(() => {
                     sort={sortConfig?.sort ?? "none"}
                   />
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
-                  <SortableColHead
-                    colKey="reminderProfile"
-                    label="Profil de rappel"
-                    onClick={(col: string) =>
-                      handleSortOnClick(col as keyof CSVMapping)
-                    }
-                    selectedColKey={sortConfig?.key ?? ""}
-                    sort={sortConfig?.sort ?? "none"}
-                  />
-                </th>
 
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
-                  <SortableColHead
-                    colKey="needs_reminder"
-                    label="Relance"
-                    onClick={(col: string) =>
-                      handleSortOnClick(col as keyof CSVMapping)
-                    }
-                    selectedColKey={sortConfig?.key ?? ""}
-                    sort={sortConfig?.sort ?? "none"}
-                  />
-                </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                   <SortableColHead
                     colKey="comment"
@@ -660,11 +679,12 @@ useLayoutEffect(() => {
                             e.stopPropagation();
                           }}
                           ref={(el) => (dropdownRefs.current[client.id] = el)}
-                          className="fixed z-[51] w-48 origin-top-left rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-10 ml-2"                          style={{
+                          className="fixed z-[51] w-48 origin-top-left rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-10 ml-2"
+                          style={{
                             top: `${dropdownPosition.top}px`,
                             left: `${dropdownPosition.left}px`,
-                          }} 
-                       >
+                          }}
+                        >
                           <div className="py-1">
                             <button
                               onClick={(e) => {
@@ -701,6 +721,43 @@ useLayoutEffect(() => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {client.client_code}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {client.reminderProfile?.name || "-"}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <span
+                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          client.needs_reminder
+                            ? "bg-red-100 text-red-800"
+                            : "bg-green-100 text-green-800"
+                        }`}
+                      >
+                        {client.needs_reminder ? "Oui" : "Non"}
+                      </span>
+                      {client.needs_reminder && !client.reminder_template_1 && (
+                        <div className="relative ml-2">
+                          <div
+                            className="text-yellow-500 cursor-help"
+                            onMouseEnter={() => handleMouseEnter(client.id)}
+                            onMouseLeave={handleMouseLeave}
+                          >
+                            <Info className="h-4 w-4" />
+                          </div>
+                          {tooltipVisible === client.id && (
+                            <div className="absolute z-10 w-64 px-3 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm -left-32 bottom-full mb-1">
+                              Paramètres de relance non configurés. Veuillez
+                              configurer les modèles de relance pour ce client.
+                              <div
+                                className="tooltip-arrow"
+                                data-popper-arrow
+                              ></div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {formatEmail(client.email)}
@@ -746,43 +803,6 @@ useLayoutEffect(() => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {formatDate(client.updated_at)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {client.reminderProfile?.name || "-"}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <span
-                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          client.needs_reminder
-                            ? "bg-red-100 text-red-800"
-                            : "bg-green-100 text-green-800"
-                        }`}
-                      >
-                        {client.needs_reminder ? "Oui" : "Non"}
-                      </span>
-                      {client.needs_reminder && !client.reminder_template_1 && (
-                        <div className="relative ml-2">
-                          <div
-                            className="text-yellow-500 cursor-help"
-                            onMouseEnter={() => handleMouseEnter(client.id)}
-                            onMouseLeave={handleMouseLeave}
-                          >
-                            <Info className="h-4 w-4" />
-                          </div>
-                          {tooltipVisible === client.id && (
-                            <div className="absolute z-10 w-64 px-3 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm -left-32 bottom-full mb-1">
-                              Paramètres de relance non configurés. Veuillez
-                              configurer les modèles de relance pour ce client.
-                              <div
-                                className="tooltip-arrow"
-                                data-popper-arrow
-                              ></div>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {client.notes}
