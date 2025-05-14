@@ -23,11 +23,11 @@ export interface Client {
 	reminder_template_2?: string;
 	reminder_template_3?: string;
 	reminder_template_final?: string;
-	reminder_date_1?: string;
-	reminder_date_2?: string;
-	reminder_date_3?: string;
-	reminder_date_final?: string;
-	pre_reminder_date?:string;
+	reminder_date_1?: string|null;
+	reminder_date_2?: string|null;
+	reminder_date_3?: string|null;
+	reminder_date_final?: string|null;
+	pre_reminder_date?:string|null;
 	created_at: string;
 	updated_at: string;
 	owner_id: string;
