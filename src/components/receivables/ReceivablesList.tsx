@@ -994,6 +994,17 @@ function ReceivablesList() {
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   <SortableColHead
+                    colKey="status"
+                    label="Statut"
+                    onClick={(col: string) =>
+                      handleSortOnClick(col as keyof CSVMapping)
+                    }
+                    selectedColKey={sortConfig?.key ?? ""}
+                    sort={sortConfig?.sort ?? "none"}
+                  />
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <SortableColHead
                     colKey="client"
                     label="Client"
                     onClick={(col: string) =>
@@ -1102,17 +1113,7 @@ function ReceivablesList() {
                     sort={sortConfig?.sort ?? "none"}
                   />
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  <SortableColHead
-                    colKey="status"
-                    label="Statut"
-                    onClick={(col: string) =>
-                      handleSortOnClick(col as keyof CSVMapping)
-                    }
-                    selectedColKey={sortConfig?.key ?? ""}
-                    sort={sortConfig?.sort ?? "none"}
-                  />
-                </th>
+           
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Commentaire
                 </th>
@@ -1281,6 +1282,10 @@ function ReceivablesList() {
                       </div>
                     </div>
                   </td>
+                  <td className="px-6 py-4 whitespace-nowrap flex gap-1 items-center">
+                    {/*jet status */}
+                    <ReceivableStatusBadge receivable={receivable} />
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {receivable.client?.company_name ?? "Client inconnu"}
                   </td>
@@ -1319,10 +1324,7 @@ function ReceivablesList() {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {receivable.installment_number || "-"}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap flex gap-1 items-center">
-                    {/*jet status */}
-                    <ReceivableStatusBadge receivable={receivable} />
-                  </td>
+
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {receivable.notes || "-"}
                   </td>
