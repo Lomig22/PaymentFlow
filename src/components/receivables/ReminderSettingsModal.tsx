@@ -32,7 +32,7 @@ export default function ReminderSettingsModal({
   );
 
   const [defaultProfile, setDefaultProfile] = useState(null);
-
+/* 
   useEffect(() => {
     const fetchDefaultProfile = async () => {
       const {
@@ -63,7 +63,7 @@ export default function ReminderSettingsModal({
 
     fetchDefaultProfile();
     console.log("DEFAULT PROFILE: ", defaultProfile);
-  }, []);
+  }, []); */
 
   // Valeurs par défaut des délais (si non fournis)
   const delay1 = client.reminder_delay_1 || { j: 1, h: 0, m: 0 };
@@ -109,7 +109,7 @@ export default function ReminderSettingsModal({
     : client.reminder_enable_final,
     pre_reminder_enable: client.pre_reminder_enable,
 
-    reminder_profile: client.reminder_profile || defaultProfile?.id,
+    reminder_profile: client.reminder_profile || null,
 
     reminder_date_1,
     reminder_date_2,
@@ -526,11 +526,11 @@ export default function ReminderSettingsModal({
               )}
             </div>
           </div>
-          {hasPastDateEnable && (
+         {/*  {hasPastDateEnable && (
             <div className=" mb-4 p-4 border border-yellow-400 bg-yellow-100 text-yellow-800 rounded">
               Certaines dates de relance sont antérieures à la date actuelle
             </div>
-          )}
+          )} */}
           {error && (
             <div className="fixed top-0 left-1/2 -translate-x-1/2  mb-4 p-4 bg-red-50 border border-red-200 rounded-md text-red-700 flex items-center z-[51]">
               {error}
