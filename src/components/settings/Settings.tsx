@@ -5,7 +5,6 @@ import { loadStripe } from '@stripe/stripe-js'; // Importer loadStripe
 // Composants à créer ou importer
 import EmailSettings from './EmailSettings';
 import PasswordSettings from './SecuritySettings';
-import SenderSettings from './SenderSettings';
 //import UserManagementSettings from './UserManagementSettings';
 
 import {
@@ -30,6 +29,7 @@ import NotificationSettings from './NotificationSettings';
 
 import ReminderProfileSettings from './ReminderProfileSettings';
 import ProfileSettings from './ProfileSettings';
+import SignatureSettings from './SenderSettings';
 /* 
 import GuideSettings from './GuideSettings';
 import ContactSupportSettings from './ContactSupportSettings';
@@ -65,7 +65,7 @@ const sections = [
     name: 'Paramètres d’envoi de relances',
     icon: Bell,
     subTabs: [
-      { id: 'sender', name: 'Personnaliser l’expéditeur', component: SenderSettings },
+      { id: 'sender', name: 'Personnaliser la signature', component: SignatureSettings },
      // { id: 'auto_notifications', name: 'Activer/désactiver les notifications automatiques', component: AutoNotificationSettings },
     ],
   },
@@ -97,16 +97,6 @@ const sections = [
       { id: 'profile_rename', name: 'Configuration des profils', component: ReminderProfileSettings },
     ],
   },
- /* {
-    id: 'support',
-    name: 'Aide et Support',
-    icon: User,
-    subTabs: [
-       { id: 'guide', name: 'Guide d’utilisation', component: GuideSettings },
-      { id: 'contact', name: 'Contacter le support', component: ContactSupportSettings },
-      { id: 'faq', name: 'FAQ / Centre de formation', component: FAQSettings }, 
-    ],
-  },*/
 ];
 
 export default function Settings() {
