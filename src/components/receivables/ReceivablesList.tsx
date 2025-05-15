@@ -872,11 +872,11 @@ function ReceivablesList() {
       return "Relance en pause";
     }
     if (
-      !receivable.reminder_enable_1 &&
-      !receivable.reminder_enable_2 &&
-      !receivable.reminder_enable_3 &&
-      !receivable.reminder_enable_final &&
-      !receivable.pre_reminder_enable
+      (receivable.reminder_enable_1===false) &&
+      (receivable.reminder_enable_2===false )&&
+      (receivable.reminder_enable_3===false) &&
+      (receivable.reminder_enable_final===false) &&
+      (receivable.pre_reminder_enable===false)
     ) {
       return "Aucune relance n'est activée!";
     }
