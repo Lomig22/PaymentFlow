@@ -173,14 +173,47 @@ function ReceivablesList() {
       if (emailSettings?.email_signature) {
         setSignature(emailSettings.email_signature);
       }
-
-      // Récupérer le contenu et le niveau
-      const result = await getReminderTemplate(selectedReceivable.id);
-      if (result) {
-        const subjectLine = `Relance facture ${selectedReceivable.invoice_number}`;
-        setSubject(subjectLine);
-        setContent(result.template); // ou formatté si le template est déjà rempli
+      const isLastStatus=(status:string)=>{
+        const lastStatus=selectedReceivable.client?.reminder_enable_final?
+        'Relance finale':selectedReceivable.client?.reminder_enable_3?
+        'Relance 3':  selectedReceivable.client?.reminder_enable_2?
+        'Relance 2': selectedReceivable.client?.reminder_enable_1?
+        'Relance 1':'Relance préventive'
+        return  status===lastStatus
       }
+      if (isLastStatus(selectedReceivable.status)===false){
+      // Déterminer le statut à utiliser pour la relance
+      const newStatus = getNextEnabledReminderStatus(
+        selectedReceivable.status,
+        selectedReceivable.client
+      );
+      await supabase
+      .from('receivables')
+      .update({
+        status:newStatus
+      })
+      .eq('id', selectedReceivable.id);
+      //alert(newStatus);
+      if (!newStatus) {
+        console.log("Aucune relance n'est activée pour ce client.");
+        setSending(false);
+        setShowConfirmReminder(false);
+        setSelectedClient(null);
+        return;
+      }
+
+      // Mettre à jour le statut avant l’envoi
+      selectedReceivable.status = newStatus;
+      // Récupérer le contenu et le niveau
+    
+        const result = await getReminderTemplate(selectedReceivable.id,newStatus);
+        if (result) {
+          const subjectLine = `Relance facture ${selectedReceivable.invoice_number}`;
+          setSubject(subjectLine);
+          setContent(result.template); // ou formatté si le template est déjà rempli
+        }
+      }
+
     };
 
     fetchData();
@@ -216,18 +249,19 @@ function ReceivablesList() {
     try {
       const { error } = await supabase
         .from("clients")
-        .update({ needs_reminder: needsReminder,
-          reminder_date_1:null,
-          reminder_date_2:null,
-          reminder_date_3:null,
-          reminder_date_final:null,
-          pre_reminder_date:null,
-          pre_reminder_enable:false,
+        .update({
+          needs_reminder: needsReminder,
+          reminder_date_1: null,
+          reminder_date_2: null,
+          reminder_date_3: null,
+          reminder_date_final: null,
+          pre_reminder_date: null,
+          pre_reminder_enable: false,
           reminder_enable_1: false,
-          reminder_enable_2:false,
-          reminder_enable_3:false,
-          reminder_enable_final:false
-         })
+          reminder_enable_2: false,
+          reminder_enable_3: false,
+          reminder_enable_final: false,
+        })
         .eq("id", clientId);
 
       if (error) throw error;
@@ -281,16 +315,16 @@ function ReceivablesList() {
                 client: {
                   ...r.client,
                   needs_reminder: false,
-                  reminder_date_1:null,
-                  reminder_date_2:null,
-                  reminder_date_3:null,
-                  reminder_date_final:null,
-                  pre_reminder_date:null,
-                  pre_reminder_enable:false,
+                  reminder_date_1: null,
+                  reminder_date_2: null,
+                  reminder_date_3: null,
+                  reminder_date_final: null,
+                  pre_reminder_date: null,
+                  pre_reminder_enable: false,
                   reminder_enable_1: false,
-                  reminder_enable_2:false,
-                  reminder_enable_3:false,
-                  reminder_enable_final:false
+                  reminder_enable_2: false,
+                  reminder_enable_3: false,
+                  reminder_enable_final: false,
                 },
               };
             }
@@ -374,6 +408,47 @@ function ReceivablesList() {
       );
     }
   };
+  //fonction récursive de détection de statut activé
+  function getNextEnabledReminderStatus(
+    status: string,
+    client: {
+      pre_reminder_enable?: boolean;
+      reminder_enable_1?: boolean;
+      reminder_enable_2?: boolean;
+      reminder_enable_3?: boolean;
+      reminder_enable_final?: boolean;
+    }
+  ): string | null {
+    const allStatuses = [
+      "pending",
+      "Relance préventive",
+      "Relance 1",
+      "Relance 2",
+      "Relance 3",
+    ];
+
+    const statusToFlag: Record<string, keyof typeof client> = {
+      pending: "pre_reminder_enable",
+      "Relance préventive": "reminder_enable_1",
+      "Relance 1": "reminder_enable_2",
+      "Relance 2": "reminder_enable_3",
+      "Relance 3": "reminder_enable_final",
+    };
+
+    let currentIndex = allStatuses.indexOf(status);
+
+    while (currentIndex < allStatuses.length) {
+      const currentStatus = allStatuses[currentIndex];
+      const flag = statusToFlag[currentStatus];
+      if (client?.[flag]) {
+        return currentStatus;
+      }
+      currentIndex++;
+    }
+
+    return null; // Aucune relance activée trouvée
+  }
+
   const handleSendReminder = async () =>
     // receivable: Receivable & { client: Client }
     {
@@ -386,6 +461,7 @@ function ReceivablesList() {
         setError(null);
         if (selectedReceivable == null) return;
         setSending(true);
+
         const success = await sendManualReminder(
           selectedReceivable.id,
           subject?.trim() || undefined,
@@ -795,8 +871,14 @@ function ReceivablesList() {
     if (!receivable.automatic_reminder && issues.length === 0) {
       return "Relance en pause";
     }
-    if (!receivable.reminder_enable_1 && !receivable.reminder_enable_2 && !receivable.reminder_enable_3 && !receivable.reminder_enable_final && !receivable.pre_reminder_enable){
-       return "Aucune relance n'est activée!"
+    if (
+      !receivable.reminder_enable_1 &&
+      !receivable.reminder_enable_2 &&
+      !receivable.reminder_enable_3 &&
+      !receivable.reminder_enable_final &&
+      !receivable.pre_reminder_enable
+    ) {
+      return "Aucune relance n'est activée!";
     }
     return issues.join(", ");
   }
@@ -1076,7 +1158,6 @@ function ReceivablesList() {
                               </span>
                             </Tooltip>
 
-
                             {/* play/pause  */}
                             <span
                               className={`w-5 h-5 flex items-center  ml-auto ${
@@ -1105,15 +1186,20 @@ function ReceivablesList() {
                                 </Tooltip>
                               )}
                             </span>
-                            
+
                             {/* Icône Info - Affichée seulement si getReminderIssues existe */}
-                         
+
                             <Tooltip label={getReminderIssues(receivable)}>
-                                <span className={getReminderIssues(receivable)?"text-yellow-500 w-5 h-5 flex items-center justify-center":"hidden"}>
-                                  <Info className="h-5 w-5" />
-                                </span>
-                              </Tooltip>
-                            
+                              <span
+                                className={
+                                  getReminderIssues(receivable)
+                                    ? "text-yellow-500 w-5 h-5 flex items-center justify-center"
+                                    : "hidden"
+                                }
+                              >
+                                <Info className="h-5 w-5" />
+                              </span>
+                            </Tooltip>
                           </button>
                         </div>
 
