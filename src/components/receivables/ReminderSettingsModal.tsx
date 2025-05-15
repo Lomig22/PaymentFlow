@@ -380,17 +380,17 @@ export default function ReminderSettingsModal({
         const details = JSON.stringify(
           {
             "Numéro de facture": `${receivable.invoice_number}`,
-            "Délai de relance 1": `${formData.reminder_delay_1.j || 0}:${
+            "Délai de relance 1": `${formData.reminder_delay_1.j || 1}:${
               formData.reminder_delay_1.h || 0
             }:${formData.reminder_delay_1.m || 0} `,
-            "Délai de relance 2": `${formData.reminder_delay_2.j || 0}:${
+            "Délai de relance 2": `${formData.reminder_delay_2.j || 1}:${
               formData.reminder_delay_2.h || 0
             }:${formData.reminder_delay_2.m || 0} `,
-            "Délai de relance 3": `${formData.reminder_delay_3.j || 0}:${
+            "Délai de relance 3": `${formData.reminder_delay_3.j || 1}:${
               formData.reminder_delay_3.h || 0
             }:${formData.reminder_delay_3.m || 0} `,
             "Délai de relance finale": `${
-              formData.reminder_delay_final.j || 0
+              formData.reminder_delay_final.j || 1
             }:${formData.reminder_delay_final.h || 0}:${
               formData.reminder_delay_final.m || 0
             } `,
@@ -650,7 +650,8 @@ export default function ReminderSettingsModal({
                   <div className="relative min-h-[124px]">
                     <fieldset
                       disabled={client.reminder_profile}
-                      className="opacity-50"
+                        className={client.reminder_profile ? "opacity-50" : ""}
+
                     >
                       <DateTimeInput
                         label="Date/Heure d’envoi – Deuxième relance"
@@ -683,7 +684,8 @@ export default function ReminderSettingsModal({
                   <div className="relative min-h-[124px]">
                     <fieldset
                       disabled={client.reminder_profile}
-                      className="opacity-50"
+                        className={client.reminder_profile ? "opacity-50" : ""}
+
                     >
                       <DateTimeInput
                         label="Date/Heure d’envoi – Troisième relance"
@@ -716,7 +718,8 @@ export default function ReminderSettingsModal({
                   <div className="relative min-h-[124px]">
                     <fieldset
                       disabled={client.reminder_profile}
-                      className="opacity-50"
+                        className={client.reminder_profile ? "opacity-50" : ""}
+
                     >
                       <DateTimeInput
                         label="Date/Heure d’envoi – Relance finale"
