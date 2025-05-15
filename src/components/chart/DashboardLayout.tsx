@@ -64,11 +64,22 @@ export default function DashboardLayout() {
         if (!item.due_date || item.amount == null) continue;
 
         const date = new Date(item.due_date);
+        if (isNaN(date.getTime())) continue;
+
+        const status = item.status;
         const year = date.getFullYear();
         const month = date.getMonth(); // 0 = Janvier
 
-        const paid = item.paid_amount || 0;
-        const unpaid = item.amount - paid;
+        const paid = Number(item.paid_amount || 0);
+        const unpaid = Math.max(item.amount - paid, 0);
+
+        // Ignorer les statuts réglés ou à relancer
+        if (
+          status === "paid" ||
+          status?.startsWith("Relance") ||
+          status === "legal"
+        )
+          continue;
 
         if (!grouped[year]) {
           grouped[year] = Array.from({ length: 12 }, (_, i) => ({
@@ -82,6 +93,7 @@ export default function DashboardLayout() {
         grouped[year][month].paid += paid;
         grouped[year][month].unpaid += unpaid;
       }
+
 
       setDataByYear(grouped);
     };

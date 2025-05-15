@@ -6,8 +6,8 @@ const statusColors: Record<string, string> = {
   pending: "#D4DEFF",
   legal: "#F03C3C",
   promesse: "#C0F1D4",
-  recouvrement: "#F6C752",
-  avoir: "#DBC9FF",
+  // recouvrement: "#F6C752",
+  // avoir: "#DBC9FF",
 };
 
 const labelMapping: Record<string, string> = {
@@ -15,8 +15,8 @@ const labelMapping: Record<string, string> = {
   pending: "Non-échu",
   legal: "Litige",
   promesse: "Promesse de paiement",
-  recouvrement: "Recouvrement",
-  avoir: "Avoirs non associés",
+  // recouvrement: "Recouvrement",
+  // avoir: "Avoirs non associés",
 };
 
 export default function ClientBalanceBar() {
@@ -26,9 +26,16 @@ export default function ClientBalanceBar() {
 
   useEffect(() => {
     async function fetchData() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) return;
+
       const { data: receivables, error } = await supabase
         .from("receivables")
-        .select("status, amount");
+        .select("status, amount, paid_amount, due_date")
+        .eq("owner_id", user.id);
 
       if (error) {
         console.error("Erreur Supabase :", error.message);
@@ -36,26 +43,33 @@ export default function ClientBalanceBar() {
       }
 
       const totals: Record<string, number> = {
-        late: 0,
-        pending: 0,
+        pending: 0, // Non-échu
+        late: 0, // Échu
         legal: 0,
         promesse: 0,
-        recouvrement: 0,
-        avoir: 0,
       };
 
+      const today = new Date();      
       receivables?.forEach((item) => {
-        const status = item.status.toLowerCase();
+        const status = item.status;
+        const amount = Number(item.amount || 0);
+        const paid = Number(item.paid_amount || 0);
+        const dueDate = new Date(item.due_date);
 
-        if (status.includes("finale") || status.includes("relance")) return;
-        if (status === "paid") return;
+        if (paid >= amount || status === "paid") return;
+        
+        if (status === "Relance préventive") {
+          totals.promesse += amount - paid;
+        } else if (status === "legal") {
+          totals.legal += amount - paid;
+        } else if (status === "late" || dueDate < today) {
+          totals.late += amount - paid;
+        } else if (status === "pending" || dueDate >= today) {
+          totals.pending += amount - paid;
+        }
 
-        if (status === "Relance préventive") totals.promesse += item.amount;
-        else if (status === "late") totals.late += item.amount;
-        else if (status === "pending") totals.pending += item.amount;
-        else if (status === "legal") totals.legal += item.amount;
-        else if (status === "recouvrement") totals.recouvrement += item.amount;
-        else totals.avoir += item.amount * -1; // Avoirs en négatif
+        
+        
       });
 
       const formatted = Object.entries(totals).map(([key, value]) => ({
