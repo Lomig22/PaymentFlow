@@ -59,6 +59,7 @@ import OverdueInvoices from "./chart/OverdueInvoices";
 import RecentActivityChart from "./chart/RecentActivityChart";
 import DashboardLayout from "./chart/DashboardLayout";
 import SectorDistributionPieChart from "./chart/SectorDistributionPieChart";
+import BalanceAgeeChart from "./chart/BalanceAgeeChart";
 export default function Dashboard() {
   const [stats, setStats] = useState<DashboardStats>({
     totalClients: 0,
@@ -593,12 +594,17 @@ export default function Dashboard() {
         </div>
 
         <div
-          className="grid grid-cols-1 xl:grid-cols-12 gap-6"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
           style={{ marginBottom: "20px" }}
         >
           <div className="xl:col-span-8 space-y-6">
-            <div className="rounded-2xl shadow bg-white p-6">
-              <ClientBalanceBar />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="rounded-2xl shadow bg-white">
+                <ClientBalanceBar />
+              </div>
+              <div className="rounded-2xl shadow bg-white">
+                <DsoChart />
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -606,7 +612,235 @@ export default function Dashboard() {
                 <DashboardLayout />
               </div>
               <div className="rounded-2xl shadow bg-white">
-                <SectorDistributionPieChart />
+                <BalanceAgeeChart />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="rounded-2xl shadow bg-white p-6">
+                <h2 className="text-xl font-semibold text-gray-800">
+                  Notifications
+                </h2>
+                <div className="mb-3 flex gap-2">
+                  <div className="relative inline-block text-left mb-4">
+                    <div>
+                      <button
+                        type="button"
+                        className="inline-flex justify-center mt-5 w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
+                        onClick={() => setDropdownOpen(!dropdownOpen)}
+                      >
+                        Filtre :{" "}
+                        {filter === "all"
+                          ? "Toutes"
+                          : filter === "unread"
+                          ? "Non lues"
+                          : "Lues"}
+                        <svg
+                          className="-mr-1 ml-2 h-5 w-5"
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                          aria-hidden="true"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M5.23 7.21a.75.75 0 011.06.02L10 11.584l3.71-4.354a.75.75 0 111.14.976l-4.25 5a.75.75 0 01-1.14 0l-4.25-5a.75.75 0 01.02-1.06z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+
+                    {dropdownOpen && (
+                      <div className="absolute z-10 mt-2 w-40 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
+                        <div className="py-1">
+                          <button
+                            onClick={() => {
+                              setFilter("all");
+                              setVisibleCount(5);
+                              setDropdownOpen(false);
+                            }}
+                            className={`block w-full text-left px-4 py-2 text-sm ${
+                              filter === "all"
+                                ? "bg-blue-600 text-white"
+                                : "text-gray-700 hover:bg-gray-100"
+                            }`}
+                          >
+                            Toutes
+                          </button>
+                          <button
+                            onClick={() => {
+                              setFilter("unread");
+                              setVisibleCount(5);
+                              setDropdownOpen(false);
+                            }}
+                            className={`block w-full text-left px-4 py-2 text-sm ${
+                              filter === "unread"
+                                ? "bg-blue-600 text-white"
+                                : "text-gray-700 hover:bg-gray-100"
+                            }`}
+                          >
+                            Non lues
+                          </button>
+                          <button
+                            onClick={() => {
+                              setFilter("read");
+                              setVisibleCount(5);
+                              setDropdownOpen(false);
+                            }}
+                            className={`block w-full text-left px-4 py-2 text-sm ${
+                              filter === "read"
+                                ? "bg-blue-600 text-white"
+                                : "text-gray-700 hover:bg-gray-100"
+                            }`}
+                          >
+                            Lues
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                {/* notification */}
+                {visibleNotifications.length === 0 ? (
+                  <p className="text-gray-500 text-sm">
+                    Aucune notification pour le moment.
+                  </p>
+                ) : (
+                  <ul className="divide-y divide-gray-200">
+                    {visibleNotifications.map((notification) => (
+                      <li
+                        key={notification.id}
+                        className="py-3 hover:bg-gray-50 transition-colors duration-200 rounded-md px-2"
+                      >
+                        <div className="flex justify-between items-start">
+                          {/* Contenu principal */}
+                          <div className="flex-1">
+                            <p
+                              className={`text-sm font-medium ${
+                                notification.type === "erreur"
+                                  ? "text-red-600"
+                                  : notification.type === "info"
+                                  ? "text-blue-600"
+                                  : "text-gray-800"
+                              }`}
+                            >
+                              {notification.message}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {new Date(notification.created_at).toLocaleString(
+                                "fr-FR"
+                              )}
+                            </p>
+                            {openDetails.has(notification.id) &&
+                              notification.details && (
+                                <p className="mt-2 text-sm text-gray-600 whitespace-pre-wrap">
+                                  {notification.details}
+                                </p>
+                              )}
+                          </div>
+
+                          {/* Actions */}
+                          <div className="ml-4 flex flex-col items-end gap-1">
+                            <div className="flex gap-2">
+                              {/* Bouton détails */}
+                              <button
+                                onClick={() => toggleDetails(notification.id)}
+                                className="text-sm px-2 py-1 text-indigo-600 hover:underline hover:text-indigo-800 border border-indigo-200 rounded"
+                                title="Afficher/Masquer les détails"
+                              >
+                                {openDetails.has(notification.id) ? "–" : "+"}
+                              </button>
+
+                              {/* Bouton supprimer avec SweetAlert2 */}
+                              <button
+                                onClick={() => {
+                                  Swal.fire({
+                                    title: "Supprimer cette notification ?",
+                                    text: "Cette action est irréversible.",
+                                    showCancelButton: true,
+                                    confirmButtonText: "Oui, supprimer",
+                                    cancelButtonText: "Annuler",
+                                    buttonsStyling: false,
+                                    customClass: {
+                                      confirmButton:
+                                        "bg-red-600 text-white px-4 py-2 rounded mr-2 hover:bg-red-700",
+                                      cancelButton:
+                                        "bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700",
+                                    },
+                                  }).then((result) => {
+                                    if (result.isConfirmed) {
+                                      deleteNotification(notification.id);
+                                      Swal.fire({
+                                        title: "Supprimée !",
+                                        text: "La notification a été supprimée.",
+                                        icon: "success",
+                                        confirmButtonText: "OK",
+                                        buttonsStyling: false,
+                                        customClass: {
+                                          confirmButton:
+                                            "bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700",
+                                        },
+                                      });
+                                    }
+                                  });
+                                }}
+                                className="text-red-600 hover:text-red-800"
+                                title="Supprimer"
+                              >
+                                <Trash2 className="h-5 w-5" />
+                              </button>
+                            </div>
+
+                            {/* Marquer comme lue / lue */}
+                            {!notification.is_read ? (
+                              <button
+                                onClick={() =>
+                                  markNotificationAsRead(notification.id)
+                                }
+                                className="text-xs text-blue-600 hover:underline"
+                              >
+                                Marquer comme lue
+                              </button>
+                            ) : (
+                              <span className="text-xs text-green-600 font-medium">
+                                Lue
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                {visibleCount < filteredNotifications.length && (
+                  <div className="mt-4 text-center">
+                    <button
+                      onClick={() => setVisibleCount((prev) => prev + 5)}
+                      className="text-sm text-indigo-600 hover:underline"
+                    >
+                      Afficher plus
+                    </button>
+                  </div>
+                )}
+                {visibleCount > 5 && (
+                  <div className="mt-4 text-center">
+                    <button
+                      onClick={() =>
+                        setVisibleCount(Math.max(5, visibleCount - 5))
+                      }
+                      className="text-sm text-indigo-600 hover:underline"
+                    >
+                      Afficher moins
+                    </button>
+                  </div>
+                )}
+              </div>
+              <div className="rounded-2xl shadow bg-white">
+                <RemindersCard />
+              </div>
+              <div className="rounded-2xl shadow bg-white">
+                <OverdueInvoices />
               </div>
             </div>
 
@@ -619,7 +853,7 @@ export default function Dashboard() {
               </div>
             </div> */}
           </div>
-
+          {/* 
           <div className="xl:col-span-4 space-y-6">
             <div className="rounded-2xl shadow bg-white p-6">
               <h3 className="text-lg font-semibold mb-4 text-gray-800">
@@ -630,14 +864,14 @@ export default function Dashboard() {
             <div className="rounded-2xl shadow bg-white">
               <RemindersCard />
             </div>
-          </div>
+          </div> */}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-6">
+            <h2 className="text-gray-800 font-semibold text-lg mb-6">
               Étapes de relance
-            </h3>
+            </h2>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">1ère relance</span>
@@ -740,9 +974,9 @@ export default function Dashboard() {
 
           {/* Statistiques générales */}
           <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-6">
+            <h2 className="text-gray-800 font-semibold text-lg mb-6">
               Statistiques générales
-            </h3>
+            </h2>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">
@@ -792,224 +1026,6 @@ export default function Dashboard() {
                 </span>
               </div>
             </div>
-          </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Notifications
-            </h3>
-            <div className="mb-3 flex gap-2">
-              <div className="relative inline-block text-left mb-4">
-                <div>
-                  <button
-                    type="button"
-                    className="inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
-                    onClick={() => setDropdownOpen(!dropdownOpen)}
-                  >
-                    Filtre :{" "}
-                    {filter === "all"
-                      ? "Toutes"
-                      : filter === "unread"
-                      ? "Non lues"
-                      : "Lues"}
-                    <svg
-                      className="-mr-1 ml-2 h-5 w-5"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      aria-hidden="true"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M5.23 7.21a.75.75 0 011.06.02L10 11.584l3.71-4.354a.75.75 0 111.14.976l-4.25 5a.75.75 0 01-1.14 0l-4.25-5a.75.75 0 01.02-1.06z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </button>
-                </div>
-
-                {dropdownOpen && (
-                  <div className="absolute z-10 mt-2 w-40 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
-                    <div className="py-1">
-                      <button
-                        onClick={() => {
-                          setFilter("all");
-                          setVisibleCount(5);
-                          setDropdownOpen(false);
-                        }}
-                        className={`block w-full text-left px-4 py-2 text-sm ${
-                          filter === "all"
-                            ? "bg-indigo-600 text-white"
-                            : "text-gray-700 hover:bg-gray-100"
-                        }`}
-                      >
-                        Toutes
-                      </button>
-                      <button
-                        onClick={() => {
-                          setFilter("unread");
-                          setVisibleCount(5);
-                          setDropdownOpen(false);
-                        }}
-                        className={`block w-full text-left px-4 py-2 text-sm ${
-                          filter === "unread"
-                            ? "bg-indigo-600 text-white"
-                            : "text-gray-700 hover:bg-gray-100"
-                        }`}
-                      >
-                        Non lues
-                      </button>
-                      <button
-                        onClick={() => {
-                          setFilter("read");
-                          setVisibleCount(5);
-                          setDropdownOpen(false);
-                        }}
-                        className={`block w-full text-left px-4 py-2 text-sm ${
-                          filter === "read"
-                            ? "bg-indigo-600 text-white"
-                            : "text-gray-700 hover:bg-gray-100"
-                        }`}
-                      >
-                        Lues
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-            {/* notification */}
-            {visibleNotifications.length === 0 ? (
-              <p className="text-gray-500 text-sm">
-                Aucune notification pour le moment.
-              </p>
-            ) : (
-              <ul className="divide-y divide-gray-200">
-                {visibleNotifications.map((notification) => (
-                  <li
-                    key={notification.id}
-                    className="py-3 hover:bg-gray-50 transition-colors duration-200 rounded-md px-2"
-                  >
-                    <div className="flex justify-between items-start">
-                      {/* Contenu principal */}
-                      <div className="flex-1">
-                        <p
-                          className={`text-sm font-medium ${
-                            notification.type === "erreur"
-                              ? "text-red-600"
-                              : notification.type === "info"
-                              ? "text-blue-600"
-                              : "text-gray-800"
-                          }`}
-                        >
-                          {notification.message}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {new Date(notification.created_at).toLocaleString(
-                            "fr-FR"
-                          )}
-                        </p>
-                        {openDetails.has(notification.id) &&
-                          notification.details && (
-                            <p className="mt-2 text-sm text-gray-600 whitespace-pre-wrap">
-                              {notification.details}
-                            </p>
-                          )}
-                      </div>
-
-                      {/* Actions */}
-                      <div className="ml-4 flex flex-col items-end gap-1">
-                        <div className="flex gap-2">
-                          {/* Bouton détails */}
-                          <button
-                            onClick={() => toggleDetails(notification.id)}
-                            className="text-sm px-2 py-1 text-indigo-600 hover:underline hover:text-indigo-800 border border-indigo-200 rounded"
-                            title="Afficher/Masquer les détails"
-                          >
-                            {openDetails.has(notification.id) ? "–" : "+"}
-                          </button>
-
-                          {/* Bouton supprimer avec SweetAlert2 */}
-                          <button
-                            onClick={() => {
-                              Swal.fire({
-                                title: "Supprimer cette notification ?",
-                                text: "Cette action est irréversible.",
-                                showCancelButton: true,
-                                confirmButtonText: "Oui, supprimer",
-                                cancelButtonText: "Annuler",
-                                buttonsStyling: false,
-                                customClass: {
-                                  confirmButton:
-                                    "bg-red-600 text-white px-4 py-2 rounded mr-2 hover:bg-red-700",
-                                  cancelButton:
-                                    "bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700",
-                                },
-                              }).then((result) => {
-                                if (result.isConfirmed) {
-                                  deleteNotification(notification.id);
-                                  Swal.fire({
-                                    title: "Supprimée !",
-                                    text: "La notification a été supprimée.",
-                                    icon: "success",
-                                    confirmButtonText: "OK",
-                                    buttonsStyling: false,
-                                    customClass: {
-                                      confirmButton:
-                                        "bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700",
-                                    },
-                                  });
-                                }
-                              });
-                            }}
-                            className="text-red-600 hover:text-red-800"
-                            title="Supprimer"
-                          >
-                            <Trash2 className="h-5 w-5" />
-                          </button>
-                        </div>
-
-                        {/* Marquer comme lue / lue */}
-                        {!notification.is_read ? (
-                          <button
-                            onClick={() =>
-                              markNotificationAsRead(notification.id)
-                            }
-                            className="text-xs text-blue-600 hover:underline"
-                          >
-                            Marquer comme lue
-                          </button>
-                        ) : (
-                          <span className="text-xs text-green-600 font-medium">
-                            Lue
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-
-            {visibleCount < filteredNotifications.length && (
-              <div className="mt-4 text-center">
-                <button
-                  onClick={() => setVisibleCount((prev) => prev + 5)}
-                  className="text-sm text-indigo-600 hover:underline"
-                >
-                  Afficher plus
-                </button>
-              </div>
-            )}
-            {visibleCount > 5 && (
-              <div className="mt-4 text-center">
-                <button
-                  onClick={() => setVisibleCount(Math.max(5, visibleCount - 5))}
-                  className="text-sm text-indigo-600 hover:underline"
-                >
-                  Afficher moins
-                </button>
-              </div>
-            )}
           </div>
         </div>
       </div>
