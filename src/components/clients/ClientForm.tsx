@@ -255,6 +255,7 @@ const handleNeedReminders = async () => {
 				  due_date: new Date().toISOString(),
 				  status: 'pending',
 				  owner_id: user.id,
+				  automatic_reminder:false,
 				  created_at: new Date().toISOString(),
 				  updated_at: new Date().toISOString(),
 				};
