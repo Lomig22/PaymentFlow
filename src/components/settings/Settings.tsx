@@ -69,25 +69,17 @@ const sections = [
      // { id: 'auto_notifications', name: 'Activer/désactiver les notifications automatiques', component: AutoNotificationSettings },
     ],
   },
-  {
-    id: 'bulk_actions',
-    name: 'Actions groupées',
-    icon: Bell,
-    subTabs: [
-/*       { id: 'available_actions', name: 'Définir les actions disponibles', component: BulkActionSettings },
-      { id: 'behavior_after_action', name: 'Comportement après action', component: PostActionBehaviorSettings }, */
-    ],
-  },
+/*  
   {
     id: 'integrations',
     name: 'Intégrations',
     icon: Mail,
     subTabs: [
-/*       { id: 'external_api', name: 'Connecter une API externe', component: ExternalApiSettings },
+      { id: 'external_api', name: 'Connecter une API externe', component: ExternalApiSettings },
       { id: 'webhooks', name: 'Paramétrer Webhooks', component: WebhookSettings },
-      { id: 'zapier', name: 'Connecter Zapier / Make', component: ZapierSettings }, */
+      { id: 'zapier', name: 'Connecter Zapier / Make', component: ZapierSettings }, 
     ],
-  },
+  }*/,
   {
     id: 'notifications',
     name: 'Notifications',
@@ -105,23 +97,22 @@ const sections = [
       { id: 'profile_rename', name: 'Configuration des profils', component: ReminderProfileSettings },
     ],
   },
-  {
+ /* {
     id: 'support',
     name: 'Aide et Support',
     icon: User,
     subTabs: [
-/*       { id: 'guide', name: 'Guide d’utilisation', component: GuideSettings },
+       { id: 'guide', name: 'Guide d’utilisation', component: GuideSettings },
       { id: 'contact', name: 'Contacter le support', component: ContactSupportSettings },
-      { id: 'faq', name: 'FAQ / Centre de formation', component: FAQSettings }, */
+      { id: 'faq', name: 'FAQ / Centre de formation', component: FAQSettings }, 
     ],
-  },
+  },*/
 ];
 
 export default function Settings() {
-	const [activeSectionId, setActiveSectionId] = useState(sections[0].id);
-	const [activeSubTabId, setActiveSubTabId] = useState(sections[0].subTabs[0].id);
-  
-	const activeSection = sections.find((section) => section.id === activeSectionId);
+	const [activeSectionId, setActiveSectionId] = useState(sections[0]?.id);
+	const [activeSubTabId, setActiveSubTabId] = useState(sections[0]?.subTabs[0].id);
+	const activeSection = sections.find((section) => section?.id === activeSectionId);
 	const activeSubTab = activeSection?.subTabs.find((tab) => tab.id === activeSubTabId);
 	const ActiveComponent = activeSubTab?.component || (() => <div>Aucun composant</div>);
   
