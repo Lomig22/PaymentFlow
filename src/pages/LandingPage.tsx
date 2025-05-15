@@ -248,10 +248,9 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
         originalPrice: Math.round(yearlyPrice),
       };
     }
-  
+
     return { displayedPrice: monthlyPrice, originalPrice: null };
   };
-  
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
@@ -575,11 +574,11 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
                   </li>
                 </ul>
                 <button
-      onClick={() => navigate("/signup")}
-      className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors"
-    >
-      Souscrire
-    </button>
+                  onClick={() => navigate("/signup")}
+                  className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  Souscrire
+                </button>
               </motion.div>
 
               {/* Pro Plan */}
@@ -631,11 +630,11 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
                   </li>
                 </ul>
                 <button
-      onClick={() => navigate("/signup")}
-      className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors"
-    >
-      Souscrire
-    </button>
+                  onClick={() => navigate("/signup")}
+                  className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  Souscrire
+                </button>
               </motion.div>
 
               {/* Enterprise Plan */}
@@ -678,7 +677,6 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
                     <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
                     <span>Support dédié 24/7</span>
                   </li>
-  
                 </ul>
                 <button
                   onClick={() => handleStripePayment("enterprise")}

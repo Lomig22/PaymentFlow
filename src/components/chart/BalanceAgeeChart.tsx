@@ -26,11 +26,15 @@ export default function BalanceAgeeChart() {
   useEffect(() => {
     async function fetchOverdueReceivables() {
       const reference = referenceDate.toISOString();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
       const { data: receivables, error } = await supabase
         .from("receivables")
         .select("due_date, amount")
-        .lt("due_date", reference); // uniquement les en retard
+        .lt("due_date", reference)
+        .eq("owner_id", user?.id); // uniquement les en retard
 
       if (error) {
         console.error("Erreur Supabase :", error.message);
@@ -70,7 +74,6 @@ export default function BalanceAgeeChart() {
 
     fetchOverdueReceivables();
   }, [referenceDate]);
-
 
   return (
     <div className="rounded-2xl w-full h-full">
