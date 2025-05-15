@@ -536,7 +536,7 @@ const handleNeedReminders = async () => {
 									onChange={(e) => handleProfileChange(e.target.value)}
 									className='w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
 								>
-									<option value=''>Sélectionner un profil de rappel</option>
+									<option value=''>Aucun profil de rappel</option>
 									{reminderProfiles.map((profile) => (
 										(profile.name!=='Default')&&(
 											<option key={profile.id} value={profile.id}>

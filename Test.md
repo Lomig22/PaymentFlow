@@ -201,4 +201,17 @@ Tous les envoies manuels ce sont bien envoyés mais à la fin (relance finale), 
 La cause est le nonactualisation des données de la table (notamment la status des lignes)
 **Précautions prises**
 Rafraîchir la table après envoie
+## Test 13- Test d'envoie de rappels manuels avec décochage croisée
+**Date:** 15/05/2025
+**Client :** Beriz Jazz
+**Numéro de facture:**3
+**Heure:**
+- 19:30: Prérelance (coché)
+- 19:32: Relance 1 (décoché)
+- 19:33: Relance 2 (décoché)
+- 19:34 Relance 3 (coché)
+- 19:35: Relance finale(coché)
+**Remarques**:
+les relances sont envoyés correctement dans l'ordre
+
 ---
