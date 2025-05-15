@@ -209,7 +209,7 @@ export default function Dashboard() {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      console.log("user: ", user?.id);
+      // console.log("user: ", user?.id);
       const { data, error } = await supabase
         .from("notifications")
         .select("*")
@@ -310,7 +310,7 @@ export default function Dashboard() {
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    console.log("user: ", user?.id);
+    // console.log("user: ", user?.id);
 
     try {
       // Récupérer les clients
@@ -429,7 +429,7 @@ export default function Dashboard() {
           reminderSteps.final++;
         }
       });
-      console.log("REMINDER STEP: ", reminderSteps);
+      // console.log("REMINDER STEP: ", reminderSteps);
 
       setStats({
         totalClients,

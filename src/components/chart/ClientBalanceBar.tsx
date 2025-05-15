@@ -1,18 +1,78 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { supabase } from "../../lib/supabase";
 
-const ClientBalanceBar = () => {
-  const data = [
-    { label: "Échu", value: 762212, color: "#FDB58D" },
-    { label: "Non-échu", value: 903909, color: "#D4DEFF" },
-    { label: "Litige", value: 262455, color: "#F03C3C" },
-    { label: "Promesse de paiement", value: 194192, color: "#C0F1D4" },
-    { label: "Recouvrement", value: 16315, color: "#F6C752" },
-    { label: "Avoirs non associés", value: -72769, color: "#DBC9FF" },
-  ];
+const statusColors: Record<string, string> = {
+  late: "#FDB58D",
+  pending: "#D4DEFF",
+  legal: "#F03C3C",
+  promesse: "#C0F1D4",
+  recouvrement: "#F6C752",
+  avoir: "#DBC9FF",
+};
+
+const labelMapping: Record<string, string> = {
+  late: "Échu",
+  pending: "Non-échu",
+  legal: "Litige",
+  promesse: "Promesse de paiement",
+  recouvrement: "Recouvrement",
+  avoir: "Avoirs non associés",
+};
+
+export default function ClientBalanceBar() {
+  const [data, setData] = useState<
+    { label: string; value: number; color: string }[]
+  >([]);
+
+  useEffect(() => {
+    async function fetchData() {
+      const { data: receivables, error } = await supabase
+        .from("receivables")
+        .select("status, amount");
+
+      if (error) {
+        console.error("Erreur Supabase :", error.message);
+        return;
+      }
+
+      const totals: Record<string, number> = {
+        late: 0,
+        pending: 0,
+        legal: 0,
+        promesse: 0,
+        recouvrement: 0,
+        avoir: 0,
+      };
+
+      receivables?.forEach((item) => {
+        const status = item.status.toLowerCase();
+
+        if (status.includes("finale") || status.includes("relance")) return;
+        if (status === "paid") return;
+
+        if (status === "Relance préventive") totals.promesse += item.amount;
+        else if (status === "late") totals.late += item.amount;
+        else if (status === "pending") totals.pending += item.amount;
+        else if (status === "legal") totals.legal += item.amount;
+        else if (status === "recouvrement") totals.recouvrement += item.amount;
+        else totals.avoir += item.amount * -1; // Avoirs en négatif
+      });
+
+      const formatted = Object.entries(totals).map(([key, value]) => ({
+        label: labelMapping[key] || key,
+        value,
+        color: statusColors[key] || "#ccc",
+      }));
+
+      setData(formatted);
+    }
+
+    fetchData();
+  }, []);
 
   const total = data.reduce((sum, d) => sum + Math.abs(d.value), 0);
 
-  const format = (val) =>
+  const format = (val: number) =>
     new Intl.NumberFormat("fr-FR", {
       style: "currency",
       currency: "EUR",
@@ -58,6 +118,4 @@ const ClientBalanceBar = () => {
       </div>
     </div>
   );
-};
-
-export default ClientBalanceBar;
+}
