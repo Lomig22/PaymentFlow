@@ -11,7 +11,7 @@ const OverdueInvoices = () => {
 
   return (
     <div className="bg-white rounded-xl shadow-sm p-4">
-      <h3 className="text-gray-800 font-medium mb-2">Factures échues</h3>
+      <h2 className="text-xl font-semibold text-gray-800">Principaux éditeurs</h2>
       <ul className="divide-y divide-gray-200">
         {invoices.map((inv, i) => (
           <li key={i} className="py-3 flex items-center justify-between">
