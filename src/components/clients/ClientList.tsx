@@ -822,6 +822,7 @@ function ClientList({
           onClientAdded={(client) => {
             setClients([client, ...clients]);
             setShowForm(false);
+            fetchClients()
           }}
           onClientUpdated={(updatedClient) => {
             setClients(
@@ -831,6 +832,8 @@ function ClientList({
             );
             setShowForm(false);
             setSelectedClient(null);
+      //      showSuccess("Client modifié correctement")
+            fetchClients()
           }}
           client={selectedClient ?? undefined}
           mode={selectedClient ? "edit" : "create"}
