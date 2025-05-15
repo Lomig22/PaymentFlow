@@ -452,29 +452,6 @@ function ClientList({
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                   Actions
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wide">
-                  <SortableColHead
-                    colKey="company_name"
-                    label="Entreprise"
-                    onClick={(col: string) =>
-                      handleSortOnClick(col as keyof CSVMapping)
-                    }
-                    selectedColKey={sortConfig?.key ?? ""}
-                    sort={sortConfig?.sort ?? "none"}
-                  />
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
-                  <SortableColHead
-                    colKey="client_code"
-                    label="Code Client"
-                    onClick={(col: string) =>
-                      handleSortOnClick(col as keyof CSVMapping)
-                    }
-                    selectedColKey={sortConfig?.key ?? ""}
-                    sort={sortConfig?.sort ?? "none"}
-                  />
-                </th>
-
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                   <SortableColHead
                     colKey="reminderProfile"
@@ -498,6 +475,30 @@ function ClientList({
                     sort={sortConfig?.sort ?? "none"}
                   />
                 </th>
+
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wide">
+                  <SortableColHead
+                    colKey="company_name"
+                    label="Entreprise"
+                    onClick={(col: string) =>
+                      handleSortOnClick(col as keyof CSVMapping)
+                    }
+                    selectedColKey={sortConfig?.key ?? ""}
+                    sort={sortConfig?.sort ?? "none"}
+                  />
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
+                  <SortableColHead
+                    colKey="client_code"
+                    label="Code Client"
+                    onClick={(col: string) =>
+                      handleSortOnClick(col as keyof CSVMapping)
+                    }
+                    selectedColKey={sortConfig?.key ?? ""}
+                    sort={sortConfig?.sort ?? "none"}
+                  />
+                </th>
+
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                   <SortableColHead
                     colKey="email"
@@ -702,12 +703,6 @@ function ClientList({
                   </td>
 
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {client.company_name}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {client.client_code}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {!client.reminderProfile?.name ||
                     client.reminderProfile.name === "Default"
                       ? "-"
@@ -746,6 +741,12 @@ function ClientList({
                         </div>
                       )}
                     </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {client.company_name}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {client.client_code}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {formatEmail(client.email)}

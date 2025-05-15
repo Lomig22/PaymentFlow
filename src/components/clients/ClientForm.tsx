@@ -206,6 +206,7 @@ const handleNeedReminders = async () => {
 			  .single();
 	  
 			if (error) throw error;
+			
 	  
 			// Si needs_reminder était true et devient false
 			if (clientBeforeUpdate?.needs_reminder && !formData.needs_reminder) {
