@@ -34,45 +34,107 @@ const allData = {
     { month: "Nov. 24", value: 70 },
     { month: "Déc. 24", value: 68 },
   ],
+  2025: [
+    { month: "Janv. 25", value: 77 },
+    { month: "Févr. 25", value: 74 },
+    { month: "Mars 25", value: 70 },
+    { month: "Avr. 25", value: 66 },
+    { month: "Mai 25", value: 61 },
+    { month: "Juin 25", value: 60 },
+    { month: "Juil. 25", value: 72 },
+    { month: "Août 25", value: 56 },
+    { month: "Sept. 25", value: 80 },
+    { month: "Oct. 25", value: 74 },
+    { month: "Nov. 25", value: 71 },
+    { month: "Déc. 25", value: 69 },
+  ],
 };
+
+const monthOrder = [
+  "Janv.",
+  "Févr.",
+  "Mars",
+  "Avr.",
+  "Mai",
+  "Juin",
+  "Juil.",
+  "Août",
+  "Sept.",
+  "Oct.",
+  "Nov.",
+  "Déc.",
+];
 
 const DsoChart = () => {
   const [selectedYear, setSelectedYear] = useState<number>(2024);
-  const data = allData[selectedYear] || [];
-  const max = Math.max(...data.map((d) => d.value));
+  const [selectedMonth, setSelectedMonth] = useState<string>("");
+
+  const currentYearData = allData[selectedYear] || [];
+  const nextYearData = allData[selectedYear + 1] || [];
+
+  let filteredData: any[] = [];
+
+  if (!selectedMonth) {
+    // Afficher tous les mois de l'année sélectionnée
+    filteredData = currentYearData;
+  } else {
+    const startIndex = monthOrder.findIndex((m) => selectedMonth.startsWith(m));
+    filteredData = [
+      ...currentYearData.slice(startIndex),
+      ...nextYearData.slice(0, startIndex + 1),
+    ];
+  }
+
+  const max = Math.max(...filteredData.map((d) => d.value || 0));
 
   const handleYearChange = (date: Date | null) => {
-    if (date) {
-      setSelectedYear(date.getFullYear());
-    }
+    if (date) setSelectedYear(date.getFullYear());
   };
 
   return (
     <div className="bg-white rounded-xl p-5 w-full">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-4">
         <h2 className="text-gray-800 font-semibold text-lg">DSO</h2>
-      </div>
+        <div className="flex gap-3">
+          <DatePicker
+            selected={new Date(selectedYear, 0)}
+            onChange={handleYearChange}
+            dateFormat="yyyy"
+            showYearPicker
+            locale="fr"
+            className="border border-gray-300 text-sm rounded-md px-2 py-1"
+          />
 
-      <div className="flex items-center justify-between mb-4">
-        <div className="text-sm text-gray-500">
-          Année sélectionnée : {selectedYear}
+          <select
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+            className="border border-gray-300 text-sm rounded-md px-2 py-1 text-gray-700 bg-gray-50"
+          >
+            <option value="">-- Mois (facultatif) --</option>
+            {monthOrder.map((month) => (
+              <option key={month} value={month}>
+                {month}
+              </option>
+            ))}
+          </select>
         </div>
-        <DatePicker
-          selected={new Date(selectedYear, 0)}
-          onChange={handleYearChange}
-          dateFormat="yyyy"
-          showYearPicker
-          locale="fr"
-          className="border border-gray-300 text-sm rounded-md px-2 py-1"
-        />
       </div>
 
-      {data.length > 0 ? (
+      <div className="text-sm text-gray-500 mb-2">
+        Période affichée :{" "}
+        {!selectedMonth
+          ? `Année ${selectedYear}`
+          : `${selectedMonth} ${selectedYear} à ${selectedMonth} ${
+              selectedYear + 1
+            }`}
+      </div>
+
+      {filteredData.length > 0 ? (
         <div
           className="flex items-end justify-between"
           style={{ height: "160px" }}
         >
-          {data.map((d, i) => (
+          {filteredData.map((d, i) => (
             <div key={i} className="flex flex-col items-center">
               <span className="text-sm text-gray-700 font-medium mb-1">
                 {d.value}
@@ -82,7 +144,7 @@ const DsoChart = () => {
                 style={{
                   height: `${(d.value / max) * 130}px`,
                   backgroundColor:
-                    i === data.length - 1 ? "#4F8CFF" : "#E0ECFF",
+                    i === filteredData.length - 1 ? "#4F8CFF" : "#E0ECFF",
                 }}
               />
               <span className="text-xs text-gray-500 mt-2">{d.month}</span>
@@ -91,7 +153,7 @@ const DsoChart = () => {
         </div>
       ) : (
         <p className="text-sm text-gray-500 italic">
-          Aucune donnée disponible pour l’année sélectionnée.
+          Aucune donnée disponible pour la période sélectionnée.
         </p>
       )}
     </div>
