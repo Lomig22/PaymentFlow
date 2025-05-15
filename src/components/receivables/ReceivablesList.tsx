@@ -1426,6 +1426,7 @@ function ReceivablesList() {
                 onClick={() => {
                   setShowConfirmReminder(false);
                   setSelectedReceivable(null);
+                  fetchReceivables;
                 }}
                 className="text-gray-400 hover:text-gray-500"
               >
@@ -1498,6 +1499,7 @@ function ReceivablesList() {
                 onClick={() => {
                   setShowConfirmReminder(false);
                   setSelectedReceivable(null);
+                  fetchReceivables()
                 }}
                 className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 border border-gray-300 rounded-md"
                 disabled={sending}
