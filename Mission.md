@@ -1,3 +1,1 @@
-## Mission 1: Modification de la paramètre
-Retirer intégrations et actions groupés
-Déplacer bouton Aide et support
+## Mission 1: Faire fonctionner la signature
