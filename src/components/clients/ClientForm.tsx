@@ -316,7 +316,6 @@ const handleNeedReminders = async () => {
 		const selectedProfile = reminderProfiles.find(
 			(profile) => profile.id === profileId
 		);
-		alert(profileId)
 		setFormData({
 			...formData,
 			reminder_profile: (profileId==="")?null:profileId,
