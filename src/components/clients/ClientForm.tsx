@@ -134,28 +134,18 @@ const handleNeedReminders = async () => {
 		  }
 	  
 		  if (mode === 'create') {
-			// Récupérer le profil de rappel par défaut
-			const { data: reminderProfile } = await supabase
-			  .from('reminder_profile')
-			  .select()
-			  .eq('name', 'Default')
-			  .eq('owner_id', user.id);
-	  
-			const reminderProfileExist =
-			  reminderProfile !== null &&
-			  reminderProfile[0] !== null &&
-			  reminderProfile.length > 0;
-	  
+			if (formData.reminder_profile===""){
+				formData.reminder_profile=null
+			}
 			const { data, error } = await supabase
 			  .from('clients')
 			  .insert([
 				{
 				  ...formData,
-				  reminder_profile: reminderProfileExist ? reminderProfile[0].id : null,
-				  reminder_delay_1: reminderProfileExist ? reminderProfile[0].delay1 : 15,
-				  reminder_delay_2: reminderProfileExist ? reminderProfile[0].delay2 : 30,
-				  reminder_delay_3: reminderProfileExist ? reminderProfile[0].delay3 : 45,
-				  reminder_delay_final: reminderProfileExist ? reminderProfile[0].delay4 : 60,
+				  reminder_delay_1: {j:1,h:0,m:0},
+				  reminder_delay_2: {j:1,h:0,m:0},
+				  reminder_delay_3: {j:1,h:0,m:0},
+				  reminder_delay_final: {j:1,h:0,m:0},
 				  owner_id: user.id,
 				},
 			  ])
@@ -200,7 +190,14 @@ const handleNeedReminders = async () => {
 			  .select('needs_reminder')
 			  .eq('id', client?.id)
 			  .single();
-	  
+			/*   setFormData({
+				...formData,
+				reminder_profile: reminder_profile? reminder_profile : null
+			  }); */
+			  if (formData.reminder_profile===''){
+				formData.reminder_profile=null
+			  }
+			  
 			const { data, error } = await supabase
 			  .from('clients')
 			  .update(formData)
@@ -316,17 +313,17 @@ const handleNeedReminders = async () => {
 		  fetchReminderProfiles();
 	  }, []);
 	  const handleProfileChange = (profileId: string) => {
-		if (profileId === null || profileId === undefined) return;
 		const selectedProfile = reminderProfiles.find(
 			(profile) => profile.id === profileId
 		);
+		alert(profileId)
 		setFormData({
 			...formData,
-			reminder_profile: profileId,
-			reminder_delay_1: selectedProfile?.delay1 || {j:0,h:0,m:1},
-			reminder_delay_2: selectedProfile?.delay2 || {j:0,h:0,m:1},
-			reminder_delay_3: selectedProfile?.delay3 || {j:0,h:0,m:1},
-			reminder_delay_final: selectedProfile?.delay4 || {j:0,h:0,m:1},
+			reminder_profile: (profileId==="")?null:profileId,
+			reminder_delay_1: selectedProfile?.delay1 || {j:1,h:0,m:0},
+			reminder_delay_2: selectedProfile?.delay2 || {j:1,h:0,m:0},
+			reminder_delay_3: selectedProfile?.delay3 || {j:1,h:0,m:0},
+			reminder_delay_final: selectedProfile?.delay4 || {j:1,h:0,m:0},
 		});
 	};
 	return (
@@ -536,13 +533,13 @@ const handleNeedReminders = async () => {
 									onChange={(e) => handleProfileChange(e.target.value)}
 									className='w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent'
 								>
-									<option value=''>Aucun profil de rappel</option>
+									<option key={null} value=''>Ne pas utiliser de profile</option>
 									{reminderProfiles.map((profile) => (
-										(profile.name!=='Default')&&(
+									
 											<option key={profile.id} value={profile.id}>
 											{profile.name}
 										</option>
-										)
+										
 									))}
 								</select>
 							</div>

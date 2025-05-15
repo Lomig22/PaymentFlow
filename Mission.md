@@ -6,3 +6,7 @@ En cas de changement de relance 1 changer automatiquement relance 2 /relance 3 /
 En cas de changement de relance n  changer les relances précédents et les relances suivants (risques de perturbé l'expérience des utilisateurs), en effet les utilisateurs ne sont pas tous intelligent et peut se perdre avec les actualisations automatiques (ils se diront, çà bouge tous le temps)
 
 Du coup à mon avis, lorsqu'un profile est paramétrer seule la relance 1 doit être modifiable
+
+## Mission 2: Profile de relance optionnelle:
+Remplacer sélectionnez un profile par aucun profile
+Remplacer par null si aucun profil choisie

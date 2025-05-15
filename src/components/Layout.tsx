@@ -179,7 +179,7 @@ export default function Layout() {
 
     verifySubscription();
   }, []);
-
+/* 
   useEffect(() => {
     const ensureDefaultProfile = async () => {
       const {
@@ -223,7 +223,7 @@ export default function Layout() {
     };
 
     ensureDefaultProfile();
-  }, []);
+  }, []); */
 
   return (
     <div>
