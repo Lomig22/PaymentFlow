@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { supabase } from "../../lib/supabase";
 
@@ -18,7 +18,24 @@ export default function SignatureSettings() {
   const [showPreview, setShowPreview] = useState(false);
   const [showHtml, setShowHtml] = useState(false);
   const [selectedTheme, setSelectedTheme] = useState("classique");
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [role, setRole] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
+  const [signatureTemplate, setSignatureTemplate] = useState("");
 
+  const showError = (message: string) => {
+    setError(message);
+    setTimeout(() => {
+      setError(null);
+    }, 3000);
+  };
+  const showSuccess = (message: string) => {
+    setSuccess(message);
+    setTimeout(() => {
+      setSuccess(null);
+    }, 3000);
+  };
   const themes = {
     classique: {
       font: "Arial",
@@ -50,22 +67,73 @@ export default function SignatureSettings() {
     }
     const user = session?.user;
     if (!user) {
-      alert("Utilisateur non connecté");
+      showError("Utilisateur non connecté");
       return;
     }
 
     const { error } = await supabase
       .from("email_settings")
-      .update({ signature_html: signatureHTML })
+      .update({
+        email_signature: signatureHTML,
+        signature_template: signatureTemplate,
+      })
       .eq("user_id", user.id);
 
     if (error) {
       console.error("Erreur Supabase:", error);
-      alert("Échec de l'enregistrement");
+      showError("Échec de l'enregistrement");
     } else {
-      alert("Signature enregistrée avec succès !");
+      showSuccess("Signature enregistrée avec succès !");
     }
   };
+  useEffect(() => {
+    const loadFromSupabase = async () => {
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      if (sessionError || !session) {
+        console.error("utilisateur non authentifiée!");
+        return;
+      }
+      const user = session?.user;
+      const { data, error } = await supabase
+        .from("email_settings")
+        .select("email_signature,signature_template")
+        .eq("user_id", user?.id)
+        .single();
+
+      if (error || !data?.email_signature) return;
+
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(data.email_signature, "text/html");
+      const getField = (selector) => {
+        const el = doc.querySelector(selector);
+        if (!el) return "";
+        const text = el.textContent?.trim() || "";
+        // S'il y a un ":", on prend ce qu’il y a après, sinon on garde tout
+        const parts = text.split(":");
+        return parts.length > 1 ? parts.slice(1).join(":").trim() : text;
+      };
+      setSignatureTemplate(data?.signature_template || "Classique");
+      setSelectedTheme(data?.signature_template)
+      setSenderName(getField(".signature-nom"));
+      setSenderEmail(getField(".signature-email"));
+      setCompanyName(getField(".signature-company"));
+      setPhoneNumber(getField(".signature-phone"));
+      setInstagram(getField(".signature-instagram"));
+      setFacebook(getField(".signature-facebook"));
+      setRole(getField(".signature-role"));
+      setWhatsapp(getField(".signature-whatsapp"));
+      setLinkedin(getField(".signature-linkedin"));
+      setLogoUrl(
+        doc.querySelector(".signature-logo")?.getAttribute("src") || ""
+      );
+    };
+
+    loadFromSupabase();
+  }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -78,12 +146,22 @@ export default function SignatureSettings() {
       reader.readAsDataURL(file);
     }
   };
+  const copySignatureToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(signatureHTML);
+      showSuccess("Signature copiée dans le presse-papiers !");
+    } catch (err) {
+      showError("Erreur lors de la copie dans le presse-papiers");
+    }
+  };
 
   const signatureHTML = renderToStaticMarkup(
     <EmailSignature
       name={senderName}
+      role={role}
       email={senderEmail}
       phone={phoneNumber}
+      whatsapp={whatsapp}
       instagram={instagram}
       facebook={facebook}
       linkedin={linkedin}
@@ -133,11 +211,30 @@ export default function SignatureSettings() {
         </div>
 
         <div>
-          <label className="block font-medium">Téléphone (WhatsApp)</label>
+          <label className="block font-medium">Téléphone </label>
           <input
             type="tel"
             value={phoneNumber}
             onChange={(e) => setPhoneNumber(e.target.value)}
+            className="w-full border rounded px-3 py-2"
+          />
+        </div>
+        <div>
+          <label className="block font-medium">Fonction</label>
+          <input
+            type="text"
+            value={role}
+            onChange={(e) => setRole(e.target.value)}
+            className="w-full border rounded px-3 py-2"
+          />
+        </div>
+
+        <div>
+          <label className="block font-medium">Numéro WhatsApp</label>
+          <input
+            type="tel"
+            value={whatsapp}
+            onChange={(e) => setWhatsapp(e.target.value)}
             className="w-full border rounded px-3 py-2"
           />
         </div>
@@ -191,17 +288,20 @@ export default function SignatureSettings() {
             className="w-full"
           />
         </div>
-
         <div>
-          <label className="block font-medium">Thème</label>
+          <label className="block font-medium">Modèle de signature</label>
           <select
-            value={selectedTheme}
-            onChange={(e) => setSelectedTheme(e.target.value)}
+            value={signatureTemplate}
+            onChange={(e) => {
+              setSignatureTemplate(e.target.value);
+              setSelectedTheme(e.target.value);
+            }}
             className="w-full border rounded px-3 py-2"
           >
             <option value="classique">Classique</option>
             <option value="sombre">Sombre</option>
             <option value="professionnel">Professionnel</option>
+            <option value="custom">Personnalisé</option>
           </select>
         </div>
 
@@ -219,6 +319,7 @@ export default function SignatureSettings() {
       {/* MODALE D'APERÇU */}
       {showPreview && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+
           <div className="bg-white w-full max-w-3xl p-6 rounded-lg shadow-xl relative">
             <button
               onClick={() => setShowPreview(false)}
@@ -236,15 +337,30 @@ export default function SignatureSettings() {
               >
                 {showHtml ? "Afficher l’aperçu visuel" : "Afficher le HTML"}
               </button>
-                
+
               <button
                 onClick={saveToSupabase}
                 className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
               >
                 Enregistrer dans Supabase
               </button>
+              <button
+                onClick={copySignatureToClipboard}
+                className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-blue-700 ml-2"
+              >
+                Copier 
+              </button>
             </div>
-
+                      {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md text-red-700 flex items-center">
+              <span>{error}</span>
+            </div>
+          )}
+          {success && (
+            <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-md text-green-700">
+              {success}
+            </div>
+          )}
             {showHtml ? (
               <pre className="bg-gray-100 p-4 rounded text-sm overflow-auto max-h-96">
                 {signatureHTML}
@@ -280,8 +396,10 @@ export default function SignatureSettings() {
 
 function EmailSignature({
   name,
+  role,
   email,
   phone,
+  whatsapp,
   instagram,
   facebook,
   linkedin,
@@ -292,8 +410,10 @@ function EmailSignature({
   company,
 }: {
   name: string;
+  role: string;
   email: string;
   phone: string;
+  whatsapp: string;
   instagram: string;
   facebook: string;
   linkedin: string;
@@ -319,31 +439,49 @@ function EmailSignature({
               <img
                 src={logo}
                 alt="Logo"
+                className="signature-logo"
                 style={{ width: "80px", height: "auto", borderRadius: "6px" }}
               />
             )}
           </td>
           <td>
-            <strong>{name}</strong>
+            <strong className="signature-nom">{name}</strong>
             <br />
-            {company && (
-              <span>
-                {company}
+            {role && (
+              <>
+                <span className="signature-role">{role}</span>
                 <br />
-              </span>
+              </>
             )}
-            <a href={`mailto:${email}`} style={{ color: textColor }}>
+            {company && (
+              <>
+                <span className="signature-company">{company}</span>
+                <br />
+              </>
+            )}
+            <a
+              href={`mailto:${email}`}
+              className="signature-email"
+              style={{ color: textColor }}
+            >
               {email}
             </a>
             <br />
             {phone && (
+              <>
+                <span className="signature-phone">Tél : {phone}</span>
+                <br />
+              </>
+            )}
+            {whatsapp && (
               <a
-                href={`https://wa.me/${phone}`}
+                href={`https://wa.me/${whatsapp}`}
                 target="_blank"
                 rel="noopener noreferrer"
+                className="signature-whatsapp"
                 style={{ color: textColor }}
               >
-                WhatsApp : {phone}
+                WhatsApp : {whatsapp}
               </a>
             )}
             <br />
@@ -352,6 +490,7 @@ function EmailSignature({
                 href={instagram}
                 target="_blank"
                 rel="noopener noreferrer"
+                className="signature-instagram"
                 style={{ color: textColor }}
               >
                 Instagram
@@ -363,6 +502,7 @@ function EmailSignature({
                 href={facebook}
                 target="_blank"
                 rel="noopener noreferrer"
+                className="signature-facebook"
                 style={{ color: textColor }}
               >
                 Facebook
@@ -374,6 +514,7 @@ function EmailSignature({
                 href={linkedin}
                 target="_blank"
                 rel="noopener noreferrer"
+                className="signature-linkedin"
                 style={{ color: textColor }}
               >
                 LinkedIn
