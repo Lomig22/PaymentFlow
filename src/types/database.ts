@@ -33,7 +33,7 @@ export interface Client {
 	owner_id: string;
 	client_code: string;
 	notes?: string;
-	reminder_profile?: string;
+	reminder_profile?: string|null;
 	pre_reminder_delay?: { j: number; h: number; m: number };
 	pre_reminder_template?: string;
 }

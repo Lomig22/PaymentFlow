@@ -309,7 +309,7 @@ export async function sendManualReminder(
               ? "Relance 1"
               : level === "second"
               ? "Relance 2"
-              : level === "third"
+              : lRelancevel === "third"
               ? "Relance 3"
               : level === "final"
               ? "Relance finale"

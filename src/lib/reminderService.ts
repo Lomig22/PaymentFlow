@@ -103,14 +103,14 @@ function determineReminderLevel(
 		return { level: 'second', template: client.reminder_template_2 };
 	if (status === 'Relance préventive' && client.reminder_template_1 )
 		return { level: 'first', template: client.reminder_template_1 };
-	if (status ==='pending' && client.pre_reminder_template && daysLate<=0){
-		alert("pending")
+	if (status ==='pending' && client.pre_reminder_template){
+	//	alert("pending")
 		return { level: 'pre', template: client.pre_reminder_template }; 
 	}
 	// Si aucun statut de relance encore, on peut proposer un pré-reminder
- 	if (status==="pending" && client.reminder_template_1 && daysLate>0){
+/*  	if (status==="pending" && client.reminder_template_1 && daysLate>0){
 		return { level: 'first', template: client.reminder_template_1 };
-	} 
+	}  */
 		
 
 	// Conversion des jours de retard en minutes (1 jour = 24h * 60min)
@@ -151,7 +151,8 @@ function determineReminderLevel(
 	return { level: 'pre', template: client.pre_reminder_template || null };
 }
 export  async function getReminderTemplate(
-	receivableId: string
+	receivableId: string,
+	status?:string
 ): Promise<{ level: string; template: string } | null> {
 	try {
 		// Récupérer la créance avec les détails du client
@@ -174,11 +175,11 @@ export  async function getReminderTemplate(
 		const { level, template } = determineReminderLevel(
 			daysLate,
 			receivable.client,
-			receivable.status
+			status||receivable.status
 		);
 
 		if (!level || !template) return null;
-
+	//	alert(level)
 		// Retourner les informations pour la template
 		return {
 			level,
@@ -190,7 +191,6 @@ export  async function getReminderTemplate(
 		return null;
 	}
 }
-
 
 // Fonction pour envoyer une relance manuelle
 export async function sendManualReminder(
@@ -253,7 +253,7 @@ export async function sendManualReminder(
 		const finalSubject =
 			subject || `Relance facture ${receivable.invoice_number}`;
 		const finalContent = content
-			? `${content}\n\n${signature || ''}`
+			? `${content}\n\n`
 			: defaultEmailContent;
 
 		const emailSent = await sendEmail(

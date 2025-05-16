@@ -185,5 +185,33 @@ Du coup on a supprimée la relance, et tous les relances sont de nouveau fonctio
 **Précautions prises**
 Remettre la status de la relance en pending quand on enregistre
 Intégrer cette logique à la confirmation d'écrasement de la configuration actuelles
+## Test 12- Test d'envoie de rappels manuels tous relance activés après fix
+**Date:** 15/05/2025
+**Client :** Beriz Jazz
+**Numéro de facture:**3
+**Heure:**
+- 19:30: Prérelance 
+- 19:32: Relance 1 
+- 19:33: Relance 2 
+- 19:34 Relance 3 
+- 19:35: Relance finale
+
+**Remarques**
+Tous les envoies manuels ce sont bien envoyés mais à la fin (relance finale), si on clique sur "envoyer une relance" la template se chargait encore alors qu'il a déjà été envoyer
+La cause est le nonactualisation des données de la table (notamment la status des lignes)
+**Précautions prises**
+Rafraîchir la table après envoie
+## Test 13- Test d'envoie de rappels manuels avec décochage croisée
+**Date:** 15/05/2025
+**Client :** Beriz Jazz
+**Numéro de facture:**3
+**Heure:**
+- 19:30: Prérelance (coché)
+- 19:32: Relance 1 (décoché)
+- 19:33: Relance 2 (décoché)
+- 19:34 Relance 3 (coché)
+- 19:35: Relance finale(coché)
+**Remarques**:
+les relances sont envoyés correctement dans l'ordre
 
 ---

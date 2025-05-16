@@ -26,12 +26,13 @@ export default function ReminderSettingsModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [showReminders, setShowReminders] = useState(true);
   const [automaticReminder, setAutomaticReminder] = useState<boolean>(
     receivable.automatic_reminder ?? false
   );
 
   const [defaultProfile, setDefaultProfile] = useState(null);
-
+  /* 
   useEffect(() => {
     const fetchDefaultProfile = async () => {
       const {
@@ -62,7 +63,7 @@ export default function ReminderSettingsModal({
 
     fetchDefaultProfile();
     console.log("DEFAULT PROFILE: ", defaultProfile);
-  }, []);
+  }, []); */
 
   // Valeurs par défaut des délais (si non fournis)
   const delay1 = client.reminder_delay_1 || { j: 1, h: 0, m: 0 };
@@ -94,13 +95,21 @@ export default function ReminderSettingsModal({
     reminder_template_3: client.reminder_template_3 || "",
     reminder_template_final: client.reminder_template_final || "",
 
-    reminder_enable_1: client.reminder_enable_1,
-    reminder_enable_2: client.reminder_enable_2,
-    reminder_enable_3: client.reminder_enable_3,
-    reminder_enable_final: client.reminder_enable_final,
+    reminder_enable_1: client.reminder_profile
+      ? true
+      : client.reminder_enable_1,
+    reminder_enable_2: client.reminder_profile
+      ? true
+      : client.reminder_enable_2,
+    reminder_enable_3: client.reminder_profile
+      ? true
+      : client.reminder_enable_3,
+    reminder_enable_final: client.reminder_profile
+      ? true
+      : client.reminder_enable_final,
     pre_reminder_enable: client.pre_reminder_enable,
 
-    reminder_profile: client.reminder_profile || defaultProfile?.id,
+    reminder_profile: client.reminder_profile || null,
 
     reminder_date_1,
     reminder_date_2,
@@ -237,7 +246,7 @@ export default function ReminderSettingsModal({
       reminder_enable_3,
       reminder_enable_final,
     } = formData;
-    
+
     // Vérification de l'ordre des dates
     const {
       pre_reminder_date,
@@ -246,88 +255,102 @@ export default function ReminderSettingsModal({
       reminder_date_3,
       reminder_date_final,
     } = formData;
-  
-  
-  // Construire dynamiquement la liste des dates activées
-const dates = [];
 
-if (pre_reminder_enable) {
-  dates.push({ label: "Prérelance", date: new Date(pre_reminder_date) });
-}
-if (reminder_enable_1) {
-  dates.push({ label: "Relance 1", date: new Date(reminder_date_1) });
-}
-if (reminder_enable_2) {
-  dates.push({ label: "Relance 2", date: new Date(reminder_date_2) });
-}
-if (reminder_enable_3) {
-  dates.push({ label: "Relance 3", date: new Date(reminder_date_3) });
-}
-if (reminder_enable_final) {
-  dates.push({ label: "Relance finale", date: new Date(reminder_date_final) });
-}
+    // Construire dynamiquement la liste des dates activées
+    const dates = [];
+
+    if (pre_reminder_enable) {
+      dates.push({ label: "Prérelance", date: new Date(pre_reminder_date) });
+    }
+    if (reminder_enable_1) {
+      dates.push({ label: "Relance 1", date: new Date(reminder_date_1) });
+    }
+    if (reminder_enable_2) {
+      dates.push({ label: "Relance 2", date: new Date(reminder_date_2) });
+    }
+    if (reminder_enable_3) {
+      dates.push({ label: "Relance 3", date: new Date(reminder_date_3) });
+    }
+    if (reminder_enable_final) {
+      dates.push({
+        label: "Relance finale",
+        date: new Date(reminder_date_final),
+      });
+    }
 
     for (let i = 0; i < dates.length - 1; i++) {
       if (dates[i].date >= dates[i + 1].date) {
         showError(
-          `La date de "${dates[i].label}" doit être avant la date de "${dates[i + 1].label}".`
+          `La date de "${dates[i].label}" doit être avant la date de "${
+            dates[i + 1].label
+          }".`
         );
         setLoading(false);
         return;
       }
     }
-  
+
     const {
       data: { user },
     } = await supabase.auth.getUser();
-  
+
     try {
       // Supposons que "alreadySent" est un tableau contenant les relances déjà envoyées
-if ((receivable.status!=='pending')||preAlreadySend||reminder1AlreadySend||reminder2AlreadySend||reminder3AlreadySend||reminderFinalAlreadySend) {
-  const result = await Swal.fire({
-    title: "Modification du process",
-    text: "Modifier les paramètres réinitialisera le processus!\n Il est conseillé de décocher les relances non souhaitées",
-    showCancelButton: true,
-    confirmButtonText: "Continuer",
-    cancelButtonText: "Annuler",
-    customClass: {
-      confirmButton: "bg-red-600 text-white hover:bg-red-700 px-4 py-2 rounded mr-2",
-      cancelButton: "px-4 py-2 rounded text-white border bg-blue-600 border-gray-300",
-    },
-    buttonsStyling: false,
-  });
+      if (
+        receivable.status !== "pending" ||
+        preAlreadySend ||
+        reminder1AlreadySend ||
+        reminder2AlreadySend ||
+        reminder3AlreadySend ||
+        reminderFinalAlreadySend
+      ) {
+        const result = await Swal.fire({
+          title: "Modification du process",
+          text: "Modifier les paramètres réinitialisera le processus!\n Il est conseillé de décocher les relances non souhaitées",
+          showCancelButton: true,
+          confirmButtonText: "Continuer",
+          cancelButtonText: "Annuler",
+          customClass: {
+            confirmButton:
+              "bg-red-600 text-white hover:bg-red-700 px-4 py-2 rounded mr-2",
+            cancelButton:
+              "px-4 py-2 rounded text-white border bg-blue-600 border-gray-300",
+          },
+          buttonsStyling: false,
+        });
 
-  if (result.isConfirmed) {
-// Supprimer les rappels
-const { error: deleteError } = await supabase
-  .from("reminders")
-  .delete()
-  .eq("receivable_id", receivable.id);
+        if (result.isConfirmed) {
+          // Supprimer les rappels
+          const { error: deleteError } = await supabase
+            .from("reminders")
+            .delete()
+            .eq("receivable_id", receivable.id);
 
-if (deleteError) throw deleteError;
+          if (deleteError) throw deleteError;
 
-// Mettre à jour le receivable
-const { error: updateError } = await supabase
-  .from("receivables")
-  .update({
-    automatic_reminder: false,
-    status: "pending",
-  })
-  .eq("id", receivable.id);
+          // Mettre à jour le receivable
+          const { error: updateError } = await supabase
+            .from("receivables")
+            .update({
+              automatic_reminder: false,
+              status: "pending",
+            })
+            .eq("id", receivable.id);
 
-if (updateError) throw updateError;
+          if (updateError) throw updateError;
+        } else {
+          setLoading(false);
+          return;
+        }
+      }
+      if (hasPastDateEnable) {
+        showError(
+          "Des dates de relance antérieures sont activés. Veuillez les corriger !"
+        );
+        return;
+      }
 
-  }else{
-    setLoading(false);
-    return;
-  }
-}
-if (hasPastDateEnable){
-showError("Des dates de relance antérieures sont activés. Veuillez les corriger !")
-return
-}
-  
-const { error: updateError } = await supabase
+      const { error: updateError } = await supabase
         .from("clients")
         .update({
           reminder_delay_1: formData.reminder_delay_1,
@@ -357,17 +380,17 @@ const { error: updateError } = await supabase
         const details = JSON.stringify(
           {
             "Numéro de facture": `${receivable.invoice_number}`,
-            "Délai de relance 1": `${formData.reminder_delay_1.j || 0}:${
+            "Délai de relance 1": `${formData.reminder_delay_1.j || 1}:${
               formData.reminder_delay_1.h || 0
             }:${formData.reminder_delay_1.m || 0} `,
-            "Délai de relance 2": `${formData.reminder_delay_2.j || 0}:${
+            "Délai de relance 2": `${formData.reminder_delay_2.j || 1}:${
               formData.reminder_delay_2.h || 0
             }:${formData.reminder_delay_2.m || 0} `,
-            "Délai de relance 3": `${formData.reminder_delay_3.j || 0}:${
+            "Délai de relance 3": `${formData.reminder_delay_3.j || 1}:${
               formData.reminder_delay_3.h || 0
             }:${formData.reminder_delay_3.m || 0} `,
             "Délai de relance finale": `${
-              formData.reminder_delay_final.j || 0
+              formData.reminder_delay_final.j || 1
             }:${formData.reminder_delay_final.h || 0}:${
               formData.reminder_delay_final.m || 0
             } `,
@@ -382,7 +405,7 @@ const { error: updateError } = await supabase
           },
           null,
           2
-        ); 
+        );
         try {
           await saveNotification({
             owner_id: user.id,
@@ -437,7 +460,6 @@ const { error: updateError } = await supabase
         .from("receivables")
         .update({
           automatic_reminder: !receivable.automatic_reminder,
-         
         })
         .eq("id", receivable.id);
       if (error) throw error;
@@ -504,11 +526,20 @@ const { error: updateError } = await supabase
               )}
             </div>
           </div>
-          {hasPastDateEnable && (
+          {!client.reminder_profile && (
+            <div className="bg-blue-50 p-4 rounded-md">
+              <p className="text-blue-800 font-medium mb-2">Information:</p>
+              <p className="text-blue-700 text-sm">
+                Aucun profil défini pour cette relance, veuillez configurer
+                manuellement chaque date!
+              </p>
+            </div>
+          )}
+          {/*            {hasPastDateEnable && (
             <div className=" mb-4 p-4 border border-yellow-400 bg-yellow-100 text-yellow-800 rounded">
               Certaines dates de relance sont antérieures à la date actuelle
             </div>
-          )}
+          )}  */}
           {error && (
             <div className="fixed top-0 left-1/2 -translate-x-1/2  mb-4 p-4 bg-red-50 border border-red-200 rounded-md text-red-700 flex items-center z-[51]">
               {error}
@@ -548,110 +579,176 @@ const { error: updateError } = await supabase
                   </span>
                 )}
               </div>
+            </div>
+            <div className="border rounded-lg shadow p-4">
+              <button
+                type="button"
+                className="w-full flex justify-between items-center text-left font-semibold text-gray-800"
+                onClick={() => setShowReminders(!showReminders)}
+              >
+                <span>Paramétrages des relances</span>
+                <svg
+                  className={`w-5 h-5 transition-transform ${
+                    showReminders ? "rotate-180" : "rotate-0"
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </button>
 
-              <div className="relative  min-h-[124px]">
-                <DateTimeInput
-                  label="Date/Heure d’envoi – Première relance"
-                  value={new Date(formData.reminder_date_1)}
-                  onChange={(date) =>
-                    setFormData({
-                      ...formData,
-                      reminder_date_1: date.toISOString(),
-                    })
-                  }
-                  optional={formData.reminder_enable_1}
-                  onToggleOptional={(checked) =>
-                    setFormData({
-                      ...formData,
-                      reminder_enable_1: checked,
-                    })
-                  }
-                />
+              {showReminders && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                  {/* Relance 1 */}
+                  <div className="relative min-h-[124px]">
+                    <DateTimeInput
+                      label="Date/Heure d’envoi – Première relance"
+                      value={new Date(formData.reminder_date_1)}
+                      onChange={(date) => {
+                        client.reminder_profile
+                          ? setFormData({
+                              ...formData,
+                              reminder_date_1: date.toISOString(),
+                              reminder_date_2: addJHMToDate(
+                                date.toISOString(),
+                                client.reminder_delay_1
+                              ),
+                              reminder_date_3: addJHMToDate(
+                                addJHMToDate(
+                                  date.toISOString(),
+                                  client.reminder_delay_1
+                                ),
+                                client.reminder_delay_2
+                              ),
+                              reminder_date_final: addJHMToDate(
+                                addJHMToDate(
+                                  addJHMToDate(
+                                    date.toISOString(),
+                                    client.reminder_delay_1
+                                  ),
+                                  client.reminder_delay_2
+                                ),
+                                client.reminder_delay_3
+                              ),
+                            })
+                          : setFormData({
+                              ...formData,
+                              reminder_date_1: date.toISOString(),
+                            });
+                      }}
+                      optional={formData.reminder_enable_1}
+                      onToggleOptional={(checked) =>
+                        setFormData({ ...formData, reminder_enable_1: checked })
+                      }
+                    />
+                    {reminder1AlreadySend && (
+                      <span className="absolute top-0 right-0 text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
+                        Déjà envoyée
+                      </span>
+                    )}
+                  </div>
 
-                {reminder1AlreadySend && (
-                  <span className="absolute top-0 right-0 text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
-                    Déjà envoyée
-                  </span>
-                )}
-              </div>
+                  {/* Relance 2 */}
+                  <div className="relative min-h-[124px]">
+                    <fieldset
+                      disabled={client.reminder_profile}
+                      className={client.reminder_profile ? "opacity-50" : ""}
+                    >
+                      <DateTimeInput
+                        label="Date/Heure d’envoi – Deuxième relance"
+                        value={new Date(formData.reminder_date_2)}
+                        onChange={(date) =>
+                          setFormData({
+                            ...formData,
+                            reminder_date_2: date.toISOString(),
+                          })
+                        }
+                        optional={formData.reminder_enable_2}
+                        onToggleOptional={(checked) =>
+                          setFormData({
+                            ...formData,
+                            reminder_enable_2: checked,
+                          })
+                        }
+                      />
+                      {reminder2AlreadySend && (
+                        <span className="absolute top-0 right-0 text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
+                          Déjà envoyée
+                        </span>
+                      )}
+                    </fieldset>
+                  </div>
 
-              <div className="relative  min-h-[124px]">
-                <DateTimeInput
-                  label="Date/Heure d’envoi – Deuxième relance"
-                  value={new Date(formData.reminder_date_2)}
-                  onChange={(date) =>
-                    setFormData({
-                      ...formData,
-                      reminder_date_2: date.toISOString(),
-                    })
-                  }
-                  optional={formData.reminder_enable_2}
-                  onToggleOptional={(checked) =>
-                    setFormData({
-                      ...formData,
-                      reminder_enable_2: checked,
-                    })
-                  }
-                />
+                  {/* Relance 3 */}
+                  <div className="relative min-h-[124px]">
+                    <fieldset
+                      disabled={client.reminder_profile}
+                      className={client.reminder_profile ? "opacity-50" : ""}
+                    >
+                      <DateTimeInput
+                        label="Date/Heure d’envoi – Troisième relance"
+                        value={new Date(formData.reminder_date_3)}
+                        onChange={(date) =>
+                          setFormData({
+                            ...formData,
+                            reminder_date_3: date.toISOString(),
+                          })
+                        }
+                        optional={formData.reminder_enable_3}
+                        onToggleOptional={(checked) =>
+                          setFormData({
+                            ...formData,
+                            reminder_enable_3: checked,
+                          })
+                        }
+                      />
+                      {reminder3AlreadySend && (
+                        <span className="absolute top-0 right-0 text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
+                          Déjà envoyée
+                        </span>
+                      )}
+                    </fieldset>
+                  </div>
 
-                {reminder2AlreadySend && (
-                  <span className="absolute top-0 right-0 text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
-                    Déjà envoyée
-                  </span>
-                )}
-              </div>
-
-              <div className="relative  min-h-[124px]">
-                <DateTimeInput
-                  label="Date/Heure d’envoi – Troisième relance"
-                  value={new Date(formData.reminder_date_3)}
-                  onChange={(date) =>
-                    setFormData({
-                      ...formData,
-                      reminder_date_3: date.toISOString(),
-                    })
-                  }
-                  optional={formData.reminder_enable_3}
-                  onToggleOptional={(checked) =>
-                    setFormData({
-                      ...formData,
-                      reminder_enable_3: checked,
-                    })
-                  }
-                />
-
-                {reminder3AlreadySend && (
-                  <span className="absolute top-0 right-0 text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
-                    Déjà envoyée
-                  </span>
-                )}
-              </div>
-
-              <div className="relative">
-                <DateTimeInput
-                  label="Date/Heure d’envoi – Relance finale"
-                  value={new Date(formData.reminder_date_final)}
-                  onChange={(date) =>
-                    setFormData({
-                      ...formData,
-                      reminder_date_final: date.toISOString(),
-                    })
-                  }
-                  optional={formData.reminder_enable_final}
-                  onToggleOptional={(checked) =>
-                    setFormData({
-                      ...formData,
-                      reminder_enable_final: checked,
-                    })
-                  }
-                />
-
-                {reminderFinalAlreadySend && (
-                  <span className="absolute top-0 right-0 text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
-                    Déjà envoyée
-                  </span>
-                )}
-              </div>
+                  {/* Relance finale */}
+                  <div className="relative min-h-[124px]">
+                    <fieldset
+                      disabled={client.reminder_profile}
+                      className={client.reminder_profile ? "opacity-50" : ""}
+                    >
+                      <DateTimeInput
+                        label="Date/Heure d’envoi – Relance finale"
+                        value={new Date(formData.reminder_date_final)}
+                        onChange={(date) =>
+                          setFormData({
+                            ...formData,
+                            reminder_date_final: date.toISOString(),
+                          })
+                        }
+                        optional={formData.reminder_enable_final}
+                        onToggleOptional={(checked) =>
+                          setFormData({
+                            ...formData,
+                            reminder_enable_final: checked,
+                          })
+                        }
+                      />
+                      {reminderFinalAlreadySend && (
+                        <span className="absolutetop -0 right-0 text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
+                          Déjà envoyée
+                        </span>
+                      )}
+                    </fieldset>
+                  </div>
+                </div>
+              )}
             </div>
             {/*end relance en calendrier */}
             {/* accordéon*/}
