@@ -130,22 +130,6 @@ const ReminderProfileSettings = () => {
 		e.preventDefault();
 		setSaving(true);
 		if (userId === null) return;
-		/* 
-		const DefaultData={
-			name: 'Default',
-			delay1: {j:1,h:0,m:0},
-			delay2: {j:1,h:0,m:0},
-			delay3: {j:1,h:0,m:0},
-			owner_id: userId,
-			public:false,
-		}
-			const { error } = await supabase
-				.from('reminder_profile')
-				.insert(DefaultData);
-			if (error) {
-				showError(error.message);
-			}
-		*/
 		if (formData.profile1.id === undefined) {
 			// Then this is a new profile
 			const prepareData: ReminderProfile[] = [
