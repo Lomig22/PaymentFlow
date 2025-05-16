@@ -409,6 +409,7 @@ export default function ReminderSettingsModal({
         try {
           await saveNotification({
             owner_id: user.id,
+            need_mail_notification:true,
             is_read: false,
             type: "info",
             message: "Mises à jour des paramètres de relance",
@@ -465,6 +466,7 @@ export default function ReminderSettingsModal({
       if (error) throw error;
       await saveNotification({
         owner_id: user?.id,
+        need_mail_notification:true,
         is_read: false,
         type: "info",
         message: "Mise à jour des paramètres de relance automatique",
@@ -480,6 +482,7 @@ export default function ReminderSettingsModal({
         await saveNotification({
           owner_id: user?.id,
           is_read: false,
+          need_mail_notification:true,
           type: "erreur",
           message: "Mise à jour des paramètres de relance automatique échouée",
           details: `${error}`,

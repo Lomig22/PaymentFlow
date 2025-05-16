@@ -113,6 +113,7 @@ export type Notification = {
 	created_at?: string; // ou Date si tu veux parser
 	owner_id: string|null;
 	is_read: boolean;
+	need_mail_notification:boolean;
 	type: string;
 	message: string;
 	details:string;
