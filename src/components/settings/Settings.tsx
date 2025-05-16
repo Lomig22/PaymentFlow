@@ -66,6 +66,7 @@ const sections = [
     icon: Bell,
     subTabs: [
       { id: 'sender', name: 'Personnaliser la signature', component: SignatureSettings },
+	  { id: 'profile_rename', name: 'Configuration des profils', component: ReminderProfileSettings },
      // { id: 'auto_notifications', name: 'Activer/désactiver les notifications automatiques', component: AutoNotificationSettings },
     ],
   },
@@ -89,14 +90,14 @@ const sections = [
     //  { id: 'reminder_freq', name: 'Fréquence des rappels', component: ReminderFrequencySettings },
     ],
   },
-  {
+/*   {
     id: 'advanced',
     name: 'Paramètres avancés',
     icon: Shield,
     subTabs: [
       { id: 'profile_rename', name: 'Configuration des profils', component: ReminderProfileSettings },
     ],
-  },
+  }, */
 ];
 
 export default function Settings() {
