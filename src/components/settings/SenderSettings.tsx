@@ -54,6 +54,41 @@ export default function SignatureSettings() {
       bgColor: "#e2e8f0",
     },
   };
+  const uploadLogo = async (file) => {
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession();
+  
+    if (sessionError || !session) {
+      console.error("utilisateur non authentifiée!");
+      return null;
+    }
+  
+    const user = session.user;
+    const filePath = `logos/${user.id}/${file.name}`;
+  
+    const { error: uploadError } = await supabase.storage
+      .from("logos") // nom du bucket Supabase
+      .upload(filePath, file, {
+        upsert: true, // écrase les anciennes versions si elles existent
+        contentType: file.type,
+      });
+  
+    if (uploadError) {
+      console.error("Erreur d'upload:", uploadError);
+      showError("Échec de l'envoi du logo");
+      return null;
+    }
+  
+    // Génère l'URL publique du fichier
+    const { data: publicUrlData } = supabase.storage
+      .from("logos")
+      .getPublicUrl(filePath);
+  
+    return publicUrlData.publicUrl;
+  };
+  
 
   const applyTheme = themes[selectedTheme];
   const saveToSupabase = async () => {
@@ -136,17 +171,55 @@ export default function SignatureSettings() {
     loadFromSupabase();
   }, []);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setLocalLogo(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setLogoUrl(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+  
+    setLocalLogo(file); // utile si tu veux prévisualiser dans un <img />
+  
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession();
+  
+    if (sessionError || !session) {
+      console.error("Utilisateur non authentifié");
+      showError("Veuillez vous connecter d'abord");
+      return;
     }
+  
+    const user = session.user;
+    const filePath = `${user.id}/${file.name}`;
+  
+    // Upload du fichier vers Supabase Storage
+    const { error: uploadError } = await supabase.storage
+      .from("logos") // remplace par le nom exact de ton bucket Supabase
+      .upload(filePath, file, {
+        upsert: true, // autorise le remplacement d'anciens fichiers
+        contentType: file.type,
+      });
+  
+    if (uploadError) {
+      console.error("Erreur d'upload:", uploadError);
+      showError("Erreur lors de l'envoi du logo");
+      return;
+    }
+  
+    // Récupère l'URL publique du fichier
+    const { data: publicUrlData } = supabase.storage
+      .from("logos")
+      .getPublicUrl(filePath);
+  
+    if (publicUrlData?.publicUrl) {
+      setLogoUrl(publicUrlData.publicUrl); // ✔️ Ceci sera utilisé dans ta signature HTML
+      showSuccess("Logo uploadé avec succès !");
+    } else {
+     // alert(error)
+      showError("Échec de la récupération de l'URL du logo");
+    }
+   // alert("terminé")
   };
+  
   const copySignatureToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(signatureHTML);
