@@ -271,6 +271,11 @@ function ReceivablesList() {
           reminder_enable_2: false,
           reminder_enable_3: false,
           reminder_enable_final: false,
+          pre_reminder_template:null,
+          reminder_template_1:null,
+          reminder_template_2:null,
+          reminder_template_3:null,
+          reminder_template_final:null
         })
         .eq("id", clientId);
 
@@ -308,11 +313,12 @@ function ReceivablesList() {
       setReceivables(receivables.filter((r) => r.id !== receivableToDelete.id));
       setShowDeleteConfirm(false);
       setReceivableToDelete(null);
+      await updateClientReminderStatus(clientId, false);
 
       // Vérifier si le client a encore des créances impayées
-      const noUnpaidReceivables = await checkClientUnpaidReceivables(clientId);
+    //  const noUnpaidReceivables = await checkClientUnpaidReceivables(clientId);
 
-      // Si le client n'a plus de créances impayées, désactiver les relances
+  /*     // Si le client n'a plus de créances impayées, désactiver les relances
       if (noUnpaidReceivables) {
         await updateClientReminderStatus(clientId, false);
 
@@ -335,13 +341,18 @@ function ReceivablesList() {
                   reminder_enable_2: false,
                   reminder_enable_3: false,
                   reminder_enable_final: false,
+                  pre_reminder_template:"",
+                  reminder_template_1:"",
+                  reminder_template_2:"",
+                  reminder_template_3:"",
+                  reminder_template_final:""
                 },
               };
             }
             return r;
           })
         );
-      }
+      } */
     } catch (error) {
       console.error("Erreur lors de la suppression:", error);
       showError("Impossible de supprimer la créance");
