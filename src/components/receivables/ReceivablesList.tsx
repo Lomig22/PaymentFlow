@@ -23,6 +23,7 @@ import {
   Pause,
   MoreHorizontal,
   Play,
+  PencilIcon,
 } from "lucide-react";
 import ReceivableForm from "./ReceivableForm";
 import ReceivableEditForm from "./ReceivableEditForm";
@@ -34,7 +35,7 @@ import {
 } from "../../lib/reminderService";
 import CSVImportModal, { CSVMapping } from "./CSVImportModal";
 import ReminderHistory from "./ReminderHistory";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { dateCompare, numberCompare, stringCompare } from "../../lib/comparers";
 import SortableColHead from "../Common/SortableColHead";
 import { dateDiff } from "../../lib/dateDiff";
@@ -544,7 +545,14 @@ function ReceivablesList() {
         setSelectedClient(null);
       }
     };
+    const navigate = useNavigate();
 
+    const sendToSignatureSetting = () => {
+     // alert("send")
+      navigate('/settings', {
+        state: { initialSectionId: 'reminders', initialSubTabId: 'sender' }
+      });
+    };
   const handleImportSuccess = async (importedCount: number) => {
     setImportSuccess(`${importedCount} créance(s) importée(s) avec succès`);
     const {
@@ -1476,8 +1484,46 @@ function ReceivablesList() {
                   placeholder="Entrez votre message"
                 ></textarea>
               </div>
+              <div className="mb-4">
+  <label
+    htmlFor="signature"
+    className="hidden block text-sm font-medium text-gray-700"
+  >
+    Signature (HTML)
+  </label>
+  <textarea
+    id="signature"
+    name="signature"
+    value={signature}
+    onChange={(e) => setSignature(e.target.value)}
+    rows={6}
+    className="hidden mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+    placeholder="Entrez votre signature HTML"
+  ></textarea>
+</div>
 
-              <div>
+<div className="mt-4">
+<div className="flex justify-between items-center mb-1">
+        <label className="block text-sm font-medium text-gray-700">
+          Aperçu de la signature :
+        </label>
+        <button
+          onClick={sendToSignatureSetting}
+          className="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          title="Personnaliser la signature"
+          type="button"
+        >
+          <PencilIcon className="h-5 w-5 mr-1" aria-hidden="true" />
+          Modifier
+        </button>
+      </div>
+  <div
+    className="border p-4 rounded bg-white shadow"
+    dangerouslySetInnerHTML={{ __html: signature }}
+  />
+</div>
+
+        {/*       <div>
                 <label
                   htmlFor="signature"
                   className="block text-sm font-medium text-gray-700"
@@ -1493,7 +1539,7 @@ function ReceivablesList() {
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                   placeholder="Entrez votre signature"
                 ></textarea>
-              </div>
+              </div> */}
             </form>
 
             <div className="flex justify-end space-x-4 mt-6">

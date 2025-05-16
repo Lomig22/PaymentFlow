@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { AlertCircle, Save, HelpCircle, Send,RefreshCw } from 'lucide-react';
+import { AlertCircle, Save, HelpCircle, Send,RefreshCw, PencilIcon } from 'lucide-react';
 import { sendEmail } from '../../lib/email';
+import { useNavigate } from 'react-router-dom';
 
 const PROVIDER_PRESETS = {
   ovh: {
@@ -188,7 +189,14 @@ export default function EmailSettings() {
       setSaving(false);
     }
   };
+  const navigate = useNavigate();
 
+  const sendToSignatureSetting = () => {
+   // alert("send")
+    navigate('/settings', {
+      state: { initialSectionId: 'reminders', initialSubTabId: 'sender' }
+    });
+  };
   const handleTestEmail = async () => {
     if (!formData.smtp_username || !formData.smtp_password) {
       showError('Veuillez remplir tous les champs obligatoires');
@@ -381,20 +389,37 @@ export default function EmailSettings() {
             </div>
           </>
         )}
+<div className="mb-4">
+  <label
+    htmlFor="signature"
+    className="block text-sm font-medium text-gray-700"
+  >
+    Signature (HTML)
+  </label>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Signature email
-          </label>
-          <textarea
-          disabled={isDisabled}
-            rows={4}
-            value={formData.email_signature}
-            onChange={(e) => setFormData({ ...formData, email_signature: e.target.value })}
-            className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Votre signature email..."
-          />
-        </div>
+</div>
+
+<div className="mt-4">
+      <div className="flex justify-between items-center mb-1">
+        <label className="block text-sm font-medium text-gray-700">
+          Aperçu de la signature :
+        </label>
+        <button
+          onClick={sendToSignatureSetting}
+          className="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          title="Personnaliser la signature"
+          type="button"
+        >
+          <PencilIcon className="h-5 w-5 mr-1" aria-hidden="true" />
+          Modifier
+        </button>
+      </div>
+      <div
+        className="border p-4 rounded bg-white shadow"
+        dangerouslySetInnerHTML={{ __html: formData.email_signature }}
+      />
+    </div>
+
 
         <div className="flex justify-between">
           <button
