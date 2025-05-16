@@ -152,6 +152,7 @@ function ReceivablesList() {
   }, [importSuccess]);
   //récupération du template actuelle:
   useEffect(() => {
+  if (showConfirmSendReminder===true){
     const fetchData = async () => {
       if (!selectedReceivable) {
         setContent("");
@@ -188,6 +189,15 @@ function ReceivablesList() {
         selectedReceivable.status,
         selectedReceivable.client
       );
+
+      if (!newStatus) { 
+
+       showError("Aucune relance n'est activée pour ce client.");
+        setSending(false);
+        setShowConfirmReminder(false);
+       setSelectedClient(null);
+        return;
+      }
       await supabase
       .from('receivables')
       .update({
@@ -195,14 +205,6 @@ function ReceivablesList() {
       })
       .eq('id', selectedReceivable.id);
       //alert(newStatus);
-      if (!newStatus) {
-        console.log("Aucune relance n'est activée pour ce client.");
-        setSending(false);
-        setShowConfirmReminder(false);
-        setSelectedClient(null);
-        return;
-      }
-
       // Mettre à jour le statut avant l’envoi
       selectedReceivable.status = newStatus;
       // Récupérer le contenu et le niveau
@@ -218,7 +220,8 @@ function ReceivablesList() {
     };
     
     fetchData();
-  }, [selectedReceivable]);
+  }
+  }, [selectedReceivable,showConfirmSendReminder]);
 
   // Fonction pour vérifier si un client a des créances impayées
   const checkClientUnpaidReceivables = async (
