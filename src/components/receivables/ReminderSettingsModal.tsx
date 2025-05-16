@@ -32,7 +32,7 @@ export default function ReminderSettingsModal({
   );
 
   const [defaultProfile, setDefaultProfile] = useState(null);
-/* 
+  /* 
   useEffect(() => {
     const fetchDefaultProfile = async () => {
       const {
@@ -95,18 +95,18 @@ export default function ReminderSettingsModal({
     reminder_template_3: client.reminder_template_3 || "",
     reminder_template_final: client.reminder_template_final || "",
 
-    reminder_enable_1:    client.reminder_profile
-    ? true
-    :client.reminder_enable_1,
-    reminder_enable_2:    client.reminder_profile
-    ? true
-    :client.reminder_enable_2,
-    reminder_enable_3:    client.reminder_profile
-    ? true
-    :client.reminder_enable_3,
-    reminder_enable_final:   client.reminder_profile
-    ? true
-    : client.reminder_enable_final,
+    reminder_enable_1: client.reminder_profile
+      ? true
+      : client.reminder_enable_1,
+    reminder_enable_2: client.reminder_profile
+      ? true
+      : client.reminder_enable_2,
+    reminder_enable_3: client.reminder_profile
+      ? true
+      : client.reminder_enable_3,
+    reminder_enable_final: client.reminder_profile
+      ? true
+      : client.reminder_enable_final,
     pre_reminder_enable: client.pre_reminder_enable,
 
     reminder_profile: client.reminder_profile || null,
@@ -526,11 +526,20 @@ export default function ReminderSettingsModal({
               )}
             </div>
           </div>
-         {/*  {hasPastDateEnable && (
+          {!client.reminder_profile && (
+            <div className="bg-blue-50 p-4 rounded-md">
+              <p className="text-blue-800 font-medium mb-2">Information:</p>
+              <p className="text-blue-700 text-sm">
+                Aucun profil défini pour cette relance, veuillez configurer
+                manuellement chaque date!
+              </p>
+            </div>
+          )}
+          {/*            {hasPastDateEnable && (
             <div className=" mb-4 p-4 border border-yellow-400 bg-yellow-100 text-yellow-800 rounded">
               Certaines dates de relance sont antérieures à la date actuelle
             </div>
-          )} */}
+          )}  */}
           {error && (
             <div className="fixed top-0 left-1/2 -translate-x-1/2  mb-4 p-4 bg-red-50 border border-red-200 rounded-md text-red-700 flex items-center z-[51]">
               {error}
@@ -650,8 +659,7 @@ export default function ReminderSettingsModal({
                   <div className="relative min-h-[124px]">
                     <fieldset
                       disabled={client.reminder_profile}
-                        className={client.reminder_profile ? "opacity-50" : ""}
-
+                      className={client.reminder_profile ? "opacity-50" : ""}
                     >
                       <DateTimeInput
                         label="Date/Heure d’envoi – Deuxième relance"
@@ -662,9 +670,7 @@ export default function ReminderSettingsModal({
                             reminder_date_2: date.toISOString(),
                           })
                         }
-                        optional={
-                        formData.reminder_enable_2
-                        }
+                        optional={formData.reminder_enable_2}
                         onToggleOptional={(checked) =>
                           setFormData({
                             ...formData,
@@ -684,8 +690,7 @@ export default function ReminderSettingsModal({
                   <div className="relative min-h-[124px]">
                     <fieldset
                       disabled={client.reminder_profile}
-                        className={client.reminder_profile ? "opacity-50" : ""}
-
+                      className={client.reminder_profile ? "opacity-50" : ""}
                     >
                       <DateTimeInput
                         label="Date/Heure d’envoi – Troisième relance"
@@ -696,9 +701,7 @@ export default function ReminderSettingsModal({
                             reminder_date_3: date.toISOString(),
                           })
                         }
-                        optional={
-                        formData.reminder_enable_3
-                        }
+                        optional={formData.reminder_enable_3}
                         onToggleOptional={(checked) =>
                           setFormData({
                             ...formData,
@@ -718,8 +721,7 @@ export default function ReminderSettingsModal({
                   <div className="relative min-h-[124px]">
                     <fieldset
                       disabled={client.reminder_profile}
-                        className={client.reminder_profile ? "opacity-50" : ""}
-
+                      className={client.reminder_profile ? "opacity-50" : ""}
                     >
                       <DateTimeInput
                         label="Date/Heure d’envoi – Relance finale"
@@ -730,9 +732,7 @@ export default function ReminderSettingsModal({
                             reminder_date_final: date.toISOString(),
                           })
                         }
-                        optional={
-                        formData.reminder_enable_final
-                        }
+                        optional={formData.reminder_enable_final}
                         onToggleOptional={(checked) =>
                           setFormData({
                             ...formData,
