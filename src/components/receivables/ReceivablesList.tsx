@@ -196,11 +196,13 @@ function ReceivablesList() {
 
       if (!newStatus) { 
 
-       showError("Aucune relance n'est activée pour ce client.");
+       showError("Vous n'avez pas encore configurer cette relance!");
         setSending(false);
         setShowConfirmReminder(false);
        setSelectedClient(null);
         return;
+      } else{
+
       }
       await supabase
       .from('receivables')
