@@ -301,6 +301,11 @@ export async function sendManualReminder(
     const reminder_notifications=notification_settings?.reminder_notifications
     console.log(reminder_notifications)
     if (reminder_notifications === true) {
+      const currentStatus=(receivable.status==="pending")?"Relance préventive":
+      (receivable.status==="Relance préventive")?"Relance 1":
+      (receivable.status==="Relance 1")?"Relance 2":
+      (receivable.status==="Relance 2")?"Relance 3":
+      "Relance Finale"
       const emailSent = sendEmail(
         emailSettings,
         userProfile.email,

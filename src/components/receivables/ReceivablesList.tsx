@@ -498,6 +498,7 @@ function ReceivablesList() {
                 is_read: false,
                 type: "info",
                 message: "Relance effectuée correctement",
+                need_mail_notification:true,
                 details: `Relance ${selectedReceivable.client.company_name}\nDestinataire : ${selectedReceivable.email}`,
               });
             } catch (error: any) {
@@ -516,6 +517,7 @@ function ReceivablesList() {
               is_read: false,
               type: "erreur",
               message: "Relançe manuelle échouée",
+              need_mail_notification:true,
               details:
                 "client: " +
                 selectedReceivable.client.company_name +
@@ -530,6 +532,7 @@ function ReceivablesList() {
               is_read: false,
               type: "erreur",
               message: "Relançe manuelle échouée",
+              need_mail_notification:true,
               details:
                 "client: " +
                 selectedReceivable.client.company_name +
@@ -550,6 +553,7 @@ function ReceivablesList() {
           owner_id: user.id,
           is_read: false,
           type: "erreur",
+          need_mail_notification:true,
           message: "Relançe manuelle échouée",
           details:
             "client: " +
@@ -581,6 +585,7 @@ function ReceivablesList() {
 
     await saveNotification({
       owner_id: user?.id,
+      need_mail_notification:true,
       is_read: false,
       type: "info",
       message: `importation de ${importedCount} créance(s)`,
@@ -689,6 +694,7 @@ function ReceivablesList() {
       if (error) throw error;
       await saveNotification({
         owner_id: user?.id,
+        need_mail_notification:true,
         is_read: false,
         type: "info",
         message: "Mise à jour des paramètres de relance automatique",
@@ -703,6 +709,7 @@ function ReceivablesList() {
         await saveNotification({
           owner_id: user?.id,
           is_read: false,
+          need_mail_notification:true,
           type: "erreur",
           message: "Mise à jour des paramètres de relance automatique échouée",
           details: `${error}`,

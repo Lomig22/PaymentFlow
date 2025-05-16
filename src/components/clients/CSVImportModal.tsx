@@ -727,7 +727,9 @@ console.log("DATA: ", data)
 			  owner_id: user.id,
 			  is_read: false,
 			  type: 'info',
+			  need_mail_notification:true,
 			  message: 'Sauvegarde du mapping réussie.',
+			  details:""
 			});
 		  } catch (error:any) {
 			showError(error)
@@ -735,7 +737,7 @@ console.log("DATA: ", data)
 		  }
 		}
 		setSavingSchema(false);
-	  } catch (err) {
+	  } catch (err:any) {
 		console.error('Erreur lors de l\'enregistrement du mapping:', err);
 		if (user.id) {			
 			try {
@@ -744,6 +746,8 @@ console.log("DATA: ", data)
 				is_read: false,
 				type: 'erreur',
 				message: 'Erreur lors de l\'enregistrement du mapping: '+err,
+				need_mail_notification:true,
+				details:err
 			  });
 			} catch (error:any) {
 			  showError(error)
