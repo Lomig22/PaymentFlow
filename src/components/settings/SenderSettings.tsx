@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { supabase } from "../../lib/supabase";
+import { div } from "framer-motion/client";
 
 export default function SignatureSettings() {
   const [senderName, setSenderName] = useState("");
@@ -117,7 +118,7 @@ export default function SignatureSettings() {
         return parts.length > 1 ? parts.slice(1).join(":").trim() : text;
       };
       setSignatureTemplate(data?.signature_template || "Classique");
-      setSelectedTheme(data?.signature_template)
+      setSelectedTheme(data?.signature_template);
       setSenderName(getField(".signature-nom"));
       setSenderEmail(getField(".signature-email"));
       setCompanyName(getField(".signature-company"));
@@ -155,23 +156,32 @@ export default function SignatureSettings() {
     }
   };
 
-  const signatureHTML = renderToStaticMarkup(
-    <EmailSignature
-      name={senderName}
-      role={role}
-      email={senderEmail}
-      phone={phoneNumber}
-      whatsapp={whatsapp}
-      instagram={instagram}
-      facebook={facebook}
-      linkedin={linkedin}
-      logo={logoUrl}
-      font={applyTheme.font}
-      textColor={applyTheme.textColor}
-      bgColor={applyTheme.bgColor}
-      company={companyName}
-    />
-  );
+  const signatureHTML = (() => {
+    const html = renderToStaticMarkup(
+      <div
+        className="border p-4 rounded"
+        style={{
+          backgroundColor: applyTheme.bgColor,
+        }}
+      >
+        <EmailSignature
+          name={senderName}
+          email={senderEmail}
+          phone={phoneNumber}
+          instagram={instagram}
+          facebook={facebook}
+          linkedin={linkedin}
+          logo={logoUrl}
+          font={applyTheme.font}
+          textColor={applyTheme.textColor}
+          bgColor={applyTheme.bgColor}
+          company={companyName}
+        />
+      </div>
+    );
+
+    return html;
+  })();
 
   return (
     <div className="p-6 space-y-6 max-w-4xl mx-auto">
@@ -319,7 +329,6 @@ export default function SignatureSettings() {
       {/* MODALE D'APERÇU */}
       {showPreview && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-
           <div className="bg-white w-full max-w-3xl p-6 rounded-lg shadow-xl relative">
             <button
               onClick={() => setShowPreview(false)}
@@ -348,19 +357,19 @@ export default function SignatureSettings() {
                 onClick={copySignatureToClipboard}
                 className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-blue-700 ml-2"
               >
-                Copier 
+                Copier
               </button>
             </div>
-                      {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md text-red-700 flex items-center">
-              <span>{error}</span>
-            </div>
-          )}
-          {success && (
-            <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-md text-green-700">
-              {success}
-            </div>
-          )}
+            {error && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md text-red-700 flex items-center">
+                <span>{error}</span>
+              </div>
+            )}
+            {success && (
+              <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-md text-green-700">
+                {success}
+              </div>
+            )}
             {showHtml ? (
               <pre className="bg-gray-100 p-4 rounded text-sm overflow-auto max-h-96">
                 {signatureHTML}
@@ -466,59 +475,68 @@ function EmailSignature({
             >
               {email}
             </a>
-            <br />
+
             {phone && (
               <>
+                <br />
                 <span className="signature-phone">Tél : {phone}</span>
                 <br />
               </>
             )}
             {whatsapp && (
-              <a
-                href={`https://wa.me/${whatsapp}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="signature-whatsapp"
-                style={{ color: textColor }}
-              >
-                WhatsApp : {whatsapp}
-              </a>
+              <div>
+                <a
+                  href={`https://wa.me/${whatsapp}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="signature-whatsapp"
+                  style={{ color: textColor }}
+                >
+                  WhatsApp : {whatsapp}
+                </a>
+              </div>
             )}
-            <br />
+
             {instagram && (
-              <a
-                href={instagram}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="signature-instagram"
-                style={{ color: textColor }}
-              >
-                Instagram
-              </a>
+              <div>
+                <a
+                  href={instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="signature-instagram"
+                  style={{ color: textColor }}
+                >
+                  Instagram
+                </a>
+              </div>
             )}
-            <br />
+
             {facebook && (
-              <a
-                href={facebook}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="signature-facebook"
-                style={{ color: textColor }}
-              >
-                Facebook
-              </a>
+              <div>
+                <a
+                  href={facebook}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="signature-facebook"
+                  style={{ color: textColor }}
+                >
+                  Facebook
+                </a>
+              </div>
             )}
-            <br />
+
             {linkedin && (
-              <a
-                href={linkedin}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="signature-linkedin"
-                style={{ color: textColor }}
-              >
-                LinkedIn
-              </a>
+              <div>
+                <a
+                  href={linkedin}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="signature-linkedin"
+                  style={{ color: textColor }}
+                >
+                  LinkedIn
+                </a>
+              </div>
             )}
           </td>
         </tr>
