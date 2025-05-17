@@ -156,16 +156,6 @@ function ClientList({
         buttonRefs.current[openDropdownId]!.getBoundingClientRect();
       const dropdown = dropdownRefs.current[openDropdownId];
       const table = tableRefs.current;
-  useLayoutEffect(() => {
-    if (
-      openDropdownId &&
-      buttonRefs.current[openDropdownId] &&
-      dropdownRefs.current[openDropdownId]
-    ) {
-      const buttonRect =
-        buttonRefs.current[openDropdownId]!.getBoundingClientRect();
-      const dropdown = dropdownRefs.current[openDropdownId];
-      const table = tableRefs.current;
 
       if (!dropdown) return;
 
@@ -210,18 +200,6 @@ function ClientList({
         .eq("id", clientToDelete.id);
 
       if (clientError) throw clientError;
-        .from("receivables")
-        .delete()
-        .eq("client_id", clientToDelete.id);
-
-      if (receivablesError) throw receivablesError;
-
-      const { error: clientError } = await supabase
-        .from("clients")
-        .delete()
-        .eq("id", clientToDelete.id);
-
-      if (clientError) throw clientError;
 
       setClients(clients.filter((c) => c.id !== clientToDelete.id));
       setShowDeleteConfirm(false);
@@ -253,17 +231,17 @@ function ClientList({
     return new Date(dateString).toLocaleDateString("fr-FR");
   };
   const handleBulkDeleteConfirmation = async () => {
+    // Confirmation avant la suppression
     const result = await Swal.fire({
       title: "Es-tu sûr ?",
       text: "Cette action supprimera tous les clients sélectionnés. Cette action est irréversible !",
-      icon: "warning",
       showCancelButton: true,
       buttonsStyling: false,
       customClass: {
         confirmButton:
-          "bg-red-600 text-white px-4 py-2 rounded mr-2 hover:bg-red-700 focus:outline-none",
+          "bg-red-600 text-white px-4 py-2 rounded mr-2 hover:bg-red-700",
         cancelButton:
-          "bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 focus:outline-none",
+          "bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700",
       },
       confirmButtonText: "Oui, supprimer",
       cancelButtonText: "Annuler",
@@ -271,18 +249,11 @@ function ClientList({
 
     if (result.isConfirmed) {
       await handleBulkDelete();
-      Swal.fire({
-        title: "Supprimé !",
-        text: "Les clients sélectionnés ont été supprimés.",
-        icon: "success",
-        buttonsStyling: false,
-        customClass: {
-          confirmButton:
-            "bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700",
-          icon: "text-blue-500",
-        },
-        confirmButtonText: "OK",
-      });
+      Swal.fire(
+        "Supprimé!",
+        "Les clients sélectionnés ont été supprimés.",
+        "success"
+      );
     }
   };
 
@@ -296,25 +267,16 @@ function ClientList({
       if (receivablesError) throw receivablesError;
       // Suppression des clients via Supabase
       const { data, error } = await supabase
-        .from("clients")
+        .from("clients") // Remplace 'clients' par le nom de ta table dans Supabase
         .delete()
-        .in("id", selectedClientIds);
+        .in("id", selectedClientIds); // `selectedClientIds` contient les IDs des clients à supprimer
 
       if (error) {
         throw new Error(error.message);
       }
-      // Swal.fire({
-      //   title: "Supprimé !",
-      //   text: "Le client a été supprimé.",
-      //   icon: "success",
-      //   buttonsStyling: false,
-      //   customClass: {
-      //     confirmButton:
-      //       "bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700",
-      //     icon: "text-blue-500",
-      //   },
-      //   confirmButtonText: "OK",
-      // });
+
+      // Tu peux aussi gérer la mise à jour de l'état des clients ici
+      // Par exemple, filtrer les clients supprimés de la liste affichée
       console.log("Clients supprimés:", data);
     } catch (error) {
       Swal.fire(
@@ -787,43 +749,6 @@ function ClientList({
                     {client.client_code}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {client.reminderProfile?.name || "-"}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <span
-                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          client.needs_reminder
-                            ? "bg-red-100 text-red-800"
-                            : "bg-green-100 text-green-800"
-                        }`}
-                      >
-                        {client.needs_reminder ? "Oui" : "Non"}
-                      </span>
-                      {client.needs_reminder && !client.reminder_template_1 && (
-                        <div className="relative ml-2">
-                          <div
-                            className="text-yellow-500 cursor-help"
-                            onMouseEnter={() => handleMouseEnter(client.id)}
-                            onMouseLeave={handleMouseLeave}
-                          >
-                            <Info className="h-4 w-4" />
-                          </div>
-                          {tooltipVisible === client.id && (
-                            <div className="absolute z-10 w-64 px-3 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm -left-32 bottom-full mb-1">
-                              Paramètres de relance non configurés. Veuillez
-                              configurer les modèles de relance pour ce client.
-                              <div
-                                className="tooltip-arrow"
-                                data-popper-arrow
-                              ></div>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {formatEmail(client.email)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -868,43 +793,7 @@ function ClientList({
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {formatDate(client.updated_at)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {client.reminderProfile?.name || "-"}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <span
-                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          client.needs_reminder
-                            ? "bg-red-100 text-red-800"
-                            : "bg-green-100 text-green-800"
-                        }`}
-                      >
-                        {client.needs_reminder ? "Oui" : "Non"}
-                      </span>
-                      {client.needs_reminder && !client.reminder_template_1 && (
-                        <div className="relative ml-2">
-                          <div
-                            className="text-yellow-500 cursor-help"
-                            onMouseEnter={() => handleMouseEnter(client.id)}
-                            onMouseLeave={handleMouseLeave}
-                          >
-                            <Info className="h-4 w-4" />
-                          </div>
-                          {tooltipVisible === client.id && (
-                            <div className="absolute z-10 w-64 px-3 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm -left-32 bottom-full mb-1">
-                              Paramètres de relance non configurés. Veuillez
-                              configurer les modèles de relance pour ce client.
-                              <div
-                                className="tooltip-arrow"
-                                data-popper-arrow
-                              ></div>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </td>
+
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {client.notes}
                   </td>
