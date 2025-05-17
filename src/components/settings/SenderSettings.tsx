@@ -260,7 +260,17 @@ export default function SignatureSettings() {
   })();
   return (
     <div className="max-w-7xl mx-auto p-4 space-y-6">
-      
+          {/* --- Erreurs ou succès éventuels --- */}
+          {error && (
+        <div className="fixed p-4 bg-red-50 border border-red-200 rounded-md text-red-700">
+          {error}
+        </div>
+      )}
+      {success && (
+        <div className="fixed p-4 bg-green-50 border border-green-200 rounded-md text-green-700">
+          {success}
+        </div>
+      )}
       {/* --- Boutons d'action en colonne verticale --- */}
       <div className="flex flex-row  ">
         <button
@@ -282,220 +292,219 @@ export default function SignatureSettings() {
           Copier
         </button>
       </div>
-      <div className="flex items-start space-x-6 mb-6">
-  {/* Combo Modèle de signature */}
-  <div>
-    <label className="block font-medium mb-1">Modèle de signature</label>
-    <select
-      value={signatureTemplate}
-      onChange={(e) => {
-        setSignatureTemplate(e.target.value);
-        setSelectedTheme(e.target.value);
-      }}
-      className="border rounded px-3 py-2 min-w-[200px]"
-    >
-      <option value="classique">Classique</option>
-      <option value="sombre">Sombre</option>
-      <option value="professionnel">Professionnel</option>
-      <option value="custom">Personnalisé</option>
-    </select>
-  </div>
+      <div className="space-y-4 mb-6">
+        {/* Ligne horizontale : combo + options custom si actif */}
+        <div className="flex items-end space-x-6">
+          {/* Combo Modèle de signature */}
+          <div>
+            <label className="block font-medium mb-1">
+              Modèle de signature
+            </label>
+            <select
+              value={signatureTemplate}
+              onChange={(e) => {
+                setSignatureTemplate(e.target.value);
+                setSelectedTheme(e.target.value);
+              }}
+              className="border rounded px-3 py-2 min-w-[200px]"
+            >
+              <option value="classique">Classique</option>
+              <option value="sombre">Sombre</option>
+              <option value="professionnel">Professionnel</option>
+              <option value="custom">Personnalisé</option>
+            </select>
+          </div>
 
-  {/* Options personnalisées alignées horizontalement */}
-  {selectedTheme === "custom" && (
-    <div className="flex items-end space-x-4">
-      {/* Police */}
-      <div>
-        <label className="block font-medium mb-1">Police</label>
-        <select
-          value={font}
-          onChange={(e) => setFont(e.target.value)}
-          className="border rounded px-2 py-1"
-        >
-          <option value="Arial">Arial</option>
-          <option value="Times New Roman">Times New Roman</option>
-          <option value="Courier New">Courier New</option>
-          <option value="Verdana">Verdana</option>
-          <option value="Tahoma">Tahoma</option>
-        </select>
-      </div>
+          {/* Options personnalisées alignées à droite */}
+          {selectedTheme === "custom" && (
+            <div className="flex items-end space-x-4">
+              {/* Police */}
+              <div>
+                <label className="block font-medium mb-1">Police</label>
+                <select
+                  value={font}
+                  onChange={(e) => setFont(e.target.value)}
+                  className="border rounded px-2 py-1"
+                >
+                  <option value="Arial">Arial</option>
+                  <option value="Times New Roman">Times New Roman</option>
+                  <option value="Courier New">Courier New</option>
+                  <option value="Verdana">Verdana</option>
+                  <option value="Tahoma">Tahoma</option>
+                </select>
+              </div>
 
-      {/* Couleur du texte */}
-      <div>
-        <label className="block font-medium mb-1">Couleur du texte</label>
-        <input
-          type="color"
-          value={textColor}
-          onChange={(e) => setTextColor(e.target.value)}
-          className="w-16 h-8 border rounded"
-        />
-      </div>
+              {/* Couleur du texte */}
+              <div>
+                <label className="block font-medium mb-1">
+                  Couleur du texte
+                </label>
+                <input
+                  type="color"
+                  value={textColor}
+                  onChange={(e) => setTextColor(e.target.value)}
+                  className="w-16 h-8 border rounded"
+                />
+              </div>
 
-      {/* Couleur de fond */}
-      <div>
-        <label className="block font-medium mb-1">Couleur de fond</label>
-        <input
-          type="color"
-          value={bgColor}
-          onChange={(e) => setBgColor(e.target.value)}
-          className="w-16 h-8 border rounded"
-        />
-      </div>
-    </div>
-  )}
-   <div >
-              <label className="block font-medium">
-                Ou importer un logo local
-              </label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                className="w-full"
-              />
+              {/* Couleur de fond */}
+              <div>
+                <label className="block font-medium mb-1">
+                  Couleur de fond
+                </label>
+                <input
+                  type="color"
+                  value={bgColor}
+                  onChange={(e) => setBgColor(e.target.value)}
+                  className="w-16 h-8 border rounded"
+                />
+              </div>
             </div>
-</div>
+          )}
+        </div>
 
-      {/* --- Erreurs ou succès éventuels --- */}
-      {error && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-md text-red-700">
-          {error}
+        {/* Import logo, sur une ligne à part */}
+        <div>
+          <label className="block font-medium mb-1">
+            Ou importer un logo local
+          </label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            className="w-full"
+          />
         </div>
-      )}
-      {success && (
-        <div className="p-4 bg-green-50 border border-green-200 rounded-md text-green-700">
-          {success}
-        </div>
-      )}
+      </div>
+
   
+
       {/* --- Contenu principal : formulaire à gauche et aperçu à droite --- */}
       <div className="flex flex-col md:flex-row gap-6">
-        
         {/* Formulaire à gauche */}
         <div className="flex-1">
           <form className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white border p-6 rounded-lg shadow">
-          <h2 className="text-2xl font-semibold col-span-full">
-            Paramètres de signature
-          </h2>
-          
-          <div className=" flex flex-col ">
-            <div>
-              <label className="block font-medium">Nom</label>
-              <input
-                type="text"
-                value={senderName}
-                onChange={(e) => setSenderName(e.target.value)}
-                className="w-full border rounded px-3 py-2 min-w-[300px]"
-              />
+            <h2 className="text-2xl font-semibold col-span-full">
+              Paramètres de signature
+            </h2>
+
+            <div className=" flex flex-col ">
+              <div>
+                <label className="block font-medium">Nom</label>
+                <input
+                  type="text"
+                  value={senderName}
+                  onChange={(e) => setSenderName(e.target.value)}
+                  className="w-full border rounded px-3 py-2 min-w-[300px]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-medium">Adresse email</label>
+                <input
+                  type="email"
+                  value={senderEmail}
+                  onChange={(e) => setSenderEmail(e.target.value)}
+                  className="w-full border rounded px-3 py-2 min-w-[300px]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-medium">Nom de la société</label>
+                <input
+                  type="text"
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value)}
+                  className="w-full border rounded px-3 py-2 min-w-[300px]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-medium">Téléphone</label>
+                <input
+                  type="tel"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  className="w-full border rounded px-3 py-2 min-w-[300px]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-medium">Fonction</label>
+                <input
+                  type="text"
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                  className="w-full border rounded px-3 py-2 min-w-[300px]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-medium">Numéro WhatsApp</label>
+                <input
+                  type="tel"
+                  value={whatsapp}
+                  onChange={(e) => setWhatsapp(e.target.value)}
+                  className="w-full border rounded px-3 py-2 min-w-[300px]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-medium">Instagram (URL)</label>
+                <input
+                  type="text"
+                  value={instagram}
+                  onChange={(e) => setInstagram(e.target.value)}
+                  className="w-full border rounded px-3 py-2 min-w-[300px]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-medium">Facebook (URL)</label>
+                <input
+                  type="text"
+                  value={facebook}
+                  onChange={(e) => setFacebook(e.target.value)}
+                  className="w-full border rounded px-3 py-2 min-w-[300px]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-medium">LinkedIn (URL)</label>
+                <input
+                  type="text"
+                  value={linkedin}
+                  onChange={(e) => setLinkedin(e.target.value)}
+                  className="w-full border rounded px-3 py-2 min-w-[300px]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-medium">Logo (URL)</label>
+                <input
+                  type="text"
+                  value={logoUrl}
+                  onChange={(e) => setLogoUrl(e.target.value)}
+                  className="w-full border rounded px-3 py-2 min-w-[300px]"
+                />
+              </div>
             </div>
-
-            <div>
-              <label className="block font-medium">Adresse email</label>
-              <input
-                type="email"
-                value={senderEmail}
-                onChange={(e) => setSenderEmail(e.target.value)}
-                className="w-full border rounded px-3 py-2 min-w-[300px]"
-              />
-            </div>
-
-            <div>
-              <label className="block font-medium">Nom de la société</label>
-              <input
-                type="text"
-                value={companyName}
-                onChange={(e) => setCompanyName(e.target.value)}
-                className="w-full border rounded px-3 py-2 min-w-[300px]"
-              />
-            </div>
-
-            <div>
-              <label className="block font-medium">Téléphone</label>
-              <input
-                type="tel"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                className="w-full border rounded px-3 py-2 min-w-[300px]"
-              />
-            </div>
-
-            <div>
-              <label className="block font-medium">Fonction</label>
-              <input
-                type="text"
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-                className="w-full border rounded px-3 py-2 min-w-[300px]"
-              />
-            </div>
-
-            <div>
-              <label className="block font-medium">Numéro WhatsApp</label>
-              <input
-                type="tel"
-                value={whatsapp}
-                onChange={(e) => setWhatsapp(e.target.value)}
-                className="w-full border rounded px-3 py-2 min-w-[300px]"
-              />
-            </div>
-
-            <div>
-              <label className="block font-medium">Instagram (URL)</label>
-              <input
-                type="text"
-                value={instagram}
-                onChange={(e) => setInstagram(e.target.value)}
-                className="w-full border rounded px-3 py-2 min-w-[300px]"
-              />
-            </div>
-
-            <div>
-              <label className="block font-medium">Facebook (URL)</label>
-              <input
-                type="text"
-                value={facebook}
-                onChange={(e) => setFacebook(e.target.value)}
-                className="w-full border rounded px-3 py-2 min-w-[300px]"
-              />
-            </div>
-
-            <div>
-              <label className="block font-medium">LinkedIn (URL)</label>
-              <input
-                type="text"
-                value={linkedin}
-                onChange={(e) => setLinkedin(e.target.value)}
-                className="w-full border rounded px-3 py-2 min-w-[300px]"
-              />
-            </div>
-
-            <div>
-              <label className="block font-medium">Logo (URL)</label>
-              <input
-                type="text"
-                value={logoUrl}
-                onChange={(e) => setLogoUrl(e.target.value)}
-                className="w-full border rounded px-3 py-2 min-w-[300px]"
-              />
-            </div>
-
-           
-          </div>
-
-
           </form>
         </div>
-  
+
         {/* Aperçu à droite */}
         <div className="flex-1 bg-white border p-6 rounded-lg shadow space-y-4">
           <h3 className="text-xl font-bold mb-2">Aperçu de la signature</h3>
-  
+
           {showHtml ? (
             <pre className="bg-gray-100 p-4 rounded text-sm overflow-auto max-h-96">
               {signatureHTML}
             </pre>
           ) : (
-            <div className="border p-4 rounded" style={{ backgroundColor: applyTheme.bgColor }}>
+            <div
+              className="border p-4 rounded"
+              style={{ backgroundColor: applyTheme.bgColor }}
+            >
               <EmailSignature
                 name={senderName}
                 email={senderEmail}
@@ -517,8 +526,6 @@ export default function SignatureSettings() {
       </div>
     </div>
   );
-  
-
 }
 
 function EmailSignature({
