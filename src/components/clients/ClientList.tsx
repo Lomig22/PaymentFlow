@@ -249,11 +249,18 @@ function ClientList({
 
     if (result.isConfirmed) {
       await handleBulkDelete();
-      Swal.fire(
-        "Supprimé!",
-        "Les clients sélectionnés ont été supprimés.",
-        "success"
-      );
+      Swal.fire({
+        title: "Supprimé !",
+        text: "Les clients sélectionnés ont été supprimés.",
+        icon: "success",
+        buttonsStyling: false,
+        customClass: {
+          confirmButton:
+            "bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700",
+          icon: "text-blue-500",
+        },
+        confirmButtonText: "OK",
+      });
     }
   };
 

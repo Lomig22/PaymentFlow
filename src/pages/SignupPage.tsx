@@ -37,11 +37,15 @@ export default function SignupPage() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [company, setCompany] = useState("");
-  const [selectedPlan, setSelectedPlan] = useState("basic");
+  const [selectedPlan, setSelectedPlan] = useState("");
+  const [billingInterval, setBillingInterval] = useState("");
 
   useEffect(() => {
     const savedPlan = localStorage.getItem("selectedPlan");
     if (savedPlan) setSelectedPlan(savedPlan);
+
+    const savedInterval = localStorage.getItem("billingInterval");
+    if (savedInterval) setSelectedPlan(savedPlan);
   }, []);
 
   const validateForm = () => {
@@ -85,7 +89,7 @@ export default function SignupPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // if (!validateForm()) return;
+    if (!validateForm()) return;
 
     setLoading(true);
     setMessage(null);
@@ -142,7 +146,11 @@ export default function SignupPage() {
         text: "Un e-mail de confirmation vous a été envoyé. Veuillez vérifier votre boîte de réception.",
       });
 
-      setTimeout(async () => await createStripeSession(), 3000);
+      if (selectedPlan) {
+        setTimeout(createStripeSession, 3000);
+      } else {
+        setTimeout(() => navigate("/login"), 2000);
+      }
     } catch (error: any) {
       setMessage({
         type: "error",
@@ -208,23 +216,34 @@ export default function SignupPage() {
   };
 
   const createStripeSession = async () => {
-    const plan = localStorage.getItem("selectedPlan");
-    const interval = localStorage.getItem("selectedInterval");
+    const plan = selectedPlan || localStorage.getItem("selectedPlan");
+    const interval =
+      (billingInterval as "monthly" | "yearly") ||
+      (localStorage.getItem("selectedInterval") as "monthly" | "yearly");
+
+    // si un seul manque on stoppe
+    if (!plan || !interval) {
+      console.warn("Aucun plan ou intervalle sélectionné, on ne redirige pas.");
+      return;
+    }
+
+    // sécurisation de l’accès à priceMap
+    const priceId = priceMap[plan]?.[interval];
+    if (!priceId) {
+      console.error("Clé de prix invalide pour", plan, interval);
+      return;
+    }
+
+    const payload = {
+      price_id: priceId,
+      success_url: window.location.origin + "/paiement-abonement",
+      cancel_url: window.location.origin + "/pricing",
+    };
 
     if (!selectedPlan) {
       console.error("Aucun plan sélectionné !");
       return;
     }
-
-    const payload = {
-      price_id: priceMap[plan][interval],
-      success_url: window.location.origin + "/paiement-abonement",
-      cancel_url: window.location.origin + "/pricing",
-    };
-
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
 
     const token = import.meta.env.VITE_TOKEN_STRIPE;
     const res = await fetch(
