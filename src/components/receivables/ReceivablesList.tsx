@@ -422,11 +422,18 @@ function ReceivablesList() {
 
     if (result.isConfirmed) {
       handleBulkDelete();
-      Swal.fire(
-        "Supprimé!",
-        "Les éléments sélectionnés ont été supprimés.",
-        "success"
-      );
+      Swal.fire({
+        title: "Supprimé !",
+        text: "Les éléments sélectionnés ont été supprimés.",
+        icon: "success",
+        buttonsStyling: false,
+        customClass: {
+          confirmButton:
+            "bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700",
+          icon: "text-blue-500",
+        },
+        confirmButtonText: "OK",
+      });
     }
   };
   //fonction récursive de détection de statut activé
