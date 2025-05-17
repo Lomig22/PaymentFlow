@@ -14,6 +14,7 @@ import {
 import { supabase } from "../lib/supabase";
 import { AuthSessionMissingError } from "@supabase/supabase-js";
 import { div } from "framer-motion/client";
+import AbonnementInfo from "../components/settings/AbonnementInfo";
 
 export default function Layout() {
   const location = useLocation();
@@ -65,7 +66,7 @@ export default function Layout() {
     { name: "Créances", href: "/receivables", icon: FileText },
     { name: "Paramètres", href: "/settings", icon: Settings },
   ];
-//  console.log("Current path:", JSON.stringify(location.pathname));
+  //  console.log("Current path:", JSON.stringify(location.pathname));
   const handleSubscribe = async () => {
     const {
       data: { session },
@@ -105,7 +106,7 @@ export default function Layout() {
       if (pending?.length === 0 || !pending) {
         await supabase.auth.signOut();
         navigate("/signup");
-      } 
+      }
       const { data: existingProfile } = await supabase
         .from("profiles")
         .select("*")
@@ -191,20 +192,21 @@ export default function Layout() {
 
       // Vérifie si le profil "Default" existe déjà pour cet utilisateur
       const { data, error: fetchError } = await supabase
-        .from('reminder_profile')
-        .select('id')
-        .eq('name', 'Default')
-        .eq('owner_id', user.id)
+        .from("reminder_profile")
+        .select("id")
+        .eq("name", "Default")
+        .eq("owner_id", user.id)
         .single();
 
-      if (fetchError && fetchError.code !== 'PGRST116') { // Code spécifique si pas trouvé
+      if (fetchError && fetchError.code !== "PGRST116") {
+        // Code spécifique si pas trouvé
         console.log(fetchError.message);
         return;
       }
 
       if (!data) {
         const DefaultData = {
-          name: 'Default',
+          name: "Default",
           delay1: { j: 1, h: 0, m: 0 },
           delay2: { j: 1, h: 0, m: 0 },
           delay3: { j: 1, h: 0, m: 0 },
@@ -213,7 +215,7 @@ export default function Layout() {
         };
 
         const { error: insertError } = await supabase
-          .from('reminder_profile')
+          .from("reminder_profile")
           .insert(DefaultData);
 
         if (insertError) {
@@ -228,7 +230,36 @@ export default function Layout() {
   return (
     <div>
       {checking ? (
-        <div>Vérification de votre compte</div>
+        <div className="flex items-center justify-center min-h-screen bg-gray-50">
+          <div className="flex flex-col items-center space-y-4">
+            <svg
+              className="animate-spin h-10 w-10 text-blue-600"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8v8z"
+              />
+            </svg>
+            <h2 className="text-xl font-semibold text-gray-700 animate-pulse">
+              Vérification de votre compte...
+            </h2>
+            <p className="text-gray-500 text-sm">
+              Merci de patienter un instant
+            </p>
+          </div>
+        </div>
       ) : (
         <div className="min-h-screen bg-gray-100">
           {/* Sidebar */}
@@ -285,6 +316,17 @@ export default function Layout() {
             </div>
           </div>
           {/* Main content */}
+          <header className="p-4 border-b flex justify-end items-center gap-4">
+            <AbonnementInfo />
+
+            <a
+              href="/pricing"
+              className="text-sm text-blue-600 bg-blue-50 px-3 py-1 rounded-full hover:bg-blue-100 transition font-medium shadow-sm"
+            >
+              Voir les tarifs
+            </a>
+          </header>
+
           <div className="pl-20 group-hover:pl-64 transition-all duration-200">
             <main className="py-6">
               <Outlet />
