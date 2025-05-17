@@ -616,8 +616,7 @@ export default function Dashboard() {
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="rounded-2xl shadow bg-white p-6">
-                <h2 className="text-xl font-semibold text-gray-800">
+              <div className="rounded-2xl shadow bg-white p-6 max-h-[300px] overflow-y-auto">                <h2 className="text-xl font-semibold text-gray-800">
                   Notifications
                 </h2>
                 <div className="mb-3 flex gap-2">
