@@ -10,6 +10,7 @@ import {
   Home,
   FileQuestion,
   CalendarCheck,
+  HelpCircle,
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { AuthSessionMissingError } from "@supabase/supabase-js";
