@@ -154,7 +154,6 @@ const PricingPage = () => {
     },
   };
 
-
   const handleStripePayment = async (
     plan: string,
     interval: "monthly" | "yearly"
@@ -173,28 +172,48 @@ const PricingPage = () => {
 
     const { data, error } = await supabase
       .from("profileStripe")
-      .select("subscription_expiry")
-      .eq("email", userEmail)
-      .maybeSingle();
+      .select("abonnement, subscription_expiry")
+      .eq("email", userEmail);
 
     if (error) {
+      console.error(error);
       setMessage("Erreur lors de la vérification de l’abonnement.");
       return;
     }
 
-    const expiry = data?.subscription_expiry;
-    const now = new Date();
+    // Vérifie s’il y a un abonnement actif
+    const latest = data
+      ?.filter((row) => row.subscription_expiry)
+      .sort(
+        (a, b) =>
+          new Date(b.subscription_expiry).getTime() -
+          new Date(a.subscription_expiry).getTime()
+      )[0];
 
-    if (expiry && new Date(expiry) > now) {
-      const formatted = new Date(expiry).toLocaleDateString("fr-FR", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      });
+    const now = new Date();
+    if (
+      latest?.subscription_expiry &&
+      new Date(latest.subscription_expiry) > now
+    ) {
+      const formatted = new Date(latest.subscription_expiry).toLocaleDateString(
+        "fr-FR",
+        {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        }
+      );
       setMessage(`Vous avez déjà un abonnement actif jusqu’au ${formatted}.`);
       return;
     }
 
+    // Vérification de la validité du plan/interval
+    if (!priceMap[plan] || !priceMap[plan][interval]) {
+      setMessage("Plan ou intervalle invalide.");
+      return;
+    }
+
+    // Stockage local pour potentielle récupération après le paiement
     localStorage.setItem("selectedPlan", plan);
     localStorage.setItem("selectedInterval", interval);
 
@@ -206,25 +225,30 @@ const PricingPage = () => {
       cancel_url: window.location.origin + "/pricing",
     };
 
-    const res = await fetch(
-      "https://rsomeerndudkhyhpigmn.supabase.co/functions/v1/create-stripe-session",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
+    try {
+      const res = await fetch(
+        "https://rsomeerndudkhyhpigmn.supabase.co/functions/v1/create-stripe-session",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      const result = await res.json();
+
+      if (result?.url) {
+        window.location.href = result.url;
+      } else {
+        setMessage("Erreur lors de la création de la session de paiement.");
+        console.error(result);
       }
-    );
-
-    const result = await res.json();
-
-    if (result?.url) {
-      window.location.href = result.url;
-    } else {
-      setMessage("Erreur lors de la création de la session de paiement.");
-      console.error(result);
+    } catch (err) {
+      setMessage("Une erreur est survenue lors du paiement.");
+      console.error(err);
     }
   };
 
