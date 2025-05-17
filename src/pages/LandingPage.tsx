@@ -252,6 +252,13 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
     return { displayedPrice: monthlyPrice, originalPrice: null };
   };
 
+  const handleChoosePlan = (plan: string, interval: "monthly" | "yearly") => {
+    localStorage.setItem("selectedPlan", plan);
+    localStorage.setItem("selectedInterval", interval);
+    navigate("/signup");
+  };
+
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Header */}
@@ -574,7 +581,7 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
                   </li>
                 </ul>
                 <button
-                  onClick={() => navigate("/signup")}
+                  onClick={() => handleChoosePlan("basic", billingInterval)}
                   className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors"
                 >
                   Souscrire
@@ -630,7 +637,7 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
                   </li>
                 </ul>
                 <button
-                  onClick={() => navigate("/signup")}
+                  onClick={() => handleChoosePlan("pro", billingInterval)}
                   className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors"
                 >
                   Souscrire
@@ -679,7 +686,9 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
                   </li>
                 </ul>
                 <button
-                  onClick={() => handleStripePayment("enterprise")}
+                  onClick={() =>
+                    handleChoosePlan("entreprise", billingInterval)
+                  }
                   className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors"
                 >
                   Contacter les ventes

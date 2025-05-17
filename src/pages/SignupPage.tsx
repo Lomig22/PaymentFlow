@@ -37,6 +37,12 @@ export default function SignupPage() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [company, setCompany] = useState("");
+  const [selectedPlan, setSelectedPlan] = useState("basic");
+
+  useEffect(() => {
+    const savedPlan = localStorage.getItem("selectedPlan");
+    if (savedPlan) setSelectedPlan(savedPlan);
+  }, []);
 
   const validateForm = () => {
     if (!email.trim()) {
@@ -79,7 +85,7 @@ export default function SignupPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateForm()) return;
+    // if (!validateForm()) return;
 
     setLoading(true);
     setMessage(null);
@@ -103,6 +109,8 @@ export default function SignupPage() {
       if (data?.user) {
         const userId = data.user.id;
         const formatedEmail = email.toLowerCase();
+        localStorage.setItem("pendingUserId", userId);
+        localStorage.setItem("pendingEmail", email.toLowerCase());
         const { error: upsertError } = await supabase
           .from("pending_profiles")
           .upsert(
@@ -116,7 +124,7 @@ export default function SignupPage() {
               },
             ],
             {
-              onConflict: "id", // clé sur laquelle on veut faire le upsert
+              onConflict: "id",
             }
           );
 
@@ -134,8 +142,7 @@ export default function SignupPage() {
         text: "Un e-mail de confirmation vous a été envoyé. Veuillez vérifier votre boîte de réception.",
       });
 
-      // Redirect after 3 seconds
-      setTimeout(() => navigate("/login"), 3000);
+      setTimeout(async () => await createStripeSession(), 3000);
     } catch (error: any) {
       setMessage({
         type: "error",
@@ -184,6 +191,62 @@ export default function SignupPage() {
     }
   };
   const [step, setStep] = useState(1);
+
+  const priceMap = {
+    basic: {
+      monthly: import.meta.env.VITE_STRIPE_PRICE_BASIC,
+      yearly: import.meta.env.VITE_STRIPE_PRICE_BASIC_ANNUEL,
+    },
+    pro: {
+      monthly: import.meta.env.VITE_STRIPE_PRICE_PRO,
+      yearly: import.meta.env.VITE_STRIPE_PRICE_PRO_ANNUEL,
+    },
+    enterprise: {
+      monthly: import.meta.env.VITE_STRIPE_PRICE_ENTREPRISE,
+      yearly: import.meta.env.VITE_STRIPE_PRICE_ENTREPRISE_ANNUEL,
+    },
+  };
+
+  const createStripeSession = async () => {
+    const plan = localStorage.getItem("selectedPlan");
+    const interval = localStorage.getItem("selectedInterval");
+
+    if (!selectedPlan) {
+      console.error("Aucun plan sélectionné !");
+      return;
+    }
+
+    const payload = {
+      price_id: priceMap[plan][interval],
+      success_url: window.location.origin + "/paiement-abonement",
+      cancel_url: window.location.origin + "/pricing",
+    };
+
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    const token = import.meta.env.VITE_TOKEN_STRIPE;
+    const res = await fetch(
+      "https://rsomeerndudkhyhpigmn.supabase.co/functions/v1/create-stripe-session",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      }
+    );
+
+    const data = await res.json();
+
+    if (data?.url) {
+      window.location.href = data.url;
+    } else {
+      console.error("Erreur création session Stripe", data);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
