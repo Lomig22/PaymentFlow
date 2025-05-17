@@ -456,10 +456,16 @@ function ClientList({
                   />
                 </th>
 
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
+                <th
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider"
+                  style={{ maxWidth: "80px" }}
+                >
                   Actions
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
+                <th
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider"
+                  style={{ maxWidth: "80px" }}
+                >
                   <SortableColHead
                     colKey="reminderProfile"
                     label="Profil de rappel"
@@ -471,7 +477,10 @@ function ClientList({
                   />
                 </th>
 
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
+                <th
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider"
+                  style={{ maxWidth: "80px" }}
+                >
                   <SortableColHead
                     colKey="needs_reminder"
                     label="Relance"
@@ -505,7 +514,6 @@ function ClientList({
                     sort={sortConfig?.sort ?? "none"}
                   />
                 </th>
-
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                   <SortableColHead
                     colKey="email"
@@ -528,7 +536,6 @@ function ClientList({
                     sort={sortConfig?.sort ?? "none"}
                   />
                 </th>
-
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                   <SortableColHead
                     colKey="address"
@@ -540,7 +547,6 @@ function ClientList({
                     sort={sortConfig?.sort ?? "none"}
                   />
                 </th>
-
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                   <SortableColHead
                     colKey="city"
@@ -596,7 +602,6 @@ function ClientList({
                     sort={sortConfig?.sort ?? "none"}
                   />
                 </th>
-
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                   <SortableColHead
                     colKey="created_at"
@@ -651,7 +656,10 @@ function ClientList({
                       className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
                     />
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap relative">
+                  <td
+                    className="px-6 py-4 whitespace-nowrap relative"
+                    style={{ maxWidth: "80px" }}
+                  >
                     <div className="flex items-center gap-2 relative">
                       <button
                         onClick={() =>
@@ -709,13 +717,19 @@ function ClientList({
                     </div>
                   </td>
 
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td
+                    className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
+                    style={{ maxWidth: "80px" }}
+                  >
                     {!client.reminderProfile?.name ||
                     client.reminderProfile.name === "Default"
                       ? "-"
                       : client.reminderProfile.name}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td
+                    className="px-6 py-4 whitespace-nowrap"
+                    style={{ maxWidth: "80px" }}
+                  >
                     <div className="flex items-center">
                       <span
                         className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
@@ -830,7 +844,7 @@ function ClientList({
           onClientAdded={(client) => {
             setClients([client, ...clients]);
             setShowForm(false);
-            fetchClients()
+            fetchClients();
           }}
           onClientUpdated={(updatedClient) => {
             setClients(
@@ -840,8 +854,8 @@ function ClientList({
             );
             setShowForm(false);
             setSelectedClient(null);
-      //      showSuccess("Client modifié correctement")
-            fetchClients()
+            //      showSuccess("Client modifié correctement")
+            fetchClients();
           }}
           client={selectedClient ?? undefined}
           mode={selectedClient ? "edit" : "create"}
