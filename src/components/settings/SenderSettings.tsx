@@ -328,41 +328,6 @@ export default function SignatureSettings() {
         )}
       </AnimatePresence>
 
-      <header className="flex flex-col md:flex-row gap-6">
-        <div className="max-w-5xl mx-auto flex justify-end gap-4 p-4">
-          {[
-            {
-              label: showHtml ? "Aperçu visuel" : "HTML brut",
-              icon: showHtml ? <Eye /> : <Code />,
-              onClick: () => setShowHtml(!showHtml),
-              color: "bg-gray-100",
-            },
-            {
-              label: "Enregistrer",
-              icon: <Save />,
-              onClick: () => saveToSupabase(),
-              color: "bg-green-600 text-white",
-            },
-            {
-              label: "Copier",
-              icon: <Clipboard />,
-              onClick: () => copySignatureToClipboard(),
-              color: "bg-blue-600 text-white",
-            },
-          ].map((btn, i) => (
-            <motion.button
-              key={i}
-              onClick={btn.onClick}
-              whileHover={btnHover}
-              className={`${btn.color} px-5 py-2 rounded-lg flex items-center gap-2 shadow`}
-            >
-              {btn.icon}
-              <span className="font-semibold">{btn.label}</span>
-            </motion.button>
-          ))}
-        </div>
-      </header>
-
       <main className="flex flex-col md:flex-row gap-6">
         <div className="bg-white rounded-xl shadow relative flex-1 overflow-hidden">
           <div className=" p-6">
@@ -524,8 +489,40 @@ export default function SignatureSettings() {
         </div>
       </div>
 
-
-      
+      <header className="flex flex-col md:flex-row gap-6">
+        <div className="max-w-5xl mx-auto flex justify-end gap-4 p-4">
+          {[
+            {
+              label: showHtml ? "Aperçu visuel" : "HTML brut",
+              icon: showHtml ? <Eye /> : <Code />,
+              onClick: () => setShowHtml(!showHtml),
+              color: "bg-gray-100",
+            },
+            {
+              label: "Enregistrer",
+              icon: <Save />,
+              onClick: () => saveToSupabase(),
+              color: "bg-green-600 text-white",
+            },
+            {
+              label: "Copier",
+              icon: <Clipboard />,
+              onClick: () => copySignatureToClipboard(),
+              color: "bg-blue-600 text-white",
+            },
+          ].map((btn, i) => (
+            <motion.button
+              key={i}
+              onClick={btn.onClick}
+              whileHover={btnHover}
+              className={`${btn.color} px-5 py-2 rounded-lg flex items-center gap-2 shadow`}
+            >
+              {btn.icon}
+              <span className="font-semibold">{btn.label}</span>
+            </motion.button>
+          ))}
+        </div>
+      </header>
     </div>
   );
 }

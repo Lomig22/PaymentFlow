@@ -160,78 +160,82 @@ function ReceivablesList() {
   }, [importSuccess]);
   //récupération du template actuelle:
   useEffect(() => {
-  if (showConfirmSendReminder===true){
-    const fetchData = async () => {
-      if (!selectedReceivable) {
-        setContent("");
-        setSubject("");
-        setSignature("");
-        return;
-      }
-
-      const {
-        data: { user },
-        error,
-      } = await supabase.auth.getUser();
-      if (error || !user) {
-        console.error("Utilisateur non connecté");
-        return;
-      }
-
-      // Récupérer la signature
-      const emailSettings = await getEmailSettings(user.id);
-      if (emailSettings?.email_signature) {
-        setSignature(emailSettings.email_signature);
-      }
-      const isLastStatus=(status:string)=>{
-        const lastStatus=selectedReceivable.client?.reminder_enable_final?
-        'Relance finale':selectedReceivable.client?.reminder_enable_3?
-        'Relance 3':  selectedReceivable.client?.reminder_enable_2?
-        'Relance 2': selectedReceivable.client?.reminder_enable_1?
-        'Relance 1':'Relance préventive'
-        return  status===lastStatus
-      }
-      if (isLastStatus(selectedReceivable.status)===false){
-      // Déterminer le statut à utiliser pour la relance
-      const newStatus = getNextEnabledReminderStatus(
-        selectedReceivable.status,
-        selectedReceivable.client
-      );
-
-      if (!newStatus) { 
-
-       showError("Vous n'avez pas encore configurer cette relance!");
-        setSending(false);
-        setShowConfirmReminder(false);
-       setSelectedClient(null);
-        return;
-      } else{
-
-      }
-      await supabase
-      .from('receivables')
-      .update({
-        status:newStatus
-      })
-      .eq('id', selectedReceivable.id);
-      //alert(newStatus);
-      // Mettre à jour le statut avant l’envoi
-      selectedReceivable.status = newStatus;
-      // Récupérer le contenu et le niveau
-    
-        const result = await getReminderTemplate(selectedReceivable.id,newStatus);
-        if (result) {
-          const subjectLine = `Relance facture ${selectedReceivable.invoice_number}`;
-          setSubject(subjectLine);
-          setContent(result.template); // ou formatté si le template est déjà rempli
+    if (showConfirmSendReminder === true) {
+      const fetchData = async () => {
+        if (!selectedReceivable) {
+          setContent("");
+          setSubject("");
+          setSignature("");
+          return;
         }
-      }
 
-    };
-    
-    fetchData();
-  }
-  }, [selectedReceivable,showConfirmSendReminder]);
+        const {
+          data: { user },
+          error,
+        } = await supabase.auth.getUser();
+        if (error || !user) {
+          console.error("Utilisateur non connecté");
+          return;
+        }
+
+        // Récupérer la signature
+        const emailSettings = await getEmailSettings(user.id);
+        if (emailSettings?.email_signature) {
+          setSignature(emailSettings.email_signature);
+        }
+        const isLastStatus = (status: string) => {
+          const lastStatus = selectedReceivable.client?.reminder_enable_final
+            ? "Relance finale"
+            : selectedReceivable.client?.reminder_enable_3
+            ? "Relance 3"
+            : selectedReceivable.client?.reminder_enable_2
+            ? "Relance 2"
+            : selectedReceivable.client?.reminder_enable_1
+            ? "Relance 1"
+            : "Relance préventive";
+          return status === lastStatus;
+        };
+        if (isLastStatus(selectedReceivable.status) === false) {
+          // Déterminer le statut à utiliser pour la relance
+          const newStatus = getNextEnabledReminderStatus(
+            selectedReceivable.status,
+            selectedReceivable.client
+          );
+
+          if (!newStatus) {
+            showError("Vous n'avez pas encore configurer cette relance!");
+            setSending(false);
+            setShowConfirmReminder(false);
+            setSelectedClient(null);
+            return;
+          } else {
+          }
+          await supabase
+            .from("receivables")
+            .update({
+              status: newStatus,
+            })
+            .eq("id", selectedReceivable.id);
+          //alert(newStatus);
+          // Mettre à jour le statut avant l’envoi
+          selectedReceivable.status = newStatus;
+          // Récupérer le contenu et le niveau
+
+          const result = await getReminderTemplate(
+            selectedReceivable.id,
+            newStatus
+          );
+          if (result) {
+            const subjectLine = `Relance facture ${selectedReceivable.invoice_number}`;
+            setSubject(subjectLine);
+            setContent(result.template); // ou formatté si le template est déjà rempli
+          }
+        }
+      };
+
+      fetchData();
+    }
+  }, [selectedReceivable, showConfirmSendReminder]);
 
   // Fonction pour vérifier si un client a des créances impayées
   const checkClientUnpaidReceivables = async (
@@ -275,11 +279,11 @@ function ReceivablesList() {
           reminder_enable_2: false,
           reminder_enable_3: false,
           reminder_enable_final: false,
-          pre_reminder_template:null,
-          reminder_template_1:null,
-          reminder_template_2:null,
-          reminder_template_3:null,
-          reminder_template_final:null
+          pre_reminder_template: null,
+          reminder_template_1: null,
+          reminder_template_2: null,
+          reminder_template_3: null,
+          reminder_template_final: null,
         })
         .eq("id", clientId);
 
@@ -320,9 +324,9 @@ function ReceivablesList() {
       await updateClientReminderStatus(clientId, false);
 
       // Vérifier si le client a encore des créances impayées
-    //  const noUnpaidReceivables = await checkClientUnpaidReceivables(clientId);
+      //  const noUnpaidReceivables = await checkClientUnpaidReceivables(clientId);
 
-  /*     // Si le client n'a plus de créances impayées, désactiver les relances
+      /*     // Si le client n'a plus de créances impayées, désactiver les relances
       if (noUnpaidReceivables) {
         await updateClientReminderStatus(clientId, false);
 
@@ -509,7 +513,7 @@ function ReceivablesList() {
                 is_read: false,
                 type: "info",
                 message: "Relance effectuée correctement",
-                need_mail_notification:true,
+                need_mail_notification: true,
                 details: `Relance ${selectedReceivable.client.company_name}\nDestinataire : ${selectedReceivable.email}`,
               });
             } catch (error: any) {
@@ -528,7 +532,7 @@ function ReceivablesList() {
               is_read: false,
               type: "erreur",
               message: "Relançe manuelle échouée",
-              need_mail_notification:true,
+              need_mail_notification: true,
               details:
                 "client: " +
                 selectedReceivable.client.company_name +
@@ -543,7 +547,7 @@ function ReceivablesList() {
               is_read: false,
               type: "erreur",
               message: "Relançe manuelle échouée",
-              need_mail_notification:true,
+              need_mail_notification: true,
               details:
                 "client: " +
                 selectedReceivable.client.company_name +
@@ -564,7 +568,7 @@ function ReceivablesList() {
           owner_id: user.id,
           is_read: false,
           type: "erreur",
-          need_mail_notification:true,
+          need_mail_notification: true,
           message: "Relançe manuelle échouée",
           details:
             "client: " +
@@ -580,14 +584,14 @@ function ReceivablesList() {
         setSelectedClient(null);
       }
     };
-    const navigate = useNavigate();
+  const navigate = useNavigate();
 
-    const sendToSignatureSetting = () => {
-     // alert("send")
-      navigate('/settings', {
-        state: { initialSectionId: 'reminders', initialSubTabId: 'sender' }
-      });
-    };
+  const sendToSignatureSetting = () => {
+    // alert("send")
+    navigate("/settings", {
+      state: { initialSectionId: "reminders", initialSubTabId: "sender" },
+    });
+  };
   const handleImportSuccess = async (importedCount: number) => {
     setImportSuccess(`${importedCount} créance(s) importée(s) avec succès`);
     const {
@@ -596,7 +600,7 @@ function ReceivablesList() {
 
     await saveNotification({
       owner_id: user?.id,
-      need_mail_notification:true,
+      need_mail_notification: true,
       is_read: false,
       type: "info",
       message: `importation de ${importedCount} créance(s)`,
@@ -705,7 +709,7 @@ function ReceivablesList() {
       if (error) throw error;
       await saveNotification({
         owner_id: user?.id,
-        need_mail_notification:true,
+        need_mail_notification: true,
         is_read: false,
         type: "info",
         message: "Mise à jour des paramètres de relance automatique",
@@ -720,7 +724,7 @@ function ReceivablesList() {
         await saveNotification({
           owner_id: user?.id,
           is_read: false,
-          need_mail_notification:true,
+          need_mail_notification: true,
           type: "erreur",
           message: "Mise à jour des paramètres de relance automatique échouée",
           details: `${error}`,
@@ -862,45 +866,67 @@ function ReceivablesList() {
       issues.push("la relance finale est activée sans template");
 
     // Vérifier chaque relance individuellement
-    if (client.pre_reminder_enable && !preAlreadySend && client.pre_reminder_date) {
-      console.log("client: ",client.company_name," preAlreadySend:",preAlreadySend)
+    if (
+      client.pre_reminder_enable &&
+      !preAlreadySend &&
+      client.pre_reminder_date
+    ) {
+      console.log(
+        "client: ",
+        client.company_name,
+        " preAlreadySend:",
+        preAlreadySend
+      );
       if (isBefore(new Date(client.pre_reminder_date), now)) {
         issues.push("La pré-relance est dépassée");
       }
     }
-    
-    if (client.reminder_enable_1 && !reminder1AlreadySend && client.reminder_date_1) {
 
+    if (
+      client.reminder_enable_1 &&
+      !reminder1AlreadySend &&
+      client.reminder_date_1
+    ) {
       if (isBefore(new Date(client.reminder_date_1), now)) {
         issues.push("La relance 1 est dépassée");
       }
     }
-    
-    if (client.reminder_enable_2 && !reminder2AlreadySend && client.reminder_date_2) {
-      console.log("relance 2 already send:",reminder2AlreadySend)
+
+    if (
+      client.reminder_enable_2 &&
+      !reminder2AlreadySend &&
+      client.reminder_date_2
+    ) {
+      console.log("relance 2 already send:", reminder2AlreadySend);
 
       if (isBefore(new Date(client.reminder_date_2), now)) {
         issues.push("La relance 2 est dépassée");
       }
     }
-    
-    if (client.reminder_enable_3 && !reminder3AlreadySend && client.reminder_date_3) {
-      console.log("relance 3 already send:",reminder3AlreadySend)
+
+    if (
+      client.reminder_enable_3 &&
+      !reminder3AlreadySend &&
+      client.reminder_date_3
+    ) {
+      console.log("relance 3 already send:", reminder3AlreadySend);
 
       if (isBefore(new Date(client.reminder_date_3), now)) {
         issues.push("La relance 3 est dépassée");
       }
     }
-    
-    if (client.reminder_enable_final && !reminderFinalAlreadySend && client.reminder_date_final) {
-      console.log("relance final already send:",reminderFinalAlreadySend)
+
+    if (
+      client.reminder_enable_final &&
+      !reminderFinalAlreadySend &&
+      client.reminder_date_final
+    ) {
+      console.log("relance final already send:", reminderFinalAlreadySend);
 
       if (isBefore(new Date(client.reminder_date_final), now)) {
         issues.push("La relance finale est dépassée");
       }
     }
-    
-   
 
     return issues.length > 0 ? issues.join(", ") : "";
   };
@@ -1025,11 +1051,11 @@ function ReceivablesList() {
       return "Relance en pause";
     }
     if (
-      (receivable.reminder_enable_1===false) &&
-      (receivable.reminder_enable_2===false )&&
-      (receivable.reminder_enable_3===false) &&
-      (receivable.reminder_enable_final===false) &&
-      (receivable.pre_reminder_enable===false)
+      receivable.reminder_enable_1 === false &&
+      receivable.reminder_enable_2 === false &&
+      receivable.reminder_enable_3 === false &&
+      receivable.reminder_enable_final === false &&
+      receivable.pre_reminder_enable === false
     ) {
       return "Aucune relance n'est activée!";
     }
@@ -1320,10 +1346,13 @@ function ReceivablesList() {
                               }}
                             >
                               {receivable.automatic_reminder ? (
-                                <Tooltip label="Mettre en pause" theme="green">
+                                <Tooltip
+                                  label="Activer les relances"
+                                  theme="orange"
+                                >
                                   <motion.img
-                                    src={PauseSvg}
-                                    alt="Pause"
+                                    src={PlaySvg}
+                                    alt="Play"
                                     className="w-5 h-5"
                                     initial={{ scale: 1 }}
                                     animate={{ rotate: 360, scale: 1.2 }}
@@ -1336,13 +1365,10 @@ function ReceivablesList() {
                                   />
                                 </Tooltip>
                               ) : (
-                                <Tooltip
-                                  label="Activer les relances"
-                                  theme="orange"
-                                >
+                                <Tooltip label="Mettre en pause" theme="green">
                                   <motion.img
-                                    src={PlaySvg}
-                                    alt="Play"
+                                    src={PauseSvg}
+                                    alt="Pause"
                                     className="w-5 h-5"
                                     initial={{ scale: 1 }}
                                     animate={{ rotate: 0, scale: 1.2 }}
