@@ -4,6 +4,8 @@ import "react-datepicker/dist/react-datepicker.css";
 import { registerLocale } from "react-datepicker";
 import fr from "date-fns/locale/fr";
 import { supabase } from "../../lib/supabase";
+import { Clock } from "lucide-react";
+import { YearPicker } from "../../components/ui/year-picker";
 registerLocale("fr", fr);
 
 const monthLabels = [
@@ -89,7 +91,6 @@ const DsoChart = () => {
       setDsoData(finalData);
     };
 
-
     fetchDSO();
   }, []);
 
@@ -117,18 +118,17 @@ const DsoChart = () => {
   const max = Math.max(...filteredData.map((d) => d.value || 0));
 
   return (
-    <div className="bg-white rounded-xl p-5 w-full">
+    <div className="bg-white rounded-xl p-5 w-full font-semibold">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-4">
-        <h2 className="text-gray-800 font-semibold text-lg">DSO</h2>
+        <div className="flex items-center space-x-2 mb-2">
+          <div className="bg-yellow-100 p-3 rounded-lg">
+            <Clock className="h-6 w-6 text-yellow-600" />
+          </div>
+          <h2 className="text-gray-800 font-semibold text-lg">DSO</h2>
+        </div>
         <div className="flex gap-3">
-          <DatePicker
-            selected={new Date(selectedYear, 0)}
-            onChange={handleYearChange}
-            dateFormat="yyyy"
-            showYearPicker
-            locale="fr"
-            className="border border-gray-300 text-sm rounded-md px-2 py-1"
-          />
+          <YearPicker value={selectedYear} onChange={setSelectedYear} />
+
           <select
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
@@ -154,26 +154,33 @@ const DsoChart = () => {
       </div>
 
       {filteredData.length > 0 ? (
-        <div
-          className="flex items-end justify-between"
-          style={{ height: "160px" }}
-        >
-          {filteredData.map((d, i) => (
-            <div key={i} className="flex flex-col items-center">
-              <span className="text-sm text-gray-700 font-medium mb-1">
-                {d.value}
-              </span>
+        <div className="overflow-x-auto w-full">
+          <div
+            className="flex items-end gap-4 min-w-[600px]"
+            style={{ height: "180px" }}
+          >
+            {filteredData.map((d, i) => (
               <div
-                className="w-6 rounded-md transition-all duration-300"
-                style={{
-                  height: `${(d.value / max) * 130}px`,
-                  backgroundColor:
-                    i === filteredData.length - 1 ? "#4F8CFF" : "#E0ECFF",
-                }}
-              />
-              <span className="text-xs text-gray-500 mt-2">{d.month}</span>
-            </div>
-          ))}
+                key={i}
+                className="flex flex-col items-center w-10 sm:w-12 flex-shrink-0"
+              >
+                <span className="text-sm text-gray-700 font-medium mb-1">
+                  {d.value}
+                </span>
+                <div
+                  className="w-full rounded-md transition-all duration-300"
+                  style={{
+                    height: `${(d.value / (max || 1)) * 130}px`,
+                    backgroundColor:
+                      i === filteredData.length - 1 ? "#4F8CFF" : "#E0ECFF",
+                  }}
+                />
+                <span className="text-xs text-gray-500 mt-2 text-center whitespace-nowrap">
+                  {d.month}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       ) : (
         <p className="text-sm text-gray-500 italic">

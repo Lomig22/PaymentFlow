@@ -13,6 +13,7 @@ import { supabase } from "../../lib/supabase";
 import dayjs from "dayjs";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { AlertCircle } from "lucide-react";
 
 type BalanceData = {
   periode: string;
@@ -79,9 +80,14 @@ export default function BalanceAgeeChart() {
     <div className="rounded-2xl w-full h-full">
       <Card className="p-6 shadow-xl bg-white h-full">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-gray-800">
-            Balance âgée (retards)
-          </h2>
+          <div className="flex items-center space-x-2 mb-2">
+            <div className="bg-red-100 p-3 rounded-lg">
+              <AlertCircle className="h-6 w-6 text-red-600" />
+            </div>
+            <h2 className="text-xl font-semibold text-gray-800">
+              Balance âgée (retards)
+            </h2>
+          </div>
           <div className="flex items-center gap-2">
             <label className="text-sm text-gray-600">Date de référence:</label>
             <DatePicker
@@ -112,7 +118,7 @@ export default function BalanceAgeeChart() {
             <Tooltip formatter={(value: number) => [`${value} €`, "Montant"]} />
             <Bar
               dataKey="montant"
-              fill="rgb(255, 99, 132)"
+              fill="rgb(220 38 38 / var(--tw-text-opacity, 1))"
               radius={[4, 4, 0, 0]}
             />
           </BarChart>
