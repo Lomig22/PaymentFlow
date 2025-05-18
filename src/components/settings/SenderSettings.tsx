@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { supabase } from "../../lib/supabase";
-import { div } from "framer-motion/client";
-
+import ThemeCustomizer from "./ThemeCustomizer";
 export default function SignatureSettings() {
   const [senderName, setSenderName] = useState("");
   const [senderEmail, setSenderEmail] = useState("");
@@ -53,42 +52,46 @@ export default function SignatureSettings() {
       textColor: "#1a202c",
       bgColor: "#e2e8f0",
     },
+    custom: {
+      font: font || "Arial",
+      textColor: textColor || "#000000",
+      bgColor: bgColor || "#ffffff",
+    },
   };
   const uploadLogo = async (file) => {
     const {
       data: { session },
       error: sessionError,
     } = await supabase.auth.getSession();
-  
+
     if (sessionError || !session) {
       console.error("utilisateur non authentifiée!");
       return null;
     }
-  
+
     const user = session.user;
     const filePath = `logos/${user.id}/${file.name}`;
-  
+
     const { error: uploadError } = await supabase.storage
       .from("logos") // nom du bucket Supabase
       .upload(filePath, file, {
         upsert: true, // écrase les anciennes versions si elles existent
         contentType: file.type,
       });
-  
+
     if (uploadError) {
       console.error("Erreur d'upload:", uploadError);
       showError("Échec de l'envoi du logo");
       return null;
     }
-  
+
     // Génère l'URL publique du fichier
     const { data: publicUrlData } = supabase.storage
       .from("logos")
       .getPublicUrl(filePath);
-  
+
     return publicUrlData.publicUrl;
   };
-  
 
   const applyTheme = themes[selectedTheme];
   const saveToSupabase = async () => {
@@ -152,8 +155,8 @@ export default function SignatureSettings() {
         const parts = text.split(":");
         return parts.length > 1 ? parts.slice(1).join(":").trim() : text;
       };
-      setSignatureTemplate(data?.signature_template || "Classique");
-      setSelectedTheme(data?.signature_template);
+      setSignatureTemplate(data?.signature_template || "classique");
+      setSelectedTheme(data?.signature_template || "classique");
       setSenderName(getField(".signature-nom"));
       setSenderEmail(getField(".signature-email"));
       setCompanyName(getField(".signature-company"));
@@ -174,23 +177,23 @@ export default function SignatureSettings() {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-  
+
     setLocalLogo(file); // utile si tu veux prévisualiser dans un <img />
-  
+
     const {
       data: { session },
       error: sessionError,
     } = await supabase.auth.getSession();
-  
+
     if (sessionError || !session) {
       console.error("Utilisateur non authentifié");
       showError("Veuillez vous connecter d'abord");
       return;
     }
-  
+
     const user = session.user;
     const filePath = `${user.id}/${file.name}`;
-  
+
     // Upload du fichier vers Supabase Storage
     const { error: uploadError } = await supabase.storage
       .from("logos") // remplace par le nom exact de ton bucket Supabase
@@ -198,28 +201,28 @@ export default function SignatureSettings() {
         upsert: true, // autorise le remplacement d'anciens fichiers
         contentType: file.type,
       });
-  
+
     if (uploadError) {
       console.error("Erreur d'upload:", uploadError);
       showError("Erreur lors de l'envoi du logo");
       return;
     }
-  
+
     // Récupère l'URL publique du fichier
     const { data: publicUrlData } = supabase.storage
       .from("logos")
       .getPublicUrl(filePath);
-  
+
     if (publicUrlData?.publicUrl) {
       setLogoUrl(publicUrlData.publicUrl); // ✔️ Ceci sera utilisé dans ta signature HTML
       showSuccess("Logo uploadé avec succès !");
     } else {
-     // alert(error)
+      // alert(error)
       showError("Échec de la récupération de l'URL du logo");
     }
-   // alert("terminé")
+    // alert("terminé")
   };
-  
+
   const copySignatureToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(signatureHTML);
@@ -255,115 +258,116 @@ export default function SignatureSettings() {
 
     return html;
   })();
-
   return (
-    <div className="p-6 space-y-6 max-w-4xl mx-auto">
-      <form className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white border p-6 rounded-lg shadow">
-        <h2 className="text-2xl font-semibold col-span-full">
-          Paramètres de signature
-        </h2>
+    <div className="max-w-7xl mx-auto p-4 space-y-6">
+          {/* --- Erreurs ou succès éventuels rencontrées --- */}
+          {error && (
+        <div className="fixed p-4 bg-red-50 border border-red-200 rounded-md text-red-700">
+          {error}
+        </div>
+      )}
+      {success && (
+        <div className="fixed p-4 bg-green-50 border border-green-200 rounded-md text-green-700">
+          {success}
+        </div>
+      )}
+      {/* --- Boutons d'action en colonne verticale --- */}
+      <div className="flex flex-row  ">
+        <button
+          onClick={() => setShowHtml(!showHtml)}
+          className="bg-gray-200 px-4 py-2 rounded hover:bg-gray-300 mr-2"
+        >
+          {showHtml ? "Afficher l’aperçu visuel" : "Afficher le HTML"}
+        </button>
+        <button
+          onClick={saveToSupabase}
+          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 mr-2"
+        >
+          Enregistrer
+        </button>
+        <button
+          onClick={copySignatureToClipboard}
+          className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-blue-700 mr-2"
+        >
+          Copier
+        </button>
+      </div>
+      <div className="space-y-4 mb-6">
+        {/* Ligne horizontale : combo + options custom si actif */}
+        <div className="flex items-end space-x-6">
+          {/* Combo Modèle de signature */}
+          <div>
+            <label className="block font-medium mb-1">
+              Modèle de signature
+            </label>
+            <select
+              value={signatureTemplate}
+              onChange={(e) => {
+                setSignatureTemplate(e.target.value);
+                setSelectedTheme(e.target.value);
+              }}
+              className="border rounded px-3 py-2 min-w-[200px]"
+            >
+              <option value="classique">Classique</option>
+              <option value="sombre">Sombre</option>
+              <option value="professionnel">Professionnel</option>
+              <option value="custom">Personnalisé</option>
+            </select>
+          </div>
 
-        <div>
-          <label className="block font-medium">Nom</label>
-          <input
-            type="text"
-            value={senderName}
-            onChange={(e) => setSenderName(e.target.value)}
-            className="w-full border rounded px-3 py-2"
-          />
+          {/* Options personnalisées alignées à droite */}
+          {selectedTheme === "custom" && (
+            <div className="flex items-end space-x-4">
+              {/* Police */}
+              <div>
+                <label className="block font-medium mb-1">Police</label>
+                <select
+                  value={font}
+                  onChange={(e) => setFont(e.target.value)}
+                  className="border rounded px-2 py-1"
+                >
+                  <option value="Arial">Arial</option>
+                  <option value="Times New Roman">Times New Roman</option>
+                  <option value="Courier New">Courier New</option>
+                  <option value="Verdana">Verdana</option>
+                  <option value="Tahoma">Tahoma</option>
+                </select>
+              </div>
+
+              {/* Couleur du texte */}
+              <div>
+                <label className="block font-medium mb-1">
+                  Couleur du texte
+                </label>
+                <input
+                  type="color"
+                  value={textColor}
+                  onChange={(e) => setTextColor(e.target.value)}
+                  className="w-16 h-8 border rounded"
+                />
+              </div>
+
+              {/* Couleur de fond */}
+              <div>
+                <label className="block font-medium mb-1">
+                  Couleur de fond
+                </label>
+                <input
+                  type="color"
+                  value={bgColor}
+                  onChange={(e) => setBgColor(e.target.value)}
+                  className="w-16 h-8 border rounded"
+                />
+              </div>
+            </div>
+          )}
         </div>
 
+        {/* Import logo, sur une ligne à part */}
         <div>
-          <label className="block font-medium">Adresse email</label>
-          <input
-            type="email"
-            value={senderEmail}
-            onChange={(e) => setSenderEmail(e.target.value)}
-            className="w-full border rounded px-3 py-2"
-          />
-        </div>
-
-        <div>
-          <label className="block font-medium">Nom de la société</label>
-          <input
-            type="text"
-            value={companyName}
-            onChange={(e) => setCompanyName(e.target.value)}
-            className="w-full border rounded px-3 py-2"
-          />
-        </div>
-
-        <div>
-          <label className="block font-medium">Téléphone </label>
-          <input
-            type="tel"
-            value={phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value)}
-            className="w-full border rounded px-3 py-2"
-          />
-        </div>
-        <div>
-          <label className="block font-medium">Fonction</label>
-          <input
-            type="text"
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-            className="w-full border rounded px-3 py-2"
-          />
-        </div>
-
-        <div>
-          <label className="block font-medium">Numéro WhatsApp</label>
-          <input
-            type="tel"
-            value={whatsapp}
-            onChange={(e) => setWhatsapp(e.target.value)}
-            className="w-full border rounded px-3 py-2"
-          />
-        </div>
-
-        <div>
-          <label className="block font-medium">Instagram (URL)</label>
-          <input
-            type="text"
-            value={instagram}
-            onChange={(e) => setInstagram(e.target.value)}
-            className="w-full border rounded px-3 py-2"
-          />
-        </div>
-
-        <div>
-          <label className="block font-medium">Facebook (URL)</label>
-          <input
-            type="text"
-            value={facebook}
-            onChange={(e) => setFacebook(e.target.value)}
-            className="w-full border rounded px-3 py-2"
-          />
-        </div>
-
-        <div>
-          <label className="block font-medium">LinkedIn (URL)</label>
-          <input
-            type="text"
-            value={linkedin}
-            onChange={(e) => setLinkedin(e.target.value)}
-            className="w-full border rounded px-3 py-2"
-          />
-        </div>
-
-        <div>
-          <label className="block font-medium">Logo (URL)</label>
-          <input
-            type="text"
-            value={logoUrl}
-            onChange={(e) => setLogoUrl(e.target.value)}
-            className="w-full border rounded px-3 py-2"
-          />
-        </div>
-
-        <div>
-          <label className="block font-medium">Ou importer un logo local</label>
+          <label className="block font-medium mb-1">
+            Ou importer un logo local
+          </label>
           <input
             type="file"
             accept="image/*"
@@ -371,107 +375,155 @@ export default function SignatureSettings() {
             className="w-full"
           />
         </div>
-        <div>
-          <label className="block font-medium">Modèle de signature</label>
-          <select
-            value={signatureTemplate}
-            onChange={(e) => {
-              setSignatureTemplate(e.target.value);
-              setSelectedTheme(e.target.value);
-            }}
-            className="w-full border rounded px-3 py-2"
-          >
-            <option value="classique">Classique</option>
-            <option value="sombre">Sombre</option>
-            <option value="professionnel">Professionnel</option>
-            <option value="custom">Personnalisé</option>
-          </select>
-        </div>
+      </div>
 
-        <div className="col-span-full flex space-x-4">
-          <button
-            type="button"
-            onClick={() => setShowPreview(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-          >
-            Aperçu
-          </button>
-        </div>
-      </form>
+  
 
-      {/* MODALE D'APERÇU */}
-      {showPreview && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white w-full max-w-3xl p-6 rounded-lg shadow-xl relative">
-            <button
-              onClick={() => setShowPreview(false)}
-              className="absolute top-3 right-3 text-gray-600 hover:text-black"
-            >
-              ✕
-            </button>
+      {/* --- Contenu principal : formulaire à gauche et aperçu à droite --- */}
+      <div className="flex flex-col md:flex-row gap-6">
+        {/* Formulaire à gauche */}
+        <div className="flex-1">
+          <form className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white border p-6 rounded-lg shadow">
+            <h2 className="text-2xl font-semibold col-span-full">
+              Paramètres de signature
+            </h2>
 
-            <h3 className="text-xl font-bold mb-4">Aperçu de la signature</h3>
-
-            <div className="mb-4">
-              <button
-                onClick={() => setShowHtml(!showHtml)}
-                className="bg-gray-200 px-3 py-1 rounded mr-2 hover:bg-gray-300"
-              >
-                {showHtml ? "Afficher l’aperçu visuel" : "Afficher le HTML"}
-              </button>
-
-              <button
-                onClick={saveToSupabase}
-                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-              >
-                Enregistrer dans Supabase
-              </button>
-              <button
-                onClick={copySignatureToClipboard}
-                className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-blue-700 ml-2"
-              >
-                Copier
-              </button>
-            </div>
-            {error && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md text-red-700 flex items-center">
-                <span>{error}</span>
-              </div>
-            )}
-            {success && (
-              <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-md text-green-700">
-                {success}
-              </div>
-            )}
-            {showHtml ? (
-              <pre className="bg-gray-100 p-4 rounded text-sm overflow-auto max-h-96">
-                {signatureHTML}
-              </pre>
-            ) : (
-              <div
-                className="border p-4 rounded"
-                style={{
-                  backgroundColor: applyTheme.bgColor,
-                }}
-              >
-                <EmailSignature
-                  name={senderName}
-                  email={senderEmail}
-                  phone={phoneNumber}
-                  instagram={instagram}
-                  facebook={facebook}
-                  linkedin={linkedin}
-                  logo={logoUrl}
-                  font={applyTheme.font}
-                  textColor={applyTheme.textColor}
-                  bgColor={applyTheme.bgColor}
-                  company={companyName}
+            <div className=" flex flex-col ">
+              <div>
+                <label className="block font-medium">Nom</label>
+                <input
+                  type="text"
+                  value={senderName}
+                  onChange={(e) => setSenderName(e.target.value)}
+                  className="w-full border rounded px-3 py-2 min-w-[300px]"
                 />
               </div>
-            )}
-          </div>
+
+              <div>
+                <label className="block font-medium">Adresse email</label>
+                <input
+                  type="email"
+                  value={senderEmail}
+                  onChange={(e) => setSenderEmail(e.target.value)}
+                  className="w-full border rounded px-3 py-2 min-w-[300px]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-medium">Nom de la société</label>
+                <input
+                  type="text"
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value)}
+                  className="w-full border rounded px-3 py-2 min-w-[300px]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-medium">Téléphone</label>
+                <input
+                  type="tel"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  className="w-full border rounded px-3 py-2 min-w-[300px]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-medium">Fonction</label>
+                <input
+                  type="text"
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                  className="w-full border rounded px-3 py-2 min-w-[300px]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-medium">Numéro WhatsApp</label>
+                <input
+                  type="tel"
+                  value={whatsapp}
+                  onChange={(e) => setWhatsapp(e.target.value)}
+                  className="w-full border rounded px-3 py-2 min-w-[300px]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-medium">Instagram (URL)</label>
+                <input
+                  type="text"
+                  value={instagram}
+                  onChange={(e) => setInstagram(e.target.value)}
+                  className="w-full border rounded px-3 py-2 min-w-[300px]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-medium">Facebook (URL)</label>
+                <input
+                  type="text"
+                  value={facebook}
+                  onChange={(e) => setFacebook(e.target.value)}
+                  className="w-full border rounded px-3 py-2 min-w-[300px]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-medium">LinkedIn (URL)</label>
+                <input
+                  type="text"
+                  value={linkedin}
+                  onChange={(e) => setLinkedin(e.target.value)}
+                  className="w-full border rounded px-3 py-2 min-w-[300px]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-medium">Logo (URL)</label>
+                <input
+                  type="text"
+                  value={logoUrl}
+                  onChange={(e) => setLogoUrl(e.target.value)}
+                  className="w-full border rounded px-3 py-2 min-w-[300px]"
+                />
+              </div>
+            </div>
+          </form>
         </div>
-      )}
+
+        {/* Aperçu à droite */}
+        <div className="flex-1 bg-white border p-6 rounded-lg shadow space-y-4">
+          <h3 className="text-xl font-bold mb-2">Aperçu de la signature</h3>
+
+          {showHtml ? (
+            <pre className="bg-gray-100 p-4 rounded text-sm overflow-auto max-h-96">
+              {signatureHTML}
+            </pre>
+          ) : (
+            <div
+              className="border p-4 rounded"
+              style={{ backgroundColor: applyTheme.bgColor }}
+            >
+              <EmailSignature
+                name={senderName}
+                email={senderEmail}
+                phone={phoneNumber}
+                instagram={instagram}
+                role={role}
+                whatsapp={whatsapp}
+                facebook={facebook}
+                linkedin={linkedin}
+                logo={logoUrl}
+                font={applyTheme.font}
+                textColor={applyTheme.textColor}
+                bgColor={applyTheme.bgColor}
+                company={companyName}
+              />
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -531,7 +583,7 @@ function EmailSignature({
             <br />
             {role && (
               <>
-                <span className="signature-role">{role}</span>
+                <strong className="signature-role">{role}</strong>
                 <br />
               </>
             )}

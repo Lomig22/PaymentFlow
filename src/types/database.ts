@@ -35,7 +35,7 @@ export interface Client {
 	notes?: string;
 	reminder_profile?: string|null;
 	pre_reminder_delay?: { j: number; h: number; m: number };
-	pre_reminder_template?: string;
+	pre_reminder_template?: string|null;
 }
 
 export interface Receivable {
@@ -113,6 +113,7 @@ export type Notification = {
 	created_at?: string; // ou Date si tu veux parser
 	owner_id: string|null;
 	is_read: boolean;
+	need_mail_notification:boolean;
 	type: string;
 	message: string;
 	details:string;

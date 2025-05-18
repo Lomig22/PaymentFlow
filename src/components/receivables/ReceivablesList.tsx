@@ -271,6 +271,11 @@ function ReceivablesList() {
           reminder_enable_2: false,
           reminder_enable_3: false,
           reminder_enable_final: false,
+          pre_reminder_template:null,
+          reminder_template_1:null,
+          reminder_template_2:null,
+          reminder_template_3:null,
+          reminder_template_final:null
         })
         .eq("id", clientId);
 
@@ -308,11 +313,12 @@ function ReceivablesList() {
       setReceivables(receivables.filter((r) => r.id !== receivableToDelete.id));
       setShowDeleteConfirm(false);
       setReceivableToDelete(null);
+      await updateClientReminderStatus(clientId, false);
 
       // Vérifier si le client a encore des créances impayées
-      const noUnpaidReceivables = await checkClientUnpaidReceivables(clientId);
+    //  const noUnpaidReceivables = await checkClientUnpaidReceivables(clientId);
 
-      // Si le client n'a plus de créances impayées, désactiver les relances
+  /*     // Si le client n'a plus de créances impayées, désactiver les relances
       if (noUnpaidReceivables) {
         await updateClientReminderStatus(clientId, false);
 
@@ -335,13 +341,18 @@ function ReceivablesList() {
                   reminder_enable_2: false,
                   reminder_enable_3: false,
                   reminder_enable_final: false,
+                  pre_reminder_template:"",
+                  reminder_template_1:"",
+                  reminder_template_2:"",
+                  reminder_template_3:"",
+                  reminder_template_final:""
                 },
               };
             }
             return r;
           })
         );
-      }
+      } */
     } catch (error) {
       console.error("Erreur lors de la suppression:", error);
       showError("Impossible de supprimer la créance");
@@ -411,11 +422,18 @@ function ReceivablesList() {
 
     if (result.isConfirmed) {
       handleBulkDelete();
-      Swal.fire(
-        "Supprimé!",
-        "Les éléments sélectionnés ont été supprimés.",
-        "success"
-      );
+      Swal.fire({
+        title: "Supprimé !",
+        text: "Les éléments sélectionnés ont été supprimés.",
+        icon: "success",
+        buttonsStyling: false,
+        customClass: {
+          confirmButton:
+            "bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700",
+          icon: "text-blue-500",
+        },
+        confirmButtonText: "OK",
+      });
     }
   };
   //fonction récursive de détection de statut activé
@@ -487,6 +505,7 @@ function ReceivablesList() {
                 is_read: false,
                 type: "info",
                 message: "Relance effectuée correctement",
+                need_mail_notification:true,
                 details: `Relance ${selectedReceivable.client.company_name}\nDestinataire : ${selectedReceivable.email}`,
               });
             } catch (error: any) {
@@ -505,6 +524,7 @@ function ReceivablesList() {
               is_read: false,
               type: "erreur",
               message: "Relançe manuelle échouée",
+              need_mail_notification:true,
               details:
                 "client: " +
                 selectedReceivable.client.company_name +
@@ -519,6 +539,7 @@ function ReceivablesList() {
               is_read: false,
               type: "erreur",
               message: "Relançe manuelle échouée",
+              need_mail_notification:true,
               details:
                 "client: " +
                 selectedReceivable.client.company_name +
@@ -539,6 +560,7 @@ function ReceivablesList() {
           owner_id: user.id,
           is_read: false,
           type: "erreur",
+          need_mail_notification:true,
           message: "Relançe manuelle échouée",
           details:
             "client: " +
@@ -570,6 +592,7 @@ function ReceivablesList() {
 
     await saveNotification({
       owner_id: user?.id,
+      need_mail_notification:true,
       is_read: false,
       type: "info",
       message: `importation de ${importedCount} créance(s)`,
@@ -678,6 +701,7 @@ function ReceivablesList() {
       if (error) throw error;
       await saveNotification({
         owner_id: user?.id,
+        need_mail_notification:true,
         is_read: false,
         type: "info",
         message: "Mise à jour des paramètres de relance automatique",
@@ -692,6 +716,7 @@ function ReceivablesList() {
         await saveNotification({
           owner_id: user?.id,
           is_read: false,
+          need_mail_notification:true,
           type: "erreur",
           message: "Mise à jour des paramètres de relance automatique échouée",
           details: `${error}`,
