@@ -3,6 +3,9 @@ import { supabase } from "../../lib/supabase";
 import { Client, Receivable } from "../../types/database";
 import { X, Upload, FileUp } from "lucide-react";
 import Swal from "sweetalert2";
+import { sendEmail } from "../../lib/email";
+import Settings from "../settings/Settings";
+import { getEmailSettings } from "../../lib/reminderService";
 
 interface ReceivableEditFormProps {
   onClose: () => void;
@@ -123,6 +126,10 @@ export default function ReceivableEditForm({
     setLoading(true);
     setError(null);
     let invoicePath = "";
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) throw new Error("Utilisateur non authentifié");
 
     try {
       const wasAlreadyPaid = receivable.status === "paid";
@@ -219,24 +226,52 @@ export default function ReceivableEditForm({
         .select("*, client:clients(*)")
         .single();
 
-      if (error) {
+       if (error) {
         throw error;
-      } else {
+      } /*else {
         showSuccess("Mise à jour complète.");
-      }
+      } */
 
       if (willBePaid && !wasAlreadyPaid) {
         const noOtherUnpaidReceivables = await checkClientUnpaidReceivables(
           receivable.client.id,
           receivable.id
         );
-
+        const emailSettings = await getEmailSettings(user.id);
+        if (!emailSettings) {
+          showError("La notification par email a échouée!");
+          return false;
+        }
+        if (data && data.client) {
+          data.client.needs_reminder = false;
+          const { data: notification_settings, error } = await supabase
+            .from("notification_settings")
+            .select("payment_notifications")
+            .eq("user_id", user.id)
+            .maybeSingle();
+          if (error) throw error;
+          const payment_notifications=notification_settings?.payment_notifications
+          console.log(payment_notifications)
+          if (payment_notifications === true) {
+            const emailSent = sendEmail(
+              emailSettings,
+              user.email,
+              "Paiement d'une créance",
+              "La créance de " +
+                data.client.company_name +
+                ", portant le numéro de facture " +
+                data.invoice_number +
+                ", a été marquée comme payée."
+            );
+            
+            if (!emailSent) {
+              showError("La notification par email a échouée!");
+            }
+          }
+        }
         if (noOtherUnpaidReceivables) {
           await updateClientReminderStatus(receivable.client.id, false);
-
-          if (data && data.client) {
-            data.client.needs_reminder = false;
-          }
+          //Jet notification
         }
       }
 

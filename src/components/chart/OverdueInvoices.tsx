@@ -84,8 +84,13 @@ const OverdueInvoices = () => {
                 })}
               </div>
               <span className="text-gray-400">
-              <a href="clients" target="_blank" rel="noopener noreferrer">›</a>
-
+                <a
+                  href="http://localhost:5173/clients"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  ›
+                </a>
               </span>
             </div>
           </li>

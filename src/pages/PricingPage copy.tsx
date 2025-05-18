@@ -2,7 +2,7 @@
 import { motion, useInView } from "framer-motion";
 import { CheckCircle, TrendingUp } from "lucide-react";
 import { supabase } from "../lib/supabase";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Footer from "../components/Footer";
 
 const fadeInUp = {
@@ -29,18 +29,6 @@ const PricingPage = () => {
   const [billingInterval, setBillingInterval] = useState<"monthly" | "yearly">(
     "monthly"
   );
-  const [selectedPlan, setSelectedPlan] = useState("basic");
-  const [message, setMessage] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (message) {
-      const timer = setTimeout(() => {
-        setMessage(null);
-      }, 5000);
-
-      return () => clearTimeout(timer); // nettoyage
-    }
-  }, [message]);
 
   // Price calculation helper
   const getPrice = (monthlyPrice: number) => {
@@ -52,12 +40,13 @@ const PricingPage = () => {
         originalPrice: Math.round(yearlyPrice),
       };
     }
-
+  
     return { displayedPrice: monthlyPrice, originalPrice: null };
   };
 
-  const handleStripePaymentTemp = async (plan: string) => {
+  const handleStripePayment = async (plan: string) => {
     try {
+      // Get current user from Supabase
       const {
         data: { user },
         error: userError,
@@ -68,51 +57,43 @@ const PricingPage = () => {
         return;
       }
 
-      // Vérifie si le profil existe déjà
-      const { data: existingProfile, error: fetchError } = await supabase
-        .from("profileStripe")
-        .select("*")
-        .eq("id", user.id)
-        .maybeSingle();
+      // Check for existing subscription
+      const { data: existingSubscriptions, error: subscriptionError } =
+        await supabase
+          .from("subscriptions")
+          .select("id")
+          .eq("user_id", user.id);
 
-      if (fetchError) {
-        console.error("Erreur lors de la récupération du profil:", fetchError);
-        alert("Erreur lors de la récupération du profil");
+      if (subscriptionError) {
+        console.error("Error checking subscriptions:", subscriptionError);
+        alert(
+          "Une erreur est survenue lors de la vérification de l'abonnement"
+        );
         return;
       }
 
-      if (existingProfile && existingProfile.subscription_expiry) {
-        const expiryDate = new Date(existingProfile.subscription_expiry);
-        const now = new Date();
-        if (expiryDate > now) {
-          alert("Vous avez déjà un abonnement actif.");
-          return;
-        }
+      if (existingSubscriptions && existingSubscriptions.length > 0) {
+        alert("Vous avez déjà un abonnement actif.");
+        return;
       }
 
-      const now = new Date();
-      const expiry = new Date();
-      expiry.setMonth(expiry.getMonth() + (plan === "enterprise" ? 12 : 1));
+      // Add new subscription to Supabase
+      const { error: insertError } = await supabase
+        .from("subscriptions")
+        .insert([
+          {
+            user_id: user.id,
+            status: "active",
+          },
+        ]);
 
-      // Enregistre ou met à jour le profilStripe
-      const { error: upsertError } = await supabase
-        .from("profileStripe")
-        .upsert({
-          id: user.id,
-          created_at: now.toISOString(),
-          email: user.email,
-          formatedEmail: user.email?.toLowerCase().trim(),
-          subscription_expiry: expiry.toISOString(),
-          abonnement: plan,
-        });
-
-      if (upsertError) {
-        console.error("Erreur d'enregistrement de l'abonnement:", upsertError);
+      if (insertError) {
+        console.error("Error creating subscription:", insertError);
         alert("Erreur lors de la création de l'abonnement");
         return;
       }
 
-      // Redirection vers Stripe
+      // Proceed to Stripe payment
       let stripeUrl = "";
       switch (plan) {
         case "basic":
@@ -130,125 +111,14 @@ const PricingPage = () => {
             user.email ?? ""
           )}`;
           break;
+        default:
+          return;
       }
 
       window.open(stripeUrl, "_blank");
     } catch (error) {
-      console.error("Erreur lors du paiement:", error);
+      console.error("Erreur de paiement:", error);
       alert("Une erreur est survenue. Veuillez réessayer.");
-    }
-  };
-
-  const priceMap = {
-    basic: {
-      monthly: import.meta.env.VITE_STRIPE_PRICE_BASIC,
-      yearly: import.meta.env.VITE_STRIPE_PRICE_BASIC_ANNUEL,
-    },
-    pro: {
-      monthly: import.meta.env.VITE_STRIPE_PRICE_PRO,
-      yearly: import.meta.env.VITE_STRIPE_PRICE_PRO_ANNUEL,
-    },
-    enterprise: {
-      monthly: import.meta.env.VITE_STRIPE_PRICE_ENTREPRISE,
-      yearly: import.meta.env.VITE_STRIPE_PRICE_ENTREPRISE_ANNUEL,
-    },
-  };
-
-  const handleStripePayment = async (
-    plan: string,
-    interval: "monthly" | "yearly"
-  ) => {
-    setMessage(null);
-
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    const userEmail = session?.user?.email;
-    if (!userEmail) {
-      setMessage("Utilisateur non connecté.");
-      return;
-    }
-
-    const { data, error } = await supabase
-      .from("profileStripe")
-      .select("abonnement, subscription_expiry")
-      .eq("email", userEmail);
-
-    if (error) {
-      console.error(error);
-      setMessage("Erreur lors de la vérification de l’abonnement.");
-      return;
-    }
-
-    // Vérifie s’il y a un abonnement actif
-    const latest = data
-      ?.filter((row) => row.subscription_expiry)
-      .sort(
-        (a, b) =>
-          new Date(b.subscription_expiry).getTime() -
-          new Date(a.subscription_expiry).getTime()
-      )[0];
-
-    const now = new Date();
-    if (
-      latest?.subscription_expiry &&
-      new Date(latest.subscription_expiry) > now
-    ) {
-      const formatted = new Date(latest.subscription_expiry).toLocaleDateString(
-        "fr-FR",
-        {
-          day: "numeric",
-          month: "long",
-          year: "numeric",
-        }
-      );
-      setMessage(`Vous avez déjà un abonnement actif jusqu’au ${formatted}.`);
-      return;
-    }
-
-    // Vérification de la validité du plan/interval
-    if (!priceMap[plan] || !priceMap[plan][interval]) {
-      setMessage("Plan ou intervalle invalide.");
-      return;
-    }
-
-    // Stockage local pour potentielle récupération après le paiement
-    localStorage.setItem("selectedPlan", plan);
-    localStorage.setItem("selectedInterval", interval);
-
-    const token = import.meta.env.VITE_TOKEN_STRIPE;
-
-    const payload = {
-      price_id: priceMap[plan][interval],
-      success_url: window.location.origin + "/paiement-abonement",
-      cancel_url: window.location.origin + "/pricing",
-    };
-
-    try {
-      const res = await fetch(
-        "https://rsomeerndudkhyhpigmn.supabase.co/functions/v1/create-stripe-session",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(payload),
-        }
-      );
-
-      const result = await res.json();
-
-      if (result?.url) {
-        window.location.href = result.url;
-      } else {
-        setMessage("Erreur lors de la création de la session de paiement.");
-        console.error(result);
-      }
-    } catch (err) {
-      setMessage("Une erreur est survenue lors du paiement.");
-      console.error(err);
     }
   };
 
@@ -262,12 +132,6 @@ const PricingPage = () => {
       {/* Main Pricing Content */}
       <main>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          {message && (
-            <div className="mb-4 p-3 rounded-md bg-yellow-50 text-yellow-700 border border-yellow-200">
-              {message}
-            </div>
-          )}
-
           <motion.div variants={fadeInUp} className="text-center mb-20">
             <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
               Des tarifs adaptés à chaque entreprise
@@ -337,7 +201,7 @@ const PricingPage = () => {
                 <FeatureItem text="Support par email" />
               </ul>
               <button
-                onClick={() => handleStripePayment("basic", billingInterval)}
+                onClick={() => handleStripePayment("basic")}
                 className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors"
               >
                 Souscrire
@@ -385,7 +249,7 @@ const PricingPage = () => {
                 <FeatureItem text="Intégration comptable" />
               </ul>
               <button
-                onClick={() => handleStripePayment("pro", billingInterval)}
+                onClick={() => handleStripePayment("pro")}
                 className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors"
               >
                 Souscrire
@@ -425,9 +289,7 @@ const PricingPage = () => {
                 <FeatureItem text="API complète" />
               </ul>
               <button
-                onClick={() =>
-                  handleStripePayment("enterprise", billingInterval)
-                }
+                onClick={() => handleStripePayment("enterprise")}
                 className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors"
               >
                 Contacter les ventes
@@ -456,7 +318,7 @@ const PricingPage = () => {
               spécifiques de votre entreprise.
             </motion.p>
             <motion.button
-              onClick={() => handleStripePayment("enterprise", billingInterval)}
+              onClick={() => handleStripePayment("enterprise")}
               className="bg-blue-600 text-white px-8 py-4 rounded-md text-lg font-medium hover:bg-blue-700 transition-colors"
               variants={fadeInScale}
             >

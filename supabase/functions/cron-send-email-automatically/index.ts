@@ -229,7 +229,7 @@ export async function sendManualReminder(
     // Récupérer les informations de l'utilisateur connecté
     const { data: userProfile, error: profileError } = await supabase
       .from("profiles")
-      .select("email_counter")
+      .select("email_counter,email")
       .eq("id", userId)
       .single();
 
@@ -292,6 +292,30 @@ export async function sendManualReminder(
 
     if (emailSent) {
       // Enregistrer la relance
+      const { data: notification_settings, error } = await supabase
+      .from("notification_settings")
+      .select("reminder_notifications")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (error) throw error;
+    const reminder_notifications=notification_settings?.reminder_notifications
+    console.log(reminder_notifications)
+    if (reminder_notifications === true) {
+      const currentStatus=(receivable.status==="pending")?"Relance préventive":
+      (receivable.status==="Relance préventive")?"Relance 1":
+      (receivable.status==="Relance 1")?"Relance 2":
+      (receivable.status==="Relance 2")?"Relance 3":
+      "Relance Finale"
+      const emailSent = sendEmail(
+        emailSettings,
+        userProfile.email,
+        "Relance automatique effectuée",
+        "La  "+receivable.status +" de la créance de "+
+          receivable.client.company_name +
+          ", portant le numéro de facture " +
+          receivable.invoice_number +
+          ", a été envoyée"
+      );}
       await supabase.from("reminders").insert({
         receivable_id: receivableId,
         reminder_type: level,
@@ -299,7 +323,7 @@ export async function sendManualReminder(
         email_sent: true,
         email_content: emailContent,
       });
-     
+    
       // Mettre à jour le statut de la créance
       await supabase
         .from("receivables")
@@ -309,7 +333,7 @@ export async function sendManualReminder(
               ? "Relance 1"
               : level === "second"
               ? "Relance 2"
-              : lRelancevel === "third"
+              : level === "third"
               ? "Relance 3"
               : level === "final"
               ? "Relance finale"
@@ -368,7 +392,7 @@ async function AutomaticallySendReminders(): Promise<void> {
         "Relance finale",
         "Relance préventive",
       ]); // ou selon tes statuts
-
+      
     if (error) throw error;
     if (!receivables || receivables.length === 0) return;
     for (const receivable of receivables) {
