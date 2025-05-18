@@ -14,8 +14,8 @@ import {
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { AuthSessionMissingError } from "@supabase/supabase-js";
-import { div } from "framer-motion/client";
 import AbonnementInfo from "../components/settings/AbonnementInfo";
+import useEnsureEmailSettings from "../lib/ensureEmailSettings";
 
 export default function Layout() {
   const location = useLocation();
@@ -23,6 +23,8 @@ export default function Layout() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [logoutError, setLogoutError] = useState<string | null>(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  useEnsureEmailSettings();
 
   const handleLogout = async () => {
     try {
