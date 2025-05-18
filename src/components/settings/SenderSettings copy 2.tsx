@@ -32,7 +32,6 @@ export default function SignatureSettings() {
   const [role, setRole] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [signatureTemplate, setSignatureTemplate] = useState("");
-  const [customOpen, setCustomOpen] = useState(false);
 
   const showError = (message: string) => {
     setError(message);
@@ -211,8 +210,9 @@ export default function SignatureSettings() {
         upsert: true, // autorise le remplacement d'anciens fichiers
         contentType: file.type,
       });
-
+    
     console.log("uploadError");
+    
 
     if (uploadError) {
       console.error("Erreur d'upload:", uploadError);
@@ -224,8 +224,9 @@ export default function SignatureSettings() {
     const { data: publicUrlData } = supabase.storage
       .from("logos")
       .getPublicUrl(filePath);
-
+    
     console.log(publicUrlData);
+    
 
     if (publicUrlData?.publicUrl) {
       setLogoUrl(publicUrlData.publicUrl); // ✔️ Ceci sera utilisé dans ta signature HTML
@@ -275,30 +276,7 @@ export default function SignatureSettings() {
 
   const btnHover = { scale: 1.05, transition: { duration: 0.2 } };
   const iconRotate = { rotate: 90, transition: { duration: 0.3 } };
-
-  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value as typeof signatureTemplate;
-    console.log(value);
-    
-    setSignatureTemplate(value);
-    setSelectedTheme(value);
-    setCustomOpen(value === "custom");
-  };
-
-  const handleToggle = () => {
-    // si on ouvre, on passe en "custom"
-    if (!customOpen) {
-      setSignatureTemplate("custom");
-      setSelectedTheme("custom");
-      setCustomOpen(true);
-    } else {
-      // si on ferme, on revient à la 1re option non-custom
-      setSignatureTemplate("classique");
-      setSelectedTheme("classique");
-      setCustomOpen(false);
-    }
-  };
-
+  
   return (
     <div className="max-w-7xl mx-auto p-4 space-y-6">
       <AnimatePresence>
@@ -328,7 +306,7 @@ export default function SignatureSettings() {
         )}
       </AnimatePresence>
 
-      <header className="flex flex-col md:flex-row gap-6">
+      <header className="fixed top-0 left-0 right-0 bg-white shadow-md z-20">
         <div className="max-w-5xl mx-auto flex justify-end gap-4 p-4">
           {[
             {
@@ -362,141 +340,210 @@ export default function SignatureSettings() {
           ))}
         </div>
       </header>
-
-      <main className="flex flex-col md:flex-row gap-6">
-        <div className="bg-white rounded-xl shadow relative flex-1 overflow-hidden">
-          <div className=" p-6">
-            <h3 className="text-lg font-bold mb-4">Modèle de signature</h3>
-            <div className="flex items-center justify-between">
-              <select
-                value={signatureTemplate}
-                onChange={handleSelectChange}
-                className="border rounded px-4 py-2 w-full"
-              >
-                <option value="classique">Classique</option>
-                <option value="sombre">Sombre</option>
-                <option value="professionnel">Professionnel</option>
-                <option value="custom">Personnalisé</option>
-              </select>
-
-              {/* Toggle custom */}
-              <motion.div
-                onClick={handleToggle}
-                whileHover={{ scale: 1.1 }}
-                className="ml-4 cursor-pointer text-gray-600"
-              >
-                {customOpen ? (
-                  <ChevronUp size={24} />
-                ) : (
-                  <ChevronDown size={24} />
-                )}
-              </motion.div>
-            </div>
-
-            {/* Accordéon */}
-            <AnimatePresence>
-              {customOpen && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="mt-4 grid grid-cols-1 gap-4"
-                >
-                  <div className="flex gap-4">
-                    <div className="flex-1">
-                      <label className="block mb-1">Police</label>
-                      <select
-                        className="border rounded w-full px-3 py-2"
-                        value={font}
-                        onChange={(e) => setFont(e.target.value)}
-                      >
-                        <option>Arial</option>
-                        <option>Times New Roman</option>
-                        <option>Courier New</option>
-                        <option>Verdana</option>
-                        <option>Tahoma</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block mb-1">Couleur texte</label>
-                      <input
-                        type="color"
-                        className="w-12 h-12 border rounded"
-                        value={textColor}
-                        onChange={(e) => setTextColor(e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label className="block mb-1">Couleur fond</label>
-                      <input
-                        type="color"
-                        className="w-12 h-12 border rounded"
-                        value={bgColor}
-                        onChange={(e) => setBgColor(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+      <div className="space-y-4 mb-6">
+        {/* Ligne horizontale : combo + options custom si actif */}
+        <div className="flex items-end space-x-6">
+          {/* Combo Modèle de signature */}
+          <div>
+            <label className="block font-medium mb-1">
+              Modèle de signature
+            </label>
+            <select
+              value={signatureTemplate}
+              onChange={(e) => {
+                setSignatureTemplate(e.target.value);
+                setSelectedTheme(e.target.value);
+              }}
+              className="border rounded px-3 py-2 min-w-[200px]"
+            >
+              <option value="classique">Classique</option>
+              <option value="sombre">Sombre</option>
+              <option value="professionnel">Professionnel</option>
+              <option value="custom">Personnalisé</option>
+            </select>
           </div>
+
+          {/* Options personnalisées alignées à droite */}
+          {selectedTheme === "custom" && (
+            <div className="flex items-end space-x-4">
+              {/* Police */}
+              <div>
+                <label className="block font-medium mb-1">Police</label>
+                <select
+                  value={font}
+                  onChange={(e) => setFont(e.target.value)}
+                  className="border rounded px-2 py-1"
+                >
+                  <option value="Arial">Arial</option>
+                  <option value="Times New Roman">Times New Roman</option>
+                  <option value="Courier New">Courier New</option>
+                  <option value="Verdana">Verdana</option>
+                  <option value="Tahoma">Tahoma</option>
+                </select>
+              </div>
+
+              {/* Couleur du texte */}
+              <div>
+                <label className="block font-medium mb-1">
+                  Couleur du texte
+                </label>
+                <input
+                  type="color"
+                  value={textColor}
+                  onChange={(e) => setTextColor(e.target.value)}
+                  className="w-16 h-8 border rounded"
+                />
+              </div>
+
+              {/* Couleur de fond */}
+              <div>
+                <label className="block font-medium mb-1">
+                  Couleur de fond
+                </label>
+                <input
+                  type="color"
+                  value={bgColor}
+                  onChange={(e) => setBgColor(e.target.value)}
+                  className="w-16 h-8 border rounded"
+                />
+              </div>
+            </div>
+          )}
         </div>
 
-        <div className="bg-white p-6 rounded-xl flex-1 shadow">
-          <h3 className="text-lg font-bold mb-2">Importer un logo</h3>
-          <label className="block cursor-pointer bg-gray-100 hover:bg-gray-200 p-4 rounded-lg text-center transition">
-            <input
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleFileChange}
-            />
-            Cliquer ou déposer le fichier
+        {/* Import logo, sur une ligne à part */}
+        <div>
+          <label className="block font-medium mb-1">
+            Ou importer un logo local
           </label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            className="w-full"
+          />
         </div>
-      </main>
+      </div>
 
+      {/* --- Contenu principal : formulaire à gauche et aperçu à droite --- */}
       <div className="flex flex-col md:flex-row gap-6">
-        <div className="flex-1 min-w-0">
-          <motion.form
-            layout
-            className="bg-white border p-6 rounded-lg shadow-lg grid grid-cols-1 md:grid-cols-2 gap-6"
-          >
+        {/* Formulaire à gauche */}
+        <div className="flex-1">
+          <form className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white border p-6 rounded-lg shadow">
             <h2 className="text-2xl font-semibold col-span-full">
               Paramètres de signature
             </h2>
 
-            {[
-              ["Nom complet", senderName, setSenderName],
-              ["Email", senderEmail, setSenderEmail],
-              ["Société", companyName, setCompanyName],
-              ["Téléphone", phoneNumber, setPhoneNumber],
-              ["Poste", role, setRole],
-              ["WhatsApp", whatsapp, setWhatsapp],
-              ["Instagram (URL)", instagram, setInstagram],
-              ["Facebook (URL)", facebook, setFacebook],
-              ["LinkedIn (URL)", linkedin, setLinkedin],
-              ["Logo URL", logoUrl, setLogoUrl],
-            ].map(([label, value, setter]) => (
-              <div key={label} className="flex flex-col">
-                <label className="font-medium mb-1">{label}</label>
+            <div className=" flex flex-col ">
+              <div>
+                <label className="block font-medium">Nom</label>
                 <input
-                  type={label === "Email" ? "email" : "text"}
-                  value={value as string}
-                  onChange={(e) => (setter as any)(e.target.value)}
-                  className="border rounded px-3 py-2 shadow-sm focus:ring-2 focus:ring-blue-300"
+                  type="text"
+                  value={senderName}
+                  onChange={(e) => setSenderName(e.target.value)}
+                  className="w-full border rounded px-3 py-2 min-w-[300px]"
                 />
               </div>
-            ))}
-          </motion.form>
+
+              <div>
+                <label className="block font-medium">Adresse email</label>
+                <input
+                  type="email"
+                  value={senderEmail}
+                  onChange={(e) => setSenderEmail(e.target.value)}
+                  className="w-full border rounded px-3 py-2 min-w-[300px]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-medium">Nom de la société</label>
+                <input
+                  type="text"
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value)}
+                  className="w-full border rounded px-3 py-2 min-w-[300px]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-medium">Téléphone</label>
+                <input
+                  type="tel"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  className="w-full border rounded px-3 py-2 min-w-[300px]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-medium">Fonction</label>
+                <input
+                  type="text"
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                  className="w-full border rounded px-3 py-2 min-w-[300px]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-medium">Numéro WhatsApp</label>
+                <input
+                  type="tel"
+                  value={whatsapp}
+                  onChange={(e) => setWhatsapp(e.target.value)}
+                  className="w-full border rounded px-3 py-2 min-w-[300px]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-medium">Instagram (URL)</label>
+                <input
+                  type="text"
+                  value={instagram}
+                  onChange={(e) => setInstagram(e.target.value)}
+                  className="w-full border rounded px-3 py-2 min-w-[300px]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-medium">Facebook (URL)</label>
+                <input
+                  type="text"
+                  value={facebook}
+                  onChange={(e) => setFacebook(e.target.value)}
+                  className="w-full border rounded px-3 py-2 min-w-[300px]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-medium">LinkedIn (URL)</label>
+                <input
+                  type="text"
+                  value={linkedin}
+                  onChange={(e) => setLinkedin(e.target.value)}
+                  className="w-full border rounded px-3 py-2 min-w-[300px]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-medium">Logo (URL)</label>
+                <input
+                  type="text"
+                  value={logoUrl}
+                  onChange={(e) => setLogoUrl(e.target.value)}
+                  className="w-full border rounded px-3 py-2 min-w-[300px]"
+                />
+              </div>
+            </div>
+          </form>
         </div>
 
-        <div className="flex-1 min-w-0 bg-white border p-6 rounded-lg shadow space-y-4">
+        {/* Aperçu à droite */}
+        <div className="flex-1 bg-white border p-6 rounded-lg shadow space-y-4">
           <h3 className="text-xl font-bold mb-2">Aperçu de la signature</h3>
 
           {showHtml ? (
-            <pre className="max-h-[600px] overflow-auto text-sm bg-gray-50 p-4 rounded">
+            <pre className="bg-gray-100 p-4 rounded text-sm overflow-auto max-h-96">
               {signatureHTML}
             </pre>
           ) : (
@@ -523,9 +570,6 @@ export default function SignatureSettings() {
           )}
         </div>
       </div>
-
-
-      
     </div>
   );
 }

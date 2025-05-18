@@ -305,14 +305,14 @@ export default function Layout() {
             </nav>
             <div className="absolute bottom-0 w-full">
               {/* Bouton Aide */}
-              <div className=" border-gray-200">
+              <div className="px-4 border-gray-200">
                 <a
                   href="https://payment-flow.fr"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="group flex items-center w-full px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-md transition-all duration-300"
                 >
-                  {/* <HelpCircle className="h-5 w-5 flex-shrink-0 text-inherit" /> */}
+                  <HelpCircle className="h-5 w-5 flex-shrink-0 text-inherit" />
                   <span className="ml-3 opacity-0 group-hover:opacity-100 whitespace-nowrap transition-opacity duration-300">
                     Aides et support
                   </span>
@@ -320,11 +320,12 @@ export default function Layout() {
               </div>
 
               {/* Bouton Déconnexion */}
-              <div className=" border-t border-gray-200">
+              <div className="border-t border-gray-200">
                 <button
                   onClick={() => setShowLogoutConfirm(true)}
-                  className="group flex items-center w-full px-6 py-9 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-md transition-all duration-300"
-                >
+                  className="group flex items-center w-full px-4 py-9 text-sm font-medium text-gray-600 hover:bg-blue-50 hover:text-blue-700 rounded-md transition-all duration-300"
+                  style={{paddingLeft:"35px"}}
+                  >
                   <LogOut className="h-5 w-5 flex-shrink-0 text-inherit" />
                   <span className="ml-3 opacity-0 group-hover:opacity-100 whitespace-nowrap transition-opacity duration-300">
                     Déconnexion

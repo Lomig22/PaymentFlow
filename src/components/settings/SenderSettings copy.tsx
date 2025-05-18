@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "../../lib/supabase";
 import ThemeCustomizer from "./ThemeCustomizer";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   Code,
   Eye,
@@ -132,7 +132,7 @@ export default function SignatureSettings() {
       console.error("Erreur Supabase:", error);
       showError("Échec de l'enregistrement");
     } else {
-      showSuccess("Signature enregistrée avec succès !");
+      showSuccess("Signature enregistré avec succès ! 🎉");
     }
   };
   useEffect(() => {
@@ -212,8 +212,6 @@ export default function SignatureSettings() {
         contentType: file.type,
       });
 
-    console.log("uploadError");
-
     if (uploadError) {
       console.error("Erreur d'upload:", uploadError);
       showError("Erreur lors de l'envoi du logo");
@@ -224,8 +222,6 @@ export default function SignatureSettings() {
     const { data: publicUrlData } = supabase.storage
       .from("logos")
       .getPublicUrl(filePath);
-
-    console.log(publicUrlData);
 
     if (publicUrlData?.publicUrl) {
       setLogoUrl(publicUrlData.publicUrl); // ✔️ Ceci sera utilisé dans ta signature HTML
@@ -276,31 +272,9 @@ export default function SignatureSettings() {
   const btnHover = { scale: 1.05, transition: { duration: 0.2 } };
   const iconRotate = { rotate: 90, transition: { duration: 0.3 } };
 
-  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value as typeof signatureTemplate;
-    console.log(value);
-    
-    setSignatureTemplate(value);
-    setSelectedTheme(value);
-    setCustomOpen(value === "custom");
-  };
-
-  const handleToggle = () => {
-    // si on ouvre, on passe en "custom"
-    if (!customOpen) {
-      setSignatureTemplate("custom");
-      setSelectedTheme("custom");
-      setCustomOpen(true);
-    } else {
-      // si on ferme, on revient à la 1re option non-custom
-      setSignatureTemplate("classique");
-      setSelectedTheme("classique");
-      setCustomOpen(false);
-    }
-  };
-
   return (
-    <div className="max-w-7xl mx-auto p-4 space-y-6">
+    <div className="min-h-screen bg-gray-50 pb-10">
+      {/* Messages */}
       <AnimatePresence>
         {error && (
           <motion.div
@@ -328,7 +302,8 @@ export default function SignatureSettings() {
         )}
       </AnimatePresence>
 
-      <header className="flex flex-col md:flex-row gap-6">
+      {/* Header flottant */}
+      <header className="fixed top-0 left-0 right-0 bg-white shadow-md z-20">
         <div className="max-w-5xl mx-auto flex justify-end gap-4 p-4">
           {[
             {
@@ -340,13 +315,13 @@ export default function SignatureSettings() {
             {
               label: "Enregistrer",
               icon: <Save />,
-              onClick: () => saveToSupabase(),
+              onClick: () => setSuccess("Enregistré !"),
               color: "bg-green-600 text-white",
             },
             {
               label: "Copier",
               icon: <Clipboard />,
-              onClick: () => copySignatureToClipboard(),
+              onClick: () => setSuccess("Copié !"),
               color: "bg-blue-600 text-white",
             },
           ].map((btn, i) => (
@@ -363,33 +338,33 @@ export default function SignatureSettings() {
         </div>
       </header>
 
-      <main className="flex flex-col md:flex-row gap-6">
-        <div className="bg-white rounded-xl shadow relative flex-1 overflow-hidden">
-          <div className=" p-6">
+      {/* Contenu principal */}
+      <main className="pt-24 max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 p-4">
+        {/* Colonne de configuration */}
+        <section className="space-y-6">
+          {/* Choix de modèle */}
+          <div className="bg-white p-6 rounded-xl shadow relative overflow-hidden">
             <h3 className="text-lg font-bold mb-4">Modèle de signature</h3>
             <div className="flex items-center justify-between">
               <select
-                value={signatureTemplate}
-                onChange={handleSelectChange}
                 className="border rounded px-4 py-2 w-full"
+                onChange={(e) =>
+                  e.target.value === "custom"
+                    ? setCustomOpen(true)
+                    : setCustomOpen(false)
+                }
               >
                 <option value="classique">Classique</option>
                 <option value="sombre">Sombre</option>
                 <option value="professionnel">Professionnel</option>
                 <option value="custom">Personnalisé</option>
               </select>
-
-              {/* Toggle custom */}
               <motion.div
-                onClick={handleToggle}
+                onClick={() => setCustomOpen(!customOpen)}
                 whileHover={{ scale: 1.1 }}
-                className="ml-4 cursor-pointer text-gray-600"
+                className="ml-4 cursor-pointer"
               >
-                {customOpen ? (
-                  <ChevronUp size={24} />
-                ) : (
-                  <ChevronDown size={24} />
-                )}
+                {customOpen ? <ChevronUp /> : <ChevronDown />}
               </motion.div>
             </div>
 
@@ -441,95 +416,169 @@ export default function SignatureSettings() {
               )}
             </AnimatePresence>
           </div>
-        </div>
 
-        <div className="bg-white p-6 rounded-xl flex-1 shadow">
-          <h3 className="text-lg font-bold mb-2">Importer un logo</h3>
-          <label className="block cursor-pointer bg-gray-100 hover:bg-gray-200 p-4 rounded-lg text-center transition">
-            <input
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleFileChange}
-            />
-            Cliquer ou déposer le fichier
-          </label>
-        </div>
-      </main>
+          {/* Uploader */}
+          <div className="bg-white p-6 rounded-xl shadow">
+            <h3 className="text-lg font-bold mb-2">Importer un logo</h3>
+            <label className="block cursor-pointer bg-gray-100 hover:bg-gray-200 p-4 rounded-lg text-center transition">
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleFileChange}
+              />
+              Cliquer ou déposer le fichier
+            </label>
+          </div>
+        </section>
 
-      <div className="flex flex-col md:flex-row gap-6">
-        <div className="flex-1 min-w-0">
-          <motion.form
-            layout
-            className="bg-white border p-6 rounded-lg shadow-lg grid grid-cols-1 md:grid-cols-2 gap-6"
-          >
-            <h2 className="text-2xl font-semibold col-span-full">
-              Paramètres de signature
-            </h2>
-
-            {[
-              ["Nom complet", senderName, setSenderName],
-              ["Email", senderEmail, setSenderEmail],
-              ["Société", companyName, setCompanyName],
-              ["Téléphone", phoneNumber, setPhoneNumber],
-              ["Poste", role, setRole],
-              ["WhatsApp", whatsapp, setWhatsapp],
-              ["Instagram (URL)", instagram, setInstagram],
-              ["Facebook (URL)", facebook, setFacebook],
-              ["LinkedIn (URL)", linkedin, setLinkedin],
-              ["Logo URL", logoUrl, setLogoUrl],
-            ].map(([label, value, setter]) => (
-              <div key={label} className="flex flex-col">
-                <label className="font-medium mb-1">{label}</label>
-                <input
-                  type={label === "Email" ? "email" : "text"}
-                  value={value as string}
-                  onChange={(e) => (setter as any)(e.target.value)}
-                  className="border rounded px-3 py-2 shadow-sm focus:ring-2 focus:ring-blue-300"
+        {/* Aperçu / HTML brut */}
+        <section>
+          <div className="bg-white rounded-xl shadow p-6 h-full">
+            {showHtml ? (
+              <pre className="max-h-[600px] overflow-auto text-sm bg-gray-50 p-4 rounded">
+                {signatureHTML}
+              </pre>
+            ) : (
+              <div className="h-full flex items-center justify-center text-gray-400">
+                <EmailSignature
+                  name={senderName}
+                  role={role}
+                  email={senderEmail}
+                  phone={phoneNumber}
+                  whatsapp={whatsapp}
+                  instagram={instagram}
+                  facebook={facebook}
+                  linkedin={linkedin}
+                  logo={logoUrl}
+                  textColor={textColor}
+                  company={companyName}
                 />
               </div>
-            ))}
-          </motion.form>
-        </div>
+            )}
+          </div>
+        </section>
+      </main>
 
-        <div className="flex-1 min-w-0 bg-white border p-6 rounded-lg shadow space-y-4">
-          <h3 className="text-xl font-bold mb-2">Aperçu de la signature</h3>
+      {/* Formulaire & Preview */}
+      <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6 my-8 px-4">
+        {/* Form */}
+        <motion.form
+          layout
+          className="bg-white border p-6 rounded-lg shadow-lg grid grid-cols-1 md:grid-cols-2 gap-6"
+        >
+          <h2 className="text-2xl font-semibold col-span-full">
+            Paramètres de signature
+          </h2>
 
-          {showHtml ? (
-            <pre className="max-h-[600px] overflow-auto text-sm bg-gray-50 p-4 rounded">
-              {signatureHTML}
-            </pre>
-          ) : (
-            <div
-              className="border p-4 rounded"
-              style={{ backgroundColor: applyTheme.bgColor }}
-            >
-              <EmailSignature
-                name={senderName}
-                email={senderEmail}
-                phone={phoneNumber}
-                instagram={instagram}
-                role={role}
-                whatsapp={whatsapp}
-                facebook={facebook}
-                linkedin={linkedin}
-                logo={logoUrl}
-                font={applyTheme.font}
-                textColor={applyTheme.textColor}
-                bgColor={applyTheme.bgColor}
-                company={companyName}
+          {[
+            ["Nom complet", senderName, setSenderName],
+            ["Email", senderEmail, setSenderEmail],
+            ["Société", companyName, setCompanyName],
+            ["Téléphone", phoneNumber, setPhoneNumber],
+            ["Poste", role, setRole],
+            ["WhatsApp", whatsapp, setWhatsapp],
+            ["Instagram (URL)", instagram, setInstagram],
+            ["Facebook (URL)", facebook, setFacebook],
+            ["LinkedIn (URL)", linkedin, setLinkedin],
+            ["Logo URL", logoUrl, setLogoUrl],
+          ].map(([label, value, setter]) => (
+            <div key={label} className="flex flex-col">
+              <label className="font-medium mb-1">{label}</label>
+              <input
+                type={label === "Email" ? "email" : "text"}
+                value={value as string}
+                onChange={(e) => (setter as any)(e.target.value)}
+                className="border rounded px-3 py-2 shadow-sm focus:ring-2 focus:ring-blue-300"
               />
             </div>
-          )}
-        </div>
+          ))}
+        </motion.form>
+
+        {/* Aperçu final */}
+        <motion.div
+          layout
+          className="bg-white border p-6 rounded-lg shadow-lg space-y-4"
+        >
+          <h3 className="text-xl font-bold">Aperçu final</h3>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4 }}
+            className="border p-4 rounded"
+            style={{
+              backgroundColor: bgColor,
+              fontFamily: font,
+              color: textColor,
+            }}
+          >
+            <table>
+              <tbody>
+                <tr>
+                  {logoUrl && (
+                    <td style={{ paddingRight: 12, verticalAlign: "top" }}>
+                      <motion.img
+                        src={logoUrl}
+                        alt="Logo"
+                        className="rounded-md"
+                        style={{ width: 80 }}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.5 }}
+                      />
+                    </td>
+                  )}
+                  <td>
+                    <strong style={{ display: "block", fontSize: 16 }}>
+                      {senderName}
+                    </strong>
+                    {role && <div className="italic">{role}</div>}
+                    {companyName && <div>{companyName}</div>}
+                    <a href={`mailto:${senderEmail}`}>{senderEmail}</a>
+                    {phoneNumber && <div>Tél : {phoneNumber}</div>}
+                    {whatsapp && (
+                      <div>
+                        <a href={`https://wa.me/${whatsapp}`} target="_blank">
+                          WhatsApp
+                        </a>
+                      </div>
+                    )}
+                    {instagram && (
+                      <div>
+                        <a href={instagram} target="_blank">
+                          Instagram
+                        </a>
+                      </div>
+                    )}
+                    {facebook && (
+                      <div>
+                        <a href={facebook} target="_blank">
+                          Facebook
+                        </a>
+                      </div>
+                    )}
+                    {linkedin && (
+                      <div>
+                        <a href={linkedin} target="_blank">
+                          LinkedIn
+                        </a>
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </motion.div>
+        </motion.div>
       </div>
 
-
-      
+      {/* Footer */}
+      <footer className="text-center py-6 text-gray-500 text-sm">
+        © 2025 MonApp Signature
+      </footer>
     </div>
   );
 }
-
 function EmailSignature({
   name,
   role,
@@ -540,127 +589,60 @@ function EmailSignature({
   facebook,
   linkedin,
   logo,
-  font,
   textColor,
-  bgColor,
   company,
 }: {
-  name: string;
-  role: string;
-  email: string;
-  phone: string;
-  whatsapp: string;
-  instagram: string;
-  facebook: string;
-  linkedin: string;
-  logo: string;
-  font: string;
-  textColor: string;
-  bgColor: string;
-  company: string;
+  [K: string]: string;
 }) {
   return (
-    <table
-      style={{
-        fontFamily: font,
-        color: textColor,
-        backgroundColor: bgColor,
-        fontSize: "14px",
-      }}
-    >
+    <table style={{ color: textColor, fontSize: 14 }}>
       <tbody>
         <tr>
-          <td style={{ paddingRight: "10px" }}>
-            {logo && (
-              <img
+          {logo && (
+            <td style={{ paddingRight: 12, verticalAlign: "top" }}>
+              <motion.img
                 src={logo}
                 alt="Logo"
-                className="signature-logo"
-                style={{ width: "80px", height: "auto", borderRadius: "6px" }}
+                className="rounded-md"
+                style={{ width: 80 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
               />
-            )}
-          </td>
+            </td>
+          )}
           <td>
-            <strong className="signature-nom">{name}</strong>
-            <br />
-            {role && (
-              <>
-                <strong className="signature-role">{role}</strong>
-                <br />
-              </>
-            )}
-            {company && (
-              <>
-                <span className="signature-company">{company}</span>
-                <br />
-              </>
-            )}
-            <a
-              href={`mailto:${email}`}
-              className="signature-email"
-              style={{ color: textColor }}
-            >
+            <strong style={{ display: "block", fontSize: 16 }}>{name}</strong>
+            {role && <div style={{ fontStyle: "italic" }}>{role}</div>}
+            {company && <div>{company}</div>}
+            <a href={`mailto:${email}`} style={{ color: textColor }}>
               {email}
             </a>
-
-            {phone && (
-              <>
-                <br />
-                <span className="signature-phone">Tél : {phone}</span>
-                <br />
-              </>
-            )}
+            {phone && <div>Tél : {phone}</div>}
             {whatsapp && (
               <div>
-                <a
-                  href={`https://wa.me/${whatsapp}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="signature-whatsapp"
-                  style={{ color: textColor }}
-                >
-                  WhatsApp : {whatsapp}
+                <a href={`https://wa.me/${whatsapp}`} target="_blank">
+                  WhatsApp
                 </a>
               </div>
             )}
-
             {instagram && (
               <div>
-                <a
-                  href={instagram}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="signature-instagram"
-                  style={{ color: textColor }}
-                >
+                <a href={instagram} target="_blank">
                   Instagram
                 </a>
               </div>
             )}
-
             {facebook && (
               <div>
-                <a
-                  href={facebook}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="signature-facebook"
-                  style={{ color: textColor }}
-                >
+                <a href={facebook} target="_blank">
                   Facebook
                 </a>
               </div>
             )}
-
             {linkedin && (
               <div>
-                <a
-                  href={linkedin}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="signature-linkedin"
-                  style={{ color: textColor }}
-                >
+                <a href={linkedin} target="_blank">
                   LinkedIn
                 </a>
               </div>

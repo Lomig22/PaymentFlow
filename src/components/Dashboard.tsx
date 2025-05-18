@@ -10,6 +10,8 @@ import {
   AlertTriangle,
   BanknoteIcon,
   Trash2,
+  Bell,
+  FileBarChart2,
 } from "lucide-react";
 import { Client, Receivable } from "../types/database";
 import Swal from "sweetalert2";
@@ -528,7 +530,10 @@ export default function Dashboard() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+          style={{ display: "none" }}
+        >
           {/* Total Clients */}
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between mb-4">
@@ -594,7 +599,7 @@ export default function Dashboard() {
         </div>
 
         <div
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-6 mb-8"
           style={{ marginBottom: "20px" }}
         >
           <div className="xl:col-span-8 space-y-6">
@@ -615,10 +620,18 @@ export default function Dashboard() {
                 <BalanceAgeeChart />
               </div>
             </div>
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="rounded-2xl shadow bg-white p-6 max-h-[300px] overflow-y-auto">                <h2 className="text-xl font-semibold text-gray-800">
-                  Notifications
-                </h2>
+              <div className="rounded-2xl shadow bg-white p-6 max-h-[300px] overflow-y-auto">
+                <div className="flex items-center space-x-2 mb-2">
+                  <div className="bg-yellow-100 p-3 rounded-lg">
+                    <Bell className="h-6 w-6 text-yellow-600" />
+                  </div>
+                  <h2 className="text-xl font-semibold text-gray-800">
+                    Notifications
+                  </h2>
+                </div>
+
                 <div className="mb-3 flex gap-2">
                   <div className="relative inline-block text-left mb-4">
                     <div>
@@ -954,7 +967,7 @@ export default function Dashboard() {
                 <div className="flex items-center">
                   <div className="w-32 bg-gray-200 rounded-full h-2 mr-2">
                     <div
-                      className="bg-red-700 h-2 rounded-full"
+                      className="bg-red-500 h-2 rounded-full"
                       style={{
                         width: `${
                           (stats.reminderSteps.legal / stats.totalReceivables) *
@@ -977,31 +990,109 @@ export default function Dashboard() {
               Statistiques générales
             </h2>
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">
+              {/* Clients à relancer */}
+              <div className="grid grid-cols-8 items-center gap-2">
+                <span className="col-span-2 text-sm text-gray-600">
                   Clients à relancer
                 </span>
-                <span className="text-sm font-medium">
-                  {stats.clientsNeedingReminder}
+                <div className="col-span-4 bg-gray-200 h-2 rounded">
+                  <div
+                    className="h-2 bg-blue-500 rounded"
+                    style={{
+                      width: `${
+                        stats.totalClients > 0
+                          ? Math.min(
+                              (stats.clientsNeedingReminder /
+                                stats.totalClients) *
+                                100,
+                              100
+                            )
+                          : 0
+                      }%`,
+                    }}
+                  />
+                </div>
+                <span className="col-span-2 text-sm font-medium text-right">
+                  {stats.clientsNeedingReminder} / {stats.totalClients}
                 </span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Relances actives</span>
-                <span className="text-sm font-medium">
-                  {stats.activeReminders}
+
+              {/* Relances actives */}
+              <div className="grid grid-cols-8 items-center gap-2">
+                <span className="col-span-2 text-sm text-gray-600">
+                  Relances actives
+                </span>
+                <div className="col-span-4 bg-gray-200 h-2 rounded">
+                  <div
+                    className="h-2 bg-yellow-500 rounded"
+                    style={{
+                      width: `${
+                        stats.totalReceivables > 0
+                          ? Math.min(
+                              (stats.activeReminders / stats.totalReceivables) *
+                                100,
+                              100
+                            )
+                          : 0
+                      }%`,
+                    }}
+                  />
+                </div>
+                <span className="col-span-2 text-sm font-medium text-right">
+                  {stats.activeReminders} / {stats.totalReceivables}
                 </span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Relances résolues</span>
-                <span className="text-sm font-medium">
-                  {stats.resolvedReminders}
+
+              {/* Relances résolues */}
+              <div className="grid grid-cols-8 items-center gap-2">
+                <span className="col-span-2 text-sm text-gray-600">
+                  Relances résolues
+                </span>
+                <div className="col-span-4 bg-gray-200 h-2 rounded">
+                  <div
+                    className="h-2 bg-green-500 rounded"
+                    style={{
+                      width: `${
+                        stats.totalReceivables > 0
+                          ? Math.min(
+                              (stats.resolvedReminders /
+                                stats.totalReceivables) *
+                                100,
+                              100
+                            )
+                          : 0
+                      }%`,
+                    }}
+                  />
+                </div>
+                <span className="col-span-2 text-sm font-medium text-right">
+                  {stats.resolvedReminders} / {stats.totalReceivables}
                 </span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">
+
+              {/* Taux de résolution */}
+              <div className="grid grid-cols-8 items-center gap-2">
+                <span className="col-span-2 text-sm text-gray-600">
                   Taux de résolution
                 </span>
-                <span className="text-sm font-medium">
+                <div className="col-span-4 bg-gray-200 h-2 rounded">
+                  <div
+                    className="h-2 bg-purple-500 rounded"
+                    style={{
+                      width: `${
+                        stats.totalReceivables > 0
+                          ? Math.min(
+                              (stats.resolvedReminders /
+                                stats.totalReceivables) *
+                                100,
+                              100
+                            )
+                          : 0
+                      }%`,
+                    }}
+                  />
+                </div>
+                <span className="col-span-2 text-sm font-medium text-right">
                   {stats.totalReceivables > 0
                     ? `${Math.round(
                         (stats.resolvedReminders / stats.totalReceivables) * 100
@@ -1009,11 +1100,22 @@ export default function Dashboard() {
                     : "0%"}
                 </span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">
+
+              {/* Montant moyen des créances */}
+              <div className="grid grid-cols-8 items-center gap-2">
+                <span className="col-span-2 text-sm text-gray-600">
                   Montant moyen des créances
                 </span>
-                <span className="text-sm font-medium">
+                <div className="col-span-4 bg-gray-200 h-2 rounded">
+                  <div
+                    className="h-2 bg-teal-500 rounded"
+                    style={{
+                      // On remplit la barre à 100% car c'est une valeur fixe moyenne
+                      width: "100%",
+                    }}
+                  />
+                </div>
+                <span className="col-span-2 text-sm font-medium text-right">
                   {new Intl.NumberFormat("fr-FR", {
                     style: "currency",
                     currency: "EUR",

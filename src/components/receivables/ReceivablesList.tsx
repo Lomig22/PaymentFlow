@@ -20,7 +20,7 @@ import {
   Info,
   ListRestart,
   File,
-  Pause,
+  PauseOctagon,
   MoreHorizontal,
   Play,
   PencilIcon,
@@ -45,6 +45,10 @@ import { getReminderStatus } from "../../lib/function";
 import { isBefore } from "date-fns";
 import ReceivableStatusBadge from "./receivableStatusBadge";
 import Tooltip from "../Common/Tooltip";
+import PlaySvg from "../../components/images/play-svgrepo-com.svg";
+import PauseSvg from "../../components/images/pause-svgrepo-com.svg";
+import { motion } from "framer-motion";
+
 type SortColumnConfig = {
   key: keyof CSVMapping | "client" | "email" | "Delay in Days";
   sort: "none" | "asc" | "desc";
@@ -1262,7 +1266,7 @@ function ReceivablesList() {
                     sort={sortConfig?.sort ?? "none"}
                   />
                 </th>
-           
+
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Commentaire
                 </th>
@@ -1288,14 +1292,14 @@ function ReceivablesList() {
                       {/* Bouton menu déroulant */}
                       <div className="relative">
                         <div className="flex items-center gap-2 relative z-10">
-                          <button className="flex items-start gap-1 text-gray-600 hover:text-gray-800">
-                            {/* Icône MoreHorizontal - Reste toujours à droite */}
+                          <button className="flex items-center gap-2 text-gray-600 hover:text-gray-800">
+                            {/* Icône MoreHorizontal */}
                             <Tooltip label="Options supplémentaires">
                               <span
                                 ref={(el) =>
                                   (buttonRefs.current[receivable.id] = el)
                                 }
-                                className="w-5 h-5 flex items-center justify-center cursor-pointer"
+                                className="w-6 h-6 flex items-center justify-center cursor-pointer"
                                 onClick={() =>
                                   setOpenDropdownId(
                                     openDropdownId === receivable.id
@@ -1304,24 +1308,31 @@ function ReceivablesList() {
                                   )
                                 }
                               >
-                                <MoreHorizontal className="h-5 w-5" />
+                                <MoreHorizontal className="w-5 h-5" />
                               </span>
                             </Tooltip>
 
-                            {/* play/pause  */}
+                            {/* Play/Pause */}
                             <span
-                              className={`w-5 h-5 flex items-center  ml-auto ${
-                                !getReminderIssues(receivable) ? "ml-0" : ""
-                              }`}
+                              className="w-6 h-6 flex items-center justify-center cursor-pointer"
                               onClick={() => {
                                 handleAutomaticReminderToggle(receivable);
                               }}
                             >
                               {receivable.automatic_reminder ? (
                                 <Tooltip label="Mettre en pause" theme="green">
-                                  <Pause
-                                    className="cursor-pointer hover:fill-green-400 stroke-green-400"
-                                    strokeWidth={2}
+                                  <motion.img
+                                    src={PauseSvg}
+                                    alt="Pause"
+                                    className="w-5 h-5"
+                                    initial={{ scale: 1 }}
+                                    animate={{ rotate: 360, scale: 1.2 }}
+                                    exit={{ scale: 1 }}
+                                    transition={{
+                                      type: "spring",
+                                      stiffness: 300,
+                                      damping: 20,
+                                    }}
                                   />
                                 </Tooltip>
                               ) : (
@@ -1329,27 +1340,31 @@ function ReceivablesList() {
                                   label="Activer les relances"
                                   theme="orange"
                                 >
-                                  <Play
-                                    className="cursor-pointer hover:fill-orange-400 stroke-orange-400"
-                                    strokeWidth={2}
+                                  <motion.img
+                                    src={PlaySvg}
+                                    alt="Play"
+                                    className="w-5 h-5"
+                                    initial={{ scale: 1 }}
+                                    animate={{ rotate: 0, scale: 1.2 }}
+                                    exit={{ scale: 1 }}
+                                    transition={{
+                                      type: "spring",
+                                      stiffness: 300,
+                                      damping: 20,
+                                    }}
                                   />
                                 </Tooltip>
                               )}
                             </span>
 
-                            {/* Icône Info - Affichée seulement si getReminderIssues existe */}
-
-                            <Tooltip label={getReminderIssues(receivable)}>
-                              <span
-                                className={
-                                  getReminderIssues(receivable)
-                                    ? "text-yellow-500 w-5 h-5 flex items-center justify-center"
-                                    : "hidden"
-                                }
-                              >
-                                <Info className="h-5 w-5" />
-                              </span>
-                            </Tooltip>
+                            {/* Icône Info */}
+                            {getReminderIssues(receivable) && (
+                              <Tooltip label={getReminderIssues(receivable)}>
+                                <span className="w-6 h-6 flex items-center justify-center text-yellow-500">
+                                  <Info className="w-6 h-6" />
+                                </span>
+                              </Tooltip>
+                            )}
                           </button>
                         </div>
 
@@ -1626,45 +1641,45 @@ function ReceivablesList() {
                 ></textarea>
               </div>
               <div className="mb-4">
-  <label
-    htmlFor="signature"
-    className="hidden block text-sm font-medium text-gray-700"
-  >
-    Signature (HTML)
-  </label>
-  <textarea
-    id="signature"
-    name="signature"
-    value={signature}
-    onChange={(e) => setSignature(e.target.value)}
-    rows={6}
-    className="hidden mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-    placeholder="Entrez votre signature HTML"
-  ></textarea>
-</div>
+                <label
+                  htmlFor="signature"
+                  className="hidden block text-sm font-medium text-gray-700"
+                >
+                  Signature (HTML)
+                </label>
+                <textarea
+                  id="signature"
+                  name="signature"
+                  value={signature}
+                  onChange={(e) => setSignature(e.target.value)}
+                  rows={6}
+                  className="hidden mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  placeholder="Entrez votre signature HTML"
+                ></textarea>
+              </div>
 
-<div className="mt-4">
-<div className="flex justify-between items-center mb-1">
-        <label className="block text-sm font-medium text-gray-700">
-          Aperçu de la signature :
-        </label>
-        <button
-          onClick={sendToSignatureSetting}
-          className="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          title="Personnaliser la signature"
-          type="button"
-        >
-          <PencilIcon className="h-5 w-5 mr-1" aria-hidden="true" />
-          Modifier
-        </button>
-      </div>
-  <div
-    className="border p-4 rounded bg-white shadow"
-    dangerouslySetInnerHTML={{ __html: signature }}
-  />
-</div>
+              <div className="mt-4">
+                <div className="flex justify-between items-center mb-1">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Aperçu de la signature :
+                  </label>
+                  <button
+                    onClick={sendToSignatureSetting}
+                    className="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    title="Personnaliser la signature"
+                    type="button"
+                  >
+                    <PencilIcon className="h-5 w-5 mr-1" aria-hidden="true" />
+                    Modifier
+                  </button>
+                </div>
+                <div
+                  className="border p-4 rounded bg-white shadow"
+                  dangerouslySetInnerHTML={{ __html: signature }}
+                />
+              </div>
 
-        {/*       <div>
+              {/*       <div>
                 <label
                   htmlFor="signature"
                   className="block text-sm font-medium text-gray-700"
@@ -1688,7 +1703,7 @@ function ReceivablesList() {
                 onClick={() => {
                   setShowConfirmReminder(false);
                   setSelectedReceivable(null);
-                  fetchReceivables()
+                  fetchReceivables();
                 }}
                 className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 border border-gray-300 rounded-md"
                 disabled={sending}
@@ -1696,7 +1711,10 @@ function ReceivablesList() {
                 Annuler
               </button>
               <button
-                onClick={()=>{handleSendReminder();fetchReceivables()}}
+                onClick={() => {
+                  handleSendReminder();
+                  fetchReceivables();
+                }}
                 disabled={sending}
                 className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md disabled:opacity-50"
               >
