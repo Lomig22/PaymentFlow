@@ -182,51 +182,7 @@ export default function Layout() {
     verifySubscription();
   }, []);
 
-  useEffect(() => {
-    const ensureDefaultProfile = async () => {
-      const {
-        data: { user },
-        error: authError,
-      } = await supabase.auth.getUser();
 
-      if (authError || !user) return;
-
-      // Vérifie si le profil "Default" existe déjà pour cet utilisateur
-      const { data, error: fetchError } = await supabase
-        .from("reminder_profile")
-        .select("id")
-        .eq("name", "Default")
-        .eq("owner_id", user.id)
-        .single();
-
-      if (fetchError && fetchError.code !== "PGRST116") {
-        // Code spécifique si pas trouvé
-        console.log(fetchError.message);
-        return;
-      }
-
-      if (!data) {
-        const DefaultData = {
-          name: "Default",
-          delay1: { j: 1, h: 0, m: 0 },
-          delay2: { j: 1, h: 0, m: 0 },
-          delay3: { j: 1, h: 0, m: 0 },
-          owner_id: user.id,
-          public: false,
-        };
-
-        const { error: insertError } = await supabase
-          .from("reminder_profile")
-          .insert(DefaultData);
-
-        if (insertError) {
-          console.log(insertError.message);
-        }
-      }
-    };
-
-    ensureDefaultProfile();
-  }, []);
 
   return (
     <div>
