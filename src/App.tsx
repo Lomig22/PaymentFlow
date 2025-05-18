@@ -23,6 +23,7 @@ import AppHeader from "./components/AppHeader";
 import ReminderList  from "./components/reminders/ReminderList"
 
 import ContactPage from "./pages/ContactPage";
+import AbonnementSuccess from "./pages/success";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import OAuthCallback from "./pages/SubscribePage";
 import SubscribePage from "./pages/SubscribePage";
@@ -126,11 +127,21 @@ function App() {
   return (
     <Router>
       {!user && <AppHeader user={user} onContactClick={() => {}} />}
-      
+
       <Routes>
         {/* Public routes */}
-        <Route path="/" element={!user?<LandingPage onGetStarted={() => {}} />: <Navigate to="/dashboard" replace />} />
+        <Route
+          path="/"
+          element={
+            !user ? (
+              <LandingPage onGetStarted={() => {}} />
+            ) : (
+              <Navigate to="/dashboard" replace />
+            )
+          }
+        />
         <Route path="/subscribe" element={<SubscribePage />} />
+        <Route path="/paiement-abonement" element={<AbonnementSuccess />} />
         <Route
           path="/signup"
           element={
@@ -165,9 +176,8 @@ function App() {
           <Route path="/clients" element={<ClientPage />} />
           <Route path="/receivables" element={<ReceivablesList />} />
           <Route path="/settings" element={<Settings />} />
-          <Route path='/reminders' element={<ReminderList />} />
+          <Route path="/reminders" element={<ReminderList />} />
           <Route path="/success" element={<Success />} />
-
         </Route>
 
         {/* Redirects */}
