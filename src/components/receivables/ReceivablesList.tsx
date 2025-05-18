@@ -196,7 +196,7 @@ function ReceivablesList() {
 
       if (!newStatus) { 
 
-       showError("Vous n'avez pas encore configurer cette relance!");
+       showError("Vous n'avez pas encore configuré cette relance !");
         setSending(false);
         setShowConfirmReminder(false);
        setSelectedClient(null);
