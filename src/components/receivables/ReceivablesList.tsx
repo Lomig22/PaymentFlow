@@ -706,8 +706,8 @@ function ReceivablesList() {
         type: "info",
         message: "Mise à jour des paramètres de relance automatique",
         details: receivable?.automatic_reminder
-          ? `Les relances sont activés pour la relance ${receivable?.invoice_number}`
-          : `Les relances sont en pause pour la relance ${receivable?.invoice_number}`,
+          ? `Les relances sont activés pour la facture ${receivable?.invoice_number}`
+          : `Les relances sont en pause pour la facture ${receivable?.invoice_number}`,
       });
       fetchReceivables();
     } catch (error: any) {

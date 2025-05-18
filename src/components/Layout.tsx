@@ -312,7 +312,7 @@ export default function Layout() {
                   rel="noopener noreferrer"
                   className="group flex items-center w-full px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-md transition-all duration-300"
                 >
-                  {/* <HelpCircle className="h-5 w-5 flex-shrink-0 text-inherit" /> */}
+                   <HelpCircle className="h-5 w-5 flex-shrink-0 text-inherit" /> 
                   <span className="ml-3 opacity-0 group-hover:opacity-100 whitespace-nowrap transition-opacity duration-300">
                     Aides et support
                   </span>
