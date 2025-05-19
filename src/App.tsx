@@ -21,7 +21,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import PricingPage from "./pages/PricingPage";
 import AppHeader from "./components/AppHeader";
 import ReminderList  from "./components/reminders/ReminderList"
-
+import HelpAndSupport from "./pages/HelpAndSupport";
 import ContactPage from "./pages/ContactPage";
 import AbonnementSuccess from "./pages/success";
 import PaymentSuccess from "./pages/PaymentSuccess";
@@ -140,6 +140,7 @@ function App() {
             )
           }
         />
+        <Route path="/help" element={<HelpAndSupport/>} />
         <Route path="/subscribe" element={<SubscribePage />} />
         <Route path="/paiement-abonement" element={<AbonnementSuccess />} />
         <Route
