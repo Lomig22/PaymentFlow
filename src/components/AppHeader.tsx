@@ -10,7 +10,6 @@ interface AppHeaderProps {
   user: User | null;
 }
 
-
 export default function AppHeader({ user }: AppHeaderProps) {
   const navigate = useNavigate();
   const calendlyRef = useRef<any>(null);
@@ -109,11 +108,7 @@ export default function AppHeader({ user }: AppHeaderProps) {
             >
               Tarifs
             </button>
-            <a
-              href="/help"
-            
-              className="text-gray-600 hover:text-gray-900"
-            >
+            <a href="/help" className="text-gray-600 hover:text-gray-900">
               Guides
             </a>
 
@@ -128,7 +123,7 @@ export default function AppHeader({ user }: AppHeaderProps) {
 
         {/* Desktop Auth Buttons */}
         <div className="hidden md:flex items-center gap-2">
-          {!user &&  (
+          {!user && (
             <>
               <Link
                 to="/login"
@@ -185,6 +180,12 @@ export default function AppHeader({ user }: AppHeaderProps) {
                 >
                   Tarifs
                 </Link>
+                <a
+                  href="/help"
+                  className="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md"
+                >
+                  Guides
+                </a>
                 <button
                   onClick={() => setShowContactModal(true)}
                   className="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md"
