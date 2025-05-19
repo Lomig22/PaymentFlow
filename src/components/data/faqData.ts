@@ -34,12 +34,12 @@ export const faqData: FaqItem[] = [
     question: "Comment mettre à jour mes informations de facturation ?",
     answer: "Pour mettre à jour vos informations de facturation, allez dans Paramètres > Compte > Facturation. Vous pouvez y mettre à jour votre mode de paiement, votre adresse de facturation et vos informations fiscales. Vous pouvez également consulter votre historique de facturation et télécharger les factures de votre abonnement Payment-Flow.",
     category: "billing"
-  },
+  }/* ,
   {
     question: "Quels modes de paiement mes clients peuvent-ils utiliser ?",
     answer: "Payment-Flow prend en charge une large gamme de moyens de paiement, notamment les cartes de crédit/débit (Visa, Mastercard, American Express, Discover), les virements bancaires SEPA, les virements internationaux, PayPal et divers moyens de paiement locaux selon votre région. Vous pouvez activer ou désactiver les moyens de paiement dans Paramètres > Paiements.",
     category: "features"
-  },
+  } */,
   {
     question: "Comment générer des rapports financiers ?",
     answer: "Pour générer des rapports financiers, accédez à la section Rapports dans la navigation principale. Vous pouvez y sélectionner différents rapports préétablis tels que Flux de trésorerie, Balance âgée, Historique des paiements et Efficacité du recouvrement. Vous pouvez personnaliser la période et d'autres paramètres, puis exporter les rapports en PDF, Excel ou CSV.",
