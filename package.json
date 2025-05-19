@@ -10,7 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@headlessui/react": "^2.2.2",
+    "@headlessui/react": "^2.2.3",
+    "@heroicons/react": "^2.2.0",
     "@mantine/core": "^8.0.0",
     "@radix-ui/react-popover": "^1.1.13",
     "@radix-ui/react-select": "^2.2.4",
