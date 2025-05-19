@@ -14,7 +14,8 @@ import { supabase } from "../../lib/supabase";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { fr } from "date-fns/locale";
-
+import { Activity } from "lucide-react";
+import { YearPicker } from "../../components/ui/year-picker";
 
 const monthOrder = [
   "Janvier",
@@ -94,7 +95,6 @@ export default function DashboardLayout() {
         grouped[year][month].unpaid += unpaid;
       }
 
-
       setDataByYear(grouped);
     };
 
@@ -102,9 +102,10 @@ export default function DashboardLayout() {
   }, []);
 
   const handleYearChange = (date: Date) => {
+    console.log(date.getFullYear());
+
     setSelectedYear(date.getFullYear());
   };
-
 
   const currentYearData = dataByYear[selectedYear] || [];
   const nextYearData = dataByYear[selectedYear + 1] || [];
@@ -125,19 +126,15 @@ export default function DashboardLayout() {
     <div className="rounded-2xl w-full h-full">
       <Card className="p-6 shadow-xl h-full bg-white">
         <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4 gap-4">
-          <h2 className="text-xl font-semibold text-gray-800">
-            Activité (de {selectedYear} à {selectedYear + 1})
-          </h2>
-          <div className="flex gap-3">
-            <DatePicker
-              selected={new Date(selectedYear, 0)}
-              onChange={handleYearChange}
-              dateFormat="yyyy"
-              showYearPicker
-              locale={fr}
-              className="border border-gray-300 text-sm rounded-md px-2 py-1"
-            />
+          <div className="flex items-center space-x-2 mb-2">
+            <div className="bg-blue-100 p-3 rounded-lg">
+              <Activity className="h-6 w-6 text-blue-600" />
+            </div>
+            <h2 className="text-xl font-semibold text-gray-800">Activité</h2>
+          </div>
 
+          <div className="flex gap-3">
+            <YearPicker value={selectedYear} onChange={setSelectedYear} />
             <select
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
@@ -174,7 +171,7 @@ export default function DashboardLayout() {
               <Line
                 type="monotone"
                 dataKey="paid"
-                stroke="#4CAF50"
+                stroke="rgb(165, 227, 167)"
                 strokeWidth={2}
                 name="Payé"
                 dot={{ r: 4 }}
@@ -182,7 +179,7 @@ export default function DashboardLayout() {
               <Line
                 type="monotone"
                 dataKey="unpaid"
-                stroke="#FF5252"
+                stroke="rgb(220 38 38 / var(--tw-text-opacity, 1))"
                 strokeWidth={2}
                 name="En attente"
                 dot={{ r: 4 }}

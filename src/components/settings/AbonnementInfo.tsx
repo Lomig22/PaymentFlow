@@ -78,7 +78,7 @@ function AbonnementInfo() {
   }
 
   return (
-    <div className="text-sm text-gray-700">
+    <div className="text-sm text-gray-700 ml-20 md:ml-0">
       {abonnement && expiryDate ? (
         <p>
           Abonnement <strong>{abonnement}</strong> – expire le{" "}
