@@ -265,7 +265,7 @@ export default function Layout() {
               {/* Bouton Aide */}
               <div className=" border-gray-200">
                 <a
-                  href="https://payment-flow.fr"
+                  href="/help"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="group flex items-center w-full px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-md transition-all duration-300"
