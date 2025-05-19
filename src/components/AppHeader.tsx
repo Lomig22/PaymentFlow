@@ -109,6 +109,13 @@ export default function AppHeader({ user }: AppHeaderProps) {
             >
               Tarifs
             </button>
+            <a
+              href="/help"
+            
+              className="text-gray-600 hover:text-gray-900"
+            >
+              Guides
+            </a>
 
             <button
               onClick={() => setShowContactModal(true)}
