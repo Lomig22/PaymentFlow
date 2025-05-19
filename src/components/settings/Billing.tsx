@@ -7,6 +7,7 @@ import {   useStripe,
  } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import { supabase } from '../../lib/supabase';
+import PricingPage from "../../pages/PricingPage"
 // Composant 1 : Informations de facturation
 export function BillingInfoSettings() {
   const [company, setCompany] = useState('');
@@ -255,14 +256,16 @@ export function SubscriptionSettings() {
     }
   };
   return (
-    <div className="space-y-4 max-w-md">
-      {(plan==="free")&&(
-         <div className="mb-4 p-4 border border-yellow-400 bg-yellow-100 text-yellow-800 rounded">
-         ⚠️ Vous n'êtes  souscrit à aucun abonnement pour le moment!
-       </div>)}
-      
+    <div className="space-y-4 max-w-full">
+      {/* {plan === "free" && (
+        <div className="mb-4 p-4 border border-yellow-400 bg-yellow-100 text-yellow-800 rounded">
+          ⚠️ Vous n'êtes souscrit à aucun abonnement pour le moment!
+        </div>
+      )} */}
+
       <h2 className="text-lg font-semibold">Choix de l’abonnement</h2>
-      {['basic', 'pro', 'entreprise'].map((p) => (
+      <PricingPage />
+      {/* {["basic", "pro", "entreprise"].map((p) => (
         <div key={p} className="flex items-center space-x-2">
           <input
             type="radio"
@@ -273,13 +276,18 @@ export function SubscriptionSettings() {
             onChange={handleChange}
           />
           <label htmlFor={p} className="capitalize">
-            {p === 'basic' ? 'Basique' : p === 'pro' ? 'Pro' : 'Entreprise'}
+            {p === "basic" ? "Basique" : p === "pro" ? "Pro" : "Entreprise"}
           </label>
         </div>
       ))}
-            <button onClick={()=>{handleStripePayment(plan)}} className="bg-blue-600 text-white px-4 py-2 rounded">
+      <button
+        onClick={() => {
+          handleStripePayment(plan);
+        }}
+        className="bg-blue-600 text-white px-4 py-2 rounded"
+      >
         Enregistrer
-      </button>
+      </button> */}
     </div>
   );
 }
