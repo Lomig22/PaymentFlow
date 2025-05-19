@@ -46,7 +46,7 @@ const HeroSection: React.FC = () => {
             transition={{ duration: 0.5, delay: 0.4 }}
             className="mt-8 flex flex-wrap justify-center gap-4 text-sm text-white"
           >
-            <span className="flex items-center">
+            <span className="flex items-center text-black">
               <HelpCircle className="h-4 w-4 mr-1" />
               Recherches populaires :
             </span>
