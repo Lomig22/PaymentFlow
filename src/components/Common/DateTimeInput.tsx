@@ -33,23 +33,32 @@ export default function DateTimeInput({
 
   const toDateTimeLocal = (date: Date) => {
     const pad = (n: number) => n.toString().padStart(2, "0");
-    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(
+      date.getDate()
+    )}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
   };
 
   return (
-<div className="bg-white p-4 rounded-xl shadow ">  {/* ou 130px selon ton rendu */}
-<div className="min-h-[40px] mb-2">
-<label className="flex items-start text-sm font-medium text-gray-700  w-full break-words whitespace-normal ">
-        <input
-          type="checkbox"
-          checked={enabled}
-          onChange={handleToggle}
-          className="mr-2"
-        />
-        {label} {/* optional && "(optionnel)" */}
-      </label>
-</div>
-
+    <div className="bg-white p-4 rounded-xl shadow ">
+      {" "}
+      <div className="flex items-center justify-between mb-2">
+        <div className="min-h-[40px] mb-2 mt-1">
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={enabled}
+              onChange={handleToggle}
+              className="sr-only peer"
+            />
+            <div
+              className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white 
+    after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all 
+    peer-checked:bg-blue-600"
+            ></div>
+          </label>
+        </div>
+        <span className="ml-2 font-medium">{label}</span>
+      </div>
       <input
         type="datetime-local"
         value={toDateTimeLocal(value)}
