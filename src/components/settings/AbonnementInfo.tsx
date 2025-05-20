@@ -84,7 +84,7 @@ function AbonnementInfo() {
 
     if (isExpired || daysLeft <= 0) return "text-red-600 font-semibold";
     if (daysLeft <= 5) return "text-orange-500 font-medium";
-    return "text-green-600";
+    return "text-black";
   };
 
   if (loading) {
