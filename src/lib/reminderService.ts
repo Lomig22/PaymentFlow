@@ -197,7 +197,6 @@ export async function sendManualReminder(
 	receivableId: string,
 	subject?: string,
 	content?: string,
-	signature?: string
 ): Promise<boolean> {
 	try {
 		const { data: receivable, error: receivableError } = await supabase
@@ -228,10 +227,10 @@ export async function sendManualReminder(
 			receivable.client,
 			receivable.status
 		);
-		if (!level || !template) return false;
+		if (!level || (!template && !content)) return false;
 
 		// ✅ Générer le contenu personnalisé ou utiliser le template par défaut
-		const defaultEmailContent = formatTemplate(template, {
+		const defaultEmailContent = formatTemplate(template||content, {
 			company: receivable.client.company_name,
 			amount: receivable.amount,
 			invoice_number: receivable.invoice_number,
@@ -239,7 +238,7 @@ export async function sendManualReminder(
 			days_late: daysLate || 0,
 			days_left: Math.max(0, -1 * daysLate),
 		});
-		if (content){
+/* 		if (content){
 			content=formatTemplate(content, {
 				company: receivable.client.company_name,
 				amount: receivable.amount,
@@ -248,7 +247,7 @@ export async function sendManualReminder(
 				days_late: daysLate || 0,
 				days_left: Math.max(0, -1 * daysLate),
 			});
-		}
+		} */
 
 		const finalSubject =
 			subject || `Relance facture ${receivable.invoice_number}`;

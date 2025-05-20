@@ -48,6 +48,7 @@ import Tooltip from "../Common/Tooltip";
 import PlaySvg from "../../components/images/play-svgrepo-com.svg";
 import PauseSvg from "../../components/images/pause-svgrepo-com.svg";
 import { motion } from "framer-motion";
+import { log } from "console";
 
 type SortColumnConfig = {
   key: keyof CSVMapping | "client" | "email" | "Delay in Days";
@@ -160,7 +161,30 @@ function ReceivablesList() {
   }, [importSuccess]);
   //récupération du template actuelle:
   useEffect(() => {
+    const enableClientDelays = async () => {
+      if (!selectedReceivable) return
+        const { data:clientData,error } = await supabase
+          .from('clients')
+          .update({
+            ...selectedReceivable?.client,
+            reminder_enable_1: true,
+            reminder_enable_2: true,
+            reminder_enable_3: true,
+            reminder_enable_final: true
+          })
+          .eq('id', selectedReceivable?.client?.id)
+          .select().single();
+          console.log(clientData);
+          
+        if (error) throw error;
+    };
+    
     if (showConfirmSendReminder === true) {
+    //  alert('selectedRecevable?.client?.reminder_profile: '+selectedReceivable?.client?.reminder_profile)
+
+      if (selectedReceivable?.client?.reminder_profile){
+        enableClientDelays()
+      }
       const fetchData = async () => {
         if (!selectedReceivable) {
           setContent("");
@@ -168,7 +192,7 @@ function ReceivablesList() {
           setSignature("");
           return;
         }
-
+        
         const {
           data: { user },
           error,
@@ -183,6 +207,7 @@ function ReceivablesList() {
         if (emailSettings?.email_signature) {
           setSignature(emailSettings.email_signature);
         }
+        
         const isLastStatus = (status: string) => {
           const lastStatus = selectedReceivable.client?.reminder_enable_final
             ? "Relance finale"
@@ -201,6 +226,7 @@ function ReceivablesList() {
             selectedReceivable.status,
             selectedReceivable.client
           );
+         alert("newStatus: "+newStatus)
 
       if (!newStatus) { 
 
@@ -470,17 +496,20 @@ function ReceivablesList() {
       "Relance 2": "reminder_enable_3",
       "Relance 3": "reminder_enable_final",
     };
-
+    //alert(statusToFlag[currentStatus])
     let currentIndex = allStatuses.indexOf(status);
-
     while (currentIndex < allStatuses.length) {
       const currentStatus = allStatuses[currentIndex];
       const flag = statusToFlag[currentStatus];
+      console.log(allStatuses)
+      console.log("flag: ",(client?.[flag]));
+      
       if (client?.[flag]) {
         return currentStatus;
       }
       currentIndex++;
     }
+
 
     return null; // Aucune relance activée trouvée
   }
@@ -1704,24 +1733,6 @@ function ReceivablesList() {
                   dangerouslySetInnerHTML={{ __html: signature }}
                 />
               </div>
-
-              {/*       <div>
-                <label
-                  htmlFor="signature"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Signature
-                </label>
-                <textarea
-                  id="signature"
-                  name="signature"
-                  value={signature}
-                  onChange={(e) => setSignature(e.target.value)}
-                  rows={6}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  placeholder="Entrez votre signature"
-                ></textarea>
-              </div> */}
             </form>
 
             <div className="flex justify-end space-x-4 mt-6">
