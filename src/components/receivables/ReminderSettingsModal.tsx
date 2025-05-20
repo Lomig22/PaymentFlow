@@ -31,8 +31,6 @@ export default function ReminderSettingsModal({
     receivable.automatic_reminder ?? false
   );
 
-  
-
   // Valeurs par défaut des délais (si non fournis)
   const delay1 = client.reminder_delay_1 || { j: 1, h: 0, m: 0 };
   const delay2 = client.reminder_delay_2 || { j: 1, h: 0, m: 0 };
@@ -136,6 +134,7 @@ export default function ReminderSettingsModal({
   const [reminder3AlreadySend, setReminder3AlreadySend] = useState(false);
   const [reminderFinalAlreadySend, setReminderFinalAlreadySend] =
     useState(false);
+    const [reminderProfileName,setReminderProfileName]=useState('')
   const [preAlreadySend, setPreAlreadySend] = useState(false);
   useEffect(() => {
     const checkReminders = async () => {
@@ -201,7 +200,35 @@ export default function ReminderSettingsModal({
 
     checkReminders();
   }, [formData, receivable.id]);
-
+  useEffect(() => {
+    const fetchReminderProfileName = async () => {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+  
+      if (userError || !user) {
+        console.error('Erreur lors de la récupération de l’utilisateur', userError);
+        return;
+      }
+  
+      const { data: reminderProfile, error } = await supabase
+        .from('reminder_profile')
+        .select('name')
+        .eq('id', client.reminder_profile)
+        .single(); // pour récupérer un seul objet au lieu d'un tableau
+  
+      if (error) {
+        console.error("Erreur récupération de reminder_profile :", error);
+        return;
+      }
+  
+      setReminderProfileName(reminderProfile.name);
+    };
+  
+    fetchReminderProfileName();
+  }, [client.id]);
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -377,7 +404,7 @@ export default function ReminderSettingsModal({
         try {
           await saveNotification({
             owner_id: user.id,
-            need_mail_notification:true,
+            need_mail_notification: true,
             is_read: false,
             type: "info",
             message: "Mises à jour des paramètres de relance",
@@ -434,7 +461,7 @@ export default function ReminderSettingsModal({
       if (error) throw error;
       await saveNotification({
         owner_id: user?.id,
-        need_mail_notification:true,
+        need_mail_notification: true,
         is_read: false,
         type: "info",
         message: "Mise à jour des paramètres de relance automatique",
@@ -450,7 +477,7 @@ export default function ReminderSettingsModal({
         await saveNotification({
           owner_id: user?.id,
           is_read: false,
-          need_mail_notification:true,
+          need_mail_notification: true,
           type: "erreur",
           message: "Mise à jour des paramètres de relance automatique échouée",
           details: `${error}`,
@@ -503,6 +530,29 @@ export default function ReminderSettingsModal({
               <p className="text-blue-700 text-sm">
                 Aucun profil défini pour cette relance, veuillez configurer
                 manuellement chaque date!
+              </p>
+            </div>
+          )}
+          {client.reminder_profile && (
+            <div className="bg-blue-50 p-4 rounded-md">
+              <p className="text-blue-800 font-medium mb-2">Information :</p>
+              <p className="text-blue-700 text-sm">
+                Cette relance utilise le profil intitulé{" "}
+                <strong>{reminderProfileName}</strong>, avec les délais
+                suivants :
+                <br />– <strong>Premier délai</strong> :{" "}
+                {client.reminder_delay_1?.j||0} jours, {client.reminder_delay_1?.h ||0}{" "}
+                heures, {client.reminder_delay_1?.m ||0} minutes
+                <br />– <strong>Deuxième délai</strong> :{" "}
+                {client.reminder_delay_2?.j ||0} jours, {client.reminder_delay_2?.h ||0}{" "}
+                heures, {client.reminder_delay_2?.m ||0} minutes
+                <br />– <strong>Troisième délai</strong> :{" "}
+                {client.reminder_delay_3?.j ||0} jours, {client.reminder_delay_3?.h ||0}{" "}
+                heures, {client.reminder_delay_3?.m ||0} minutes
+                <br />– <strong>Délai final</strong> :{" "}
+                {client.reminder_delay_final?.j ||0} jours,{" "}
+                {client.reminder_delay_final?.h ||0} heures,{" "}
+                {client.reminder_delay_final?.m ||0} minutes
               </p>
             </div>
           )}
