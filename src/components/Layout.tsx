@@ -281,7 +281,7 @@ export default function Layout() {
               <div className="border-t border-gray-200">
                 <button
                   onClick={() => setShowLogoutConfirm(true)}
-                  className="group flex items-center w-full px-4 py-9 text-sm font-medium text-gray-600 hover:bg-blue-50 hover:text-blue-700 rounded-md transition-all duration-300"
+                  className="group flex items-center w-full px-4 py-6 text-sm font-medium text-gray-600 hover:bg-blue-50 hover:text-blue-700 rounded-md transition-all duration-300"
                   style={{paddingLeft:"35px"}}
                   >
                   <LogOut className="h-5 w-5 flex-shrink-0 text-inherit" />

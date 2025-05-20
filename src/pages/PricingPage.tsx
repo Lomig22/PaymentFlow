@@ -1,4 +1,3 @@
-"use client";
 import { motion, useInView } from "framer-motion";
 import { CheckCircle, TrendingUp } from "lucide-react";
 import { supabase } from "../lib/supabase";
