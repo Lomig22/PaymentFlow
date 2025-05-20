@@ -1370,7 +1370,7 @@ function ReceivablesList() {
                                 handleAutomaticReminderToggle(receivable);
                               }}
                             >
-                              {receivable.automatic_reminder ? (
+                              {!receivable.automatic_reminder ? (
                                 <Tooltip
                                   label="Activer les relances"
                                   theme="orange"
