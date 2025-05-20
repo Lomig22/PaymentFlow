@@ -10,6 +10,7 @@ import "react-datetime/css/react-datetime.css"; // si tu n'as pas encore import�
 import DateTimeInput from "../Common/DateTimeInput";
 import { isBefore, startOfMinute } from "date-fns";
 import Swal from "sweetalert2";
+import ReminderInfo from "./reminderInfo";
 
 interface ReminderSettingsModalProps {
   client: Client;
@@ -211,7 +212,7 @@ export default function ReminderSettingsModal({
         console.error('Erreur lors de la récupération de l’utilisateur', userError);
         return;
       }
-  
+      if (!client.reminder_profile) return
       const { data: reminderProfile, error } = await supabase
         .from('reminder_profile')
         .select('name')
@@ -533,29 +534,7 @@ export default function ReminderSettingsModal({
               </p>
             </div>
           )}
-          {client.reminder_profile && (
-            <div className="bg-blue-50 p-4 rounded-md">
-              <p className="text-blue-800 font-medium mb-2">Information :</p>
-              <p className="text-blue-700 text-sm">
-                Cette relance utilise le profil intitulé{" "}
-                <strong>{reminderProfileName}</strong>, avec les délais
-                suivants :
-                <br />– <strong>Premier délai</strong> :{" "}
-                {client.reminder_delay_1?.j||0} jours, {client.reminder_delay_1?.h ||0}{" "}
-                heures, {client.reminder_delay_1?.m ||0} minutes
-                <br />– <strong>Deuxième délai</strong> :{" "}
-                {client.reminder_delay_2?.j ||0} jours, {client.reminder_delay_2?.h ||0}{" "}
-                heures, {client.reminder_delay_2?.m ||0} minutes
-                <br />– <strong>Troisième délai</strong> :{" "}
-                {client.reminder_delay_3?.j ||0} jours, {client.reminder_delay_3?.h ||0}{" "}
-                heures, {client.reminder_delay_3?.m ||0} minutes
-                <br />– <strong>Délai final</strong> :{" "}
-                {client.reminder_delay_final?.j ||0} jours,{" "}
-                {client.reminder_delay_final?.h ||0} heures,{" "}
-                {client.reminder_delay_final?.m ||0} minutes
-              </p>
-            </div>
-          )}
+        <ReminderInfo client={client} reminderProfileName={reminderProfileName}/>
           {/*            {hasPastDateEnable && (
             <div className=" mb-4 p-4 border border-yellow-400 bg-yellow-100 text-yellow-800 rounded">
               Certaines dates de relance sont antérieures à la date actuelle
@@ -679,7 +658,7 @@ export default function ReminderSettingsModal({
                   {/* Relance 2 */}
                   <div className="relative min-h-[124px]">
                     <fieldset
-                      disabled={client.reminder_profile}
+                      // disabled={client.reminder_profile}
                       className={client.reminder_profile ? "opacity-50" : ""}
                     >
                       <DateTimeInput
@@ -710,7 +689,7 @@ export default function ReminderSettingsModal({
                   {/* Relance 3 */}
                   <div className="relative min-h-[124px]">
                     <fieldset
-                      disabled={client.reminder_profile}
+                      // disabled={client.reminder_profile}
                       className={client.reminder_profile ? "opacity-50" : ""}
                     >
                       <DateTimeInput
@@ -741,7 +720,7 @@ export default function ReminderSettingsModal({
                   {/* Relance finale */}
                   <div className="relative min-h-[124px]">
                     <fieldset
-                      disabled={client.reminder_profile}
+                      // disabled={client.reminder_profile}
                       className={client.reminder_profile ? "opacity-50" : ""}
                     >
                       <DateTimeInput
