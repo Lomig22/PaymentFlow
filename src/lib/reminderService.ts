@@ -253,9 +253,7 @@ export async function sendManualReminder(
 
 		const finalSubject =
 			subject || `Relance facture ${receivable.invoice_number}`;
-		const finalContent = content
-			? `${content}\n\n`
-			: defaultEmailContent;
+		const finalContent = defaultEmailContent
 
 		const emailSent = await sendEmail(
 			emailSettings,
