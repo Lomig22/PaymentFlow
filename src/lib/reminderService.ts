@@ -197,7 +197,7 @@ export  async function getReminderTemplate(
 export async function sendManualReminder(
 	receivableId: string,
 	subject?: string,
-	content?: string,
+	content?: string|null,
 ): Promise<boolean> {
 	try {
 		const { data: receivable, error: receivableError } = await supabase
@@ -232,7 +232,7 @@ export async function sendManualReminder(
 		if (!level || (!template && !content)) return false;
 
 		// ✅ Générer le contenu personnalisé ou utiliser le template par défaut
-		const defaultEmailContent = formatTemplate(template||content, {
+		const defaultEmailContent = formatTemplate(content || template, {
 			company: receivable.client.company_name,
 			amount: receivable.amount,
 			invoice_number: receivable.invoice_number,
