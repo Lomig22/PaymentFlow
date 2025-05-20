@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
-import { format, isBefore } from "date-fns";
+import { format, isBefore,differenceInDays } from "date-fns";
 import { fr } from "date-fns/locale";
 import PricingPage from "../../pages/PricingPage";
 
 function AbonnementInfo() {
   const [abonnement, setAbonnement] = useState<string | null>(null);
   const [expiryDate, setExpiryDate] = useState<string | null>(null);
+  const [rawExpiryDate, setRawExpiryDate] = useState<Date | null>(null);
   const [isExpired, setIsExpired] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -48,6 +49,7 @@ function AbonnementInfo() {
           setAbonnement(latest.abonnement || null);
 
           const expiry = new Date(latest.subscription_expiry);
+          setRawExpiryDate(expiry);
           const expired = isBefore(expiry, new Date());
           setIsExpired(expired);
 
@@ -75,6 +77,16 @@ function AbonnementInfo() {
     fetchAbonnement();
   }, []);
 
+  const getColorClass = () => {
+    if (!rawExpiryDate) return "text-gray-700";
+    const today = new Date();
+    const daysLeft = differenceInDays(rawExpiryDate, today);
+
+    if (isExpired || daysLeft <= 0) return "text-red-600 font-semibold";
+    if (daysLeft <= 5) return "text-orange-500 font-medium";
+    return "text-green-600";
+  };
+
   if (loading) {
     return (
       <p className="text-sm text-gray-500 animate-pulse">
@@ -84,17 +96,20 @@ function AbonnementInfo() {
   }
 
   return (
-    <>
-      <div className="text-sm text-gray-700 ml-20 md:ml-0 z-0">
-        {abonnement && expiryDate ? (
-          <p>
-            Abonnement <strong>{abonnement}</strong> – expire le{" "}
-            <strong>{expiryDate}</strong>
-          </p>
-        ) : (
-          <p className="text-red-500">Aucun abonnement actif</p>
-        )}
-      </div>
+    <div className="text-sm ml-20 md:ml-0 z-0">
+      {abonnement && expiryDate ? (
+        <p className={getColorClass()}>
+          Abonnement <strong>{abonnement}</strong> – expire le{" "}
+          <strong>{expiryDate}</strong>
+        </p>
+      ) : (
+        <p className="text-red-500">Aucun abonnement actif</p>
+      )}
+    </div>
+  );
+}
+
+export default AbonnementInfo;
 
       {/* {isExpired && (
         <div className="fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center">
@@ -110,8 +125,3 @@ function AbonnementInfo() {
           </div>
         </div>
       )} */}
-    </>
-  );
-}
-
-export default AbonnementInfo;
