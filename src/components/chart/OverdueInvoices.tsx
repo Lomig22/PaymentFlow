@@ -88,7 +88,7 @@ const OverdueInvoices = () => {
   };
 
   return (
-    <div className="rounded-2xl p-6 max-h-[350px] overflow-y-auto bg-white shadow-sm border">
+    <div className="rounded-2xl p-6 max-h-[350px] overflow-y-auto">
       <div className="flex items-center space-x-2 mb-4">
         <div className="bg-blue-100 p-3 rounded-lg">
           <Users className="h-6 w-6 text-blue-600" />

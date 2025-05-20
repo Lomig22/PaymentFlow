@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
-import { format } from "date-fns";
+import { format, isBefore } from "date-fns";
 import { fr } from "date-fns/locale";
+import PricingPage from "../../pages/PricingPage";
 
 function AbonnementInfo() {
   const [abonnement, setAbonnement] = useState<string | null>(null);
   const [expiryDate, setExpiryDate] = useState<string | null>(null);
+  const [isExpired, setIsExpired] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -19,6 +21,7 @@ function AbonnementInfo() {
         console.error("Session invalide ou erreur :", sessionError?.message);
         setAbonnement(null);
         setExpiryDate(null);
+        setIsExpired(true);
         setLoading(false);
         return;
       }
@@ -32,6 +35,7 @@ function AbonnementInfo() {
         console.error("Erreur récupération abonnement :", error.message);
         setAbonnement(null);
         setExpiryDate(null);
+        setIsExpired(true);
       } else if (data && data.length > 0) {
         const latest = data
           .filter((row) => row.subscription_expiry)
@@ -43,12 +47,12 @@ function AbonnementInfo() {
         if (latest) {
           setAbonnement(latest.abonnement || null);
 
+          const expiry = new Date(latest.subscription_expiry);
+          const expired = isBefore(expiry, new Date());
+          setIsExpired(expired);
+
           try {
-            const formatted = format(
-              new Date(latest.subscription_expiry),
-              "d MMMM yyyy",
-              { locale: fr }
-            );
+            const formatted = format(expiry, "d MMMM yyyy", { locale: fr });
             setExpiryDate(formatted);
           } catch (e) {
             console.error("Erreur de format de date :", e);
@@ -57,10 +61,12 @@ function AbonnementInfo() {
         } else {
           setAbonnement(null);
           setExpiryDate(null);
+          setIsExpired(true);
         }
       } else {
         setAbonnement(null);
         setExpiryDate(null);
+        setIsExpired(true);
       }
 
       setLoading(false);
@@ -72,22 +78,40 @@ function AbonnementInfo() {
   if (loading) {
     return (
       <p className="text-sm text-gray-500 animate-pulse">
-        Chargement de l’abonnement...
+        Chargement de l’abonnement…
       </p>
     );
   }
 
   return (
-    <div className="text-sm text-gray-700 ml-20 md:ml-0">
-      {abonnement && expiryDate ? (
-        <p>
-          Abonnement <strong>{abonnement}</strong> – expire le{" "}
-          <strong>{expiryDate}</strong>
-        </p>
-      ) : (
-        <p className="text-red-500">Aucun abonnement actif</p>
-      )}
-    </div>
+    <>
+      <div className="text-sm text-gray-700 ml-20 md:ml-0 z-0">
+        {abonnement && expiryDate ? (
+          <p>
+            Abonnement <strong>{abonnement}</strong> – expire le{" "}
+            <strong>{expiryDate}</strong>
+          </p>
+        ) : (
+          <p className="text-red-500">Aucun abonnement actif</p>
+        )}
+      </div>
+
+      {/* {isExpired && (
+        <div className="fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-xl p-8 w-full max-w-5xl max-h-[80vh] overflow-y-auto text-center">
+            <h2 className="text-2xl font-bold text-red-600 mb-4">
+              Abonnement expiré
+            </h2>
+            <p className="mb-6 text-gray-700">
+              Votre abonnement est expiré. Veuillez renouveler votre abonnement
+              pour continuer à utiliser l’application.
+            </p>
+            <PricingPage />
+          </div>
+        </div>
+      )} */}
+    </>
   );
 }
+
 export default AbonnementInfo;

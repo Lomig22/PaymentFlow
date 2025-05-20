@@ -45,9 +45,10 @@ export default function BalanceAgeeChart() {
       const refDay = dayjs(referenceDate);
       const grouped = {
         "0-30 jours": 0,
-        "31-60 jours": 0,
-        "61-90 jours": 0,
-        "91+ jours": 0,
+        "30-60 jours": 0,
+        "60-90 jours": 0,
+        "90-120 jours": 0,
+        "120+ jours": 0,
       };
 
       receivables?.forEach((item) => {
@@ -58,11 +59,13 @@ export default function BalanceAgeeChart() {
         if (daysOverdue <= 30) {
           grouped["0-30 jours"] += amount;
         } else if (daysOverdue <= 60) {
-          grouped["31-60 jours"] += amount;
+          grouped["30-60 jours"] += amount;
         } else if (daysOverdue <= 90) {
-          grouped["61-90 jours"] += amount;
+          grouped["60-90 jours"] += amount;
+        } else if (daysOverdue <= 120) {
+          grouped["90-120 jours"] += amount;
         } else {
-          grouped["91+ jours"] += amount;
+          grouped["120+ jours"] += amount;
         }
       });
 
