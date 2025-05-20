@@ -162,7 +162,6 @@ function ReceivablesList() {
   //récupération du template actuelle:
   useEffect(() => {
     const enableClientDelays = async () => {
-      if (!selectedReceivable) return
         const { data:clientData,error } = await supabase
           .from('clients')
           .update({
@@ -170,19 +169,16 @@ function ReceivablesList() {
             reminder_enable_1: true,
             reminder_enable_2: true,
             reminder_enable_3: true,
-            reminder_enable_final: true
           })
           .eq('id', selectedReceivable?.client?.id)
           .select().single();
-          console.log(clientData);
-          
+        console.log("client data updated",clientData)          
         if (error) throw error;
     };
     
     if (showConfirmSendReminder === true) {
-    //  alert('selectedRecevable?.client?.reminder_profile: '+selectedReceivable?.client?.reminder_profile)
-
       if (selectedReceivable?.client?.reminder_profile){
+    //    alert('selectedRecevable?.client?.reminder_profile: ',selectedReceivable?.client?.reminder_profile)
         enableClientDelays()
       }
       const fetchData = async () => {
@@ -220,15 +216,17 @@ function ReceivablesList() {
             : "Relance préventive";
           return status === lastStatus;
         };
+
         if (isLastStatus(selectedReceivable.status) === false) {
-          // Déterminer le statut à utiliser pour la relance
+      //    alert("status: "+selectedReceivable.status+ "\nclient: "+selectedReceivable.client)
+          // Déterminer le statut à utiliser pour la relance jet getnext
           const newStatus = getNextEnabledReminderStatus(
             selectedReceivable.status,
             selectedReceivable.client
           );
-         alert("newStatus: "+newStatus)
+       //  alert("newStatus: "+newStatus)
 
-      if (!newStatus) { 
+   /*    if (!newStatus) { 
 
        showError("Vous n'avez pas encore configuré cette relance !");
         setSending(false);
@@ -237,7 +235,7 @@ function ReceivablesList() {
         return;
       } else{
 
-      }
+      } */
       await supabase
       .from('receivables')
       .update({
@@ -501,8 +499,7 @@ function ReceivablesList() {
     while (currentIndex < allStatuses.length) {
       const currentStatus = allStatuses[currentIndex];
       const flag = statusToFlag[currentStatus];
-      console.log(allStatuses)
-      console.log("flag: ",(client?.[flag]));
+     
       
       if (client?.[flag]) {
         return currentStatus;
@@ -531,7 +528,6 @@ function ReceivablesList() {
           selectedReceivable.id,
           subject?.trim() || undefined,
           content?.trim() || undefined,
-          signature?.trim() || undefined
         );
         if (success) {
           setSendSuccess(true);
