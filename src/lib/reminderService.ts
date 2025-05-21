@@ -82,30 +82,31 @@ function formatTemplate(
 function determineReminderLevel(
 	daysLate: number,
 	client: Client,
-	status: string
+	status: string,
+	content?:string|null
 ): {
 	level: 'pre' | 'first' | 'second' | 'third' | 'final' | null;
 	template: string | null;
 } {
 	// Si aucun client n'est fourni, on retourne null
 	if (!client) return { level: null, template: null };
-
+	//alert("status to return level: "+status)
 	// Gestion des cas où une relance a déjà atteint le niveau final
 	if (status === 'Relance finale') return { level: null, template: null };
 
 	// Si une relance a déjà été faite avec un certain niveau,
 	// on renvoie directement le niveau suivant avec le template correspondant
-	if (status === 'Relance 3' && client.reminder_template_final)
-		return { level: 'final', template: client.reminder_template_final };
-	if (status === 'Relance 2' && client.reminder_template_3)
-		return { level: 'third', template: client.reminder_template_3 };
-	if (status === 'Relance 1' && client.reminder_template_2)
-		return { level: 'second', template: client.reminder_template_2 };
-	if (status === 'Relance préventive' && client.reminder_template_1 )
-		return { level: 'first', template: client.reminder_template_1 };
+	if (status === 'Relance 3' && (client.reminder_template_final||content))
+		return { level: 'final', template: client.reminder_template_final||content };
+	if (status === 'Relance 2' && (client.reminder_template_3 || content))
+		return { level: 'third', template: client.reminder_template_3||content };
+	if (status === 'Relance 1' && (client.reminder_template_2||content))
+		return { level: 'second', template:client.reminder_template_2||content };
+	if (status === 'Relance préventive' && (client.reminder_template_1||content) )
+		return { level: 'first', template: client.reminder_template_1||content };
 	if (status ==='pending' && client.pre_reminder_template){
 	//	alert("pending")
-		return { level: 'pre', template: client.pre_reminder_template }; 
+		return { level: 'pre', template: client.pre_reminder_template||content }; 
 	}
 	// Si aucun statut de relance encore, on peut proposer un pré-reminder
 /*  	if (status==="pending" && client.reminder_template_1 && daysLate>0){
@@ -196,8 +197,7 @@ export  async function getReminderTemplate(
 export async function sendManualReminder(
 	receivableId: string,
 	subject?: string,
-	content?: string,
-	signature?: string
+	content?: string|null,
 ): Promise<boolean> {
 	try {
 		const { data: receivable, error: receivableError } = await supabase
@@ -226,12 +226,13 @@ export async function sendManualReminder(
 		const { level, template } = determineReminderLevel(
 			daysLate,
 			receivable.client,
-			receivable.status
+			receivable.status,
+			content?content:null
 		);
-		if (!level || !template) return false;
+		if (!level || (!template && !content)) return false;
 
 		// ✅ Générer le contenu personnalisé ou utiliser le template par défaut
-		const defaultEmailContent = formatTemplate(template, {
+		const defaultEmailContent = formatTemplate(content || template, {
 			company: receivable.client.company_name,
 			amount: receivable.amount,
 			invoice_number: receivable.invoice_number,
@@ -239,7 +240,7 @@ export async function sendManualReminder(
 			days_late: daysLate || 0,
 			days_left: Math.max(0, -1 * daysLate),
 		});
-		if (content){
+/* 		if (content){
 			content=formatTemplate(content, {
 				company: receivable.client.company_name,
 				amount: receivable.amount,
@@ -248,13 +249,11 @@ export async function sendManualReminder(
 				days_late: daysLate || 0,
 				days_left: Math.max(0, -1 * daysLate),
 			});
-		}
+		} */
 
 		const finalSubject =
 			subject || `Relance facture ${receivable.invoice_number}`;
-		const finalContent = content
-			? `${content}\n\n`
-			: defaultEmailContent;
+		const finalContent = defaultEmailContent
 
 		const emailSent = await sendEmail(
 			emailSettings,
@@ -273,7 +272,8 @@ export async function sendManualReminder(
 				email_sent: true,
 				email_content: finalContent,
 			});
-
+		//	alert("level:"+level)
+			
 			// Mettre à jour le statut
 			await supabase
 				.from('receivables')

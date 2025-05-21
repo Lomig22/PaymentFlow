@@ -20,7 +20,7 @@ import {
   Info,
   ListRestart,
   File,
-  Pause,
+  PauseOctagon,
   MoreHorizontal,
   Play,
   PencilIcon,
@@ -45,6 +45,11 @@ import { getReminderStatus } from "../../lib/function";
 import { isBefore } from "date-fns";
 import ReceivableStatusBadge from "./receivableStatusBadge";
 import Tooltip from "../Common/Tooltip";
+import PlaySvg from "../../components/images/play-svgrepo-com.svg";
+import PauseSvg from "../../components/images/pause-svgrepo-com.svg";
+import { motion } from "framer-motion";
+import { log } from "console";
+
 type SortColumnConfig = {
   key: keyof CSVMapping | "client" | "email" | "Delay in Days";
   sort: "none" | "asc" | "desc";
@@ -156,54 +161,81 @@ function ReceivablesList() {
   }, [importSuccess]);
   //récupération du template actuelle:
   useEffect(() => {
-  if (showConfirmSendReminder===true){
-    const fetchData = async () => {
-      if (!selectedReceivable) {
-        setContent("");
-        setSubject("");
-        setSignature("");
-        return;
+    const enableClientDelays = async () => {
+        const { data:clientData,error } = await supabase
+          .from('clients')
+          .update({
+            ...selectedReceivable?.client,
+            reminder_enable_1: true,
+            reminder_enable_2: true,
+            reminder_enable_3: true,
+          })
+          .eq('id', selectedReceivable?.client?.id)
+          .select().single();
+        console.log("client data updated",clientData)          
+        if (error) throw error;
+    };
+    
+    if (showConfirmSendReminder === true) {
+      if (selectedReceivable?.client?.reminder_profile){
+    //    alert('selectedRecevable?.client?.reminder_profile: ',selectedReceivable?.client?.reminder_profile)
+        enableClientDelays()
       }
+      const fetchData = async () => {
+        if (!selectedReceivable) {
+          setContent("");
+          setSubject("");
+          setSignature("");
+          return;
+        }
+        
+        const {
+          data: { user },
+          error,
+        } = await supabase.auth.getUser();
+        if (error || !user) {
+          console.error("Utilisateur non connecté");
+          return;
+        }
 
-      const {
-        data: { user },
-        error,
-      } = await supabase.auth.getUser();
-      if (error || !user) {
-        console.error("Utilisateur non connecté");
-        return;
-      }
+        // Récupérer la signature
+        const emailSettings = await getEmailSettings(user.id);
+        if (emailSettings?.email_signature) {
+          setSignature(emailSettings.email_signature);
+        }
+        
+        const isLastStatus = (status: string) => {
+          const lastStatus = selectedReceivable.client?.reminder_enable_final
+            ? "Relance finale"
+            : selectedReceivable.client?.reminder_enable_3
+            ? "Relance 3"
+            : selectedReceivable.client?.reminder_enable_2
+            ? "Relance 2"
+            : selectedReceivable.client?.reminder_enable_1
+            ? "Relance 1"
+            : "Relance préventive";
+          return status === lastStatus;
+        };
 
-      // Récupérer la signature
-      const emailSettings = await getEmailSettings(user.id);
-      if (emailSettings?.email_signature) {
-        setSignature(emailSettings.email_signature);
-      }
-      const isLastStatus=(status:string)=>{
-        const lastStatus=selectedReceivable.client?.reminder_enable_final?
-        'Relance finale':selectedReceivable.client?.reminder_enable_3?
-        'Relance 3':  selectedReceivable.client?.reminder_enable_2?
-        'Relance 2': selectedReceivable.client?.reminder_enable_1?
-        'Relance 1':'Relance préventive'
-        return  status===lastStatus
-      }
-      if (isLastStatus(selectedReceivable.status)===false){
-      // Déterminer le statut à utiliser pour la relance
-      const newStatus = getNextEnabledReminderStatus(
-        selectedReceivable.status,
-        selectedReceivable.client
-      );
+        if (isLastStatus(selectedReceivable.status) === false) {
+      //    alert("status: "+selectedReceivable.status+ "\nclient: "+selectedReceivable.client)
+          // Déterminer le statut à utiliser pour la relance jet getnext
+          const newStatus = getNextEnabledReminderStatus(
+            selectedReceivable.status,
+            selectedReceivable.client
+          );
+       //  alert("newStatus: "+newStatus)
 
-      if (!newStatus) { 
+   /*    if (!newStatus) { 
 
-       showError("Vous n'avez pas encore configurer cette relance!");
+       showError("Vous n'avez pas encore configuré cette relance !");
         setSending(false);
         setShowConfirmReminder(false);
        setSelectedClient(null);
         return;
       } else{
 
-      }
+      } */
       await supabase
       .from('receivables')
       .update({
@@ -271,11 +303,11 @@ function ReceivablesList() {
           reminder_enable_2: false,
           reminder_enable_3: false,
           reminder_enable_final: false,
-          pre_reminder_template:null,
-          reminder_template_1:null,
-          reminder_template_2:null,
-          reminder_template_3:null,
-          reminder_template_final:null
+          pre_reminder_template: null,
+          reminder_template_1: null,
+          reminder_template_2: null,
+          reminder_template_3: null,
+          reminder_template_final: null,
         })
         .eq("id", clientId);
 
@@ -316,9 +348,9 @@ function ReceivablesList() {
       await updateClientReminderStatus(clientId, false);
 
       // Vérifier si le client a encore des créances impayées
-    //  const noUnpaidReceivables = await checkClientUnpaidReceivables(clientId);
+      //  const noUnpaidReceivables = await checkClientUnpaidReceivables(clientId);
 
-  /*     // Si le client n'a plus de créances impayées, désactiver les relances
+      /*     // Si le client n'a plus de créances impayées, désactiver les relances
       if (noUnpaidReceivables) {
         await updateClientReminderStatus(clientId, false);
 
@@ -462,17 +494,19 @@ function ReceivablesList() {
       "Relance 2": "reminder_enable_3",
       "Relance 3": "reminder_enable_final",
     };
-
+    //alert(statusToFlag[currentStatus])
     let currentIndex = allStatuses.indexOf(status);
-
     while (currentIndex < allStatuses.length) {
       const currentStatus = allStatuses[currentIndex];
       const flag = statusToFlag[currentStatus];
+     
+      
       if (client?.[flag]) {
         return currentStatus;
       }
       currentIndex++;
     }
+
 
     return null; // Aucune relance activée trouvée
   }
@@ -494,7 +528,6 @@ function ReceivablesList() {
           selectedReceivable.id,
           subject?.trim() || undefined,
           content?.trim() || undefined,
-          signature?.trim() || undefined
         );
         if (success) {
           setSendSuccess(true);
@@ -505,7 +538,7 @@ function ReceivablesList() {
                 is_read: false,
                 type: "info",
                 message: "Relance effectuée correctement",
-                need_mail_notification:true,
+                need_mail_notification: true,
                 details: `Relance ${selectedReceivable.client.company_name}\nDestinataire : ${selectedReceivable.email}`,
               });
             } catch (error: any) {
@@ -524,7 +557,7 @@ function ReceivablesList() {
               is_read: false,
               type: "erreur",
               message: "Relançe manuelle échouée",
-              need_mail_notification:true,
+              need_mail_notification: true,
               details:
                 "client: " +
                 selectedReceivable.client.company_name +
@@ -539,7 +572,7 @@ function ReceivablesList() {
               is_read: false,
               type: "erreur",
               message: "Relançe manuelle échouée",
-              need_mail_notification:true,
+              need_mail_notification: true,
               details:
                 "client: " +
                 selectedReceivable.client.company_name +
@@ -560,7 +593,7 @@ function ReceivablesList() {
           owner_id: user.id,
           is_read: false,
           type: "erreur",
-          need_mail_notification:true,
+          need_mail_notification: true,
           message: "Relançe manuelle échouée",
           details:
             "client: " +
@@ -576,14 +609,14 @@ function ReceivablesList() {
         setSelectedClient(null);
       }
     };
-    const navigate = useNavigate();
+  const navigate = useNavigate();
 
-    const sendToSignatureSetting = () => {
-     // alert("send")
-      navigate('/settings', {
-        state: { initialSectionId: 'reminders', initialSubTabId: 'sender' }
-      });
-    };
+  const sendToSignatureSetting = () => {
+    // alert("send")
+    navigate("/settings", {
+      state: { initialSectionId: "reminders", initialSubTabId: "sender" },
+    });
+  };
   const handleImportSuccess = async (importedCount: number) => {
     setImportSuccess(`${importedCount} créance(s) importée(s) avec succès`);
     const {
@@ -592,7 +625,7 @@ function ReceivablesList() {
 
     await saveNotification({
       owner_id: user?.id,
-      need_mail_notification:true,
+      need_mail_notification: true,
       is_read: false,
       type: "info",
       message: `importation de ${importedCount} créance(s)`,
@@ -701,13 +734,13 @@ function ReceivablesList() {
       if (error) throw error;
       await saveNotification({
         owner_id: user?.id,
-        need_mail_notification:true,
+        need_mail_notification: true,
         is_read: false,
         type: "info",
         message: "Mise à jour des paramètres de relance automatique",
         details: receivable?.automatic_reminder
-          ? `Les relances sont activés pour la relance ${receivable?.invoice_number}`
-          : `Les relances sont en pause pour la relance ${receivable?.invoice_number}`,
+          ? `Les relances sont activés pour la facture ${receivable?.invoice_number}`
+          : `Les relances sont en pause pour la facture ${receivable?.invoice_number}`,
       });
       fetchReceivables();
     } catch (error: any) {
@@ -716,7 +749,7 @@ function ReceivablesList() {
         await saveNotification({
           owner_id: user?.id,
           is_read: false,
-          need_mail_notification:true,
+          need_mail_notification: true,
           type: "erreur",
           message: "Mise à jour des paramètres de relance automatique échouée",
           details: `${error}`,
@@ -858,45 +891,67 @@ function ReceivablesList() {
       issues.push("la relance finale est activée sans template");
 
     // Vérifier chaque relance individuellement
-    if (client.pre_reminder_enable && !preAlreadySend && client.pre_reminder_date) {
-      console.log("client: ",client.company_name," preAlreadySend:",preAlreadySend)
+    if (
+      client.pre_reminder_enable &&
+      !preAlreadySend &&
+      client.pre_reminder_date
+    ) {
+      console.log(
+        "client: ",
+        client.company_name,
+        " preAlreadySend:",
+        preAlreadySend
+      );
       if (isBefore(new Date(client.pre_reminder_date), now)) {
         issues.push("La pré-relance est dépassée");
       }
     }
-    
-    if (client.reminder_enable_1 && !reminder1AlreadySend && client.reminder_date_1) {
 
+    if (
+      client.reminder_enable_1 &&
+      !reminder1AlreadySend &&
+      client.reminder_date_1
+    ) {
       if (isBefore(new Date(client.reminder_date_1), now)) {
         issues.push("La relance 1 est dépassée");
       }
     }
-    
-    if (client.reminder_enable_2 && !reminder2AlreadySend && client.reminder_date_2) {
-      console.log("relance 2 already send:",reminder2AlreadySend)
+
+    if (
+      client.reminder_enable_2 &&
+      !reminder2AlreadySend &&
+      client.reminder_date_2
+    ) {
+      console.log("relance 2 already send:", reminder2AlreadySend);
 
       if (isBefore(new Date(client.reminder_date_2), now)) {
         issues.push("La relance 2 est dépassée");
       }
     }
-    
-    if (client.reminder_enable_3 && !reminder3AlreadySend && client.reminder_date_3) {
-      console.log("relance 3 already send:",reminder3AlreadySend)
+
+    if (
+      client.reminder_enable_3 &&
+      !reminder3AlreadySend &&
+      client.reminder_date_3
+    ) {
+      console.log("relance 3 already send:", reminder3AlreadySend);
 
       if (isBefore(new Date(client.reminder_date_3), now)) {
         issues.push("La relance 3 est dépassée");
       }
     }
-    
-    if (client.reminder_enable_final && !reminderFinalAlreadySend && client.reminder_date_final) {
-      console.log("relance final already send:",reminderFinalAlreadySend)
+
+    if (
+      client.reminder_enable_final &&
+      !reminderFinalAlreadySend &&
+      client.reminder_date_final
+    ) {
+      console.log("relance final already send:", reminderFinalAlreadySend);
 
       if (isBefore(new Date(client.reminder_date_final), now)) {
         issues.push("La relance finale est dépassée");
       }
     }
-    
-   
 
     return issues.length > 0 ? issues.join(", ") : "";
   };
@@ -1021,11 +1076,11 @@ function ReceivablesList() {
       return "Relance en pause";
     }
     if (
-      (receivable.reminder_enable_1===false) &&
-      (receivable.reminder_enable_2===false )&&
-      (receivable.reminder_enable_3===false) &&
-      (receivable.reminder_enable_final===false) &&
-      (receivable.pre_reminder_enable===false)
+      receivable.reminder_enable_1 === false &&
+      receivable.reminder_enable_2 === false &&
+      receivable.reminder_enable_3 === false &&
+      receivable.reminder_enable_final === false &&
+      receivable.pre_reminder_enable === false
     ) {
       return "Aucune relance n'est activée!";
     }
@@ -1262,7 +1317,7 @@ function ReceivablesList() {
                     sort={sortConfig?.sort ?? "none"}
                   />
                 </th>
-           
+
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Commentaire
                 </th>
@@ -1288,14 +1343,14 @@ function ReceivablesList() {
                       {/* Bouton menu déroulant */}
                       <div className="relative">
                         <div className="flex items-center gap-2 relative z-10">
-                          <button className="flex items-start gap-1 text-gray-600 hover:text-gray-800">
-                            {/* Icône MoreHorizontal - Reste toujours à droite */}
+                          <button className="flex items-center gap-2 text-gray-600 hover:text-gray-800">
+                            {/* Icône MoreHorizontal */}
                             <Tooltip label="Options supplémentaires">
                               <span
                                 ref={(el) =>
                                   (buttonRefs.current[receivable.id] = el)
                                 }
-                                className="w-5 h-5 flex items-center justify-center cursor-pointer"
+                                className="w-6 h-6 flex items-center justify-center cursor-pointer"
                                 onClick={() =>
                                   setOpenDropdownId(
                                     openDropdownId === receivable.id
@@ -1304,52 +1359,63 @@ function ReceivablesList() {
                                   )
                                 }
                               >
-                                <MoreHorizontal className="h-5 w-5" />
+                                <MoreHorizontal className="w-5 h-5" />
                               </span>
                             </Tooltip>
 
-                            {/* play/pause  */}
+                            {/* Play/Pause */}
                             <span
-                              className={`w-5 h-5 flex items-center  ml-auto ${
-                                !getReminderIssues(receivable) ? "ml-0" : ""
-                              }`}
+                              className="w-6 h-6 flex items-center justify-center cursor-pointer"
                               onClick={() => {
                                 handleAutomaticReminderToggle(receivable);
                               }}
                             >
-                              {receivable.automatic_reminder ? (
-                                <Tooltip label="Mettre en pause" theme="green">
-                                  <Pause
-                                    className="cursor-pointer hover:fill-green-400 stroke-green-400"
-                                    strokeWidth={2}
-                                  />
-                                </Tooltip>
-                              ) : (
+                              {!receivable.automatic_reminder ? (
                                 <Tooltip
                                   label="Activer les relances"
                                   theme="orange"
                                 >
-                                  <Play
-                                    className="cursor-pointer hover:fill-orange-400 stroke-orange-400"
-                                    strokeWidth={2}
+                                  <motion.img
+                                    src={PlaySvg}
+                                    alt="Play"
+                                    className="w-5 h-5"
+                                    initial={{ scale: 1 }}
+                                    animate={{ rotate: 360, scale: 1.2 }}
+                                    exit={{ scale: 1 }}
+                                    transition={{
+                                      type: "spring",
+                                      stiffness: 300,
+                                      damping: 20,
+                                    }}
+                                  />
+                                </Tooltip>
+                              ) : (
+                                <Tooltip label="Mettre en pause" theme="green">
+                                  <motion.img
+                                    src={PauseSvg}
+                                    alt="Pause"
+                                    className="w-5 h-5"
+                                    initial={{ scale: 1 }}
+                                    animate={{ rotate: 0, scale: 1.2 }}
+                                    exit={{ scale: 1 }}
+                                    transition={{
+                                      type: "spring",
+                                      stiffness: 300,
+                                      damping: 20,
+                                    }}
                                   />
                                 </Tooltip>
                               )}
                             </span>
 
-                            {/* Icône Info - Affichée seulement si getReminderIssues existe */}
-
-                            <Tooltip label={getReminderIssues(receivable)}>
-                              <span
-                                className={
-                                  getReminderIssues(receivable)
-                                    ? "text-yellow-500 w-5 h-5 flex items-center justify-center"
-                                    : "hidden"
-                                }
-                              >
-                                <Info className="h-5 w-5" />
-                              </span>
-                            </Tooltip>
+                            {/* Icône Info */}
+                            {getReminderIssues(receivable) && (
+                              <Tooltip label={getReminderIssues(receivable)}>
+                                <span className="w-6 h-6 flex items-center justify-center text-yellow-500">
+                                  <Info className="w-6 h-6" />
+                                </span>
+                              </Tooltip>
+                            )}
                           </button>
                         </div>
 
@@ -1626,50 +1692,11 @@ function ReceivablesList() {
                 ></textarea>
               </div>
               <div className="mb-4">
-  <label
-    htmlFor="signature"
-    className="hidden block text-sm font-medium text-gray-700"
-  >
-    Signature (HTML)
-  </label>
-  <textarea
-    id="signature"
-    name="signature"
-    value={signature}
-    onChange={(e) => setSignature(e.target.value)}
-    rows={6}
-    className="hidden mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-    placeholder="Entrez votre signature HTML"
-  ></textarea>
-</div>
-
-<div className="mt-4">
-<div className="flex justify-between items-center mb-1">
-        <label className="block text-sm font-medium text-gray-700">
-          Aperçu de la signature :
-        </label>
-        <button
-          onClick={sendToSignatureSetting}
-          className="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          title="Personnaliser la signature"
-          type="button"
-        >
-          <PencilIcon className="h-5 w-5 mr-1" aria-hidden="true" />
-          Modifier
-        </button>
-      </div>
-  <div
-    className="border p-4 rounded bg-white shadow"
-    dangerouslySetInnerHTML={{ __html: signature }}
-  />
-</div>
-
-        {/*       <div>
                 <label
                   htmlFor="signature"
-                  className="block text-sm font-medium text-gray-700"
+                  className="hidden block text-sm font-medium text-gray-700"
                 >
-                  Signature
+                  Signature (HTML)
                 </label>
                 <textarea
                   id="signature"
@@ -1677,10 +1704,31 @@ function ReceivablesList() {
                   value={signature}
                   onChange={(e) => setSignature(e.target.value)}
                   rows={6}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  placeholder="Entrez votre signature"
+                  className="hidden mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  placeholder="Entrez votre signature HTML"
                 ></textarea>
-              </div> */}
+              </div>
+
+              <div className="mt-4">
+                <div className="flex justify-between items-center mb-1">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Aperçu de la signature :
+                  </label>
+                  <button
+                    onClick={sendToSignatureSetting}
+                    className="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    title="Personnaliser la signature"
+                    type="button"
+                  >
+                    <PencilIcon className="h-5 w-5 mr-1" aria-hidden="true" />
+                    Modifier
+                  </button>
+                </div>
+                <div
+                  className="border p-4 rounded bg-white shadow"
+                  dangerouslySetInnerHTML={{ __html: signature }}
+                />
+              </div>
             </form>
 
             <div className="flex justify-end space-x-4 mt-6">
@@ -1688,7 +1736,7 @@ function ReceivablesList() {
                 onClick={() => {
                   setShowConfirmReminder(false);
                   setSelectedReceivable(null);
-                  fetchReceivables()
+                  fetchReceivables();
                 }}
                 className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 border border-gray-300 rounded-md"
                 disabled={sending}
@@ -1696,7 +1744,10 @@ function ReceivablesList() {
                 Annuler
               </button>
               <button
-                onClick={()=>{handleSendReminder();fetchReceivables()}}
+                onClick={() => {
+                  handleSendReminder();
+                  fetchReceivables();
+                }}
                 disabled={sending}
                 className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md disabled:opacity-50"
               >

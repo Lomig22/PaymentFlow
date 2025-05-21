@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
-
+import { BanknoteIcon } from "lucide-react";
 const statusColors: Record<string, string> = {
   late: "#FDB58D",
   pending: "#D4DEFF",
@@ -49,7 +49,7 @@ export default function ClientBalanceBar() {
         promesse: 0,
       };
 
-      const today = new Date();      
+      const today = new Date();
       receivables?.forEach((item) => {
         const status = item.status;
         const amount = Number(item.amount || 0);
@@ -57,7 +57,7 @@ export default function ClientBalanceBar() {
         const dueDate = new Date(item.due_date);
 
         if (paid >= amount || status === "paid") return;
-        
+
         if (status === "Relance préventive") {
           totals.promesse += amount - paid;
         } else if (status === "legal") {
@@ -67,9 +67,6 @@ export default function ClientBalanceBar() {
         } else if (status === "pending" || dueDate >= today) {
           totals.pending += amount - paid;
         }
-
-        
-        
       });
 
       const formatted = Object.entries(totals).map(([key, value]) => ({
@@ -95,10 +92,15 @@ export default function ClientBalanceBar() {
   return (
     <div className="bg-white rounded-2xl p-6 max-w-full">
       <div className="mb-4">
-        <h2 className="text-gray-800 text-lg font-medium mb-1 flex items-center">
-          Encours client
-          <span className="ml-2 text-sm text-gray-400 cursor-pointer">ℹ️</span>
-        </h2>
+        <div className="flex items-center space-x-2 mb-2">
+          <div className="bg-green-100 p-3 rounded-lg">
+            <BanknoteIcon className="h-6 w-6 text-green-600" />
+          </div>
+          <h2 className="text-gray-800 text-lg font-medium mb-1 flex items-center">
+            Encours client
+          </h2>
+        </div>
+
         <div className="text-3xl font-bold text-gray-900">
           {format(data.reduce((sum, d) => sum + d.value, 0))}
         </div>
