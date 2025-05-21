@@ -13,6 +13,7 @@ import { supabase } from "../../lib/supabase";
 import dayjs from "dayjs";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { AlertCircle } from "lucide-react";
 
 type BalanceData = {
   periode: string;
@@ -44,9 +45,10 @@ export default function BalanceAgeeChart() {
       const refDay = dayjs(referenceDate);
       const grouped = {
         "0-30 jours": 0,
-        "31-60 jours": 0,
-        "61-90 jours": 0,
-        "91+ jours": 0,
+        "30-60 jours": 0,
+        "60-90 jours": 0,
+        "90-120 jours": 0,
+        "120+ jours": 0,
       };
 
       receivables?.forEach((item) => {
@@ -57,11 +59,13 @@ export default function BalanceAgeeChart() {
         if (daysOverdue <= 30) {
           grouped["0-30 jours"] += amount;
         } else if (daysOverdue <= 60) {
-          grouped["31-60 jours"] += amount;
+          grouped["30-60 jours"] += amount;
         } else if (daysOverdue <= 90) {
-          grouped["61-90 jours"] += amount;
+          grouped["60-90 jours"] += amount;
+        } else if (daysOverdue <= 120) {
+          grouped["90-120 jours"] += amount;
         } else {
-          grouped["91+ jours"] += amount;
+          grouped["120+ jours"] += amount;
         }
       });
 
@@ -79,9 +83,14 @@ export default function BalanceAgeeChart() {
     <div className="rounded-2xl w-full h-full">
       <Card className="p-6 shadow-xl bg-white h-full">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-gray-800">
-            Balance âgée (retards)
-          </h2>
+          <div className="flex items-center space-x-2 mb-2">
+            <div className="bg-red-100 p-3 rounded-lg">
+              <AlertCircle className="h-6 w-6 text-red-600" />
+            </div>
+            <h2 className="text-xl font-semibold text-gray-800">
+              Balance âgée (retards)
+            </h2>
+          </div>
           <div className="flex items-center gap-2">
             <label className="text-sm text-gray-600">Date de référence:</label>
             <DatePicker
@@ -112,7 +121,7 @@ export default function BalanceAgeeChart() {
             <Tooltip formatter={(value: number) => [`${value} €`, "Montant"]} />
             <Bar
               dataKey="montant"
-              fill="rgb(255, 99, 132)"
+              fill="rgb(220 38 38 / var(--tw-text-opacity, 1))"
               radius={[4, 4, 0, 0]}
             />
           </BarChart>
