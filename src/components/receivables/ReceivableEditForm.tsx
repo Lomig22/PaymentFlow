@@ -226,7 +226,7 @@ export default function ReceivableEditForm({
         .select("*, client:clients(*)")
         .single();
 
-       if (error) {
+      if (error) {
         throw error;
       } /*else {
         showSuccess("Mise à jour complète.");
@@ -250,8 +250,9 @@ export default function ReceivableEditForm({
             .eq("user_id", user.id)
             .maybeSingle();
           if (error) throw error;
-          const payment_notifications=notification_settings?.payment_notifications
-          console.log(payment_notifications)
+          const payment_notifications =
+            notification_settings?.payment_notifications;
+          console.log(payment_notifications);
           if (payment_notifications === true) {
             const emailSent = sendEmail(
               emailSettings,
@@ -263,7 +264,7 @@ export default function ReceivableEditForm({
                 data.invoice_number +
                 ", a été marquée comme payée."
             );
-            
+
             if (!emailSent) {
               showError("La notification par email a échouée!");
             }
@@ -458,9 +459,15 @@ export default function ReceivableEditForm({
               <select
                 required
                 value={formData.status}
-                onChange={(e) =>
-                  setFormData({ ...formData, status: e.target.value })
-                }
+                onChange={(e) => {
+                  const newStatus = e.target.value;
+                  setFormData((prev) => ({
+                    ...prev,
+                    status: newStatus,
+                    paid_amount:
+                      newStatus === "paid" ? prev.amount : prev.paid_amount,
+                  }));
+                }}
                 className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="pending">En attente</option>

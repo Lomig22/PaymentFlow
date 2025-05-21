@@ -10,6 +10,7 @@ import "react-datetime/css/react-datetime.css"; // si tu n'as pas encore import�
 import DateTimeInput from "../Common/DateTimeInput";
 import { isBefore, startOfMinute } from "date-fns";
 import Swal from "sweetalert2";
+import ReminderInfo from "./reminderInfo";
 
 interface ReminderSettingsModalProps {
   client: Client;
@@ -30,40 +31,6 @@ export default function ReminderSettingsModal({
   const [automaticReminder, setAutomaticReminder] = useState<boolean>(
     receivable.automatic_reminder ?? false
   );
-
-  const [defaultProfile, setDefaultProfile] = useState(null);
-  /* 
-  useEffect(() => {
-    const fetchDefaultProfile = async () => {
-      const {
-        data: { user },
-        error: authError,
-      } = await supabase.auth.getUser();
-
-      if (authError || !user) return;
-
-      const { data, error } = await supabase
-        .from("reminder_profile")
-        .select("*")
-        .eq("name", "Default")
-        .eq("owner_id", user.id)
-        .single(); // attend une seule ligne
-
-      if (error) {
-        if (error.code !== "PGRST116") {
-          // Pas de profil trouvé
-          alert("error: ", error);
-          showError(error.message);
-        }
-        setDefaultProfile(null);
-      } else {
-        setDefaultProfile(data);
-      }
-    };
-
-    fetchDefaultProfile();
-    console.log("DEFAULT PROFILE: ", defaultProfile);
-  }, []); */
 
   // Valeurs par défaut des délais (si non fournis)
   const delay1 = client.reminder_delay_1 || { j: 1, h: 0, m: 0 };
@@ -168,6 +135,7 @@ export default function ReminderSettingsModal({
   const [reminder3AlreadySend, setReminder3AlreadySend] = useState(false);
   const [reminderFinalAlreadySend, setReminderFinalAlreadySend] =
     useState(false);
+    const [reminderProfileName,setReminderProfileName]=useState('')
   const [preAlreadySend, setPreAlreadySend] = useState(false);
   useEffect(() => {
     const checkReminders = async () => {
@@ -233,7 +201,35 @@ export default function ReminderSettingsModal({
 
     checkReminders();
   }, [formData, receivable.id]);
-
+  useEffect(() => {
+    const fetchReminderProfileName = async () => {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+  
+      if (userError || !user) {
+        console.error('Erreur lors de la récupération de l’utilisateur', userError);
+        return;
+      }
+      if (!client.reminder_profile) return
+      const { data: reminderProfile, error } = await supabase
+        .from('reminder_profile')
+        .select('name')
+        .eq('id', client.reminder_profile)
+        .single(); // pour récupérer un seul objet au lieu d'un tableau
+  
+      if (error) {
+        console.error("Erreur récupération de reminder_profile :", error);
+        return;
+      }
+  
+      setReminderProfileName(reminderProfile.name);
+    };
+  
+    fetchReminderProfileName();
+  }, [client.id]);
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -409,7 +405,7 @@ export default function ReminderSettingsModal({
         try {
           await saveNotification({
             owner_id: user.id,
-            need_mail_notification:true,
+            need_mail_notification: true,
             is_read: false,
             type: "info",
             message: "Mises à jour des paramètres de relance",
@@ -466,7 +462,7 @@ export default function ReminderSettingsModal({
       if (error) throw error;
       await saveNotification({
         owner_id: user?.id,
-        need_mail_notification:true,
+        need_mail_notification: true,
         is_read: false,
         type: "info",
         message: "Mise à jour des paramètres de relance automatique",
@@ -482,7 +478,7 @@ export default function ReminderSettingsModal({
         await saveNotification({
           owner_id: user?.id,
           is_read: false,
-          need_mail_notification:true,
+          need_mail_notification: true,
           type: "erreur",
           message: "Mise à jour des paramètres de relance automatique échouée",
           details: `${error}`,
@@ -538,6 +534,7 @@ export default function ReminderSettingsModal({
               </p>
             </div>
           )}
+        <ReminderInfo client={client} reminderProfileName={reminderProfileName}/>
           {/*            {hasPastDateEnable && (
             <div className=" mb-4 p-4 border border-yellow-400 bg-yellow-100 text-yellow-800 rounded">
               Certaines dates de relance sont antérieures à la date actuelle
@@ -621,24 +618,24 @@ export default function ReminderSettingsModal({
                               reminder_date_1: date.toISOString(),
                               reminder_date_2: addJHMToDate(
                                 date.toISOString(),
-                                client.reminder_delay_1
+                                client.reminder_delay_2
                               ),
                               reminder_date_3: addJHMToDate(
                                 addJHMToDate(
                                   date.toISOString(),
-                                  client.reminder_delay_1
+                                  client.reminder_delay_2
                                 ),
-                                client.reminder_delay_2
+                                client.reminder_delay_3
                               ),
                               reminder_date_final: addJHMToDate(
                                 addJHMToDate(
                                   addJHMToDate(
                                     date.toISOString(),
-                                    client.reminder_delay_1
+                                    client.reminder_delay_2
                                   ),
-                                  client.reminder_delay_2
+                                  client.reminder_delay_3
                                 ),
-                                client.reminder_delay_3
+                                client.reminder_delay_final
                               ),
                             })
                           : setFormData({
@@ -661,7 +658,7 @@ export default function ReminderSettingsModal({
                   {/* Relance 2 */}
                   <div className="relative min-h-[124px]">
                     <fieldset
-                      disabled={client.reminder_profile}
+                      // disabled={client.reminder_profile}
                       className={client.reminder_profile ? "opacity-50" : ""}
                     >
                       <DateTimeInput
@@ -692,7 +689,7 @@ export default function ReminderSettingsModal({
                   {/* Relance 3 */}
                   <div className="relative min-h-[124px]">
                     <fieldset
-                      disabled={client.reminder_profile}
+                      // disabled={client.reminder_profile}
                       className={client.reminder_profile ? "opacity-50" : ""}
                     >
                       <DateTimeInput
@@ -723,7 +720,7 @@ export default function ReminderSettingsModal({
                   {/* Relance finale */}
                   <div className="relative min-h-[124px]">
                     <fieldset
-                      disabled={client.reminder_profile}
+                      // disabled={client.reminder_profile}
                       className={client.reminder_profile ? "opacity-50" : ""}
                     >
                       <DateTimeInput

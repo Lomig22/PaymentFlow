@@ -1,9 +1,9 @@
-"use client";
 import { motion, useInView } from "framer-motion";
 import { CheckCircle, TrendingUp } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { useEffect, useState } from "react";
 import Footer from "../components/Footer";
+import { useLocation } from "react-router-dom";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
@@ -31,6 +31,9 @@ const PricingPage = () => {
   );
   const [selectedPlan, setSelectedPlan] = useState("basic");
   const [message, setMessage] = useState<string | null>(null);
+  const location = useLocation();
+  const isPricingPage = location.pathname === "/pricing";
+
 
   useEffect(() => {
     if (message) {
@@ -269,9 +272,11 @@ const PricingPage = () => {
           )}
 
           <motion.div variants={fadeInUp} className="text-center mb-20">
-            <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
-              Des tarifs adaptés à chaque entreprise
-            </h1>
+            {isPricingPage && (
+              <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
+                Des tarifs adaptés à chaque entreprise
+              </h1>
+            )}
             <div className="flex items-center justify-center gap-4">
               <button
                 onClick={() => setBillingInterval("monthly")}
@@ -436,71 +441,79 @@ const PricingPage = () => {
           </motion.div>
 
           {/* Enterprise Contact Section */}
+          {isPricingPage && (
+            <motion.div
+              className="mt-20 text-center"
+              variants={fadeInUp}
+              initial="hidden"
+              animate="visible"
+            >
+              <motion.h2
+                className="text-3xl font-bold text-gray-900 mb-6"
+                variants={fadeInLeft}
+              >
+                Besoin d'une solution personnalisée ?
+              </motion.h2>
+              <motion.p
+                className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto"
+                variants={fadeInUp}
+              >
+                Notre équipe peut créer un plan sur mesure adapté aux besoins
+                spécifiques de votre entreprise.
+              </motion.p>
+              <motion.button
+                onClick={() =>
+                  handleStripePayment("enterprise", billingInterval)
+                }
+                className="bg-blue-600 text-white px-8 py-4 rounded-md text-lg font-medium hover:bg-blue-700 transition-colors"
+                variants={fadeInScale}
+              >
+                Contactez notre équipe commerciale
+              </motion.button>
+            </motion.div>
+          )}
+        </div>
+      </main>
+
+      {isPricingPage && (
+        <>
           <motion.div
-            className="mt-20 text-center"
+            className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20"
             variants={fadeInUp}
             initial="hidden"
             animate="visible"
           >
             <motion.h2
-              className="text-3xl font-bold text-gray-900 mb-6"
+              className="text-3xl font-bold text-center mb-16"
               variants={fadeInLeft}
             >
-              Besoin d'une solution personnalisée ?
+              Questions fréquentes
             </motion.h2>
-            <motion.p
-              className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto"
-              variants={fadeInUp}
+            <motion.div
+              className="grid grid-cols-1 md:grid-cols-2 gap-8"
+              variants={staggerContainer}
             >
-              Notre équipe peut créer un plan sur mesure adapté aux besoins
-              spécifiques de votre entreprise.
-            </motion.p>
-            <motion.button
-              onClick={() => handleStripePayment("enterprise", billingInterval)}
-              className="bg-blue-600 text-white px-8 py-4 rounded-md text-lg font-medium hover:bg-blue-700 transition-colors"
-              variants={fadeInScale}
-            >
-              Contactez notre équipe commerciale
-            </motion.button>
+              <FAQItem
+                question="Puis-je changer de plan ultérieurement ?"
+                answer="Oui, vous pouvez mettre à jour ou rétrograder votre plan à tout moment depuis votre tableau de bord."
+              />
+              <FAQItem
+                question="Y a-t-il des frais de résiliation ?"
+                answer="Aucun frais de résiliation - vous pouvez annuler votre abonnement à tout moment."
+              />
+              <FAQItem
+                question="Quels moyens de paiement acceptez-vous ?"
+                answer="Nous acceptons toutes les cartes de crédit principales via Stripe, ainsi que les virements bancaires."
+              />
+              <FAQItem
+                question="Proposez-vous une période d'essai ?"
+                answer="Oui, nous offrons un essai gratuit de 14 jours sans engagement."
+              />
+            </motion.div>
           </motion.div>
-        </div>
-      </main>
-
-      <motion.div
-        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20"
-        variants={fadeInUp}
-        initial="hidden"
-        animate="visible"
-      >
-        <motion.h2
-          className="text-3xl font-bold text-center mb-16"
-          variants={fadeInLeft}
-        >
-          Questions fréquentes
-        </motion.h2>
-        <motion.div
-          className="grid grid-cols-1 md:grid-cols-2 gap-8"
-          variants={staggerContainer}
-        >
-          <FAQItem
-            question="Puis-je changer de plan ultérieurement ?"
-            answer="Oui, vous pouvez mettre à jour ou rétrograder votre plan à tout moment depuis votre tableau de bord."
-          />
-          <FAQItem
-            question="Y a-t-il des frais de résiliation ?"
-            answer="Aucun frais de résiliation - vous pouvez annuler votre abonnement à tout moment."
-          />
-          <FAQItem
-            question="Quels moyens de paiement acceptez-vous ?"
-            answer="Nous acceptons toutes les cartes de crédit principales via Stripe, ainsi que les virements bancaires."
-          />
-          <FAQItem
-            question="Proposez-vous une période d'essai ?"
-            answer="Oui, nous offrons un essai gratuit de 14 jours sans engagement."
-          />
-        </motion.div>
-      </motion.div>
-      <Footer />
+          <Footer />
+        </>
+      )}
     </motion.div>
   );
 };
