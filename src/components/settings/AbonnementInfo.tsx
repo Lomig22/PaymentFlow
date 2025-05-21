@@ -163,19 +163,3 @@ function AbonnementInfo() {
 
 export default AbonnementInfo;
 
-{
-  /* {isExpired && (
-        <div className="fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center">
-          <div className="bg-white rounded-xl p-8 w-full max-w-5xl max-h-[80vh] overflow-y-auto text-center">
-            <h2 className="text-2xl font-bold text-red-600 mb-4">
-              Abonnement expiré
-            </h2>
-            <p className="mb-6 text-gray-700">
-              Votre abonnement est expiré. Veuillez renouveler votre abonnement
-              pour continuer à utiliser l’application.
-            </p>
-            <PricingPage />
-          </div>
-        </div>
-      )} */
-}
