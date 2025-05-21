@@ -105,47 +105,65 @@ function ReceivablesList() {
   const [signature, setSignature] = useState<string>("");
   const [isDropdownAbove, setIsDropdownAbove] = useState(false);
 
-  const fetchReceivables = async () => {
-    try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+ const fetchReceivables = async () => {
+  try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-      if (!user) throw new Error("Utilisateur non authentifié");
+    if (!user) throw new Error("Utilisateur non authentifié");
 
-      const { data, error } = await supabase
-        .from("receivables")
-        .select(`*, client:clients(*)`)
-        .eq("owner_id", user.id)
-        .order("due_date", { ascending: false });
+    const userEmail = user.email;
 
-      if (error) {
-        throw error;
-      }
-      const { data: reminderPorfile } = await supabase
-        .from("reminder_profile")
-        .select()
-        .eq("owner_id", user.id);
-      setReminderProfiles(reminderPorfile || []);
+    // 1. Récupère les IDs des utilisateurs qui ont invité l'utilisateur actuel
+    const { data: invitedByData, error: invitedByError } = await supabase
+      .from("invited_users")
+      .select("invited_by")
+      .eq("invited_email", userEmail);
 
-      if (error) throw error;
-      setReceivables(data || []);
+    if (invitedByError) throw invitedByError;
 
-      const { data: reminderHistroyData, error: reminderHistroyError } =
-        await supabase
-          .from("reminders")
-          .select("*")
-          .order("reminder_date", { ascending: false });
+    const invitedByIds = invitedByData.map((entry) => entry.invited_by);
 
-      if (reminderHistroyError) throw reminderHistroyError;
-      setReminderHistory(reminderHistroyData || []);
-    } catch (error) {
-      console.error("Erreur lors du chargement des créances:", error);
-      showError("Impossible de charger les créances");
-    } finally {
-      setLoading(false);
-    }
-  };
+    // 2. Inclure l'utilisateur actuel dans les IDs à filtrer
+    const allOwnerIds = [user.id, ...invitedByIds];
+
+    // 3. Récupère les créances pour tous les IDs collectés
+    const { data: receivablesData, error: receivablesError } = await supabase
+      .from("receivables")
+      .select("*, client:clients(*)")
+      .in("owner_id", allOwnerIds)
+      .order("due_date", { ascending: false });
+
+    if (receivablesError) throw receivablesError;
+
+    // 4. Profils de rappel
+    const { data: reminderProfilesData, error: profilesError } = await supabase
+      .from("reminder_profile")
+      .select()
+      .in("owner_id", allOwnerIds);
+
+    if (profilesError) throw profilesError;
+
+    setReminderProfiles(reminderProfilesData || []);
+    setReceivables(receivablesData || []);
+
+    // 5. Historique des rappels
+    const { data: reminderHistoryData, error: historyError } =     await supabase
+    .from("reminders")
+    .select("*")
+    .order("reminder_date", { ascending: false });
+    if (historyError) throw historyError;
+
+    setReminderHistory(reminderHistoryData || []);
+  } catch (error) {
+    console.error("Erreur lors du chargement des créances:", error);
+    showError("Impossible de charger les créances");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   useEffect(() => {
     fetchReceivables();

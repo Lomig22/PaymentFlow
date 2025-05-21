@@ -70,15 +70,33 @@ function ClientList({
       const {
         data: { user },
       } = await supabase.auth.getUser();
+  
       if (!user) throw new Error("Utilisateur non authentifié");
-
-      const { data: clientsData, error } = await supabase
+  
+      const userEmail = user.email;
+  
+      // 1. Récupérer les IDs des utilisateurs qui ont invité l'utilisateur courant
+      const { data: invitedByData, error: invitedByError } = await supabase
+        .from("invited_users")
+        .select("invited_by")
+        .eq("invited_email", userEmail);
+  
+      if (invitedByError) throw invitedByError;
+  
+      const invitedByIds = invitedByData.map(entry => entry.invited_by);
+  
+      // 2. Inclure l'utilisateur actuel dans les IDs à filtrer
+      const allOwnerIds = [user.id, ...invitedByIds];
+  
+      // 3. Récupérer les clients pour ces propriétaires
+      const { data: clientsData, error: clientsError } = await supabase
         .from("clients")
         .select("*, reminderProfile:reminder_profile(*)")
-        .eq("owner_id", user.id)
+        .in("owner_id", allOwnerIds)
         .order("company_name");
-
-      if (error) throw error;
+  
+      if (clientsError) throw clientsError;
+  
       setClients(clientsData || []);
     } catch (error) {
       console.error("Erreur lors du chargement des clients:", error);
@@ -87,7 +105,7 @@ function ClientList({
       setLoading(false);
     }
   };
-
+  
   useEffect(() => {
     fetchClients();
   }, []);
