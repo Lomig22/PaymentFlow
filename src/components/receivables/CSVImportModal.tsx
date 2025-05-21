@@ -1253,55 +1253,7 @@ export default function CSVImportModal({
 							</div>
 
 							<div className='bg-gray-50 p-4 rounded-md mb-4'>
-								{/* <div className='flex justify-between items-center mb-2'>
-									<h3 className='font-medium'>Correspondance des colonnes</h3>
-									<button
-										onClick={() => setShowHelp(!showHelp)}
-										className='text-blue-600 hover:text-blue-800 flex items-center text-sm'
-									>
-										<HelpCircle className='h-4 w-4 mr-1' />
-										{showHelp ? "Masquer l'aide" : "Afficher l'aide"}
-									</button>
-								</div>
-
-								{showHelp && (
-									<div className='bg-blue-50 p-3 rounded-md mb-4 text-sm text-blue-700'>
-										<p className='mb-2'>
-											<span className='font-medium'>
-												Correspondance des colonnes :
-											</span>{' '}
-											Associez chaque colonne de votre fichier CSV à un champ
-											dans notre système.
-										</p>
-										<ul className='list-disc pl-5 space-y-1'>
-											<li>
-												<span className='font-medium'>
-													Nom de l'entreprise et Email
-												</span>{' '}
-												sont obligatoires.
-											</li>
-											<li>
-												Pour le champ{' '}
-												<span className='font-medium'>
-													Nécessite une relance
-												</span>
-												, les valeurs acceptées sont : "Oui", "OUI", "Yes", "1",
-												"True", "Relance en cours".
-											</li>
-											<li>
-												Pour les champs{' '}
-												<span className='font-medium'>Créé le</span> et{' '}
-												<span className='font-medium'>Mis à jour</span>,
-												plusieurs formats de date sont acceptés.
-											</li>
-											<li>
-												Les colonnes non mappées seront ignorées lors de
-												l'import.
-											</li>
-										</ul>
-									</div>
-								)} */}
-
+					
 								<div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
 									{csvHeaders.map((header, index) => (
 										<div key={index} className='flex items-center space-x-2'>
