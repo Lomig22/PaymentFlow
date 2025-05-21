@@ -130,18 +130,11 @@ function AbonnementInfo() {
       </AnimatePresence>
 
       {isExpired && (
-        <div className="fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center p-4 overflow-auto">
-          <div className="bg-white rounded-xl p-8 max-w-lg w-full text-center space-y-6">
-            <h2 className="text-2xl font-bold text-red-600">
-              Abonnement expiré
-            </h2>
-            <p className="text-gray-700">
-              Votre abonnement est expiré. Veuillez renouveler votre abonnement
-              pour continuer à utiliser l’application.
-            </p>
-            <PricingPage />
-          </div>
-        </div>
+        <div className="text-sm ml-20 md:ml-0 mt-2">
+          <p className="text-center text-red-600 font-semibold">
+            Abonnement expiré
+          </p>
+      </div>
       )}
 
       {!isExpired && (
