@@ -307,76 +307,77 @@ export default function Dashboard() {
       prev.filter((notification) => notification.id !== id)
     );
   };
-
   const fetchDashboardStats = async () => {
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    // console.log("user: ", user?.id);
-
+  
     try {
-      // Récupérer les clients
+      if (!user) throw new Error("Utilisateur non authentifié");
+  
+      const userEmail = user.email;
+  
+      // 1. Récupérer les IDs des utilisateurs qui ont invité cet utilisateur
+      const { data: invitedByData, error: invitedByError } = await supabase
+        .from("invited_users")
+        .select("invited_by")
+        .eq("invited_email", userEmail);
+  
+      if (invitedByError) throw invitedByError;
+  
+      const invitedByIds = invitedByData.map(entry => entry.invited_by);
+      const allOwnerIds = [user.id, ...invitedByIds];
+  
+      // 2. Récupérer les clients
       const { data: clientsData, error: clientsError } = await supabase
         .from("clients")
         .select("*")
-        .eq("owner_id", user?.id);
-
+        .in("owner_id", allOwnerIds);
+  
       if (clientsError) throw clientsError;
-
-      // Récupérer les créances avec leurs clients
+  
+      // 3. Récupérer les créances avec leurs clients
       const { data: receivablesData, error: receivablesError } = await supabase
         .from("receivables")
-        .select(
-          `
-          *,
-          client:clients(*)
-        `
-        )
-        .eq("owner_id", user?.id);
-
+        .select(`*, client:clients(*)`)
+        .in("owner_id", allOwnerIds);
+  
       if (receivablesError) throw receivablesError;
-
-      // Calculer les statistiques
-      //Jet totalClients
+  
+      // 4. Calcul des statistiques
       const totalClients = clientsData?.length || 0;
       const clientsNeedingReminder =
-        clientsData?.filter((c) => c.needs_reminder)?.length || 0;
-
+        clientsData?.filter(c => c.needs_reminder)?.length || 0;
+  
       const receivables = receivablesData || [];
       const totalReceivables = receivables.length;
       const totalAmount = receivables.reduce((sum, r) => sum + r.amount, 0);
-
+  
       const today = new Date();
       const overdueReceivables = receivables.filter(
-        (r) => new Date(r.due_date) < today
+        r => new Date(r.due_date) < today
       );
       const overdueAmount = overdueReceivables.reduce(
         (sum, r) => sum + r.amount,
         0
       );
-
-      // Calculer les retards de paiement moyens
+  
       const delays = receivables
-        .filter((r) => r.status === "paid")
-        .map((r) => {
+        .filter(r => r.status === "paid")
+        .map(r => {
           const dueDate = new Date(r.due_date);
           const paidDate = new Date(r.updated_at);
           return Math.max(
             0,
-            Math.ceil(
-              (paidDate.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24)
-            )
+            Math.ceil((paidDate.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24))
           );
         });
-
+  
       const averagePaymentDelay =
         delays.length > 0
-          ? Math.round(
-              delays.reduce((sum, delay) => sum + delay, 0) / delays.length
-            )
+          ? Math.round(delays.reduce((sum, delay) => sum + delay, 0) / delays.length)
           : 0;
-
-      // Calculer les étapes de relance
+  
       const reminderSteps = {
         first: 0,
         second: 0,
@@ -384,61 +385,20 @@ export default function Dashboard() {
         final: 0,
         legal: 0,
       };
-
-      receivables.forEach((receivable) => {
-        if (receivable.status === "legal") {
-          reminderSteps.legal++;
-        } /* else {
-          console.log("Status: ",receivable.status);
-          
-          const step = getReminderStep(receivable);
-          if (step) {
-
-            reminderSteps[step as keyof typeof reminderSteps]++;
-          }
-        } */
+  
+      receivables.forEach((r) => {
+        if (r.status === "legal") reminderSteps.legal++;
+        if (r.status === "Relance 1") reminderSteps.first++;
+        if (r.status === "Relance 2") reminderSteps.second++;
+        if (r.status === "Relance 3") reminderSteps.third++;
+        if (r.status === "Relance finale") reminderSteps.final++;
       });
-      receivables.forEach((receivable) => {
-        if (receivable.status === "legal") {
-          reminderSteps.legal++;
-        } /* else {
-          console.log("Status: ",receivable.status);
-          
-          const step = getReminderStep(receivable);
-          if (step) {
-
-            reminderSteps[step as keyof typeof reminderSteps]++;
-          }
-        } */
-      });
-      receivables.forEach((receivable) => {
-        if (receivable.status === "Relance 1") {
-          reminderSteps.first++;
-        }
-      });
-      receivables.forEach((receivable) => {
-        if (receivable.status === "Relance 2") {
-          reminderSteps.second++;
-        }
-      });
-      receivables.forEach((receivable) => {
-        if (receivable.status === "Relance 3") {
-          reminderSteps.third++;
-        }
-      });
-      receivables.forEach((receivable) => {
-        if (receivable.status === "Relance finale") {
-          reminderSteps.final++;
-        }
-      });
-      // console.log("REMINDER STEP: ", reminderSteps);
-
+  
       setStats({
         totalClients,
         clientsNeedingReminder,
         activeReminders: overdueReceivables.length,
-        resolvedReminders: receivables.filter((r) => r.status === "paid")
-          .length,
+        resolvedReminders: receivables.filter((r) => r.status === "paid").length,
         totalReceivables,
         totalAmount,
         overdueAmount,
@@ -447,10 +407,12 @@ export default function Dashboard() {
       });
     } catch (error) {
       console.error("Erreur lors de la récupération des statistiques:", error);
+      showError("Impossible de charger les statistiques du tableau de bord");
     } finally {
       setLoading(false);
     }
   };
+  
 
   const [notifications, setNotifications] = useState([]);
   const [filter, setFilter] = useState("unread"); // 'all', 'read', 'unread'
