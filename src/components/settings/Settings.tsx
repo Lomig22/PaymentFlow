@@ -30,6 +30,7 @@ import ReminderProfileSettings from "./ReminderProfileSettings";
 import ProfileSettings from "./ProfileSettings";
 import SignatureSettings from "./SenderSettings";
 import { useLocation } from "react-router-dom";
+import DeleteAccount from "./DeleteAccount";
 /* 
 import GuideSettings from './GuideSettings';
 import ContactSupportSettings from './ContactSupportSettings';
@@ -53,7 +54,11 @@ const sections = [
         name: "Information de l'utilisateur",
         component: ProfileSettings,
       },
-
+      {
+        id: "termination",
+        name: "Résiliation de compte",
+        component: DeleteAccount,
+      }
       //    { id: 'users', name: 'Gestion des utilisateurs', component: UserManagementSettings },
     ],
   },
@@ -95,17 +100,7 @@ const sections = [
     ],
   },
   ,
-  /*  
-  {
-    id: 'integrations',
-    name: 'Intégrations',
-    icon: Mail,
-    subTabs: [
-      { id: 'external_api', name: 'Connecter une API externe', component: ExternalApiSettings },
-      { id: 'webhooks', name: 'Paramétrer Webhooks', component: WebhookSettings },
-      { id: 'zapier', name: 'Connecter Zapier / Make', component: ZapierSettings }, 
-    ],
-  }*/ {
+ {
     id: "notifications",
     name: "Notifications",
     icon: Bell,
