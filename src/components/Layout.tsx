@@ -14,8 +14,8 @@ import {
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { AuthSessionMissingError } from "@supabase/supabase-js";
-import { div } from "framer-motion/client";
 import AbonnementInfo from "../components/settings/AbonnementInfo";
+import useEnsureEmailSettings from "../lib/ensureEmailSettings";
 
 export default function Layout() {
   const location = useLocation();
@@ -23,6 +23,8 @@ export default function Layout() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [logoutError, setLogoutError] = useState<string | null>(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  useEnsureEmailSettings();
 
   const handleLogout = async () => {
     try {
@@ -182,51 +184,7 @@ export default function Layout() {
     verifySubscription();
   }, []);
 
-  useEffect(() => {
-    const ensureDefaultProfile = async () => {
-      const {
-        data: { user },
-        error: authError,
-      } = await supabase.auth.getUser();
 
-      if (authError || !user) return;
-
-      // Vérifie si le profil "Default" existe déjà pour cet utilisateur
-      const { data, error: fetchError } = await supabase
-        .from("reminder_profile")
-        .select("id")
-        .eq("name", "Default")
-        .eq("owner_id", user.id)
-        .single();
-
-      if (fetchError && fetchError.code !== "PGRST116") {
-        // Code spécifique si pas trouvé
-        console.log(fetchError.message);
-        return;
-      }
-
-      if (!data) {
-        const DefaultData = {
-          name: "Default",
-          delay1: { j: 1, h: 0, m: 0 },
-          delay2: { j: 1, h: 0, m: 0 },
-          delay3: { j: 1, h: 0, m: 0 },
-          owner_id: user.id,
-          public: false,
-        };
-
-        const { error: insertError } = await supabase
-          .from("reminder_profile")
-          .insert(DefaultData);
-
-        if (insertError) {
-          console.log(insertError.message);
-        }
-      }
-    };
-
-    ensureDefaultProfile();
-  }, []);
 
   return (
     <div>
@@ -305,14 +263,14 @@ export default function Layout() {
             </nav>
             <div className="absolute bottom-0 w-full">
               {/* Bouton Aide */}
-              <div className=" border-gray-200">
+              <div className="px-4 border-gray-200">
                 <a
-                  href="https://payment-flow.fr"
+                  href="/help"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="group flex items-center w-full px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-md transition-all duration-300"
                 >
-                  {/* <HelpCircle className="h-5 w-5 flex-shrink-0 text-inherit" /> */}
+                  <HelpCircle className="h-5 w-5 flex-shrink-0 text-inherit" />
                   <span className="ml-3 opacity-0 group-hover:opacity-100 whitespace-nowrap transition-opacity duration-300">
                     Aides et support
                   </span>
@@ -320,11 +278,12 @@ export default function Layout() {
               </div>
 
               {/* Bouton Déconnexion */}
-              <div className=" border-t border-gray-200">
+              <div className="border-t border-gray-200">
                 <button
                   onClick={() => setShowLogoutConfirm(true)}
-                  className="group flex items-center w-full px-6 py-9 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-md transition-all duration-300"
-                >
+                  className="group flex items-center w-full px-4 py-6 text-sm font-medium text-gray-600 hover:bg-blue-50 hover:text-blue-700 rounded-md transition-all duration-300"
+                  style={{paddingLeft:"35px"}}
+                  >
                   <LogOut className="h-5 w-5 flex-shrink-0 text-inherit" />
                   <span className="ml-3 opacity-0 group-hover:opacity-100 whitespace-nowrap transition-opacity duration-300">
                     Déconnexion
