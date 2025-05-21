@@ -343,7 +343,7 @@ export default function SignupPage() {
                       className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-md 
             shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 
             focus:border-blue-500 sm:text-sm"
-                      placeholder="+261 34 00 000 00"
+                      placeholder="+33XXXXXXXXX"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                     />
@@ -367,7 +367,7 @@ export default function SignupPage() {
                       className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-md 
             shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 
             focus:border-blue-500 sm:text-sm"
-                      placeholder="Onirtech"
+                      placeholder="Payment-flow"
                       value={company}
                       onChange={(e) => setCompany(e.target.value)}
                     />
