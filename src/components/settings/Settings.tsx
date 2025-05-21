@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Mail, User, Bell, Shield } from "lucide-react";
+import { Mail, User, Bell, Shield, Users } from "lucide-react";
 import { Elements } from "@stripe/react-stripe-js"; // Importer Elements
 import { loadStripe } from "@stripe/stripe-js"; // Importer loadStripe
 // Composants à créer ou importer
@@ -31,6 +31,7 @@ import ProfileSettings from "./ProfileSettings";
 import SignatureSettings from "./SenderSettings";
 import { useLocation } from "react-router-dom";
 import DeleteAccount from "./DeleteAccount";
+import MemberList from "./MemberList";
 /* 
 import GuideSettings from './GuideSettings';
 import ContactSupportSettings from './ContactSupportSettings';
@@ -62,6 +63,19 @@ const sections = [
       //    { id: 'users', name: 'Gestion des utilisateurs', component: UserManagementSettings },
     ],
   },
+  {
+    id: "members",
+    name: "Gestion des membres",
+    icon: Users, 
+    subTabs: [
+      {
+        id: "list",
+        name: "Liste des membres",
+        component: MemberList,
+      },
+    ],
+  }
+  ,
   {
     id: "billing",
     name: "Paramètres de facturation",
