@@ -292,15 +292,15 @@ function ClientList({
       if (receivablesError) throw receivablesError;
       // Suppression des clients via Supabase
       const { data, error } = await supabase
-        .from("clients") // Remplace 'clients' par le nom de ta table dans Supabase
+        .from("clients") 
         .delete()
-        .in("id", selectedClientIds); // `selectedClientIds` contient les IDs des clients à supprimer
+        .in("id", selectedClientIds); 
 
       if (error) {
         throw new Error(error.message);
       }
 
-      // Tu peux aussi gérer la mise à jour de l'état des clients ici
+      
       // Par exemple, filtrer les clients supprimés de la liste affichée
       console.log("Clients supprimés:", data);
     } catch (error) {
