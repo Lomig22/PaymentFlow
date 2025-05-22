@@ -14,6 +14,10 @@ function MemberList() {
   const [userEmail, setUserEmail] = useState("");
   const [success, setSuccess] = useState<string | null>(null);
 	const [error, setError] = useState<string | null>(null);
+
+
+
+
   const showError = (message: string) => {
     setError(message);
     setTimeout(() => {
@@ -110,88 +114,130 @@ function MemberList() {
   const handleInvite = async (e) => {
     e.preventDefault();
     setInviting(true);
- 
-
+  
     if (!isValidEmail(email)) {
       showError("Adresse email invalide.");
       setInviting(false);
       return;
     }
-
-    // Vérifie s'il est déjà invité
+  
+    // 1. Récupérer le plan d’abonnement
+    const { data: subscription, error: subscriptionError } = await supabase
+      .from('subscriptions')
+      .select('plan')
+      .eq('user_id', userId)
+      .limit(1)
+      .single();
+  
+    if (subscriptionError || !subscription) {
+      showError("Impossible de récupérer le type d'abonnement.");
+      setInviting(false);
+      return;
+    }
+  
+    // 2. Définir les limites selon les plans
+    const planLimits = {
+      free: 0,
+      basic: 1,
+      pro: 3,
+      company: 10,
+    };
+  
+    const userPlan = subscription.plan;
+    const maxInvites = planLimits[userPlan] ?? 0;
+  
+    // 3. Compter les utilisateurs déjà invités
+    const { data: invitedList, error: countError } = await supabase
+      .from("invited_users")
+      .select("*", { count: "exact", head: false })
+      .eq("invited_by", userId);
+  
+    if (countError) {
+      showError("Erreur lors du comptage des utilisateurs invités.");
+      setInviting(false);
+      return;
+    }
+  
+    if (invitedList.length >= maxInvites) {
+      showError(`Limite atteinte : votre plan "${userPlan}" permet d'inviter jusqu'à ${maxInvites} utilisateur(s).`);
+      setInviting(false);
+      return;
+    }
+  
+    // 4. Vérifier si l’utilisateur est déjà invité
     const { data: existing } = await supabase
       .from("invited_users")
       .select("*")
       .eq("invited_email", email)
       .eq("invited_by", userId);
-
+  
     if (existing.length > 0) {
       showError("Cet email a déjà été invité.");
       setInviting(false);
       return;
     }
-
-    // Insertion dans la base de données
+  
+    // 5. Insertion dans la base de données
     const { error: insertError } = await supabase
       .from("invited_users")
       .insert([
         { invited_email: email, invited_by: userId }
       ]);
-
+  
     if (insertError) {
       showError("Erreur lors de l'invitation.");
       setInviting(false);
       return;
     }
-
-    // Envoi de l'email
+  
+    // 6. Envoi de l’email
     const emailSettings = await getEmailSettings(userId);
     if (!emailSettings) {
       showError("Paramètres d’email introuvables.");
       setInviting(false);
       return;
     }
-
+  
     const emailSent = await sendEmail(
       emailSettings,
       email || "",
       "Invitation à un espace de travail payment-flow",
-      `
-      <div style="font-family: Arial, sans-serif; background-color: #f9fafb; padding: 20px;">
-        <div style="max-width: 600px; margin: auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-          <div style="background-color: #2563eb; color: #ffffff; padding: 16px 24px;">
-            <h2 style="margin: 0; font-size: 20px;">Invitation à rejoindre Payment-Flow</h2>
-          </div>
-          <div style="padding: 24px; color: #111827; font-size: 16px;">
-            <p>Bonjour,</p>
-            <p>Vous êtes invités à rejoindre un espace de travail <strong>payment-flow</strong> !</p>
-            <p>Pour accepter l'invitation, cliquez sur le bouton ci-dessous :</p>
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="https://lomig.onirtech.com/login" 
-                 style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
-                 Rejoindre maintenant
-              </a>
+            `
+        <div style="font-family: Arial, sans-serif; background-color: #f9fafb; padding: 20px;">
+          <div style="max-width: 600px; margin: auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+            <div style="background-color: #2563eb; color: #ffffff; padding: 16px 24px;">
+              <h2 style="margin: 0; font-size: 20px;">Invitation à rejoindre Payment-Flow</h2>
             </div>
-            <p>Ou copiez ce lien dans votre navigateur :</p>
-            <p><a href="https://lomig.onirtech.com/login" style="color: #2563eb;">https://lomig.onirtech.com/login</a></p>
-            <p style="margin-top: 30px;">Merci,<br>L’équipe Payment-Flow</p>
+            <div style="padding: 24px; color: #111827; font-size: 16px;">
+              <p>Bonjour,</p>
+              <p>Vous êtes invités à rejoindre un espace de travail <strong>payment-flow</strong> !</p>
+              <p>Pour accepter l'invitation, cliquez sur le bouton ci-dessous :</p>
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="https://lomig.onirtech.com/login" 
+                   style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
+                   Rejoindre maintenant
+                </a>
+              </div>
+              <p>Ou copiez ce lien dans votre navigateur :</p>
+              <p><a href="https://lomig.onirtech.com/login" style="color: #2563eb;">https://lomig.onirtech.com/login</a></p>
+              <p style="margin-top: 30px;">Merci,<br>L’équipe Payment-Flow</p>
+            </div>
           </div>
         </div>
-      </div>
-      `
+        `
     );
-    
-
+  
     if (!emailSent) {
       showError("Invitation par email échouée !");
     } else {
       showSuccess("Invitation envoyée avec succès !");
-      setEmail(""); // Réinitialise le champ
-      fetchMembers(); // Rafraîchit la liste
+      setEmail("");
+      fetchMembers();
     }
-
+  
     setInviting(false);
   };
+  
 
   return (
     <div className="space-y-4">
