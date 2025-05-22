@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { sendEmail } from "../../lib/email";
 import { getEmailSettings } from "../../lib/reminderService";
+import { useAbonnement } from "../context/AbonnementContext";
 
 function MemberList() {
+  const { checkAbonnement } = useAbonnement();
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState("");
@@ -12,7 +14,11 @@ function MemberList() {
   const [successMessage, setSuccessMessage] = useState("");
   const [userId, setUserId] = useState("");
   const [userEmail, setUserEmail] = useState("");
-
+  const handleClick = () => {
+    if (!checkAbonnement()) return;
+    console.log("Action autorisée !");
+    return true;
+  };
   useEffect(() => {
     const fetchUserInfo = async () => {
       const {
@@ -45,14 +51,14 @@ function MemberList() {
       .from("invited_users")
       .delete()
       .eq("id", id);
-  
+
     if (error) {
       console.error("Erreur lors de la suppression :", error);
     } else {
       fetchMembers(); // Rafraîchir la liste
     }
   };
-  
+
   useEffect(() => {
     if (userId) fetchMembers();
   }, [userId]);
@@ -63,6 +69,9 @@ function MemberList() {
 
   const handleInvite = async (e) => {
     e.preventDefault();
+    e.stopPropagation();
+    const allowed = handleClick();
+    if (!allowed) return;
     setInviting(true);
     setErrorMessage("");
     setSuccessMessage("");
@@ -89,9 +98,7 @@ function MemberList() {
     // Insertion dans la base de données
     const { error: insertError } = await supabase
       .from("invited_users")
-      .insert([
-        { invited_email: email, invited_by: userId }
-      ]);
+      .insert([{ invited_email: email, invited_by: userId }]);
 
     if (insertError) {
       setErrorMessage("Erreur lors de l'invitation.");
@@ -135,7 +142,6 @@ function MemberList() {
       </div>
       `
     );
-    
 
     if (!emailSent) {
       setErrorMessage("Invitation par email échouée !");
@@ -170,8 +176,16 @@ function MemberList() {
         >
           {inviting ? "Invitation en cours..." : "Inviter"}
         </button>
-        {errorMessage && <p className="fixed mb-6 p-4 bg-red-50 border border-red-200 rounded-md text-red-700 flex items-center">{errorMessage}</p>}
-        {successMessage && <p className="fixed mb-4 p-4 bg-green-50 border border-green-200 rounded-md text-green-700">{successMessage}</p>}
+        {errorMessage && (
+          <p className="fixed mb-6 p-4 bg-red-50 border border-red-200 rounded-md text-red-700 flex items-center">
+            {errorMessage}
+          </p>
+        )}
+        {successMessage && (
+          <p className="fixed mb-4 p-4 bg-green-50 border border-green-200 rounded-md text-green-700">
+            {successMessage}
+          </p>
+        )}
       </form>
 
       <div>
@@ -180,37 +194,42 @@ function MemberList() {
           <p>Chargement des membres...</p>
         ) : members.length === 0 ? (
           <p>Aucun membre.</p>
-        ) : (<table className="w-full table-auto border border-gray-300 mt-4">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="border p-2 text-left">Email</th>
-              <th className="border p-2 text-left">Invité le</th>
-              <th className="border p-2">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {members.map((m) => (
-              <tr key={m.id}>
-                <td className="border p-2">{m.invited_email}</td>
-                <td className="border p-2">
-                  {new Date(m.created_at).toLocaleString("fr-FR", {
-                    dateStyle: "short",
-                    timeStyle: "short",
-                  })}
-                </td>
-                <td className="border p-2 text-center">
-                  <button
-                    onClick={() => handleDelete(m.id)}
-                    className="text-red-600 hover:underline"
-                  >
-                    Supprimer
-                  </button>
-                </td>
+        ) : (
+          <table className="w-full table-auto border border-gray-300 mt-4">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="border p-2 text-left">Email</th>
+                <th className="border p-2 text-left">Invité le</th>
+                <th className="border p-2">Action</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-        
+            </thead>
+            <tbody>
+              {members.map((m) => (
+                <tr key={m.id}>
+                  <td className="border p-2">{m.invited_email}</td>
+                  <td className="border p-2">
+                    {new Date(m.created_at).toLocaleString("fr-FR", {
+                      dateStyle: "short",
+                      timeStyle: "short",
+                    })}
+                  </td>
+                  <td className="border p-2 text-center">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const allowed = handleClick();
+                        if (!allowed) return;
+                        handleDelete(m.id);
+                      }}
+                      className="text-red-600 hover:underline"
+                    >
+                      Supprimer
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         )}
       </div>
     </div>

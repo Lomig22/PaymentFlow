@@ -2,16 +2,27 @@ import { useState } from "react";
 import { supabase } from '../../lib/supabase';
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
+import { useAbonnement } from "../context/AbonnementContext";
 
 
 const DeleteAccount = () => {
+  const { checkAbonnement } = useAbonnement();
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const navigate = useNavigate();
 
-  const handleDelete = async () => {
+  const handleClick = () => {
+    if (!checkAbonnement()) return;
+    console.log("Action autorisée !");
+    return true;
+  };
+
+  const handleDelete = async (e: React.FormEvent) => {
+    e.stopPropagation();
+    const allowed = handleClick();
+    if (!allowed) return;
     setLoading(true);
     setErrorMsg("");
 

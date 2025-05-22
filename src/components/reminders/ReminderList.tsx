@@ -5,14 +5,21 @@ import { AlertCircle, Eye, FileText, Mail, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { decodeReminderStatus } from "../../lib/decodeReminderStatus";
 import Swal from "sweetalert2";
-import { File} from "lucide-react";
+import { File } from "lucide-react";
+import { useAbonnement } from "../context/AbonnementContext";
 
 const ReminderList = () => {
+  const { checkAbonnement } = useAbonnement();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [records, setRecords] = useState<
     (Reminder & { receivable: Receivable & { client: Client } })[]
   >([]);
+  const handleClick = () => {
+    if (!checkAbonnement()) return;
+    console.log("Action autorisée !");
+    return true;
+  };
   const showError = (message: string) => {
     setError(message);
     setTimeout(() => {
@@ -130,7 +137,7 @@ const ReminderList = () => {
       Swal.fire("Supprimé !", "La relance a bien été supprimée.", "success");
     }
   };
-  
+
   return (
     <div className="p-6">
       <div className="flex gap-4 items-center mb-6">
@@ -165,7 +172,12 @@ const ReminderList = () => {
           {selectedIds.length} élément(s) sélectionné(s)
           <button
             type="button"
-            onClick={handleBulkDeleteConfirmation}
+            onClick={(e) => {
+              e.stopPropagation();
+              const allowed = handleClick();
+              if (!allowed) return;
+              handleBulkDeleteConfirmation();
+            }}
             disabled={selectedIds.length === 0}
             className={`inline-flex items-center gap-1 px-4 py-1.5 rounded-lg text-sm font-semibold transition duration-200 ${
               selectedIds.length === 0
@@ -236,8 +248,7 @@ const ReminderList = () => {
                     {record.receivable?.invoice_number}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-
-                                       {record?.receivable?.invoice_pdf_url ? (
+                    {record?.receivable?.invoice_pdf_url ? (
                       <a
                         href={record?.receivable.invoice_pdf_url}
                         target="_blank"
@@ -256,14 +267,17 @@ const ReminderList = () => {
                     )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {decodeReminderStatus(record.reminder_type) }
+                    {decodeReminderStatus(record.reminder_type)}
                   </td>
 
                   {/* Actions */}
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 flex gap-3">
                     {/* Voir email */}
                     <button
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const allowed = handleClick();
+                        if (!allowed) return;
                         Swal.fire({
                           title: "Email envoyé",
                           html: `<div style="text-align:left">${
@@ -286,7 +300,10 @@ const ReminderList = () => {
 
                     {/* Supprimer */}
                     <button
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const allowed = handleClick();
+                        if (!allowed) return;
                         Swal.fire({
                           title: "Confirmer la suppression",
                           text: "Voulez-vous vraiment supprimer cette ligne de l'historique des relances ?",

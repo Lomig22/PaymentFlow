@@ -49,6 +49,7 @@ import PlaySvg from "../../components/images/play-svgrepo-com.svg";
 import PauseSvg from "../../components/images/pause-svgrepo-com.svg";
 import { motion } from "framer-motion";
 import { log } from "console";
+import { useAbonnement } from "../context/AbonnementContext";
 
 type SortColumnConfig = {
   key: keyof CSVMapping | "client" | "email" | "Delay in Days";
@@ -56,6 +57,7 @@ type SortColumnConfig = {
 };
 
 function ReceivablesList() {
+  const { checkAbonnement } = useAbonnement();
   const [receivables, setReceivables] = useState<
     (Receivable & { client: Client })[]
   >([]);
@@ -92,6 +94,12 @@ function ReceivablesList() {
     {}
   );
 
+  const handleClick = () => {
+    if (!checkAbonnement()) return;
+    console.log("Action autorisée !");
+    return true;
+  };
+
   const [showConfirmSendReminder, setShowConfirmReminder] = useState(false);
   const [sending, setSending] = useState(false);
   const showError = (message: string) => {
@@ -105,65 +113,65 @@ function ReceivablesList() {
   const [signature, setSignature] = useState<string>("");
   const [isDropdownAbove, setIsDropdownAbove] = useState(false);
 
- const fetchReceivables = async () => {
-  try {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+  const fetchReceivables = async () => {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-    if (!user) throw new Error("Utilisateur non authentifié");
+      if (!user) throw new Error("Utilisateur non authentifié");
 
-    const userEmail = user.email;
+      const userEmail = user.email;
 
-    // 1. Récupère les IDs des utilisateurs qui ont invité l'utilisateur actuel
-    const { data: invitedByData, error: invitedByError } = await supabase
-      .from("invited_users")
-      .select("invited_by")
-      .eq("invited_email", userEmail);
+      // 1. Récupère les IDs des utilisateurs qui ont invité l'utilisateur actuel
+      const { data: invitedByData, error: invitedByError } = await supabase
+        .from("invited_users")
+        .select("invited_by")
+        .eq("invited_email", userEmail);
 
-    if (invitedByError) throw invitedByError;
+      if (invitedByError) throw invitedByError;
 
-    const invitedByIds = invitedByData.map((entry) => entry.invited_by);
+      const invitedByIds = invitedByData.map((entry) => entry.invited_by);
 
-    // 2. Inclure l'utilisateur actuel dans les IDs à filtrer
-    const allOwnerIds = [user.id, ...invitedByIds];
+      // 2. Inclure l'utilisateur actuel dans les IDs à filtrer
+      const allOwnerIds = [user.id, ...invitedByIds];
 
-    // 3. Récupère les créances pour tous les IDs collectés
-    const { data: receivablesData, error: receivablesError } = await supabase
-      .from("receivables")
-      .select("*, client:clients(*)")
-      .in("owner_id", allOwnerIds)
-      .order("due_date", { ascending: false });
+      // 3. Récupère les créances pour tous les IDs collectés
+      const { data: receivablesData, error: receivablesError } = await supabase
+        .from("receivables")
+        .select("*, client:clients(*)")
+        .in("owner_id", allOwnerIds)
+        .order("due_date", { ascending: false });
 
-    if (receivablesError) throw receivablesError;
+      if (receivablesError) throw receivablesError;
 
-    // 4. Profils de rappel
-    const { data: reminderProfilesData, error: profilesError } = await supabase
-      .from("reminder_profile")
-      .select()
-      .in("owner_id", allOwnerIds);
+      // 4. Profils de rappel
+      const { data: reminderProfilesData, error: profilesError } =
+        await supabase
+          .from("reminder_profile")
+          .select()
+          .in("owner_id", allOwnerIds);
 
-    if (profilesError) throw profilesError;
+      if (profilesError) throw profilesError;
 
-    setReminderProfiles(reminderProfilesData || []);
-    setReceivables(receivablesData || []);
+      setReminderProfiles(reminderProfilesData || []);
+      setReceivables(receivablesData || []);
 
-    // 5. Historique des rappels
-    const { data: reminderHistoryData, error: historyError } =     await supabase
-    .from("reminders")
-    .select("*")
-    .order("reminder_date", { ascending: false });
-    if (historyError) throw historyError;
+      // 5. Historique des rappels
+      const { data: reminderHistoryData, error: historyError } = await supabase
+        .from("reminders")
+        .select("*")
+        .order("reminder_date", { ascending: false });
+      if (historyError) throw historyError;
 
-    setReminderHistory(reminderHistoryData || []);
-  } catch (error) {
-    console.error("Erreur lors du chargement des créances:", error);
-    showError("Impossible de charger les créances");
-  } finally {
-    setLoading(false);
-  }
-};
-
+      setReminderHistory(reminderHistoryData || []);
+    } catch (error) {
+      console.error("Erreur lors du chargement des créances:", error);
+      showError("Impossible de charger les créances");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchReceivables();
@@ -180,24 +188,25 @@ function ReceivablesList() {
   //récupération du template actuelle:
   useEffect(() => {
     const enableClientDelays = async () => {
-        const { data:clientData,error } = await supabase
-          .from('clients')
-          .update({
-            ...selectedReceivable?.client,
-            reminder_enable_1: true,
-            reminder_enable_2: true,
-            reminder_enable_3: true,
-          })
-          .eq('id', selectedReceivable?.client?.id)
-          .select().single();
-        console.log("client data updated",clientData)          
-        if (error) throw error;
+      const { data: clientData, error } = await supabase
+        .from("clients")
+        .update({
+          ...selectedReceivable?.client,
+          reminder_enable_1: true,
+          reminder_enable_2: true,
+          reminder_enable_3: true,
+        })
+        .eq("id", selectedReceivable?.client?.id)
+        .select()
+        .single();
+      console.log("client data updated", clientData);
+      if (error) throw error;
     };
-    
+
     if (showConfirmSendReminder === true) {
-      if (selectedReceivable?.client?.reminder_profile){
-    //    alert('selectedRecevable?.client?.reminder_profile: ',selectedReceivable?.client?.reminder_profile)
-        enableClientDelays()
+      if (selectedReceivable?.client?.reminder_profile) {
+        //    alert('selectedRecevable?.client?.reminder_profile: ',selectedReceivable?.client?.reminder_profile)
+        enableClientDelays();
       }
       const fetchData = async () => {
         if (!selectedReceivable) {
@@ -206,7 +215,7 @@ function ReceivablesList() {
           setSignature("");
           return;
         }
-        
+
         const {
           data: { user },
           error,
@@ -221,7 +230,7 @@ function ReceivablesList() {
         if (emailSettings?.email_signature) {
           setSignature(emailSettings.email_signature);
         }
-        
+
         const isLastStatus = (status: string) => {
           const lastStatus = selectedReceivable.client?.reminder_enable_final
             ? "Relance finale"
@@ -236,15 +245,15 @@ function ReceivablesList() {
         };
 
         if (isLastStatus(selectedReceivable.status) === false) {
-      //    alert("status: "+selectedReceivable.status+ "\nclient: "+selectedReceivable.client)
+          //    alert("status: "+selectedReceivable.status+ "\nclient: "+selectedReceivable.client)
           // Déterminer le statut à utiliser pour la relance jet getnext
           const newStatus = getNextEnabledReminderStatus(
             selectedReceivable.status,
             selectedReceivable.client
           );
-       //  alert("newStatus: "+newStatus)
+          //  alert("newStatus: "+newStatus)
 
-   /*    if (!newStatus) { 
+          /*    if (!newStatus) { 
 
        showError("Vous n'avez pas encore configuré cette relance !");
         setSending(false);
@@ -254,30 +263,32 @@ function ReceivablesList() {
       } else{
 
       } */
-      await supabase
-      .from('receivables')
-      .update({
-        status:newStatus
-      })
-      .eq('id', selectedReceivable.id);
-      //alert(newStatus);
-      // Mettre à jour le statut avant l’envoi
-      selectedReceivable.status = newStatus;
-      // Récupérer le contenu et le niveau
-    
-        const result = await getReminderTemplate(selectedReceivable.id,newStatus);
-        if (result) {
-          const subjectLine = `Relance facture ${selectedReceivable.invoice_number}`;
-          setSubject(subjectLine);
-          setContent(result.template); // ou formatté si le template est déjà rempli
-        }
-      }
+          await supabase
+            .from("receivables")
+            .update({
+              status: newStatus,
+            })
+            .eq("id", selectedReceivable.id);
+          //alert(newStatus);
+          // Mettre à jour le statut avant l’envoi
+          selectedReceivable.status = newStatus;
+          // Récupérer le contenu et le niveau
 
-    };
-    
-    fetchData();
-  }
-  }, [selectedReceivable,showConfirmSendReminder]);
+          const result = await getReminderTemplate(
+            selectedReceivable.id,
+            newStatus
+          );
+          if (result) {
+            const subjectLine = `Relance facture ${selectedReceivable.invoice_number}`;
+            setSubject(subjectLine);
+            setContent(result.template); // ou formatté si le template est déjà rempli
+          }
+        }
+      };
+
+      fetchData();
+    }
+  }, [selectedReceivable, showConfirmSendReminder]);
 
   // Fonction pour vérifier si un client a des créances impayées
   const checkClientUnpaidReceivables = async (
@@ -517,14 +528,12 @@ function ReceivablesList() {
     while (currentIndex < allStatuses.length) {
       const currentStatus = allStatuses[currentIndex];
       const flag = statusToFlag[currentStatus];
-     
-      
+
       if (client?.[flag]) {
         return currentStatus;
       }
       currentIndex++;
     }
-
 
     return null; // Aucune relance activée trouvée
   }
@@ -545,7 +554,7 @@ function ReceivablesList() {
         const success = await sendManualReminder(
           selectedReceivable.id,
           subject?.trim() || undefined,
-          content?.trim() || undefined,
+          content?.trim() || undefined
         );
         if (success) {
           setSendSuccess(true);
@@ -1128,14 +1137,24 @@ function ReceivablesList() {
         </div>
         <div className="flex gap-4">
           <button
-            onClick={() => setShowImportModal(true)}
+            onClick={(e) => {
+              e.stopPropagation();
+              const allowed = handleClick();
+              if (!allowed) return;
+              setShowImportModal(true);
+            }}
             className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors flex items-center gap-2"
           >
             <Upload className="h-5 w-5" />
             Importer CSV
           </button>
           <button
-            onClick={() => setShowForm(true)}
+            onClick={(e) => {
+              e.stopPropagation();
+              const allowed = handleClick();
+              if (!allowed) return;
+              setShowForm(true);
+            }}
             className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2"
           >
             <Plus className="h-5 w-5" />
@@ -1181,7 +1200,12 @@ function ReceivablesList() {
             : "élément sélectionné"}{" "}
           <button
             type="button"
-            onClick={handleBulkDeleteConfirmation}
+            onClick={(e) => {
+              e.stopPropagation();
+              const allowed = handleClick();
+              if (!allowed) return;
+              handleBulkDeleteConfirmation();
+            }}
             disabled={selectedIds.length === 0}
             className={`inline-flex items-center gap-1 px-4 py-1.5 rounded-lg text-sm font-semibold transition duration-200 ${
               selectedIds.length === 0
@@ -1369,13 +1393,16 @@ function ReceivablesList() {
                                   (buttonRefs.current[receivable.id] = el)
                                 }
                                 className="w-6 h-6 flex items-center justify-center cursor-pointer"
-                                onClick={() =>
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const allowed = handleClick();
+                                  if (!allowed) return;
                                   setOpenDropdownId(
                                     openDropdownId === receivable.id
                                       ? null
                                       : receivable.id
-                                  )
-                                }
+                                  );
+                                }}
                               >
                                 <MoreHorizontal className="w-5 h-5" />
                               </span>
@@ -1384,7 +1411,10 @@ function ReceivablesList() {
                             {/* Play/Pause */}
                             <span
                               className="w-6 h-6 flex items-center justify-center cursor-pointer"
-                              onClick={() => {
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const allowed = handleClick();
+                                if (!allowed) return;
                                 handleAutomaticReminderToggle(receivable);
                               }}
                             >
