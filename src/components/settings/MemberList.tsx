@@ -2,17 +2,75 @@ import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { sendEmail } from "../../lib/email";
 import { getEmailSettings } from "../../lib/reminderService";
+import Swal from "sweetalert2";
 
 function MemberList() {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState("");
   const [inviting, setInviting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+
   const [userId, setUserId] = useState("");
   const [userEmail, setUserEmail] = useState("");
+  const [success, setSuccess] = useState<string | null>(null);
+	const [error, setError] = useState<string | null>(null);
+  const showError = (message: string) => {
+    setError(message);
+    setTimeout(() => {
+      setError(null);
+    }, 3000);
+  };
+  const showSuccess = (message: string) => {
+    setSuccess(message);
+    setTimeout(() => {
+      setSuccess(null);
+    }, 3000);
+  };
+  const handleDeleteConfirmation = async (id) => {
+    // Confirmation avant la suppression
+    const result = await Swal.fire({
+      title: "Es-tu sûr ?",
+      text: "Cette action retirera ce membre de la liste des utilisateurs invités!",
+      showCancelButton: true,
+      buttonsStyling: false,
+      customClass: {
+        confirmButton:
+          "bg-red-600 text-white px-4 py-2 rounded mr-2 hover:bg-red-700",
+        cancelButton:
+          "bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700",
+      },
+      confirmButtonText: "Oui, supprimer",
+      cancelButtonText: "Annuler",
+    });
 
+    if (result.isConfirmed) {
+      await handleDelete(id);
+      Swal.fire({
+        title: "Supprimé !",
+        text: "Les clients sélectionnés ont été supprimés.",
+        icon: "success",
+        buttonsStyling: false,
+        customClass: {
+          confirmButton:
+            "bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700",
+          icon: "text-blue-500",
+        },
+        confirmButtonText: "OK",
+      });
+    }
+  };
+  const handleDelete = async (id) => {
+    const { error } = await supabase
+      .from("invited_users")
+      .delete()
+      .eq("id", id);
+  
+    if (error) {
+      showError("Erreur lors de la suppression du membre:\n"+ error);
+    } else {
+      fetchMembers(); // Rafraîchir la liste
+    }
+  };
   useEffect(() => {
     const fetchUserInfo = async () => {
       const {
@@ -25,7 +83,6 @@ function MemberList() {
   }, []);
 
   const fetchMembers = async () => {
-    setSuccessMessage("");
 
     const { data, error } = await supabase
       .from("invited_users")
@@ -40,18 +97,7 @@ function MemberList() {
 
     setLoading(false);
   };
-  const handleDelete = async (id) => {
-    const { error } = await supabase
-      .from("invited_users")
-      .delete()
-      .eq("id", id);
-  
-    if (error) {
-      console.error("Erreur lors de la suppression :", error);
-    } else {
-      fetchMembers(); // Rafraîchir la liste
-    }
-  };
+ 
   
   useEffect(() => {
     if (userId) fetchMembers();
@@ -64,11 +110,10 @@ function MemberList() {
   const handleInvite = async (e) => {
     e.preventDefault();
     setInviting(true);
-    setErrorMessage("");
-    setSuccessMessage("");
+ 
 
     if (!isValidEmail(email)) {
-      setErrorMessage("Adresse email invalide.");
+      showError("Adresse email invalide.");
       setInviting(false);
       return;
     }
@@ -81,7 +126,7 @@ function MemberList() {
       .eq("invited_by", userId);
 
     if (existing.length > 0) {
-      setErrorMessage("Cet email a déjà été invité.");
+      showError("Cet email a déjà été invité.");
       setInviting(false);
       return;
     }
@@ -94,7 +139,7 @@ function MemberList() {
       ]);
 
     if (insertError) {
-      setErrorMessage("Erreur lors de l'invitation.");
+      showError("Erreur lors de l'invitation.");
       setInviting(false);
       return;
     }
@@ -102,7 +147,7 @@ function MemberList() {
     // Envoi de l'email
     const emailSettings = await getEmailSettings(userId);
     if (!emailSettings) {
-      setErrorMessage("Paramètres d’email introuvables.");
+      showError("Paramètres d’email introuvables.");
       setInviting(false);
       return;
     }
@@ -138,9 +183,9 @@ function MemberList() {
     
 
     if (!emailSent) {
-      setErrorMessage("Invitation par email échouée !");
+      showError("Invitation par email échouée !");
     } else {
-      setSuccessMessage("Invitation envoyée avec succès !");
+      showSuccess("Invitation envoyée avec succès !");
       setEmail(""); // Réinitialise le champ
       fetchMembers(); // Rafraîchit la liste
     }
@@ -150,6 +195,8 @@ function MemberList() {
 
   return (
     <div className="space-y-4">
+              {error && <p className="fixed w-full mb-6 p-4 bg-red-50 border border-red-200 rounded-md text-red-700 flex items-center w-[550px]">{error}</p>}
+        {success && <p className="fixed top-4 left-1/2 transform -translate-x-1/2 mb-4 p-4 bg-green-50 border border-green-200 rounded-md text-center text-green-700 z-50 w-[550px]">{success}</p>}
       <h2 className="text-lg font-semibold">Gestion des membres</h2>
 
       <form onSubmit={handleInvite} className="space-y-2">
@@ -170,8 +217,7 @@ function MemberList() {
         >
           {inviting ? "Invitation en cours..." : "Inviter"}
         </button>
-        {errorMessage && <p className="fixed mb-6 p-4 bg-red-50 border border-red-200 rounded-md text-red-700 flex items-center">{errorMessage}</p>}
-        {successMessage && <p className="fixed mb-4 p-4 bg-green-50 border border-green-200 rounded-md text-green-700">{successMessage}</p>}
+
       </form>
 
       <div>
@@ -200,7 +246,7 @@ function MemberList() {
                 </td>
                 <td className="border p-2 text-center">
                   <button
-                    onClick={() => handleDelete(m.id)}
+                    onClick={() => handleDeleteConfirmation(m.id)}
                     className="text-red-600 hover:underline"
                   >
                     Supprimer

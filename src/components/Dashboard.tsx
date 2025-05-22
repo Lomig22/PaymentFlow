@@ -53,14 +53,10 @@ interface DashboardStats {
   };
 }
 import { motion } from "framer-motion";
-import Chart from "react-apexcharts";
-import EncoursClientChart from "./chart/EncoursClientChart";
 import DsoChart from "./chart/DsoChart";
 import RemindersCard from "./chart/RemindersCard";
 import OverdueInvoices from "./chart/OverdueInvoices";
-import RecentActivityChart from "./chart/RecentActivityChart";
 import DashboardLayout from "./chart/DashboardLayout";
-import SectorDistributionPieChart from "./chart/SectorDistributionPieChart";
 import BalanceAgeeChart from "./chart/BalanceAgeeChart";
 export default function Dashboard() {
   const [stats, setStats] = useState<DashboardStats>({
@@ -80,6 +76,20 @@ export default function Dashboard() {
       legal: 0,
     },
   });
+  const [success, setSuccess] = useState<string | null>(null);
+	const [error, setError] = useState<string | null>(null);
+  const showError = (message: string) => {
+    setError(message);
+    setTimeout(() => {
+      setError(null);
+    }, 3000);
+  };
+  const showSuccess = (message: string) => {
+    setSuccess(message);
+    setTimeout(() => {
+      setSuccess(null);
+    }, 3000);
+  };
 
   const [loading, setLoading] = useState(true);
   const COLORS = ["#8884d8", "#82ca9d", "#ffc658", "#ff8042", "#00C49F"];
