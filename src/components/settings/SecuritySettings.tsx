@@ -1,50 +1,60 @@
-import React, { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabase';
-import { AlertCircle, Save, Lock } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { supabase } from "../../lib/supabase";
+import { AlertCircle, Save, Lock } from "lucide-react";
+import { useAbonnement } from "../context/AbonnementContext";
 
 export default function PasswordSettings() {
+  const { checkAbonnement } = useAbonnement();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [formData, setFormData] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
   });
+  const handleClick = () => {
+    if (!checkAbonnement()) return;
+    console.log("Action autorisée !");
+    return true;
+  };
   const showError = (message: string) => {
     setError(message);
     setTimeout(() => {
       setError(null);
     }, 3000);
-  }
+  };
   const showSuccess = () => {
-    setSuccess(true)
+    setSuccess(true);
     setTimeout(() => {
       setSuccess(false);
     }, 3000);
-  }
+  };
   // Gestion de la touche Echap
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
+      if (event.key === "Escape") {
         // Si la modale est ouverte, la fermer
         const modal = document.querySelector('[role="dialog"]');
         if (modal) {
-          modal.dispatchEvent(new Event('close'));
+          modal.dispatchEvent(new Event("close"));
         }
       }
     };
 
-    window.addEventListener('keydown', handleEscape);
+    window.addEventListener("keydown", handleEscape);
     return () => {
-      window.removeEventListener('keydown', handleEscape);
+      window.removeEventListener("keydown", handleEscape);
     };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
+    const allowed = handleClick();
+    if (!allowed) return;
     if (formData.newPassword !== formData.confirmPassword) {
-      showError('Les nouveaux mots de passe ne correspondent pas');
+      showError("Les nouveaux mots de passe ne correspondent pas");
       return;
     }
 
@@ -54,20 +64,20 @@ export default function PasswordSettings() {
 
     try {
       const { error } = await supabase.auth.updateUser({
-        password: formData.newPassword
+        password: formData.newPassword,
       });
 
       if (error) throw error;
 
-      showSuccess()
+      showSuccess();
       setFormData({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
       });
     } catch (error) {
-      console.error('Erreur lors du changement de mot de passe:', error);
-      showError('Impossible de changer le mot de passe');
+      console.error("Erreur lors du changement de mot de passe:", error);
+      showError("Impossible de changer le mot de passe");
     } finally {
       setLoading(false);
     }
@@ -100,7 +110,9 @@ export default function PasswordSettings() {
             <input
               type="password"
               value={formData.currentPassword}
-              onChange={(e) => setFormData({ ...formData, currentPassword: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, currentPassword: e.target.value })
+              }
               className="pl-10 w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
             />
@@ -116,7 +128,9 @@ export default function PasswordSettings() {
             <input
               type="password"
               value={formData.newPassword}
-              onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, newPassword: e.target.value })
+              }
               className="pl-10 w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
               minLength={8}
@@ -133,7 +147,9 @@ export default function PasswordSettings() {
             <input
               type="password"
               value={formData.confirmPassword}
-              onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, confirmPassword: e.target.value })
+              }
               className="pl-10 w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
               minLength={8}
@@ -148,7 +164,7 @@ export default function PasswordSettings() {
             className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
           >
             <Save className="h-5 w-5 mr-2" />
-            {loading ? 'Enregistrement...' : 'Changer le mot de passe'}
+            {loading ? "Enregistrement..." : "Changer le mot de passe"}
           </button>
         </div>
       </form>

@@ -110,15 +110,16 @@ function AbonnementInfo() {
   }
 
   return (
-    <div className="relative">
+    <div className="flex items-center flex-wrap gap-4 mt-2">
+      {/* Avertissement email faible */}
       <AnimatePresence>
         {resteEmail <= 5 && !isExpired && (
           <motion.div
-            initial={{ y: -40, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: -40, opacity: 0 }}
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: -20, opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="fixed top-4 left-1/2 transform bg-yellow-100 border border-yellow-400 text-yellow-800 text-xs font-medium px-4 py-2 rounded shadow z-40"
+            className="bg-yellow-100 border border-yellow-400 text-yellow-800 text-xs font-medium px-4 py-2 rounded shadow"
           >
             ⚠️ Il ne vous reste que <strong>{resteEmail}</strong> email
             {resteEmail > 1 ? "s" : ""} restants.{" "}
@@ -129,16 +130,13 @@ function AbonnementInfo() {
         )}
       </AnimatePresence>
 
-      {isExpired && (
-        <div className="text-sm ml-20 md:ml-0 mt-2">
-          <p className="text-center text-red-600 font-semibold">
-            Abonnement expiré
-          </p>
-      </div>
-      )}
-
-      {!isExpired && (
-        <div className="text-sm ml-20 md:ml-0 mt-2">
+      {/* Statut d'abonnement */}
+      {isExpired ? (
+        <p className="text-red-600 font-semibold text-sm text-center">
+          Abonnement expiré
+        </p>
+      ) : (
+        <div className="text-sm text-center">
           {abonnement && expiryDate ? (
             <p className={getColorClass()}>
               Abonnement <strong>{abonnement}</strong> – expire le{" "}

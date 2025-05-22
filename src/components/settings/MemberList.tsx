@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { sendEmail } from "../../lib/email";
 import { getEmailSettings } from "../../lib/reminderService";
-import Swal from "sweetalert2";
+import { useAbonnement } from "../context/AbonnementContext";
 
 function MemberList() {
+  const { checkAbonnement } = useAbonnement();
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState("");
@@ -12,6 +13,11 @@ function MemberList() {
 
   const [userId, setUserId] = useState("");
   const [userEmail, setUserEmail] = useState("");
+  const handleClick = () => {
+    if (!checkAbonnement()) return;
+    console.log("Action autorisée !");
+    return true;
+  };
   const [success, setSuccess] = useState<string | null>(null);
 	const [error, setError] = useState<string | null>(null);
 
@@ -101,8 +107,19 @@ function MemberList() {
 
     setLoading(false);
   };
- 
-  
+  const handleDelete = async (id) => {
+    const { error } = await supabase
+      .from("invited_users")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      console.error("Erreur lors de la suppression :", error);
+    } else {
+      fetchMembers(); // Rafraîchir la liste
+    }
+  };
+
   useEffect(() => {
     if (userId) fetchMembers();
   }, [userId]);
@@ -113,6 +130,9 @@ function MemberList() {
 
   const handleInvite = async (e) => {
     e.preventDefault();
+    e.stopPropagation();
+    const allowed = handleClick();
+    if (!allowed) return;
     setInviting(true);
   
     if (!isValidEmail(email)) {
