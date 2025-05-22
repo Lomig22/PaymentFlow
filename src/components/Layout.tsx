@@ -23,6 +23,7 @@ export default function Layout() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [logoutError, setLogoutError] = useState<string | null>(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   useEnsureEmailSettings();
 
@@ -184,8 +185,6 @@ export default function Layout() {
     verifySubscription();
   }, []);
 
-
-
   return (
     <div>
       {checking ? (
@@ -222,70 +221,92 @@ export default function Layout() {
       ) : (
         <div className="min-h-screen bg-gray-100">
           {/* Sidebar */}
-          <div className="group fixed inset-y-0 left-0 bg-white shadow-lg transition-all duration-200 w-20 hover:w-64 z-40">
+          <div
+            className={`fixed inset-y-0 left-0 bg-white shadow-lg transition-all duration-200 z-40 ${
+              isExpanded ? "w-64" : "w-16"
+            }`}
+            onMouseEnter={() => setIsExpanded(true)}
+            onMouseLeave={() => setIsExpanded(false)}
+          >
+            {/* Logo */}
             <Link
               to="/"
-              className="group flex items-center h-16 px-4 border-b border-gray-200"
+              className="flex items-center h-16 px-4 border-b border-gray-200"
             >
               <TrendingUp className="h-8 w-8 text-blue-600 flex-shrink-0" />
-              <span className="ml-2 text-xl font-bold text-gray-900 overflow-hidden whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              <span
+                className={`ml-2 text-xl font-bold text-gray-900 overflow-hidden whitespace-nowrap transition-opacity duration-200 ${
+                  isExpanded ? "opacity-100" : "opacity-0"
+                }`}
+              >
                 PaymentFlow
               </span>
             </Link>
-            <nav className="mt-6 px-4 space-y-1">
-              {navigation.map((item) => {
-                const Icon = item.icon;
-                const isActive =
-                  item.href === "/dashboard"
-                    ? location.pathname.startsWith("/dashboard")
-                    : location.pathname === item.href;
 
-                return (
-                  <Link
-                    key={item.name}
-                    to={item.href}
-                    className={`
-        group flex items-center px-4 py-3 text-sm font-medium rounded-md transition-all duration-300
-        ${
-          isActive
-            ? "bg-blue-50 text-blue-700"
-            : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-        }
-      `}
+            {/* Navigation */}
+            {navigation.map((item) => {
+              const Icon = item.icon;
+              const isActive =
+                item.href === "/dashboard"
+                  ? location.pathname.startsWith("/dashboard")
+                  : location.pathname === item.href;
+
+              return (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  className={`flex items-center px-4 py-3 text-sm font-medium rounded-md transition-all duration-300
+                  ${
+                    isActive
+                      ? "bg-blue-50 text-blue-700"
+                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                  }
+                `}
+                >
+                  <Icon className="h-5 w-5 flex-shrink-0 text-inherit" />
+                  <span
+                    className={`ml-3 whitespace-nowrap transition-opacity duration-300 ${
+                      isExpanded ? "block opacity-100" : "hidden"
+                    }`}
                   >
-                    <Icon className="h-5 w-5 flex-shrink-0 text-inherit" />
-                    <span className="ml-3 opacity-0 group-hover:opacity-100 whitespace-nowrap transition-opacity duration-300">
-                      {item.name}
-                    </span>
-                  </Link>
-                );
-              })}
-            </nav>
+                    {item.name}
+                  </span>
+                </Link>
+              );
+            })}
+
+            {/* Pied du menu */}
             <div className="absolute bottom-0 w-full">
-              {/* Bouton Aide */}
               <div className="px-4 border-gray-200">
                 <a
                   href="/help"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group flex items-center w-full px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-md transition-all duration-300"
+                  className="flex items-center w-full px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-md transition-all duration-300"
                 >
                   <HelpCircle className="h-5 w-5 flex-shrink-0 text-inherit" />
-                  <span className="ml-3 opacity-0 group-hover:opacity-100 whitespace-nowrap transition-opacity duration-300">
+                  <span
+                    className={`ml-3 whitespace-nowrap transition-opacity duration-300 ${
+                      isExpanded ? "block opacity-100" : "hidden"
+                    }`}
+                  >
                     Aides et support
                   </span>
                 </a>
               </div>
 
-              {/* Bouton Déconnexion */}
               <div className="border-t border-gray-200">
                 <button
                   onClick={() => setShowLogoutConfirm(true)}
-                  className="group flex items-center w-full px-4 py-6 text-sm font-medium text-gray-600 hover:bg-blue-50 hover:text-blue-700 rounded-md transition-all duration-300"
-                  style={{paddingLeft:"35px"}}
-                  >
+                  className="flex items-center w-full px-4 py-6 text-sm font-medium text-gray-600 hover:bg-blue-50 hover:text-blue-700 rounded-md transition-all duration-300"
+                  style={{ paddingLeft: "35px" }}
+                >
                   <LogOut className="h-5 w-5 flex-shrink-0 text-inherit" />
-                  <span className="ml-3 opacity-0 group-hover:opacity-100 whitespace-nowrap transition-opacity duration-300">
+                  <span
+                    className={`ml-3 whitespace-nowrap transition-opacity duration-300 ${
+                      isExpanded ? "block opacity-100" : "hidden"
+                    }`}
+                  >
                     Déconnexion
                   </span>
                 </button>
