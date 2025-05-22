@@ -56,7 +56,8 @@ function ClientList({
   const [selectedClientIds, setSelectedClientIds] = useState<string[]>([]);
   const handleClick = () => {
     if (!checkAbonnement()) return;
-    console.log("Action autorisée !");
+  //  console.log("Action autorisée !");
+    return true
   };
   const showError = (message: string) => {
     setError(message);
@@ -64,12 +65,12 @@ function ClientList({
       setError(null);
     }, 3000);
   };
-  const showSuccess = (message: string) => {
+/*   const showSuccess = (message: string) => {
     setSuccess(message);
     setTimeout(() => {
       setSuccess(null);
     }, 3000);
-  };
+  }; */
   const fetchClients = async () => {
     try {
       const {
@@ -182,10 +183,10 @@ function ClientList({
 
       if (!dropdown) return;
 
-      const dropdownHeight = dropdown.getBoundingClientRect().height;
+     /*  const dropdownHeight = dropdown.getBoundingClientRect().height;
       const tableHeight = table.offsetHeight;
-
-      /*  if (mousePosition.y > tableHeight) {
+ 
+        if (mousePosition.y > tableHeight) {
       setDropdownPosition({
         top: buttonRect.top - dropdownHeight,
         left: buttonRect.left,

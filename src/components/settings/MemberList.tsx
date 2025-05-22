@@ -3,6 +3,7 @@ import { supabase } from "../../lib/supabase";
 import { sendEmail } from "../../lib/email";
 import { getEmailSettings } from "../../lib/reminderService";
 import { useAbonnement } from "../context/AbonnementContext";
+import Swal from "sweetalert2";
 
 function MemberList() {
   const { checkAbonnement } = useAbonnement();
@@ -15,7 +16,7 @@ function MemberList() {
   const [userEmail, setUserEmail] = useState("");
   const handleClick = () => {
     if (!checkAbonnement()) return;
-    console.log("Action autorisée !");
+   // console.log("Action autorisée !");
     return true;
   };
   const [success, setSuccess] = useState<string | null>(null);
@@ -69,18 +70,7 @@ function MemberList() {
       });
     }
   };
-  const handleDelete = async (id) => {
-    const { error } = await supabase
-      .from("invited_users")
-      .delete()
-      .eq("id", id);
-  
-    if (error) {
-      showError("Erreur lors de la suppression du membre:\n"+ error);
-    } else {
-      fetchMembers(); // Rafraîchir la liste
-    }
-  };
+
   useEffect(() => {
     const fetchUserInfo = async () => {
       const {
