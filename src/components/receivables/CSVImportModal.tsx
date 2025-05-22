@@ -941,8 +941,8 @@ export default function CSVImportModal({
 						.from('receivables')
 						.select('owner_id, invoice_number, status')
 						.in('owner_id', batch.map(r => r.owner_id));
-					
-					console.log("OWNERID DE COMPARAISON: "+batch.map(r => r.owner_id))
+					const existingTotalAmount = existing?.reduce((sum, item) => sum + (item.amount || 0), 0) || 0;
+
 					
 					if (fetchError) {
 						console.error("Erreur de récupération:", fetchError);
@@ -952,16 +952,12 @@ export default function CSVImportModal({
 					const existingMap = new Map(
 						existing.map(r => [`${r.owner_id}-${r.invoice_number}`, r])
 					);
-					console.log("EXISTING DATA:", existingMap);
-			//		console.log("EXISTING EMAIL: ",exi);
 					
 					const toInsert: any[] = [];
 					const toUpdate: any[] = [];
 					
 					for (const record of batch) {
-						//Jetemail
-					console.log("EMAIIIIIIIIIIIIL:",record.email);
-						
+						//Jetemail						
 						const key = `${record.owner_id}-${record.invoice_number}`;
 						if (existingMap.has(key)) {
 							//console.log(record);
@@ -976,7 +972,6 @@ export default function CSVImportModal({
 			
 					// INSERT uniquement les nouveaux
 					if (toInsert.length > 0) {
-						console.log("TOINSERT: ",toInsert);
 						
 						const { error: insertError } = await supabase
 							.from('receivables')
@@ -991,7 +986,6 @@ export default function CSVImportModal({
 			
 					// UPDATE les existants (sans changer le status)
 					if (toUpdate.length > 0) {
-						console.log("TO UPDATE: ",toUpdate);
 						
 						const { error: updateError } = await supabase
 							.from('receivables')
