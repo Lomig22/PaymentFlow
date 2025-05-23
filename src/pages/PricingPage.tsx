@@ -4,6 +4,7 @@ import { supabase } from "../lib/supabase";
 import { useEffect, useState } from "react";
 import Footer from "../components/Footer";
 import { useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
@@ -24,8 +25,11 @@ const fadeInLeft = {
   hidden: { opacity: 0, x: -20 },
   visible: { opacity: 1, x: 0, transition: { duration: 0.6, ease: "easeOut" } },
 };
-
-const PricingPage = () => {
+type Props = {
+  setShowContact: React.Dispatch<React.SetStateAction<boolean>>;
+  setDefaultSubject: React.Dispatch<React.SetStateAction<string>>
+};
+const PricingPage = ({setShowContact,setDefaultSubject}:Props) => {
   const [billingInterval, setBillingInterval] = useState<"monthly" | "yearly">(
     "monthly"
   );
@@ -33,7 +37,8 @@ const PricingPage = () => {
   const [message, setMessage] = useState<string | null>(null);
   const location = useLocation();
   const isPricingPage = location.pathname === "/pricing";
-
+ 
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (message) {
@@ -169,7 +174,8 @@ const PricingPage = () => {
 
     const userEmail = session?.user?.email;
     if (!userEmail) {
-      setMessage("Utilisateur non connecté.");
+      navigate("/signup")
+    //  setMessage("Utilisateur non connecté.");
       return;
     }
 
@@ -416,11 +422,7 @@ const PricingPage = () => {
                 Solution sur mesure pour les grandes entreprises
               </p>
               <div className="mb-6">
-                {billingInterval === "yearly" && (
-                  <span className="text-lg text-gray-500 line-through mr-2">
-                    Sur devis
-                  </span>
-                )}
+      
                 <span className="text-4xl font-bold">
                   Sur devis
                 </span>
@@ -440,7 +442,10 @@ const PricingPage = () => {
               </ul>
               <button
                 onClick={() =>
-                  handleStripePayment("enterprise", billingInterval)
+                 {
+                  setDefaultSubject("pricing")
+                    setShowContact(true)
+                 }
                 }
                 className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors"
               >
@@ -450,7 +455,7 @@ const PricingPage = () => {
           </motion.div>
 
           {/* Enterprise Contact Section */}
-          {isPricingPage && (
+ {/*          {isPricingPage && (
             <motion.div
               className="mt-20 text-center"
               variants={fadeInUp}
@@ -472,7 +477,8 @@ const PricingPage = () => {
               </motion.p>
               <motion.button
                 onClick={() =>
-                  handleStripePayment("enterprise", billingInterval)
+                 { alert("truemm")
+                  setShowContact(true)}
                 }
                 className="bg-blue-600 text-white px-8 py-4 rounded-md text-lg font-medium hover:bg-blue-700 transition-colors"
                 variants={fadeInScale}
@@ -480,7 +486,7 @@ const PricingPage = () => {
                 Contactez notre équipe commerciale
               </motion.button>
             </motion.div>
-          )}
+          )} */}
         </div>
       </main>
 
