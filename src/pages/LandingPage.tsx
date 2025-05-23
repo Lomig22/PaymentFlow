@@ -12,7 +12,6 @@ import {
   CheckCircle,
   ChevronRight,
 } from "lucide-react";
-import PricingPage from "./PricingPage"
 import { sendContactForm } from "../lib/contactService";
 import { supabase } from "../lib/supabase";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -24,6 +23,7 @@ import "swiper/css/pagination";
 import { User } from "@supabase/supabase-js";
 import { Link } from "react-router-dom";
 import Footer from "../components/Footer";
+import PricingPage from "./PricingPage";
 interface LandingPageProps {
   onGetStarted: () => void;
   user?: User; // Add this if you want to pass the user as a prop
@@ -502,7 +502,19 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
           </motion.div>
 
           {/* Pricing Section */}
-          <PricingPage />
+          <motion.div
+            id="pricing"
+            className="mt-32"
+            variants={staggerContainer}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.3 }}
+          >
+                      <PricingPage />
+
+                        </motion.div>
+
+           
           {/* Testimonials */}
           <motion.div
             id="testimonials"
