@@ -231,7 +231,7 @@ export default function Layout() {
           >
             {/* Logo */}
 
-            <div className="px-4 py-3">
+            <div className="px-4">
               <Link
                 to="/"
                 className="flex items-center h-16 px-4 border-b border-gray-200"
