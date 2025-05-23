@@ -162,9 +162,39 @@ export default function ReceivableForm({
 
       // Étape 3 : Ajouter le nouveau montant
       const newAmount = parseFloat(formData.amount);
-      const updatedTotal = currentTotal + newAmount;
+      const updatedTotalAmount = currentTotal + newAmount;
 
-      console.log("Total après ajout du nouveau receivable :", updatedTotal);
+      console.log("Total après ajout du nouveau receivable :", updatedTotalAmount);
+      const { data: subscription, error: subscriptionError } = await supabase
+      .from('subscriptions')
+      .select('plan')
+      .eq('user_id', user.id)
+      .limit(1)
+      .single();
+  
+    if (subscriptionError || !subscription) {
+      showError("Impossible de récupérer le type d'abonnement.");
+      return;
+    }
+  
+    // 2. Définir les limites selon les plans
+    const planLimits = {
+      free: 25000,
+      basic: 50000,
+      pro: 200000,
+      company: Infinity,
+    };
+    const userPlan = subscription.plan;
+const maxOverDues = planLimits[userPlan] ?? 0;
+
+
+if (updatedTotalAmount >= maxOverDues) {
+	setError(`Limite atteinte : votre plan "${userPlan}" permet de gérer jusqu'à ${maxOverDues} Euro d'encours`)
+  return
+  //showError(`Limite atteinte : votre plan "${userPlan}" permet de gérer jusqu'à ${maxOverDues} Euro d'encours`);
+}
+
+
       // Ajouter la nouvelle créance
       const { data, error } = await supabase
         .from("receivables")

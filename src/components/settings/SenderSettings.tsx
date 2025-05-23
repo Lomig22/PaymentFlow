@@ -442,7 +442,7 @@ export default function SignatureSettings() {
                 e.stopPropagation();
                 const allowed = handleClick();
                 if (!allowed) return;
-                handleFileChange();
+                handleFileChange(e);
               }}
             />
             Cliquer ou déposer le fichier
