@@ -25,6 +25,7 @@ export default function Layout() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
 
+
   useEnsureEmailSettings();
 
   const handleLogout = async () => {
@@ -231,63 +232,66 @@ export default function Layout() {
             {/* Logo */}
 
             <div className="px-4 py-3">
-            <Link
-              to="/"
-              className="flex items-center h-16 px-4 border-b border-gray-200"
-            >
-              <TrendingUp className="h-8 w-8 text-blue-600 flex-shrink-0" />
-              <span
-                className={`ml-2 text-xl font-bold text-gray-900 overflow-hidden whitespace-nowrap transition-opacity duration-200 ${
-                  isExpanded ? "opacity-100" : "opacity-0"
-                }`}
+              <Link
+                to="/"
+                className="flex items-center h-16 px-4 border-b border-gray-200"
               >
-                PaymentFlow
-              </span>
-            </Link>
-                   {/* Navigation */}
-            {navigation.map((item) => {
-              const Icon = item.icon;
-              const isActive =
-                item.href === "/dashboard"
-                  ? location.pathname.startsWith("/dashboard")
-                  : location.pathname === item.href;
+                <TrendingUp className="h-8 w-8 text-blue-600 flex-shrink-0" />
+                <span
+                  className={`ml-2 text-xl font-bold text-gray-900 overflow-hidden whitespace-nowrap transition-opacity duration-200 ${
+                    isExpanded ? "opacity-100" : "opacity-0"
+                  }`}
+                >
+                  PaymentFlow
+                </span>
+              </Link>
+              {/* Navigation */}
+              {navigation.map((item) => {
+                const Icon = item.icon;
+                const isActive =
+                  item.href === "/dashboard"
+                    ? location.pathname.startsWith("/dashboard")
+                    : location.pathname === item.href;
 
-              return (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className={`flex items-center ${!isExpanded&&"justify-center"} px-4 py-3 my-2 text-sm font-medium rounded-md transition-all duration-300
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    className={`flex items-center ${
+                      !isExpanded && "justify-center"
+                    } px-4 py-3 my-2 text-sm font-medium rounded-md transition-all duration-300
                   ${
                     isActive
                       ? "bg-blue-50 text-blue-700"
                       : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                   }
                 `}
-                >
-                  <Icon className="h-5 w-5 flex-shrink-0 text-inherit" />
-                  <span
-                    className={`ml-3 whitespace-nowrap transition-opacity duration-300 ${
-                      isExpanded ? "block opacity-100" : "hidden"
-                    }`}
                   >
-                    {item.name}
-                  </span>
-                </Link>
-              );
-            })}
+                    <Icon className="h-5 w-5 flex-shrink-0 text-inherit" />
+                    <span
+                      className={`ml-3 whitespace-nowrap transition-opacity duration-300 ${
+                        isExpanded ? "block opacity-100" : "hidden"
+                      }`}
+                    >
+                      {item.name}
+                    </span>
+                  </Link>
+                );
+              })}
             </div>
-       
 
             {/* Pied du menu */}
-            <div className="absolute bottom-0 w-full left-0">
+            <div className={`absolute bottom-0 w-full left-0 ${isExpanded ? "px-6" : "px-0"}`}>
               <div className=" border-gray-200">
                 <Link
                   to="/help"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={`flex items-center ${!isExpanded&&"justify-center"}   w-full px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-md transition-all duration-300`}
-              >
-                             <HelpCircle className="h-5 w-5 flex-shrink-0 text-inherit" />
+                  className={`flex items-center ${
+                    !isExpanded && "justify-center"
+                  }   w-full px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-md transition-all duration-300`}
+                >
+                  <HelpCircle className="h-5 w-5 flex-shrink-0 text-inherit" />
                   <span
                     className={`ml-3 whitespace-nowrap transition-opacity duration-300 ${
                       isExpanded ? "block opacity-100" : "hidden"
@@ -295,14 +299,15 @@ export default function Layout() {
                   >
                     Aides et support
                   </span>
-           </Link>
+                </Link>
               </div>
 
               <div className="border-t border-gray-200">
                 <button
                   onClick={() => setShowLogoutConfirm(true)}
-                  className={`flex items-center  ${!isExpanded&&"justify-center"} w-full px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-md transition-all duration-300`}
-                  
+                  className={`flex items-center  ${
+                    !isExpanded && "justify-center"
+                  } w-full px-4 py-6 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-md transition-all duration-300`}
                 >
                   <LogOut className="h-5 w-5 flex-shrink-0 text-inherit" />
                   <span
