@@ -222,13 +222,15 @@ export default function Layout() {
         <div className="min-h-screen bg-gray-100">
           {/* Sidebar */}
           <div
-            className={`fixed inset-y-0 left-0 bg-white shadow-lg transition-all duration-200 z-40 ${
-              isExpanded ? "w-64" : "w-16"
+            className={` fixed inset-y-0 left-0 bg-white shadow-lg transition-all duration-200 z-40  ${
+              isExpanded ? "w-64" : "w-24"
             }`}
             onMouseEnter={() => setIsExpanded(true)}
             onMouseLeave={() => setIsExpanded(false)}
           >
             {/* Logo */}
+
+            <div className="px-4 py-3">
             <Link
               to="/"
               className="flex items-center h-16 px-4 border-b border-gray-200"
@@ -242,8 +244,7 @@ export default function Layout() {
                 PaymentFlow
               </span>
             </Link>
-
-            {/* Navigation */}
+                   {/* Navigation */}
             {navigation.map((item) => {
               const Icon = item.icon;
               const isActive =
@@ -255,7 +256,7 @@ export default function Layout() {
                 <Link
                   key={item.name}
                   to={item.href}
-                  className={`flex items-center px-4 py-3 text-sm font-medium rounded-md transition-all duration-300
+                  className={`flex items-center ${!isExpanded&&"justify-center"} px-4 py-3 my-2 text-sm font-medium rounded-md transition-all duration-300
                   ${
                     isActive
                       ? "bg-blue-50 text-blue-700"
@@ -274,17 +275,19 @@ export default function Layout() {
                 </Link>
               );
             })}
+            </div>
+       
 
             {/* Pied du menu */}
-            <div className="absolute bottom-0 w-full">
-              <div className="px-4 border-gray-200">
-                <a
-                  href="/help"
+            <div className="absolute bottom-0 w-full left-0">
+              <div className=" border-gray-200">
+                <Link
+                  to="/help"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center w-full px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-md transition-all duration-300"
-                >
-                  <HelpCircle className="h-5 w-5 flex-shrink-0 text-inherit" />
+                  className={`flex items-center ${!isExpanded&&"justify-center"}   w-full px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-md transition-all duration-300`}
+              >
+                             <HelpCircle className="h-5 w-5 flex-shrink-0 text-inherit" />
                   <span
                     className={`ml-3 whitespace-nowrap transition-opacity duration-300 ${
                       isExpanded ? "block opacity-100" : "hidden"
@@ -292,14 +295,14 @@ export default function Layout() {
                   >
                     Aides et support
                   </span>
-                </a>
+           </Link>
               </div>
 
               <div className="border-t border-gray-200">
                 <button
                   onClick={() => setShowLogoutConfirm(true)}
-                  className="flex items-center w-full px-4 py-6 text-sm font-medium text-gray-600 hover:bg-blue-50 hover:text-blue-700 rounded-md transition-all duration-300"
-                  style={{ paddingLeft: "35px" }}
+                  className={`flex items-center  ${!isExpanded&&"justify-center"} w-full px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-md transition-all duration-300`}
+                  
                 >
                   <LogOut className="h-5 w-5 flex-shrink-0 text-inherit" />
                   <span
