@@ -322,11 +322,11 @@ const PricingPage = () => {
               <div className="mb-6">
                 {billingInterval === "yearly" && (
                   <span className="text-lg text-gray-500 line-through mr-2">
-                    {getPrice(29).originalPrice}€
+                    {getPrice(69).originalPrice}€
                   </span>
                 )}
                 <span className="text-4xl font-bold">
-                  {getPrice(29).displayedPrice}€
+                  {getPrice(69).displayedPrice}€
                 </span>
                 <span className="text-lg font-normal text-gray-500">
                   /{billingInterval === "monthly" ? "mois" : "an"}
@@ -336,10 +336,15 @@ const PricingPage = () => {
                 </span>
               </div>
               <ul className="space-y-3 mb-8">
-                <FeatureItem text="Jusqu'à 50 créances actives" />
-                <FeatureItem text="3 modèles de relance" />
-                <FeatureItem text="Rapports mensuels" />
+                <FeatureItem text="jusqu’à 50 000 Euros d’encours" />
+                <FeatureItem text="100 relances / mois" />
+                <FeatureItem text="1 seul utilisateur" />
+                <FeatureItem text="5 modèles de relances" />
+                <FeatureItem text="créances actives illimités" />
+                <FeatureItem text="Rapport mensuels" />
+                <FeatureItem text="Rapport journaliers et/ou hebdomadaire" />
                 <FeatureItem text="Support par email" />
+                <FeatureItem text="intégration comptable " />
               </ul>
               <button
                 onClick={() => handleStripePayment("basic", billingInterval)}
@@ -369,11 +374,11 @@ const PricingPage = () => {
               <div className="mb-6">
                 {billingInterval === "yearly" && (
                   <span className="text-lg text-gray-500 line-through mr-2">
-                    {getPrice(79).originalPrice}€
+                    {getPrice(129).originalPrice}€
                   </span>
                 )}
                 <span className="text-4xl font-bold">
-                  {getPrice(79).displayedPrice}€
+                  {getPrice(129).displayedPrice}€
                 </span>
                 <span className="text-lg font-normal text-gray-500">
                   /{billingInterval === "monthly" ? "mois" : "an"}
@@ -383,11 +388,15 @@ const PricingPage = () => {
                 </span>
               </div>
               <ul className="space-y-3 mb-8">
-                <FeatureItem text="Jusqu'à 200 créances actives" />
-                <FeatureItem text="10 modèles de relance" />
-                <FeatureItem text="Rapports hebdomadaires" />
+                <FeatureItem text="jusqu’à 200 000 Euros d’encours" />
+                <FeatureItem text="500 relances / mois" />
+                <FeatureItem text="3 utilisateurs" />
+                <FeatureItem text="5 modèles de relances" />
+                <FeatureItem text="créances actives illimités" />
+                <FeatureItem text="Rapport mensuels" />
+                <FeatureItem text="Rapport journaliers et/ou hebdomadaire" />
                 <FeatureItem text="Support prioritaire" />
-                <FeatureItem text="Intégration comptable" />
+                <FeatureItem text="intégration comptable" />
               </ul>
               <button
                 onClick={() => handleStripePayment("pro", billingInterval)}
@@ -409,25 +418,25 @@ const PricingPage = () => {
               <div className="mb-6">
                 {billingInterval === "yearly" && (
                   <span className="text-lg text-gray-500 line-through mr-2">
-                    {getPrice(199).originalPrice}€
+                    Sur devis
                   </span>
                 )}
                 <span className="text-4xl font-bold">
-                  {getPrice(199).displayedPrice}€
+                  Sur devis
                 </span>
-                <span className="text-lg font-normal text-gray-500">
-                  /{billingInterval === "monthly" ? "mois" : "an"}
-                  <sup className="text-sm ml-1 font-bold">
-                    HT {billingInterval === "monthly" ? "" : "-10%"}
-                  </sup>
-                </span>
+   
               </div>
               <ul className="space-y-3 mb-8">
-                <FeatureItem text="créances actives illimités" />
-                <FeatureItem text="Modèles illimités" />
-                <FeatureItem text="Rapports personnalisés" />
-                <FeatureItem text="Support dédié 24/7" />
-                <FeatureItem text="API complète" />
+                <FeatureItem text=">1M d’euros d’encours" />
+                <FeatureItem text="jusqu’à 10 utilisateurs" />
+                <FeatureItem text="5 modèles de relances" />
+                <FeatureItem text="créances actives illimités"  />
+                <FeatureItem text="Rapport mensuels" />
+                <FeatureItem text="Rapport journaliers et/ou hebdomadaire" />
+                <FeatureItem text="Support prioritaire" />
+                <FeatureItem text="intégration comptable" />
+                <FeatureItem text="relances illimités" />
+                <FeatureItem text="10 utilisateurs" />
               </ul>
               <button
                 onClick={() =>
