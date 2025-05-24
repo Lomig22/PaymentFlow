@@ -81,7 +81,7 @@ export default function BalanceAgeeChart() {
 
   return (
     <div className="rounded-2xl w-full h-full">
-      <Card className="p-6 shadow-xl bg-white h-full">
+      <Card className="p-6 shadow-xl bg-white min-h-[350px]">
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center space-x-2 mb-2">
             <div className="bg-red-100 p-3 rounded-lg">
@@ -121,7 +121,7 @@ export default function BalanceAgeeChart() {
             <Tooltip formatter={(value: number) => [`${value} €`, "Montant"]} />
             <Bar
               dataKey="montant"
-              fill="rgb(220 38 38 / var(--tw-text-opacity, 1))"
+              fill="rgb(255, 147, 147)"
               radius={[4, 4, 0, 0]}
             />
           </BarChart>

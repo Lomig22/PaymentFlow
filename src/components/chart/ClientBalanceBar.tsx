@@ -4,7 +4,7 @@ import { BanknoteIcon } from "lucide-react";
 const statusColors: Record<string, string> = {
   late: "#FDB58D",
   pending: "#D4DEFF",
-  legal: "#F03C3C",
+  legal: "rgb(255, 147, 147)",
   promesse: "#C0F1D4",
   // recouvrement: "#F6C752",
   // avoir: "#DBC9FF",
