@@ -503,7 +503,7 @@ export default function Dashboard() {
         </div>
 
         <div
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+          className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-6 mb-8"
           style={{ display: "none" }}
         >
           {/* Total Clients */}
@@ -571,7 +571,7 @@ export default function Dashboard() {
         </div>
 
         <div
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-6 mb-8"
+          className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 gap-6 mb-8"
           style={{ marginBottom: "20px" }}
         >
           <div className="xl:col-span-8 space-y-6">
@@ -939,7 +939,7 @@ export default function Dashboard() {
                 <div className="flex items-center">
                   <div className="w-32 bg-gray-200 rounded-full h-2 mr-2">
                     <div
-                      className="bg-red-500 h-2 rounded-full"
+                      className="bg-red-300 h-2 rounded-full"
                       style={{
                         width: `${
                           (stats.reminderSteps.legal / stats.totalReceivables) *
@@ -969,7 +969,7 @@ export default function Dashboard() {
                 </span>
                 <div className="col-span-4 bg-gray-200 h-2 rounded">
                   <div
-                    className="h-2 bg-blue-500 rounded"
+                    className="h-2 bg-blue-300 rounded"
                     style={{
                       width: `${
                         stats.totalClients > 0
@@ -996,7 +996,7 @@ export default function Dashboard() {
                 </span>
                 <div className="col-span-4 bg-gray-200 h-2 rounded">
                   <div
-                    className="h-2 bg-yellow-500 rounded"
+                    className="h-2 bg-yellow-400 rounded"
                     style={{
                       width: `${
                         stats.totalReceivables > 0
@@ -1022,7 +1022,7 @@ export default function Dashboard() {
                 </span>
                 <div className="col-span-4 bg-gray-200 h-2 rounded">
                   <div
-                    className="h-2 bg-green-500 rounded"
+                    className="h-2 bg-green-400 rounded"
                     style={{
                       width: `${
                         stats.totalReceivables > 0
@@ -1044,7 +1044,7 @@ export default function Dashboard() {
 
               {/* Taux de résolution */}
               <div className="grid grid-cols-8 items-center gap-2">
-                <span className="col-span-2 text-sm text-gray-600">
+                <span className="col-span-2 text-sm text-gray-400">
                   Taux de résolution
                 </span>
                 <div className="col-span-4 bg-gray-200 h-2 rounded">
@@ -1080,7 +1080,7 @@ export default function Dashboard() {
                 </span>
                 <div className="col-span-4 bg-gray-200 h-2 rounded">
                   <div
-                    className="h-2 bg-teal-500 rounded"
+                    className="h-2 bg-teal-300 rounded"
                     style={{
                       // On remplit la barre à 100% car c'est une valeur fixe moyenne
                       width: "100%",

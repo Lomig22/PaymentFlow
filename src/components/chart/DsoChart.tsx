@@ -26,7 +26,9 @@ const monthLabels = [
 const DsoChart = () => {
   const [selectedYear, setSelectedYear] = useState<number>(2025);
   const [selectedMonth, setSelectedMonth] = useState<string>("");
-  const [dsoData, setDsoData] = useState<Record<string, any[]>>({});
+  const [dsoData, setDsoData] = useState<
+    Record<string, { month: string; value: number }[]>
+  >({});
 
   useEffect(() => {
     const fetchDSO = async () => {
@@ -48,10 +50,10 @@ const DsoChart = () => {
         const d1 = new Date(base);
         const d2 = new Date(due);
         const diffMs = d2.getTime() - d1.getTime();
-        return Math.floor(diffMs / (1000 * 60 * 60 * 24));
+        return Math.floor(diffMs / (1000 * 60 * 60 * 24)); // jours
       };
 
-      const grouped: Record<number, { [key: string]: number[] }> = {};
+      const grouped: Record<number, Record<string, number[]>> = {};
 
       for (const item of data) {
         if (!item.due_date) continue;
@@ -62,7 +64,6 @@ const DsoChart = () => {
         const date = new Date(item.due_date);
         const year = date.getFullYear();
         const month = date.getMonth();
-
         const label = `${monthLabels[month]} ${String(year).slice(-2)}`;
 
         if (!grouped[year]) grouped[year] = {};
@@ -71,9 +72,10 @@ const DsoChart = () => {
         grouped[year][label].push(delay);
       }
 
-      const finalData: Record<string, any[]> = {};
+      const finalData: Record<string, { month: string; value: number }[]> = {};
 
-      Object.entries(grouped).forEach(([year, months]) => {
+      Object.entries(grouped).forEach(([yearStr, months]) => {
+        const year = parseInt(yearStr);
         finalData[year] = monthLabels.map((label, index) => {
           const fullLabel = `${label} ${String(year).slice(-2)}`;
           const delays = months[fullLabel] || [];
@@ -101,7 +103,7 @@ const DsoChart = () => {
   const currentYearData = dsoData[selectedYear] || [];
   const nextYearData = dsoData[selectedYear + 1] || [];
 
-  let filteredData: any[] = [];
+  let filteredData: { month: string; value: number }[] = [];
 
   if (!selectedMonth) {
     filteredData = currentYearData;
@@ -117,6 +119,18 @@ const DsoChart = () => {
 
   const max = Math.max(...filteredData.map((d) => d.value || 0));
 
+  // Correction ici : on accède à .value au lieu de .montant
+  const diff = (() => {
+    if (filteredData.length < 2) return 0;
+    const last = filteredData[filteredData.length - 1].value;
+    const prev = filteredData[filteredData.length - 2].value;
+    return last - prev;
+  })();
+
+  const isDown = diff < 0;
+  const arrow = isDown ? "↓" : "↑";
+  const colorClass = isDown ? "text-green-600" : "text-red-600";
+
   return (
     <div className="bg-white rounded-xl p-5 w-full font-semibold">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-4">
@@ -125,6 +139,10 @@ const DsoChart = () => {
             <Clock className="h-6 w-6 text-yellow-600" />
           </div>
           <h2 className="text-gray-800 font-semibold text-lg">DSO</h2>
+          <div className={`inline-flex items-center gap-1 ${colorClass}`}>
+            <span className="text-sm font-semibold">{arrow}</span>
+            <span className="text-sm font-medium">{Math.abs(diff)} jour(s)</span>
+          </div>
         </div>
         <div className="flex gap-3">
           <YearPicker value={selectedYear} onChange={setSelectedYear} />
