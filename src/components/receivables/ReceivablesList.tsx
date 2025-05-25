@@ -265,7 +265,6 @@ function ReceivablesList() {
       } */
           if (!newStatus)
 {
-alert("le nouveau status est:"+newStatus)
 newStatus="pending"
 } 
          await supabase
