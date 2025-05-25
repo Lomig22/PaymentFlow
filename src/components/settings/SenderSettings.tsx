@@ -11,7 +11,10 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
+import { useAbonnement } from "../context/AbonnementContext";
+
 export default function SignatureSettings() {
+  const { checkAbonnement } = useAbonnement();
   const [senderName, setSenderName] = useState("");
   const [senderEmail, setSenderEmail] = useState("");
   const [companyName, setCompanyName] = useState("");
@@ -34,6 +37,11 @@ export default function SignatureSettings() {
   const [signatureTemplate, setSignatureTemplate] = useState("");
   const [customOpen, setCustomOpen] = useState(false);
 
+  const handleClick = () => {
+    if (!checkAbonnement()) return;
+    console.log("Action autorisée !");
+    return true;
+  };
   const showError = (message: string) => {
     setError(message);
     setTimeout(() => {
@@ -279,7 +287,7 @@ export default function SignatureSettings() {
   const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value as typeof signatureTemplate;
     console.log(value);
-    
+
     setSignatureTemplate(value);
     setSelectedTheme(value);
     setCustomOpen(value === "custom");
@@ -374,7 +382,12 @@ export default function SignatureSettings() {
                       <select
                         className="border rounded w-full px-3 py-2"
                         value={font}
-                        onChange={(e) => setFont(e.target.value)}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          const allowed = handleClick();
+                          if (!allowed) return;
+                          setFont(e.target.value);
+                        }}
                       >
                         <option>Arial</option>
                         <option>Times New Roman</option>
@@ -389,7 +402,12 @@ export default function SignatureSettings() {
                         type="color"
                         className="w-12 h-12 border rounded"
                         value={textColor}
-                        onChange={(e) => setTextColor(e.target.value)}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          const allowed = handleClick();
+                          if (!allowed) return;
+                          setTextColor(e.target.value);
+                        }}
                       />
                     </div>
                     <div>
@@ -398,7 +416,12 @@ export default function SignatureSettings() {
                         type="color"
                         className="w-12 h-12 border rounded"
                         value={bgColor}
-                        onChange={(e) => setBgColor(e.target.value)}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          const allowed = handleClick();
+                          if (!allowed) return;
+                          setBgColor(e.target.value);
+                        }}
                       />
                     </div>
                   </div>
@@ -415,7 +438,12 @@ export default function SignatureSettings() {
               type="file"
               accept="image/*"
               className="hidden"
-              onChange={handleFileChange}
+              onChange={(e) => {
+                e.stopPropagation();
+                const allowed = handleClick();
+                if (!allowed) return;
+                handleFileChange(e);
+              }}
             />
             Cliquer ou déposer le fichier
           </label>
@@ -495,19 +523,34 @@ export default function SignatureSettings() {
             {
               label: showHtml ? "Aperçu visuel" : "HTML brut",
               icon: showHtml ? <Eye /> : <Code />,
-              onClick: () => setShowHtml(!showHtml),
+              onClick: (e) => {
+                e.stopPropagation();
+                const allowed = handleClick();
+                if (!allowed) return;
+                setShowHtml(!showHtml);
+              },
               color: "bg-gray-100",
             },
             {
               label: "Enregistrer",
               icon: <Save />,
-              onClick: () => saveToSupabase(),
+              onClick: (e) => {
+                e.stopPropagation();
+                const allowed = handleClick();
+                if (!allowed) return;
+                saveToSupabase();
+              },
               color: "bg-green-600 text-white",
             },
             {
               label: "Copier",
               icon: <Clipboard />,
-              onClick: () => copySignatureToClipboard(),
+              onClick: (e) => {
+                e.stopPropagation();
+                const allowed = handleClick();
+                if (!allowed) return;
+                copySignatureToClipboard();
+              },
               color: "bg-blue-600 text-white",
             },
           ].map((btn, i) => (

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Mail, User, Bell, Shield } from "lucide-react";
+import { Mail, User, Bell, Shield, Users } from "lucide-react";
 import { Elements } from "@stripe/react-stripe-js"; // Importer Elements
 import { loadStripe } from "@stripe/stripe-js"; // Importer loadStripe
 // Composants à créer ou importer
@@ -30,6 +30,8 @@ import ReminderProfileSettings from "./ReminderProfileSettings";
 import ProfileSettings from "./ProfileSettings";
 import SignatureSettings from "./SenderSettings";
 import { useLocation } from "react-router-dom";
+import DeleteAccount from "./DeleteAccount";
+import MemberList from "./MemberList";
 /* 
 import GuideSettings from './GuideSettings';
 import ContactSupportSettings from './ContactSupportSettings';
@@ -53,10 +55,27 @@ const sections = [
         name: "Information de l'utilisateur",
         component: ProfileSettings,
       },
-
+      {
+        id: "termination",
+        name: "Résiliation de compte",
+        component: DeleteAccount,
+      }
       //    { id: 'users', name: 'Gestion des utilisateurs', component: UserManagementSettings },
     ],
   },
+  {
+    id: "members",
+    name: "Gestion des membres",
+    icon: Users, 
+    subTabs: [
+      {
+        id: "list",
+        name: "Liste des membres",
+        component: MemberList,
+      },
+    ],
+  }
+  ,
   {
     id: "billing",
     name: "Paramètres de facturation",
@@ -95,17 +114,7 @@ const sections = [
     ],
   },
   ,
-  /*  
-  {
-    id: 'integrations',
-    name: 'Intégrations',
-    icon: Mail,
-    subTabs: [
-      { id: 'external_api', name: 'Connecter une API externe', component: ExternalApiSettings },
-      { id: 'webhooks', name: 'Paramétrer Webhooks', component: WebhookSettings },
-      { id: 'zapier', name: 'Connecter Zapier / Make', component: ZapierSettings }, 
-    ],
-  }*/ {
+ {
     id: "notifications",
     name: "Notifications",
     icon: Bell,

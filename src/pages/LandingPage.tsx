@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { motion, useInView } from "framer-motion";
 import { InlineWidget } from "react-calendly";
 import { useLocation, useNavigate } from "react-router-dom";
+import ContactModal from "../pages/ContactModal";
 
 import {
   BarChart2,
@@ -23,6 +24,7 @@ import "swiper/css/pagination";
 import { User } from "@supabase/supabase-js";
 import { Link } from "react-router-dom";
 import Footer from "../components/Footer";
+import PricingPage from "./PricingPage";
 interface LandingPageProps {
   onGetStarted: () => void;
   user?: User; // Add this if you want to pass the user as a prop
@@ -37,16 +39,16 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
   const [contactSubmitted, setContactSubmitted] = useState(false);
   const [contactSubmitting, setContactSubmitting] = useState(false);
   const [contactError, setContactError] = useState<string | null>(null);
+  const [defaultSubject, setDefaultSubject] = useState("");
   const [contactFormData, setContactFormData] = useState({
     name: "",
     email: "",
-    subject: "",
+    subject: defaultSubject || "",
     message: "",
     privacy: false,
   });
 
   const location = useLocation();
-
   useEffect(() => {
     if (location.hash) {
       const id = location.hash.replace("#", "");
@@ -257,7 +259,6 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
     localStorage.setItem("selectedInterval", interval);
     navigate("/signup");
   };
-
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
@@ -509,192 +510,10 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
             whileInView="visible"
             viewport={{ once: true, amount: 0.3 }}
           >
-            <motion.h2
-              className="text-3xl font-bold text-center mb-8"
-              variants={fadeInLeft}
-            >
-              <span className="mb-4">Tarifs simples et transparents</span>
-              <div className="flex items-center justify-center gap-4 mt-8">
-                <button
-                  onClick={() => setBillingInterval("monthly")}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                    billingInterval === "monthly"
-                      ? "bg-blue-600 text-white shadow-md"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}
-                >
-                  Facturation mensuelle
-                </button>
-                <button
-                  onClick={() => setBillingInterval("yearly")}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                    billingInterval === "yearly"
-                      ? "bg-blue-600 text-white shadow-md"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}
-                >
-                  Facturation annuelle
-                </button>
-              </div>
-            </motion.h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {/* Basic Plan */}
-              <motion.div
-                variants={fadeInLeft}
-                className="bg-white rounded-lg shadow-lg p-8 border border-gray-200 hover:border-blue-500 transition-colors"
-              >
-                <h3 className="text-xl font-bold mb-2">Basic</h3>
-                <p className="text-gray-600 mb-6">
-                  Pour les petites entreprises
-                </p>
-                <p className="text-4xl font-bold mb-6">
-                  {billingInterval === "yearly" && (
-                    <span className="text-lg font-normal text-gray-500 line-through mr-2">
-                      {getPrice(29).originalPrice}€
-                    </span>
-                  )}
-                  {getPrice(29).displayedPrice}€
-                  <span className="text-lg font-normal text-gray-500">
-                    /{billingInterval === "monthly" ? "mois" : "an"}
-                    <sup className="text-sm ml-1 font-bold">
-                      HT {billingInterval === "monthly" ? "" : "-10%"}
-                    </sup>
-                  </span>
-                </p>
-                <ul className="space-y-3 mb-8">
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
-                    <span>Jusqu'à 50 créances actives</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
-                    <span>3 modèles de relance</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
-                    <span>Rapports mensuels</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
-                    <span>Support par email</span>
-                  </li>
-                </ul>
-                <button
-                  onClick={() => handleChoosePlan("basic", billingInterval)}
-                  className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors"
-                >
-                  Souscrire
-                </button>
-              </motion.div>
-
-              {/* Pro Plan */}
-              <motion.div
-                variants={fadeInLeft}
-                className="bg-white rounded-lg shadow-lg p-8 border-2 border-blue-500 md:transform md:scale-105 z-10"
-              >
-                <div className="bg-blue-500 text-white text-xs font-bold uppercase tracking-wider py-1 px-2 rounded-full inline-block mb-2">
-                  Populaire
-                </div>
-                <h3 className="text-xl font-bold mb-2">Pro</h3>
-                <p className="text-gray-600 mb-6">
-                  Pour les entreprises en croissance
-                </p>
-                <p className="text-4xl font-bold mb-6">
-                  {billingInterval === "yearly" && (
-                    <span className="text-lg font-normal text-gray-500 line-through mr-2">
-                      {getPrice(79).originalPrice}€
-                    </span>
-                  )}
-                  {getPrice(79).displayedPrice}€
-                  <span className="text-lg font-normal text-gray-500">
-                    /{billingInterval === "monthly" ? "mois" : "an"}
-                    <sup className="text-sm ml-1 font-bold">
-                      HT {billingInterval === "monthly" ? "" : "-10%"}
-                    </sup>
-                  </span>
-                </p>
-                <ul className="space-y-3 mb-8">
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
-                    <span>Jusqu'à 200 créances actives</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
-                    <span>10 modèles de relance</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
-                    <span>Rapports hebdomadaires</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
-                    <span>Support prioritaire</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
-                    <span>Intégration comptable</span>
-                  </li>
-                </ul>
-                <button
-                  onClick={() => handleChoosePlan("pro", billingInterval)}
-                  className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors"
-                >
-                  Souscrire
-                </button>
-              </motion.div>
-
-              {/* Enterprise Plan */}
-              <motion.div
-                variants={fadeInLeft}
-                className="bg-white rounded-lg shadow-lg p-8 border border-gray-200 hover:border-blue-500 transition-colors"
-              >
-                <h3 className="text-xl font-bold mb-2">Enterprise</h3>
-                <p className="text-gray-600 mb-6">
-                  Pour les grandes entreprises
-                </p>
-                <p className="text-4xl font-bold mb-6">
-                  {billingInterval === "yearly" && (
-                    <span className="text-lg font-normal text-gray-500 line-through mr-2">
-                      {getPrice(199).originalPrice}€
-                    </span>
-                  )}
-                  {getPrice(199).displayedPrice}€
-                  <span className="text-lg font-normal text-gray-500">
-                    /{billingInterval === "monthly" ? "mois" : "an"}
-                    <sup className="text-sm ml-1 font-bold">
-                      HT {billingInterval === "monthly" ? "" : "-10%"}
-                    </sup>
-                  </span>
-                </p>
-                <ul className="space-y-3 mb-8">
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
-                    <span>Créances actives illimités</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
-                    <span>Modèles illimités</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
-                    <span>Rapports personnalisés</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
-                    <span>Support dédié 24/7</span>
-                  </li>
-                </ul>
-                <button
-                  onClick={() =>
-                    handleChoosePlan("entreprise", billingInterval)
-                  }
-                  className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors"
-                >
-                  Contacter les ventes
-                </button>
-              </motion.div>
-            </div>
+            <PricingPage
+              setShowContact={setShowContact}
+              setDefaultSubject={setDefaultSubject}
+            />
           </motion.div>
 
           {/* Testimonials */}
@@ -1159,185 +978,193 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
 
       {/* Modal Contact */}
       {showContact && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">
-                Contactez-nous
-              </h2>
-              <button
-                onClick={() => setShowContact(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="h-6 w-6" />
-              </button>
-            </div>
+        <>
+          <ContactModal
+            onClose={() => setShowContact(false)}
+            defaultSubject={defaultSubject}
+          />
 
-            {contactSubmitted ? (
-              <div className="text-center py-8">
-                <div className="bg-green-100 text-green-700 p-4 rounded-md mb-4 flex items-center justify-center">
-                  <CheckCircle className="h-6 w-6 mr-2" />
-                  <span>Votre message a été envoyé avec succès !</span>
-                </div>
-                <p className="text-gray-600 mb-4">
-                  Nous vous répondrons dans les plus brefs délais.
-                </p>
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 hidden">
+            <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Contactez-nous
+                </h2>
                 <button
                   onClick={() => setShowContact(false)}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                  className="text-gray-400 hover:text-gray-600"
                 >
-                  Fermer
+                  <X className="h-6 w-6" />
                 </button>
               </div>
-            ) : (
-              <form onSubmit={handleContactSubmit} className="space-y-4">
-                {contactError && (
-                  <div className="bg-red-100 text-red-700 p-4 rounded-md mb-4">
-                    {contactError}
+
+              {contactSubmitted ? (
+                <div className="text-center py-8">
+                  <div className="bg-green-100 text-green-700 p-4 rounded-md mb-4 flex items-center justify-center">
+                    <CheckCircle className="h-6 w-6 mr-2" />
+                    <span>Votre message a été envoyé avec succès !</span>
                   </div>
-                )}
-
-                <div>
-                  <label
-                    htmlFor="name"
-                    className="block text-sm font-medium text-gray-700 mb-1"
+                  <p className="text-gray-600 mb-4">
+                    Nous vous répondrons dans les plus brefs délais.
+                  </p>
+                  <button
+                    onClick={() => setShowContact(false)}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
                   >
-                    Nom complet
-                  </label>
-                  <input
-                    type="text"
-                    id="name"
-                    value={contactFormData.name}
-                    onChange={(e) =>
-                      setContactFormData({
-                        ...contactFormData,
-                        name: e.target.value,
-                      })
-                    }
-                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2  focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Votre nom"
-                    required
-                  />
+                    Fermer
+                  </button>
                 </div>
+              ) : (
+                <form onSubmit={handleContactSubmit} className="space-y-4">
+                  {contactError && (
+                    <div className="bg-red-100 text-red-700 p-4 rounded-md mb-4">
+                      {contactError}
+                    </div>
+                  )}
 
-                <div>
-                  <label
-                    htmlFor="email"
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    value={contactFormData.email}
-                    onChange={(e) =>
-                      setContactFormData({
-                        ...contactFormData,
-                        email: e.target.value,
-                      })
-                    }
-                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="votre@email.com"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="subject"
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    Sujet
-                  </label>
-                  <select
-                    id="subject"
-                    value={contactFormData.subject}
-                    onChange={(e) =>
-                      setContactFormData({
-                        ...contactFormData,
-                        subject: e.target.value,
-                      })
-                    }
-                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    required
-                  >
-                    <option value="">Sélectionnez un sujet</option>
-                    <option value="demo">Demande de démonstration</option>
-                    <option value="pricing">Informations tarifaires</option>
-                    <option value="support">Support technique</option>
-                    <option value="partnership">Partenariat</option>
-                    <option value="other">Autre</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="message"
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    Message
-                  </label>
-                  <textarea
-                    id="message"
-                    rows={4}
-                    value={contactFormData.message}
-                    onChange={(e) =>
-                      setContactFormData({
-                        ...contactFormData,
-                        message: e.target.value,
-                      })
-                    }
-                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Comment pouvons-nous vous aider ?"
-                    required
-                  ></textarea>
-                </div>
-
-                <div className="flex items-start">
-                  <input
-                    id="privacy"
-                    type="checkbox"
-                    checked={contactFormData.privacy}
-                    onChange={(e) =>
-                      setContactFormData({
-                        ...contactFormData,
-                        privacy: e.target.checked,
-                      })
-                    }
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-1"
-                    required
-                  />
-                  <label
-                    htmlFor="privacy"
-                    className="ml-2 block text-sm text-gray-500"
-                  >
-                    J'accepte que mes données soient traitées conformément à la{" "}
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setShowContact(false);
-                        setShowPrivacyPolicy(true);
-                      }}
-                      className="text-blue-600 hover:text-blue-800"
+                  <div>
+                    <label
+                      htmlFor="name"
+                      className="block text-sm font-medium text-gray-700 mb-1"
                     >
-                      politique de confidentialité
-                    </button>
-                  </label>
-                </div>
+                      Nom complet
+                    </label>
+                    <input
+                      type="text"
+                      id="name"
+                      value={contactFormData.name}
+                      onChange={(e) =>
+                        setContactFormData({
+                          ...contactFormData,
+                          name: e.target.value,
+                        })
+                      }
+                      className="w-full p-3 border border-gray-300 rounded-md focus:ring-2  focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Votre nom"
+                      required
+                    />
+                  </div>
 
-                <button
-                  type="submit"
-                  disabled={contactSubmitting}
-                  className="w-full bg-blue-600 text-white p-3 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
-                >
-                  {contactSubmitting ? "Envoi en cours..." : "Envoyer"}
-                </button>
-              </form>
-            )}
+                  <div>
+                    <label
+                      htmlFor="email"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      id="email"
+                      value={contactFormData.email}
+                      onChange={(e) =>
+                        setContactFormData({
+                          ...contactFormData,
+                          email: e.target.value,
+                        })
+                      }
+                      className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="votre@email.com"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="subject"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Sujet
+                    </label>
+                    <select
+                      id="subject"
+                      value={contactFormData.subject}
+                      onChange={(e) =>
+                        setContactFormData({
+                          ...contactFormData,
+                          subject: e.target.value,
+                        })
+                      }
+                      className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      required
+                    >
+                      <option value="">Sélectionnez un sujet</option>
+                      <option value="demo">Demande de démonstration</option>
+                      <option value="pricing">Informations tarifaires</option>
+                      <option value="support">Support technique</option>
+                      <option value="partnership">Partenariat</option>
+                      <option value="other">Autre</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="message"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Message
+                    </label>
+                    <textarea
+                      id="message"
+                      rows={4}
+                      value={contactFormData.message}
+                      onChange={(e) =>
+                        setContactFormData({
+                          ...contactFormData,
+                          message: e.target.value,
+                        })
+                      }
+                      className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Comment pouvons-nous vous aider ?"
+                      required
+                    ></textarea>
+                  </div>
+
+                  <div className="flex items-start">
+                    <input
+                      id="privacy"
+                      type="checkbox"
+                      checked={contactFormData.privacy}
+                      onChange={(e) =>
+                        setContactFormData({
+                          ...contactFormData,
+                          privacy: e.target.checked,
+                        })
+                      }
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-1"
+                      required
+                    />
+                    <label
+                      htmlFor="privacy"
+                      className="ml-2 block text-sm text-gray-500"
+                    >
+                      J'accepte que mes données soient traitées conformément à
+                      la{" "}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setShowContact(false);
+                          setShowPrivacyPolicy(true);
+                        }}
+                        className="text-blue-600 hover:text-blue-800"
+                      >
+                        politique de confidentialité
+                      </button>
+                    </label>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={contactSubmitting}
+                    className="w-full bg-blue-600 text-white p-3 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
+                  >
+                    {contactSubmitting ? "Envoi en cours..." : "Envoyer"}
+                  </button>
+                </form>
+              )}
+            </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );

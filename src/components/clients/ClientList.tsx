@@ -11,6 +11,7 @@ import {
   stringCompare,
 } from "../../lib/comparers";
 import Swal from "sweetalert2";
+import { useAbonnement } from "../context/AbonnementContext";
 
 type ClientListProps = {
   showForm: boolean;
@@ -36,6 +37,7 @@ function ClientList({
   importSuccess,
   setImportSuccess,
 }: ClientListProps) {
+  const { checkAbonnement } = useAbonnement();
   const [clients, setClients] = useState<
     (Client & { reminderProfile?: ReminderProfile })[]
   >([]);
@@ -52,33 +54,55 @@ function ClientList({
   });
   const [success, setSuccess] = useState<string | null>(null);
   const [selectedClientIds, setSelectedClientIds] = useState<string[]>([]);
-
+  const handleClick = () => {
+    if (!checkAbonnement()) return;
+  //  console.log("Action autorisée !");
+    return true
+  };
   const showError = (message: string) => {
     setError(message);
     setTimeout(() => {
       setError(null);
     }, 3000);
   };
-  const showSuccess = (message: string) => {
+/*   const showSuccess = (message: string) => {
     setSuccess(message);
     setTimeout(() => {
       setSuccess(null);
     }, 3000);
-  };
+  }; */
   const fetchClients = async () => {
     try {
       const {
         data: { user },
       } = await supabase.auth.getUser();
+
       if (!user) throw new Error("Utilisateur non authentifié");
 
-      const { data: clientsData, error } = await supabase
+      const userEmail = user.email;
+
+      // 1. Récupérer les IDs des utilisateurs qui ont invité l'utilisateur courant
+      const { data: invitedByData, error: invitedByError } = await supabase
+        .from("invited_users")
+        .select("invited_by")
+        .eq("invited_email", userEmail);
+
+      if (invitedByError) throw invitedByError;
+
+      const invitedByIds = invitedByData.map((entry) => entry.invited_by);
+
+      // 2. Inclure l'utilisateur actuel dans les IDs à filtrer
+      const allOwnerIds = [user.id, ...invitedByIds];
+
+      // 3. Récupérer les clients pour ces propriétaires
+      const { data: clientsData, error: clientsError } = await supabase
         .from("clients")
         .select("*, reminderProfile:reminder_profile(*)")
-        .eq("owner_id", user.id)
+        .in("owner_id", allOwnerIds)
         .order("company_name");
 
-      if (error) throw error;
+      if (clientsError) throw clientsError;
+
       setClients(clientsData || []);
     } catch (error) {
       console.error("Erreur lors du chargement des clients:", error);
@@ -159,10 +183,10 @@ function ClientList({
 
       if (!dropdown) return;
 
-      const dropdownHeight = dropdown.getBoundingClientRect().height;
+     /*  const dropdownHeight = dropdown.getBoundingClientRect().height;
       const tableHeight = table.offsetHeight;
-
-      /*  if (mousePosition.y > tableHeight) {
+ 
+        if (mousePosition.y > tableHeight) {
       setDropdownPosition({
         top: buttonRect.top - dropdownHeight,
         left: buttonRect.left,
@@ -274,15 +298,15 @@ function ClientList({
       if (receivablesError) throw receivablesError;
       // Suppression des clients via Supabase
       const { data, error } = await supabase
-        .from("clients") // Remplace 'clients' par le nom de ta table dans Supabase
+        .from("clients") 
         .delete()
-        .in("id", selectedClientIds); // `selectedClientIds` contient les IDs des clients à supprimer
+        .in("id", selectedClientIds); 
 
       if (error) {
         throw new Error(error.message);
       }
 
-      // Tu peux aussi gérer la mise à jour de l'état des clients ici
+      
       // Par exemple, filtrer les clients supprimés de la liste affichée
       console.log("Clients supprimés:", data);
     } catch (error) {
@@ -414,7 +438,11 @@ function ClientList({
           {selectedClientIds.length} client(s) sélectionné(s)
           <button
             type="button"
-            onClick={handleBulkDeleteConfirmation}
+            onClick={() => {
+              const allowed = handleClick();
+              if (!allowed) return;
+              handleBulkDeleteConfirmation();
+            }}
             disabled={selectedClientIds.length === 0}
             className={`ml-2 px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors duration-200 ${
               selectedClientIds.length === 0
@@ -690,6 +718,8 @@ function ClientList({
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
+                                const allowed = handleClick();
+                                if (!allowed) return;
                                 setSelectedClient(client);
                                 setShowForm(true);
                                 setOpenDropdownId(null);
@@ -701,6 +731,8 @@ function ClientList({
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
+                                const allowed = handleClick();
+                                if (!allowed) return;
                                 handleDeleteClick(client);
                                 setOpenDropdownId(null);
                               }}
