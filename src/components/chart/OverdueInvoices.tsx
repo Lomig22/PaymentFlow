@@ -27,7 +27,25 @@ const OverdueInvoices = () => {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-
+  
+      if (!user) throw new Error("Utilisateur non authentifié");
+  
+      const userEmail = user.email;
+  
+      // 1. Récupère les IDs des utilisateurs qui ont invité l'utilisateur actuel
+      const { data: invitedByData, error: invitedByError } = await supabase
+        .from("invited_users")
+        .select("invited_by")
+        .eq("invited_email", userEmail);
+  
+      if (invitedByError) throw invitedByError;
+  
+      const invitedByIds = invitedByData.map((entry) => entry.invited_by);
+  
+      // 2. Inclure l'utilisateur actuel dans les IDs à filtrer
+      const allOwnerIds = [user.id, ...invitedByIds];
+  
+      
       const { data, error } = await supabase
         .from("receivables")
         .select(
@@ -37,7 +55,7 @@ const OverdueInvoices = () => {
           client:clients(company_name, client_code)
         `
         )
-        .eq("owner_id", user?.id);
+        .in("owner_id", allOwnerIds);
 
       if (error) {
         console.error("Erreur lors du chargement:", error);

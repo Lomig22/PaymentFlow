@@ -30,12 +30,30 @@ export default function BalanceAgeeChart() {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-
+    
+      if (!user) throw new Error("Utilisateur non authentifié");
+  
+      const userEmail = user.email;
+  
+      // 1. Récupère les IDs des utilisateurs qui ont invité l'utilisateur actuel
+      const { data: invitedByData, error: invitedByError } = await supabase
+        .from("invited_users")
+        .select("invited_by")
+        .eq("invited_email", userEmail);
+  
+      if (invitedByError) throw invitedByError;
+  
+      const invitedByIds = invitedByData.map((entry) => entry.invited_by);
+  
+      // 2. Inclure l'utilisateur actuel dans les IDs à filtrer
+      const allOwnerIds = [user.id, ...invitedByIds];
+  
+      
       const { data: receivables, error } = await supabase
         .from("receivables")
         .select("due_date, amount")
         .lt("due_date", reference)
-        .eq("owner_id", user?.id); // uniquement les en retard
+        .in("owner_id", allOwnerIds); // uniquement les en retard
 
       if (error) {
         console.error("Erreur Supabase :", error.message);
