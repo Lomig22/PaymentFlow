@@ -200,7 +200,7 @@ export default function CSVImportModal({
   const [mapping, setMapping] = useState<Record<string, keyof CSVMapping>>({});
   const [savingSchema, setSavingSchema] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
-
+  let planMessage="";
   // Plus de validation des en-têtes requis
   const expectedHeaders: string[] = [];
   const showError = (message: string) => {
@@ -1033,14 +1033,14 @@ const planLimits = {
 };
 
 const userPlan = subscription.plan;
-const maxOverDues = planLimits[userPlan] ?? 0;
-
-
+const maxOverDues = Number(planLimits[userPlan]) ?? 0;
+console.log(typeof updatedTotalAmount, updatedTotalAmount);
+console.log(typeof maxOverDues, maxOverDues);
 if (updatedTotalAmount >= maxOverDues) {
-	setPlanError(`Limite atteinte : votre plan "${userPlan}" permet de gérer jusqu'à ${maxOverDues} Euro d'encours`)
-  //showError(`Limite atteinte : votre plan "${userPlan}" permet de gérer jusqu'à ${maxOverDues} Euro d'encours`);
+   planMessage = `Limite atteinte : votre plan "${userPlan}" permet de gérer jusqu'à ${maxOverDues} Euro d'encours`;
+  setPlanError(planMessage);         // Pour afficher dans le composant si besoin
+  throw new Error(planMessage);    
 }
-
           // INSERT uniquement les nouveaux
           if (toInsert.length > 0) {
             const { error: insertError } = await supabase
@@ -1167,13 +1167,8 @@ if (updatedTotalAmount >= maxOverDues) {
       if (successCount > 0) {
         onImportSuccess(successCount);
       } else {
-     	if (!planError){ 
-			throw new Error("Aucune créance n'a pu être importée!")}
-		else{
-			
-			throw new Error(planError)
-		};
-      }
+   
+			throw new Error((planMessage==="")?"Aucune créance n'a pu être importée!":planMessage)}
     } catch (error: any) {
       console.error("Erreur lors de l'import des créances:", error);
       showError(error.message || "Erreur lors de l'import des créances");
