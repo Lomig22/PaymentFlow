@@ -4,6 +4,7 @@ import { supabase } from "../lib/supabase";
 import { useEffect, useState } from "react";
 import Footer from "../components/Footer";
 import { useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
@@ -24,8 +25,11 @@ const fadeInLeft = {
   hidden: { opacity: 0, x: -20 },
   visible: { opacity: 1, x: 0, transition: { duration: 0.6, ease: "easeOut" } },
 };
-
-const PricingPage = () => {
+type Props = {
+  setShowContact: React.Dispatch<React.SetStateAction<boolean>>;
+  setDefaultSubject: React.Dispatch<React.SetStateAction<string>>
+};
+const PricingPage = ({setShowContact,setDefaultSubject}:Props) => {
   const [billingInterval, setBillingInterval] = useState<"monthly" | "yearly">(
     "monthly"
   );
@@ -33,7 +37,8 @@ const PricingPage = () => {
   const [message, setMessage] = useState<string | null>(null);
   const location = useLocation();
   const isPricingPage = location.pathname === "/pricing";
-
+ 
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (message) {
@@ -169,7 +174,8 @@ const PricingPage = () => {
 
     const userEmail = session?.user?.email;
     if (!userEmail) {
-      setMessage("Utilisateur non connecté.");
+      navigate("/signup")
+    //  setMessage("Utilisateur non connecté.");
       return;
     }
 
@@ -322,11 +328,11 @@ const PricingPage = () => {
               <div className="mb-6">
                 {billingInterval === "yearly" && (
                   <span className="text-lg text-gray-500 line-through mr-2">
-                    {getPrice(29).originalPrice}€
+                    {getPrice(69).originalPrice}€
                   </span>
                 )}
                 <span className="text-4xl font-bold">
-                  {getPrice(29).displayedPrice}€
+                  {getPrice(69).displayedPrice}€
                 </span>
                 <span className="text-lg font-normal text-gray-500">
                   /{billingInterval === "monthly" ? "mois" : "an"}
@@ -336,10 +342,15 @@ const PricingPage = () => {
                 </span>
               </div>
               <ul className="space-y-3 mb-8">
-                <FeatureItem text="Jusqu'à 50 créances actives" />
-                <FeatureItem text="3 modèles de relance" />
-                <FeatureItem text="Rapports mensuels" />
+                <FeatureItem text="jusqu’à 50 000 Euros d’encours" />
+                <FeatureItem text="100 relances / mois" />
+                <FeatureItem text="1 seul utilisateur" />
+                <FeatureItem text="5 modèles de relances" />
+                <FeatureItem text="créances actives illimités" />
+                <FeatureItem text="Rapport mensuels" />
+                <FeatureItem text="Rapport journaliers et/ou hebdomadaire" />
                 <FeatureItem text="Support par email" />
+                <FeatureItem text="intégration comptable " />
               </ul>
               <button
                 onClick={() => handleStripePayment("basic", billingInterval)}
@@ -369,11 +380,11 @@ const PricingPage = () => {
               <div className="mb-6">
                 {billingInterval === "yearly" && (
                   <span className="text-lg text-gray-500 line-through mr-2">
-                    {getPrice(79).originalPrice}€
+                    {getPrice(129).originalPrice}€
                   </span>
                 )}
                 <span className="text-4xl font-bold">
-                  {getPrice(79).displayedPrice}€
+                  {getPrice(129).displayedPrice}€
                 </span>
                 <span className="text-lg font-normal text-gray-500">
                   /{billingInterval === "monthly" ? "mois" : "an"}
@@ -383,11 +394,15 @@ const PricingPage = () => {
                 </span>
               </div>
               <ul className="space-y-3 mb-8">
-                <FeatureItem text="Jusqu'à 200 créances actives" />
-                <FeatureItem text="10 modèles de relance" />
-                <FeatureItem text="Rapports hebdomadaires" />
+                <FeatureItem text="jusqu’à 200 000 Euros d’encours" />
+                <FeatureItem text="500 relances / mois" />
+                <FeatureItem text="3 utilisateurs" />
+                <FeatureItem text="5 modèles de relances" />
+                <FeatureItem text="créances actives illimités" />
+                <FeatureItem text="Rapport mensuels" />
+                <FeatureItem text="Rapport journaliers et/ou hebdomadaire" />
                 <FeatureItem text="Support prioritaire" />
-                <FeatureItem text="Intégration comptable" />
+                <FeatureItem text="intégration comptable" />
               </ul>
               <button
                 onClick={() => handleStripePayment("pro", billingInterval)}
@@ -407,31 +422,30 @@ const PricingPage = () => {
                 Solution sur mesure pour les grandes entreprises
               </p>
               <div className="mb-6">
-                {billingInterval === "yearly" && (
-                  <span className="text-lg text-gray-500 line-through mr-2">
-                    {getPrice(199).originalPrice}€
-                  </span>
-                )}
+      
                 <span className="text-4xl font-bold">
-                  {getPrice(199).displayedPrice}€
+                  Sur devis
                 </span>
-                <span className="text-lg font-normal text-gray-500">
-                  /{billingInterval === "monthly" ? "mois" : "an"}
-                  <sup className="text-sm ml-1 font-bold">
-                    HT {billingInterval === "monthly" ? "" : "-10%"}
-                  </sup>
-                </span>
+   
               </div>
               <ul className="space-y-3 mb-8">
-                <FeatureItem text="créances actives illimités" />
-                <FeatureItem text="Modèles illimités" />
-                <FeatureItem text="Rapports personnalisés" />
-                <FeatureItem text="Support dédié 24/7" />
-                <FeatureItem text="API complète" />
+                <FeatureItem text=">1M d’euros d’encours" />
+                <FeatureItem text="jusqu’à 10 utilisateurs" />
+                <FeatureItem text="5 modèles de relances" />
+                <FeatureItem text="créances actives illimités"  />
+                <FeatureItem text="Rapport mensuels" />
+                <FeatureItem text="Rapport journaliers et/ou hebdomadaire" />
+                <FeatureItem text="Support prioritaire" />
+                <FeatureItem text="intégration comptable" />
+                <FeatureItem text="relances illimités" />
+                <FeatureItem text="10 utilisateurs" />
               </ul>
               <button
                 onClick={() =>
-                  handleStripePayment("enterprise", billingInterval)
+                 {
+                  setDefaultSubject("pricing")
+                    setShowContact(true)
+                 }
                 }
                 className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors"
               >
@@ -441,7 +455,7 @@ const PricingPage = () => {
           </motion.div>
 
           {/* Enterprise Contact Section */}
-          {isPricingPage && (
+ {/*          {isPricingPage && (
             <motion.div
               className="mt-20 text-center"
               variants={fadeInUp}
@@ -463,7 +477,8 @@ const PricingPage = () => {
               </motion.p>
               <motion.button
                 onClick={() =>
-                  handleStripePayment("enterprise", billingInterval)
+                 { alert("truemm")
+                  setShowContact(true)}
                 }
                 className="bg-blue-600 text-white px-8 py-4 rounded-md text-lg font-medium hover:bg-blue-700 transition-colors"
                 variants={fadeInScale}
@@ -471,7 +486,7 @@ const PricingPage = () => {
                 Contactez notre équipe commerciale
               </motion.button>
             </motion.div>
-          )}
+          )} */}
         </div>
       </main>
 
