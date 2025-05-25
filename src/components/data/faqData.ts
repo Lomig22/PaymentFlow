@@ -47,7 +47,7 @@ export const faqData: FaqItem[] = [
   {
     question: "Comment afficher les rapports financiers ?",
     answer: "Pour générer des rapports financiers, accédez à la section Rapports dans la navigation principale. Vous pouvez y sélectionner différents rapports préétablis tels que Flux de trésorerie, Balance âgée, Historique des paiements et Efficacité du recouvrement. Vous pouvez personnaliser la période et d'autres paramètres, puis exporter les rapports en PDF, Excel ou CSV.",
-    category: "features"
+    category: "feature"
   }*/,
   {
     question: "Puis-je ajouter des membres à mon équipe ?",
