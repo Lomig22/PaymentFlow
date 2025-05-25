@@ -247,7 +247,7 @@ function ReceivablesList() {
         if (isLastStatus(selectedReceivable.status) === false) {
           //    alert("status: "+selectedReceivable.status+ "\nclient: "+selectedReceivable.client)
           // Déterminer le statut à utiliser pour la relance jet getnext
-          const newStatus = getNextEnabledReminderStatus(
+          let newStatus = getNextEnabledReminderStatus(
             selectedReceivable.status,
             selectedReceivable.client
           );
@@ -263,7 +263,12 @@ function ReceivablesList() {
       } else{
 
       } */
-          await supabase
+          if (!newStatus)
+{
+alert("le nouveau status est:"+newStatus)
+newStatus="pending"
+} 
+         await supabase
             .from("receivables")
             .update({
               status: newStatus,
