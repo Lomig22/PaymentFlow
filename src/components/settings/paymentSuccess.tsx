@@ -24,7 +24,7 @@ export default function Success() {
 
   return (
     <div className="p-6 text-center">
-      <h1 className="text-3xl font-bold text-green-600 mb-4">{message}</h1>
+      <h1 className="text-3xl font-bold text-red-600 mb-4">{message}</h1>
       {/* Ajoute d'autres informations ou un bouton pour revenir à l'accueil */}
       <a href="/" className="text-blue-500 hover:text-blue-700">Retour à l'accueil</a>
     </div>
