@@ -139,7 +139,7 @@ export default function BalanceAgeeChart() {
             <Tooltip formatter={(value: number) => [`${value} €`, "Montant"]} />
             <Bar
               dataKey="montant"
-              fill="rgb(255, 147, 147)"
+              fill="rgb(255, 67, 67)" // rouge plus vif
               radius={[4, 4, 0, 0]}
             />
           </BarChart>

@@ -64,88 +64,88 @@ const PricingPage = ({setShowContact,setDefaultSubject}:Props) => {
     return { displayedPrice: monthlyPrice, originalPrice: null };
   };
 
-  const handleStripePaymentTemp = async (plan: string) => {
-    try {
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
+  // const handleStripePaymentTemp = async (plan: string) => {
+  //   try {
+  //     const {
+  //       data: { user },
+  //       error: userError,
+  //     } = await supabase.auth.getUser();
 
-      if (userError || !user) {
-        alert("Veuillez vous connecter pour continuer");
-        return;
-      }
+  //     if (userError || !user) {
+  //       alert("Veuillez vous connecter pour continuer");
+  //       return;
+  //     }
 
-      // Vérifie si le profil existe déjà
-      const { data: existingProfile, error: fetchError } = await supabase
-        .from("profileStripe")
-        .select("*")
-        .eq("id", user.id)
-        .maybeSingle();
+  //     // Vérifie si le profil existe déjà
+  //     const { data: existingProfile, error: fetchError } = await supabase
+  //       .from("profileStripe")
+  //       .select("*")
+  //       .eq("id", user.id)
+  //       .maybeSingle();
 
-      if (fetchError) {
-        console.error("Erreur lors de la récupération du profil:", fetchError);
-        alert("Erreur lors de la récupération du profil");
-        return;
-      }
+  //     if (fetchError) {
+  //       console.error("Erreur lors de la récupération du profil:", fetchError);
+  //       alert("Erreur lors de la récupération du profil");
+  //       return;
+  //     }
 
-      if (existingProfile && existingProfile.subscription_expiry) {
-        const expiryDate = new Date(existingProfile.subscription_expiry);
-        const now = new Date();
-        if (expiryDate > now) {
-          alert("Vous avez déjà un abonnement actif.");
-          return;
-        }
-      }
+  //     if (existingProfile && existingProfile.subscription_expiry) {
+  //       const expiryDate = new Date(existingProfile.subscription_expiry);
+  //       const now = new Date();
+  //       if (expiryDate > now) {
+  //         alert("Vous avez déjà un abonnement actif.");
+  //         return;
+  //       }
+  //     }
 
-      const now = new Date();
-      const expiry = new Date();
-      expiry.setMonth(expiry.getMonth() + (plan === "enterprise" ? 12 : 1));
+  //     const now = new Date();
+  //     const expiry = new Date();
+  //     expiry.setMonth(expiry.getMonth() + (plan === "enterprise" ? 12 : 1));
 
-      // Enregistre ou met à jour le profilStripe
-      const { error: upsertError } = await supabase
-        .from("profileStripe")
-        .upsert({
-          id: user.id,
-          created_at: now.toISOString(),
-          email: user.email,
-          formatedEmail: user.email?.toLowerCase().trim(),
-          subscription_expiry: expiry.toISOString(),
-          abonnement: plan,
-        });
+  //     // Enregistre ou met à jour le profilStripe
+  //     const { error: upsertError } = await supabase
+  //       .from("profileStripe")
+  //       .upsert({
+  //         id: user.id,
+  //         created_at: now.toISOString(),
+  //         email: user.email,
+  //         formatedEmail: user.email?.toLowerCase().trim(),
+  //         subscription_expiry: expiry.toISOString(),
+  //         abonnement: plan,
+  //       });
 
-      if (upsertError) {
-        console.error("Erreur d'enregistrement de l'abonnement:", upsertError);
-        alert("Erreur lors de la création de l'abonnement");
-        return;
-      }
+  //     if (upsertError) {
+  //       console.error("Erreur d'enregistrement de l'abonnement:", upsertError);
+  //       alert("Erreur lors de la création de l'abonnement");
+  //       return;
+  //     }
 
-      // Redirection vers Stripe
-      let stripeUrl = "";
-      switch (plan) {
-        case "basic":
-          stripeUrl = `https://buy.stripe.com/test_dR66s9cgGcRgcQU3cc?prefilled_email=${encodeURIComponent(
-            user.email ?? ""
-          )}`;
-          break;
-        case "pro":
-          stripeUrl = `https://buy.stripe.com/test_dR66s9cgGcRgcQU3cc?prefilled_email=${encodeURIComponent(
-            user.email ?? ""
-          )}`;
-          break;
-        case "enterprise":
-          stripeUrl = `https://buy.stripe.com/test_dR66s9cgGcRgcQU3cc?prefilled_email=${encodeURIComponent(
-            user.email ?? ""
-          )}`;
-          break;
-      }
+  //     // Redirection vers Stripe
+  //     let stripeUrl = "";
+  //     switch (plan) {
+  //       case "basic":
+  //         stripeUrl = `https://buy.stripe.com/test_dR66s9cgGcRgcQU3cc?prefilled_email=${encodeURIComponent(
+  //           user.email ?? ""
+  //         )}`;
+  //         break;
+  //       case "pro":
+  //         stripeUrl = `https://buy.stripe.com/test_dR66s9cgGcRgcQU3cc?prefilled_email=${encodeURIComponent(
+  //           user.email ?? ""
+  //         )}`;
+  //         break;
+  //       case "enterprise":
+  //         stripeUrl = `https://buy.stripe.com/test_dR66s9cgGcRgcQU3cc?prefilled_email=${encodeURIComponent(
+  //           user.email ?? ""
+  //         )}`;
+  //         break;
+  //     }
 
-      window.open(stripeUrl, "_blank");
-    } catch (error) {
-      console.error("Erreur lors du paiement:", error);
-      alert("Une erreur est survenue. Veuillez réessayer.");
-    }
-  };
+  //     window.open(stripeUrl, "_blank");
+  //   } catch (error) {
+  //     console.error("Erreur lors du paiement:", error);
+  //     alert("Une erreur est survenue. Veuillez réessayer.");
+  //   }
+  // };
 
   const priceMap = {
     basic: {
@@ -173,6 +173,7 @@ const PricingPage = ({setShowContact,setDefaultSubject}:Props) => {
     } = await supabase.auth.getSession();
 
     const userEmail = session?.user?.email;
+    const userId = session?.user?.id;
     if (!userEmail) {
       navigate("/signup")
     //  setMessage("Utilisateur non connecté.");
@@ -180,9 +181,9 @@ const PricingPage = ({setShowContact,setDefaultSubject}:Props) => {
     }
 
     const { data, error } = await supabase
-      .from("profileStripe")
-      .select("abonnement, subscription_expiry")
-      .eq("email", userEmail);
+      .from("subscriptions")
+      .select("plan, subscription_expiry")
+      .eq("user_id", userId);
 
     if (error) {
       console.error(error);
