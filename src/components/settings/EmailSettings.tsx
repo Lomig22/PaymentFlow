@@ -434,7 +434,7 @@ export default function EmailSettings() {
           </label>
         </div>
 
-        <div className="mt-4">
+        <div className="mt-4 w-[30vw]">
           <div className="flex justify-between items-center mb-1">
             <label className="block text-sm font-medium text-gray-700">
               Aperçu de la signature :
@@ -455,7 +455,7 @@ export default function EmailSettings() {
             </button>
           </div>
           <div
-            className="border p-4 rounded bg-white shadow"
+            className="rounded"
             dangerouslySetInnerHTML={{ __html: formData.email_signature }}
           />
         </div>

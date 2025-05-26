@@ -159,7 +159,9 @@ const DsoChart = () => {
           <h2 className="text-gray-800 font-semibold text-lg">DSO</h2>
           <div className={`inline-flex items-center gap-1 ${colorClass}`}>
             <span className="text-sm font-semibold">{arrow}</span>
-            <span className="text-sm font-medium">{Math.abs(diff)} jour(s)</span>
+            <span className="text-sm font-medium">
+              {Math.abs(diff)} jour(s)
+            </span>
           </div>
         </div>
         <div className="flex gap-3">
@@ -208,7 +210,7 @@ const DsoChart = () => {
                   style={{
                     height: `${(d.value / (max || 1)) * 130}px`,
                     backgroundColor:
-                      i === filteredData.length - 1 ? "#4F8CFF" : "#E0ECFF",
+                      i === filteredData.length - 1 ? "#1E60FF" : "#5CA9FF",
                   }}
                 />
                 <span className="text-xs text-gray-500 mt-2 text-center whitespace-nowrap">

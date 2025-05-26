@@ -189,7 +189,7 @@ export default function DashboardLayout() {
               <Line
                 type="monotone"
                 dataKey="paid"
-                stroke="rgb(74, 222, 128)"
+                stroke="rgb(0, 200, 83)" // vert vif (ex : #00C853)
                 strokeWidth={2}
                 name="Payé"
                 dot={{ r: 4 }}
@@ -197,7 +197,7 @@ export default function DashboardLayout() {
               <Line
                 type="monotone"
                 dataKey="unpaid"
-                stroke="rgb(255, 147, 147)"
+                stroke="rgb(255, 67, 67)" // rouge vif (ex : #FF4343)
                 strokeWidth={2}
                 name="En attente"
                 dot={{ r: 4 }}

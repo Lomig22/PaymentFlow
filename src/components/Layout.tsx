@@ -334,7 +334,7 @@ export default function Layout() {
           </header>
 
           <div className="pl-20 group-hover:pl-64 transition-all duration-200">
-            <main className="py-6">
+            <main>
               <Outlet />
             </main>
           </div>

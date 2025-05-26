@@ -2,13 +2,14 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { BanknoteIcon } from "lucide-react";
 const statusColors: Record<string, string> = {
-  late: "#FDB58D",
-  pending: "#D4DEFF",
-  legal: "rgb(255, 147, 147)",
-  promesse: "#C0F1D4",
-  // recouvrement: "#F6C752",
-  // avoir: "#DBC9FF",
+  late: "#FF7F50", // corail vif
+  pending: "#4D6DFF", // bleu vif
+  legal: "#FF4C4C", // rouge vif
+  promesse: "#3CE58D", // vert menthe vif
+  // recouvrement: "#FFC107", // jaune doré vif (commentée)
+  // avoir: "#A569FF",        // violet vif (commentée)
 };
+
 
 const labelMapping: Record<string, string> = {
   late: "Échu",
