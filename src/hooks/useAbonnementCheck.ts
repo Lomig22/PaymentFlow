@@ -28,7 +28,7 @@ export default function useAbonnementCheck() {
       const userCreatedAt = new Date(user.created_at);
       const now = new Date();
       const daysSinceCreation = differenceInDays(now, userCreatedAt);
-      const essaiDuration = 10;
+      const essaiDuration = 30;
 
       if (daysSinceCreation < essaiDuration) {
         setAbonnement("Essai gratuit");
