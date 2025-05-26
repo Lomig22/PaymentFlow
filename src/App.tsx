@@ -81,7 +81,7 @@ function App() {
       if (chatlingButtonContainer) chatlingButtonContainer.remove();
     };
   
-    if (!user) {
+    if (!user ||location.pathname==="/help") {
       // Ajouter le script si non connecté
       if (!document.getElementById(CHATLING_SCRIPT_ID)) {
         const script = document.createElement("script");
