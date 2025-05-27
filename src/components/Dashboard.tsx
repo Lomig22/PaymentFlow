@@ -881,7 +881,7 @@ export default function Dashboard() {
                 <div className="flex items-center">
                   <div className="w-32 bg-gray-200 rounded-full h-2 mr-2">
                     <div
-                      className="bg-yellow-500 h-2 rounded-full"
+                      className="bg-yellow-400 h-2 rounded-full" // plus vif que yellow-500
                       style={{
                         width: `${
                           (stats.reminderSteps.first / stats.totalReceivables) *
@@ -895,12 +895,13 @@ export default function Dashboard() {
                   </span>
                 </div>
               </div>
+
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">2ème relance</span>
                 <div className="flex items-center">
                   <div className="w-32 bg-gray-200 rounded-full h-2 mr-2">
                     <div
-                      className="bg-orange-500 h-2 rounded-full"
+                      className="bg-orange-400 h-2 rounded-full" // plus vif que orange-500
                       style={{
                         width: `${
                           (stats.reminderSteps.second /
@@ -915,12 +916,13 @@ export default function Dashboard() {
                   </span>
                 </div>
               </div>
+
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">3ème relance</span>
                 <div className="flex items-center">
                   <div className="w-32 bg-gray-200 rounded-full h-2 mr-2">
                     <div
-                      className="bg-red-500 h-2 rounded-full"
+                      className="bg-red-500 h-2 rounded-full" // déjà assez vif
                       style={{
                         width: `${
                           (stats.reminderSteps.third / stats.totalReceivables) *
@@ -934,12 +936,13 @@ export default function Dashboard() {
                   </span>
                 </div>
               </div>
+
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">Relance finale</span>
                 <div className="flex items-center">
                   <div className="w-32 bg-gray-200 rounded-full h-2 mr-2">
                     <div
-                      className="bg-purple-500 h-2 rounded-full"
+                      className="bg-purple-500 h-2 rounded-full" // déjà vif et distinctif
                       style={{
                         width: `${
                           (stats.reminderSteps.final / stats.totalReceivables) *
@@ -953,12 +956,13 @@ export default function Dashboard() {
                   </span>
                 </div>
               </div>
+
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">Contentieux</span>
                 <div className="flex items-center">
                   <div className="w-32 bg-gray-200 rounded-full h-2 mr-2">
                     <div
-                      className="bg-red-300 h-2 rounded-full"
+                      className="bg-red-600 h-2 rounded-full" // plus vif que red-300
                       style={{
                         width: `${
                           (stats.reminderSteps.legal / stats.totalReceivables) *
@@ -988,8 +992,9 @@ export default function Dashboard() {
                 </span>
                 <div className="col-span-4 bg-gray-200 h-2 rounded">
                   <div
-                    className="h-2 bg-blue-300 rounded"
+                    className="h-2 rounded"
                     style={{
+                      backgroundColor: "#4F8CFF", // bleu vif
                       width: `${
                         stats.totalClients > 0
                           ? Math.min(
@@ -1015,8 +1020,9 @@ export default function Dashboard() {
                 </span>
                 <div className="col-span-4 bg-gray-200 h-2 rounded">
                   <div
-                    className="h-2 bg-yellow-400 rounded"
+                    className="h-2 rounded"
                     style={{
+                      backgroundColor: "#F6C752", // jaune orangé plus vif
                       width: `${
                         stats.totalReceivables > 0
                           ? Math.min(
@@ -1041,8 +1047,9 @@ export default function Dashboard() {
                 </span>
                 <div className="col-span-4 bg-gray-200 h-2 rounded">
                   <div
-                    className="h-2 bg-green-400 rounded"
+                    className="h-2 rounded"
                     style={{
+                      backgroundColor: "#00C853", // vert plus vif
                       width: `${
                         stats.totalReceivables > 0
                           ? Math.min(
@@ -1068,8 +1075,9 @@ export default function Dashboard() {
                 </span>
                 <div className="col-span-4 bg-gray-200 h-2 rounded">
                   <div
-                    className="h-2 bg-purple-500 rounded"
+                    className="h-2 rounded"
                     style={{
+                      backgroundColor: "#A259FF", // violet vif
                       width: `${
                         stats.totalReceivables > 0
                           ? Math.min(
@@ -1099,9 +1107,9 @@ export default function Dashboard() {
                 </span>
                 <div className="col-span-4 bg-gray-200 h-2 rounded">
                   <div
-                    className="h-2 bg-teal-300 rounded"
+                    className="h-2 rounded"
                     style={{
-                      // On remplit la barre à 100% car c'est une valeur fixe moyenne
+                      backgroundColor: "#1DD2AF", // turquoise vif
                       width: "100%",
                     }}
                   />

@@ -16,6 +16,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { fr } from "date-fns/locale";
 import { Activity } from "lucide-react";
 import { YearPicker } from "../../components/ui/year-picker";
+import { useMemo } from "react";
 
 const monthOrder = [
   "Janvier",
@@ -48,25 +49,24 @@ export default function DashboardLayout() {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-  
+
       if (!user) throw new Error("Utilisateur non authentifié");
-  
+
       const userEmail = user.email;
-  
+
       // 1. Récupère les IDs des utilisateurs qui ont invité l'utilisateur actuel
       const { data: invitedByData, error: invitedByError } = await supabase
         .from("invited_users")
         .select("invited_by")
         .eq("invited_email", userEmail);
-  
+
       if (invitedByError) throw invitedByError;
-  
+
       const invitedByIds = invitedByData.map((entry) => entry.invited_by);
-  
+
       // 2. Inclure l'utilisateur actuel dans les IDs à filtrer
       const allOwnerIds = [user.id, ...invitedByIds];
-  
-      
+
       const { data, error } = await supabase
         .from("receivables")
         .select("due_date, amount, paid_amount")
@@ -87,12 +87,11 @@ export default function DashboardLayout() {
 
         const status = item.status;
         const year = date.getFullYear();
-        const month = date.getMonth(); // 0 = Janvier
+        const month = date.getMonth();
 
         const paid = Number(item.paid_amount || 0);
         const unpaid = Math.max(item.amount - paid, 0);
 
-        // Ignorer les statuts réglés ou à relancer
         if (
           status === "paid" ||
           status?.startsWith("Relance") ||
@@ -140,23 +139,59 @@ export default function DashboardLayout() {
     ];
   }
 
+  const { activityDiff, activityArrow, activityColorClass } = useMemo(() => {
+    if (filteredData.length < 2) {
+      return {
+        activityDiff: 0,
+        activityArrow: "→",
+        activityColorClass: "text-gray-500",
+      };
+    }
+
+    const last = filteredData[1];
+    const prev = filteredData[0];
+
+    const lastTotal = (last.paid || 0) + (last.unpaid || 0);
+    const prevTotal = (prev.paid || 0) + (prev.unpaid || 0);
+
+    const diff = lastTotal - prevTotal;
+    return {
+      activityDiff: diff,
+      activityArrow: diff < 0 ? "↓" : "↑",
+      activityColorClass: diff < 0 ? "text-red-600" : "text-green-600",
+    };
+  }, [filteredData]);
+
   return (
     <div className="rounded-2xl w-full h-full">
       <Card className="p-6 shadow-xl h-full bg-white">
-        <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4 gap-4">
-          <div className="flex items-center space-x-2 mb-2">
-            <div className="bg-blue-100 p-3 rounded-lg">
-              <Activity className="h-6 w-6 text-blue-600" />
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-4">
+          {/* Bloc titre + icône + évolution */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-2 sm:space-y-0">
+            <div className="flex items-center space-x-2">
+              <div className="bg-blue-100 p-3 rounded-lg">
+                <Activity className="h-6 w-6 text-blue-600" />
+              </div>
+              <h2 className="text-xl font-semibold text-gray-800">Activité</h2>
             </div>
-            <h2 className="text-xl font-semibold text-gray-800">Activité</h2>
+            <div
+              className={`inline-flex items-center gap-1 ${activityColorClass}`}
+            >
+              <span className="text-sm font-semibold">{activityArrow}</span>
+              <span className="text-sm font-medium">
+                {Math.abs(activityDiff) === 0
+                  ? "Stable"
+                  : `${formatEuro(Math.abs(activityDiff))}`}
+              </span>
+            </div>
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <YearPicker value={selectedYear} onChange={setSelectedYear} />
             <select
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
-              className="border border-gray-300 text-sm rounded-lg px-3 py-2 text-gray-700 bg-gray-50"
+              className="flex items-center justify-between w-[140px] rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm transition-all hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-ring"
             >
               <option value="">-- Mois (facultatif) --</option>
               {monthOrder.map((month) => (
@@ -189,7 +224,7 @@ export default function DashboardLayout() {
               <Line
                 type="monotone"
                 dataKey="paid"
-                stroke="rgb(74, 222, 128)"
+                stroke="rgb(0, 200, 83)"
                 strokeWidth={2}
                 name="Payé"
                 dot={{ r: 4 }}
@@ -197,7 +232,7 @@ export default function DashboardLayout() {
               <Line
                 type="monotone"
                 dataKey="unpaid"
-                stroke="rgb(255, 147, 147)"
+                stroke="rgb(255, 67, 67)"
                 strokeWidth={2}
                 name="En attente"
                 dot={{ r: 4 }}
