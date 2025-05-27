@@ -1,18 +1,18 @@
-import React, { useEffect, useState } from 'react';
-import Header from '../components/AppHeader';;
-import Footer from '../components/Footer';
-import HeroSection from '../components/help_and_supports/HeroSection';
-import FaqSection from '../components/help_and_supports/FaqSection';
-import SupportOptions from '../components/help_and_supports/SupportOptions';
-import KnowledgeBase from '../components/help_and_supports/KnowledgeBase';
-import ContactForm from '../components/help_and_supports/ContactForm';
-import { checkAuth, supabase } from '../lib/supabase';
-import { User } from '@supabase/supabase-js';
+import React, { useEffect, useState } from "react";
+import Header from "../components/AppHeader";
+import Footer from "../components/Footer";
+import HeroSection from "../components/help_and_supports/HeroSection";
+import FaqSection from "../components/help_and_supports/FaqSection";
+import SupportOptions from "../components/help_and_supports/SupportOptions";
+import KnowledgeBase from "../components/help_and_supports/KnowledgeBase";
+import ContactForm from "../components/help_and_supports/ContactForm";
+import { checkAuth, supabase } from "../lib/supabase";
+import { User } from "@supabase/supabase-js";
+import useChatlingScript from "../lib/useChatling";
 
 const HelpAndSupport: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
   useEffect(() => {
     const initAuth = async () => {
       try {
@@ -37,7 +37,7 @@ const HelpAndSupport: React.FC = () => {
   }, []);
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      {user && (<Header  user={user}/>)}
+      {user && <Header user={user} />}
       <main className="flex-grow">
         <HeroSection />
         <div className="container mx-auto px-4 py-12">

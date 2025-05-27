@@ -275,7 +275,9 @@ export default function ReceivableEditForm({
           //Jet notification
         }
       }
-
+      if (receivable.status === "pending") {
+        await updateClientReminderStatus(receivable.client.id, true);
+      }
       if (data) {
         showSuccess("Mise à jour complète.");
         onReceivableUpdated({
