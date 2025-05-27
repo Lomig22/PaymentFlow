@@ -40,7 +40,6 @@ const DsoChart = () => {
   
       const userEmail = user.email;
   
-      // 1. Récupère les IDs des utilisateurs qui ont invité l'utilisateur actuel
       const { data: invitedByData, error: invitedByError } = await supabase
         .from("invited_users")
         .select("invited_by")
@@ -50,7 +49,6 @@ const DsoChart = () => {
   
       const invitedByIds = invitedByData.map((entry) => entry.invited_by);
   
-      // 2. Inclure l'utilisateur actuel dans les IDs à filtrer
       const allOwnerIds = [user.id, ...invitedByIds];
   
       
@@ -137,7 +135,6 @@ const DsoChart = () => {
 
   const max = Math.max(...filteredData.map((d) => d.value || 0));
 
-  // Correction ici : on accède à .value au lieu de .montant
   const diff = (() => {
     if (filteredData.length < 2) return 0;
     const last = filteredData[filteredData.length - 1].value;
@@ -145,7 +142,7 @@ const DsoChart = () => {
     return last - prev;
   })();
 
-  const isDown = diff < 0;
+  const isDown = diff < 0;  
   const arrow = isDown ? "↓" : "↑";
   const colorClass = isDown ? "text-green-600" : "text-red-600";
 
