@@ -40,7 +40,6 @@ const DsoChart = () => {
   
       const userEmail = user.email;
   
-      // 1. Récupère les IDs des utilisateurs qui ont invité l'utilisateur actuel
       const { data: invitedByData, error: invitedByError } = await supabase
         .from("invited_users")
         .select("invited_by")
@@ -50,7 +49,6 @@ const DsoChart = () => {
   
       const invitedByIds = invitedByData.map((entry) => entry.invited_by);
   
-      // 2. Inclure l'utilisateur actuel dans les IDs à filtrer
       const allOwnerIds = [user.id, ...invitedByIds];
   
       
@@ -137,7 +135,6 @@ const DsoChart = () => {
 
   const max = Math.max(...filteredData.map((d) => d.value || 0));
 
-  // Correction ici : on accède à .value au lieu de .montant
   const diff = (() => {
     if (filteredData.length < 2) return 0;
     const last = filteredData[filteredData.length - 1].value;
@@ -145,7 +142,7 @@ const DsoChart = () => {
     return last - prev;
   })();
 
-  const isDown = diff < 0;
+  const isDown = diff < 0;  
   const arrow = isDown ? "↓" : "↑";
   const colorClass = isDown ? "text-green-600" : "text-red-600";
 
@@ -159,7 +156,9 @@ const DsoChart = () => {
           <h2 className="text-gray-800 font-semibold text-lg">DSO</h2>
           <div className={`inline-flex items-center gap-1 ${colorClass}`}>
             <span className="text-sm font-semibold">{arrow}</span>
-            <span className="text-sm font-medium">{Math.abs(diff)} jour(s)</span>
+            <span className="text-sm font-medium">
+              {Math.abs(diff)} jour(s)
+            </span>
           </div>
         </div>
         <div className="flex gap-3">
@@ -208,7 +207,7 @@ const DsoChart = () => {
                   style={{
                     height: `${(d.value / (max || 1)) * 130}px`,
                     backgroundColor:
-                      i === filteredData.length - 1 ? "#4F8CFF" : "#E0ECFF",
+                      i === filteredData.length - 1 ? "#1E60FF" : "#5CA9FF",
                   }}
                 />
                 <span className="text-xs text-gray-500 mt-2 text-center whitespace-nowrap">

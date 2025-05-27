@@ -1,6 +1,6 @@
-import React from 'react';
-import { Search, HelpCircle } from 'lucide-react';
-import { motion } from 'framer-motion';
+import React from "react";
+import { Search, HelpCircle } from "lucide-react";
+import { motion } from "framer-motion";
 
 const HeroSection: React.FC = () => {
   return (
@@ -16,7 +16,8 @@ const HeroSection: React.FC = () => {
               Comment pouvons-nous vous aider aujourd'hui ?
             </h1>
             <p className="text-lg md:text-xl mb-8">
-              Trouvez des réponses, des tutoriels et du support pour la gestion de trésorerie et des créances de Payment-Flow.
+              Trouvez des réponses, des tutoriels et du support pour la gestion
+              de trésorerie et des créances de Payment-Flow.
             </p>
           </motion.div>
 
@@ -50,16 +51,28 @@ const HeroSection: React.FC = () => {
               <HelpCircle className="h-4 w-4 mr-1" />
               Recherches populaires :
             </span>
-            <a href="#" className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-full transition-colors">
+            <a
+              href="#"
+              className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-full transition-colors"
+            >
               Gestion de trésorerie
             </a>
-            <a href="#" className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-full transition-colors">
+            <a
+              href="#"
+              className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-full transition-colors"
+            >
               Comptes clients
             </a>
-            <a href="#" className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-full transition-colors">
+            <a
+              href="#"
+              className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-full transition-colors"
+            >
               Recouvrement
             </a>
-            <a href="#" className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-full transition-colors">
+            <a
+              href="#"
+              className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-full transition-colors"
+            >
               Configuration automatique
             </a>
           </motion.div>
