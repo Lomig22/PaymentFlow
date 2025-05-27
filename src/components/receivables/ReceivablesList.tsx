@@ -24,6 +24,7 @@ import {
   MoreHorizontal,
   Play,
   PencilIcon,
+  ChevronDown,
 } from "lucide-react";
 import ReceivableForm from "./ReceivableForm";
 import ReceivableEditForm from "./ReceivableEditForm";
@@ -112,6 +113,34 @@ function ReceivablesList() {
   const [subject, setSubject] = useState<string>("");
   const [signature, setSignature] = useState<string>("");
   const [isDropdownAbove, setIsDropdownAbove] = useState(false);
+
+  const columnFilters = [
+    { key: "status", label: "Statut" },
+    { key: "client", label: "Client" },
+    { key: "client_code", label: "Code Client" },
+    { key: "amount", label: "Montant" },
+    { key: "paid_amount", label: "Montant Réglé" },
+    { key: "due_date", label: "Échéance" },
+    { key: "Delay in Days", label: "Retard" },
+  ];
+
+  const [columns, setColumns] = useState([
+    { id: "select", label: "" },
+    { id: "actions", label: "Actions" },
+    { id: "status", label: "Statut" },
+    { id: "client", label: "Client" },
+    { id: "client_code", label: "Code Client" },
+    { id: "email", label: "Email" },
+    { id: "invoice_number", label: "Facture" },
+    { id: "amount", label: "Montant" },
+    { id: "paid_amount", label: "Réglé" },
+    { id: "document_date", label: "Date pièce" },
+    { id: "due_date", label: "Échéance" },
+    { id: "delay", label: "Retard" },
+    { id: "installment_number", label: "N° Échéance" },
+    { id: "notes", label: "Commentaire" },
+    { id: "invoice_pdf_url", label: "Invoice" },
+  ]);
 
   const fetchReceivables = async () => {
     try {
@@ -263,11 +292,10 @@ function ReceivablesList() {
       } else{
 
       } */
-          if (!newStatus)
-{
-newStatus="pending"
-} 
-         await supabase
+          if (!newStatus) {
+            newStatus = "pending";
+          }
+          await supabase
             .from("receivables")
             .update({
               status: newStatus,
@@ -425,6 +453,7 @@ newStatus="pending"
       setDeleting(false);
     }
   };
+
   const handleBulkDelete = async () => {
     if (selectedIds.length === 0) return;
 
@@ -648,6 +677,7 @@ newStatus="pending"
       state: { initialSectionId: "reminders", initialSubTabId: "sender" },
     });
   };
+
   const handleImportSuccess = async (importedCount: number) => {
     setImportSuccess(`${importedCount} créance(s) importée(s) avec succès`);
     const {
@@ -744,9 +774,7 @@ newStatus="pending"
 
     return 0;
   };
-  {
-    /*play/pause */
-  }
+
   const handleAutomaticReminderToggle = async (receivable) => {
     const {
       data: { user },
@@ -791,6 +819,7 @@ newStatus="pending"
       setLoading(false);
     }
   };
+
   const filteredReceivables = receivables
     .filter((receivable) => {
       const searchLower = searchTerm.toLowerCase();
@@ -1006,6 +1035,7 @@ newStatus="pending"
       updateAllReminderStates();
     }
   }, [receivables]);
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       const dropdown = dropdownRefs.current[openDropdownId];
@@ -1034,6 +1064,7 @@ newStatus="pending"
       document.removeEventListener("keydown", handleEscape);
     };
   }, [openDropdownId]);
+
   const resolveStatus = (receivable) => {
     const { status, client } = receivable;
 
@@ -1065,6 +1096,7 @@ newStatus="pending"
     // Statut standard (non concerné par la logique de relance)
     return status;
   };
+
   function getReminderIssues(receivable) {
     const now = new Date();
     const issues: string[] = [];
@@ -1125,6 +1157,29 @@ newStatus="pending"
       </div>
     );
   }
+
+  function renderCell(key: string, r: any) {
+    switch (key) {
+      case "status":
+        return <ReceivableStatusBadge receivable={r} />;
+      case "client":
+        return r.client?.company_name ?? "Inconnu";
+      case "client_code":
+        return r.client?.client_code ?? "Inconnu";
+      case "email":
+        return r.email || r.client.email.split(",")[0];
+      case "invoice_number":
+        return r.invoice_number;
+      case "amount":
+        return new Intl.NumberFormat("fr-FR", {
+          style: "currency",
+          currency: "EUR",
+        }).format(r.amount);
+      default:
+        return "-";
+    }
+  }
+
 
   return (
     <div className="p-6">
@@ -1222,356 +1277,277 @@ newStatus="pending"
         </div>
       )}
 
-      <div className="ml-4 bg-white rounded-lg shadow overflow-hidden">
-        <div className="overflow-x-auto">
-          <table
-            className="min-w-full divide-y divide-gray-200"
-            ref={tableRefs}
-          >
-            <thead className="bg-gray-50">
+      <div className="ml-4 overflow-hidden">
+        {/* Filtres de colonnes */}
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="mb-6 p-4 rounded-xl bg-gradient-to-br from-white via-gray-50 to-white shadow-md flex flex-wrap items-center gap-3 border border-gray-200"
+        >
+          {columnFilters.map((col) => {
+            const isActive = sortConfig?.key === col.key;
+            const isAsc = isActive && sortConfig.sort === "asc";
+
+            return (
+              <motion.button
+                key={col.key}
+                onClick={() => handleSortOnClick(col.key as keyof CSVMapping)}
+                whileHover={{ scale: 1.06 }}
+                whileTap={{ scale: 0.97 }}
+                transition={{ type: "spring", stiffness: 280, damping: 18 }}
+                className={`
+                  relative px-5 py-2.5 text-sm font-semibold transition-all duration-300
+                  rounded-xl overflow-hidden flex items-center gap-2 shadow-sm group border
+                  ${
+                    isActive
+                      ? isAsc
+                        ? "bg-blue-600 text-white border-blue-600"
+                        : "bg-red-600 text-white border-red-600"
+                      : "bg-white text-gray-700 border-gray-300"
+                  }
+                  ${
+                    !isActive &&
+                    "hover:text-white hover:bg-gradient-to-r hover:from-indigo-500 hover:to-blue-500 hover:border-transparent hover:shadow-lg"
+                  }
+                `}
+              >
+                <span className="z-10">{col.label}</span>
+
+                {isActive && (
+                  <motion.span
+                    initial={{ rotate: 0 }}
+                    animate={{ rotate: isAsc ? 180 : 0 }}
+                    transition={{ duration: 0.25 }}
+                    className="z-10"
+                  >
+                    <ChevronDown className="w-4 h-4" />
+                  </motion.span>
+                )}
+
+                {isActive && (
+                  <motion.div
+                    layoutId="activeTab"
+                    className={`absolute inset-0 rounded-xl ${
+                      isAsc ? "bg-blue-600" : "bg-red-600"
+                    }`}
+                    style={{ zIndex: 0 }}
+                  />
+                )}
+
+                {!isActive && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    whileHover={{ opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                    className="absolute inset-0 rounded-xl bg-gradient-to-r from-indigo-500 to-blue-500 z-0 opacity-0"
+                  />
+                )}
+              </motion.button>
+            );
+          })}
+        </motion.div>
+
+        {/* Table */}
+        <div className="overflow-x-auto rounded-xl border border-gray-200">
+          <table className="min-w-full divide-y divide-gray-200 text-sm">
+            <thead className="bg-gray-100 text-gray-800 uppercase text-xs font-semibold">
               <tr>
-                <th className="px-6 py-3">
+                <th className="px-4 py-3 text-left">
                   <input
                     type="checkbox"
                     checked={selectedAll}
                     onChange={handleSelectAll}
-                    className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
+                    className="h-4 w-4 text-blue-600 border-gray-300 rounded"
                     title="Tout sélectionner"
                   />
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  <SortableColHead
-                    colKey="status"
-                    label="Statut"
-                    onClick={(col: string) =>
-                      handleSortOnClick(col as keyof CSVMapping)
-                    }
-                    selectedColKey={sortConfig?.key ?? ""}
-                    sort={sortConfig?.sort ?? "none"}
-                  />
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  <SortableColHead
-                    colKey="client"
-                    label="Client"
-                    onClick={(col: string) =>
-                      handleSortOnClick(col as keyof CSVMapping)
-                    }
-                    selectedColKey={sortConfig?.key ?? ""}
-                    sort={sortConfig?.sort ?? "none"}
-                  />
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  <SortableColHead
-                    colKey="client_code"
-                    label="Code Client"
-                    onClick={(col: string) =>
-                      handleSortOnClick(col as keyof CSVMapping)
-                    }
-                    selectedColKey={sortConfig?.key ?? ""}
-                    sort={sortConfig?.sort ?? "none"}
-                  />
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  <SortableColHead
-                    colKey="email"
-                    label="Email"
-                    onClick={(col: string) =>
-                      handleSortOnClick(col as keyof CSVMapping)
-                    }
-                    selectedColKey={sortConfig?.key ?? ""}
-                    sort={sortConfig?.sort ?? "none"}
-                  />
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  <SortableColHead
-                    colKey="invoice_number"
-                    label="Facture"
-                    onClick={(col: string) =>
-                      handleSortOnClick(col as keyof CSVMapping)
-                    }
-                    selectedColKey={sortConfig?.key ?? ""}
-                    sort={sortConfig?.sort ?? "none"}
-                  />
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  <SortableColHead
-                    colKey="amount"
-                    label="Montant"
-                    onClick={(col: string) =>
-                      handleSortOnClick(col as keyof CSVMapping)
-                    }
-                    selectedColKey={sortConfig?.key ?? ""}
-                    sort={sortConfig?.sort ?? "none"}
-                  />
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  <SortableColHead
-                    colKey="paid_amount"
-                    label="Montant Réglé"
-                    onClick={(col: string) =>
-                      handleSortOnClick(col as keyof CSVMapping)
-                    }
-                    selectedColKey={sortConfig?.key ?? ""}
-                    sort={sortConfig?.sort ?? "none"}
-                  />
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  <SortableColHead
-                    colKey="document_date"
-                    label="Date pièce"
-                    onClick={(col: string) =>
-                      handleSortOnClick(col as keyof CSVMapping)
-                    }
-                    selectedColKey={sortConfig?.key ?? ""}
-                    sort={sortConfig?.sort ?? "none"}
-                  />
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  <SortableColHead
-                    colKey="due_date"
-                    label="Échéance"
-                    onClick={(col: string) =>
-                      handleSortOnClick(col as keyof CSVMapping)
-                    }
-                    selectedColKey={sortConfig?.key ?? ""}
-                    sort={sortConfig?.sort ?? "none"}
-                  />
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  <SortableColHead
-                    colKey="Delay in Days"
-                    label="Retard"
-                    onClick={(col: string) =>
-                      handleSortOnClick(col as keyof CSVMapping)
-                    }
-                    selectedColKey={sortConfig?.key ?? ""}
-                    sort={sortConfig?.sort ?? "none"}
-                  />
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  <SortableColHead
-                    colKey="installment_number"
-                    label="Numéro échéance"
-                    onClick={(col: string) =>
-                      handleSortOnClick(col as keyof CSVMapping)
-                    }
-                    selectedColKey={sortConfig?.key ?? ""}
-                    sort={sortConfig?.sort ?? "none"}
-                  />
-                </th>
-
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Commentaire
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Invoice
-                </th>
+                <th className="px-4 py-3 text-left">Actions</th>
+                <th className="px-4 py-3 text-left">Statut</th>
+                <th className="px-4 py-3 text-left">Client</th>
+                <th className="px-4 py-3 text-left">Code Client</th>
+                <th className="px-4 py-3 text-left">Email</th>
+                <th className="px-4 py-3 text-left">Facture</th>
+                <th className="px-4 py-3 text-left">Montant</th>
+                <th className="px-4 py-3 text-left">Réglé</th>
+                <th className="px-4 py-3 text-left">Date pièce</th>
+                <th className="px-4 py-3 text-left">Échéance</th>
+                <th className="px-4 py-3 text-left">Retard</th>
+                <th className="px-4 py-3 text-left">N° Échéance</th>
+                <th className="px-4 py-3 text-left">Commentaire</th>
+                <th className="px-4 py-3 text-left">Invoice</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+
+            <tbody className="bg-white divide-y divide-gray-100">
               {filteredReceivables.map((receivable) => (
-                <tr key={receivable.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
+                <tr key={receivable.id} className="hover:bg-gray-50 transition">
+                  <td className="px-4 py-3">
                     <input
                       type="checkbox"
                       checked={selectedIds.includes(receivable.id)}
                       onChange={() => handleSelectRow(receivable.id)}
-                      className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
+                      className="h-4 w-4 text-blue-600 border-gray-300 rounded"
                     />
                   </td>
 
-                  <td className="px-6 py-4 whitespace-nowrap relative">
-                    <div className="flex  justify-start">
-                      {/* Bouton menu déroulant */}
-                      <div className="relative">
-                        <div className="flex items-center gap-2 relative z-10">
-                          <button className="flex items-center gap-2 text-gray-600 hover:text-gray-800">
-                            {/* Icône MoreHorizontal */}
-                            <Tooltip label="Options supplémentaires">
-                              <span
-                                ref={(el) =>
-                                  (buttonRefs.current[receivable.id] = el)
-                                }
-                                className="w-6 h-6 flex items-center justify-center cursor-pointer"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  const allowed = handleClick();
-                                  if (!allowed) return;
-                                  setOpenDropdownId(
-                                    openDropdownId === receivable.id
-                                      ? null
-                                      : receivable.id
-                                  );
-                                }}
-                              >
-                                <MoreHorizontal className="w-5 h-5" />
-                              </span>
-                            </Tooltip>
+                  {/* Actions */}
+                  <td className="px-4 py-3 relative">
+                    <div className="flex gap-2 items-center">
+                      <Tooltip label="Options supplémentaires">
+                        <span
+                          ref={(el) => (buttonRefs.current[receivable.id] = el)}
+                          className="w-6 h-6 flex items-center justify-center cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (!handleClick()) return;
+                            setOpenDropdownId(
+                              openDropdownId === receivable.id
+                                ? null
+                                : receivable.id
+                            );
+                          }}
+                        >
+                          <MoreHorizontal className="w-5 h-5 text-gray-600 hover:text-gray-900" />
+                        </span>
+                      </Tooltip>
 
-                            {/* Play/Pause */}
-                            <span
-                              className="w-6 h-6 flex items-center justify-center cursor-pointer"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                const allowed = handleClick();
-                                if (!allowed) return;
-                                handleAutomaticReminderToggle(receivable);
+                      <span
+                        className="w-6 h-6 flex items-center justify-center cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (!handleClick()) return;
+                          handleAutomaticReminderToggle(receivable);
+                        }}
+                      >
+                        {!receivable.automatic_reminder ? (
+                          <Tooltip label="Activer les relances" theme="orange">
+                            <motion.img
+                              src={PlaySvg}
+                              alt="Play"
+                              className="w-5 h-5"
+                              initial={{ scale: 1 }}
+                              animate={{ rotate: 360, scale: 1.2 }}
+                              transition={{
+                                type: "spring",
+                                stiffness: 300,
+                                damping: 20,
                               }}
-                            >
-                              {!receivable.automatic_reminder ? (
-                                <Tooltip
-                                  label="Activer les relances"
-                                  theme="orange"
-                                >
-                                  <motion.img
-                                    src={PlaySvg}
-                                    alt="Play"
-                                    className="w-5 h-5"
-                                    initial={{ scale: 1 }}
-                                    animate={{ rotate: 360, scale: 1.2 }}
-                                    exit={{ scale: 1 }}
-                                    transition={{
-                                      type: "spring",
-                                      stiffness: 300,
-                                      damping: 20,
-                                    }}
-                                  />
-                                </Tooltip>
-                              ) : (
-                                <Tooltip label="Mettre en pause" theme="green">
-                                  <motion.img
-                                    src={PauseSvg}
-                                    alt="Pause"
-                                    className="w-5 h-5"
-                                    initial={{ scale: 1 }}
-                                    animate={{ rotate: 0, scale: 1.2 }}
-                                    exit={{ scale: 1 }}
-                                    transition={{
-                                      type: "spring",
-                                      stiffness: 300,
-                                      damping: 20,
-                                    }}
-                                  />
-                                </Tooltip>
-                              )}
-                            </span>
+                            />
+                          </Tooltip>
+                        ) : (
+                          <Tooltip label="Mettre en pause" theme="green">
+                            <motion.img
+                              src={PauseSvg}
+                              alt="Pause"
+                              className="w-5 h-5"
+                              initial={{ scale: 1 }}
+                              animate={{ scale: 1.2 }}
+                              transition={{
+                                type: "spring",
+                                stiffness: 300,
+                                damping: 20,
+                              }}
+                            />
+                          </Tooltip>
+                        )}
+                      </span>
 
-                            {/* Icône Info */}
-                            {getReminderIssues(receivable) && (
-                              <Tooltip label={getReminderIssues(receivable)}>
-                                <span className="w-6 h-6 flex items-center justify-center text-yellow-500">
-                                  <Info className="w-6 h-6" />
-                                </span>
-                              </Tooltip>
-                            )}
+                      {getReminderIssues(receivable) && (
+                        <Tooltip label={getReminderIssues(receivable)}>
+                          <Info className="w-5 h-5 text-yellow-500" />
+                        </Tooltip>
+                      )}
+                    </div>
+
+                    {/* Dropdown */}
+                    {openDropdownId === receivable.id && (
+                      <div
+                        ref={(el) => (dropdownRefs.current[receivable.id] = el)}
+                        className="absolute z-50 w-56 mt-2 bg-white border border-gray-200 rounded-md shadow-lg"
+                      >
+                        <div className="py-1">
+                          <button
+                            onClick={() => {
+                              setShowEditForm(true);
+                              setSelectedReceivable(receivable);
+                              setOpenDropdownId(null);
+                            }}
+                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            <Edit className="w-4 h-4 mr-2" /> Modifier
+                          </button>
+                          {receivable.status !== "paid" && (
+                            <button
+                              onClick={() => {
+                                setSelectedReceivable(receivable);
+                                setShowConfirmReminder(true);
+                                setOpenDropdownId(null);
+                              }}
+                              className="flex items-center w-full px-4 py-2 text-sm text-yellow-600 hover:bg-yellow-100"
+                            >
+                              <Mail className="w-4 h-4 mr-2" /> Envoyer une
+                              relance
+                            </button>
+                          )}
+                          <button
+                            onClick={() => {
+                              setSelectedClient(receivable.client);
+                              setSelectedReceivable(receivable);
+                              setShowSettings(true);
+                              setOpenDropdownId(null);
+                            }}
+                            className="flex items-center w-full px-4 py-2 text-sm text-gray-600 hover:bg-gray-100"
+                          >
+                            <Clock className="w-4 h-4 mr-2" /> Paramètres de
+                            relance
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSelectedReceivable(receivable);
+                              setShowReminderHistory(true);
+                              setOpenDropdownId(null);
+                            }}
+                            className="flex items-center w-full px-4 py-2 text-sm text-gray-600 hover:bg-gray-100"
+                          >
+                            <ListRestart className="w-4 h-4 mr-2" /> Historique
+                            des relances
+                          </button>
+                          <button
+                            onClick={() => {
+                              handleDeleteClick(receivable);
+                              setOpenDropdownId(null);
+                            }}
+                            className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-100"
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" /> Supprimer
                           </button>
                         </div>
-
-                        {openDropdownId === receivable.id && (
-                          <div
-                            ref={(el) =>
-                              (dropdownRefs.current[receivable.id] = el)
-                            }
-                            className="fixed z-[51] w-48 origin-top-left rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-10 ml-2"
-                            style={{
-                              top: `${dropdownPosition.top}px`,
-                              left: `${dropdownPosition.left}px`,
-                            }}
-                          >
-                            <div className="py-1">
-                              <button
-                                onClick={() => {
-                                  setShowEditForm(true);
-                                  setSelectedReceivable(receivable);
-                                  setOpenDropdownId(null);
-                                }}
-                                className="flex items-center w-full px-2 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                              >
-                                <Edit className="w-4 h-4 mr-2" /> Modifier
-                              </button>
-                              {receivable.status !== "paid" && (
-                                <>
-                                  <button
-                                    onClick={() => {
-                                      setSelectedReceivable(receivable);
-                                      setShowConfirmReminder(true);
-                                      setOpenDropdownId(null);
-                                    }}
-                                    className="flex items-center w-full px-2 py-2 text-sm text-yellow-600 hover:bg-yellow-100"
-                                  >
-                                    <Mail className="w-4 h-4 mr-2" /> Envoyer
-                                    une relance
-                                  </button>
-                                </>
-                              )}
-                              <button
-                                onClick={() => {
-                                  setSelectedClient(receivable.client);
-                                  setSelectedReceivable(receivable);
-                                  setShowSettings(true);
-                                  setOpenDropdownId(null);
-                                }}
-                                className="flex items-center w-full px-2 py-2 text-sm text-gray-600 hover:bg-gray-100"
-                              >
-                                <Clock className="w-4 h-4 mr-2 " /> Paramètres
-                                de relance
-                              </button>
-                              <button
-                                onClick={() => {
-                                  setSelectedReceivable(receivable);
-                                  setShowReminderHistory(true);
-                                  setOpenDropdownId(null);
-                                }}
-                                className="flex items-center w-full px-2 py-2 text-sm text-gray-600 hover:bg-gray-100"
-                              >
-                                <ListRestart className="w-4 h-4 mr-2" />{" "}
-                                Historique des relances
-                              </button>
-                              <button
-                                onClick={() => {
-                                  handleDeleteClick(receivable);
-                                  setOpenDropdownId(null);
-                                }}
-                                className="flex items-center w-full px-2 py-2 text-sm text-red-600 hover:bg-red-100"
-                                ref={(el) =>
-                                  (dropdownRefs.current[receivable.id] = el)
-                                }
-                              >
-                                <Trash2 className="w-4 h-4 mr-2" /> Supprimer
-                              </button>
-                            </div>
-                          </div>
-                        )}
                       </div>
-                    </div>
+                    )}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap flex gap-1 items-center">
-                    {/*jet status */}
+
+                  {/* Données */}
+                  <td className="px-4 py-3">
                     <ReceivableStatusBadge receivable={receivable} />
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-4 py-3">
                     {receivable.client?.company_name ?? "Client inconnu"}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-4 py-3">
                     {receivable.client?.client_code ?? "inconnu"}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-4 py-3">
                     {receivable.email || receivable.client.email.split(",")[0]}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {receivable.invoice_number}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-4 py-3">{receivable.invoice_number}</td>
+                  <td className="px-4 py-3">
                     {new Intl.NumberFormat("fr-FR", {
                       style: "currency",
                       currency: "EUR",
                     }).format(receivable.amount)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-4 py-3">
                     {receivable.paid_amount
                       ? new Intl.NumberFormat("fr-FR", {
                           style: "currency",
@@ -1579,36 +1555,31 @@ newStatus="pending"
                         }).format(receivable.paid_amount)
                       : "-"}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-4 py-3 text-gray-500">
                     {formatDate(receivable.document_date)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-4 py-3 text-gray-500">
                     {new Date(receivable.due_date).toLocaleDateString("fr-FR")}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-4 py-3 text-gray-500">
                     {dateDiff(new Date(receivable.due_date), new Date())}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-4 py-3 text-gray-500">
                     {receivable.installment_number || "-"}
                   </td>
-
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-4 py-3 text-gray-500">
                     {receivable.notes || "-"}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-4 py-3">
                     {receivable.invoice_pdf_url ? (
                       <a
                         href={receivable.invoice_pdf_url}
                         target="_blank"
-                        rel="noopenner noreferrer"
-                        className="grid"
+                        rel="noopener noreferrer"
+                        title="Voir la facture"
+                        className="text-blue-600 hover:text-blue-800"
                       >
-                        <button
-                          className="text-gray-600 hover:text-gray-800"
-                          title="View Invoice"
-                        >
-                          <File className="h-5 w-5" />
-                        </button>
+                        <File className="w-5 h-5" />
                       </a>
                     ) : (
                       "-"
@@ -1618,10 +1589,7 @@ newStatus="pending"
               ))}
               {filteredReceivables.length === 0 && (
                 <tr>
-                  <td
-                    colSpan={9}
-                    className="px-6 py-4 text-center text-gray-500"
-                  >
+                  <td colSpan={15} className="text-center py-6 text-gray-500">
                     Aucune créance trouvée
                   </td>
                 </tr>
@@ -1863,6 +1831,13 @@ newStatus="pending"
           onClose={handleOnClose}
         />
       )}
+      <style>
+        {`
+          [data-framer-motion-layout-id="activeTab"] {
+            transition: all 0.3s ease-in-out;
+          }
+        `}
+      </style>
     </div>
   );
 }
