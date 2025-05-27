@@ -19,6 +19,8 @@ export default function useAbonnementCheck() {
       const user = sessionData?.session?.user;
 
       if (!user) {
+        console.log("tsy mis user session");
+        
         setIsExpired(true);
         setLoading(false);
         return;
