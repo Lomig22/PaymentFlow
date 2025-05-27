@@ -223,13 +223,13 @@ function MemberList() {
               <p>Vous êtes invités à rejoindre un espace de travail <strong>payment-flow</strong> !</p>
               <p>Pour accepter l'invitation, cliquez sur le bouton ci-dessous :</p>
               <div style="text-align: center; margin: 30px 0;">
-                <a href="https://lomig.onirtech.com/login" 
+                <a href="https://payment-flow.fr/login" 
                    style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
                    Rejoindre maintenant
                 </a>
               </div>
               <p>Ou copiez ce lien dans votre navigateur :</p>
-              <p><a href="https://lomig.onirtech.com/login" style="color: #2563eb;">https://lomig.onirtech.com/login</a></p>
+              <p><a href="https://payment-flow.fr/login" style="color: #2563eb;">https://payment-flow.fr/login</a></p>
               <p style="margin-top: 30px;">Merci,<br>L’équipe Payment-Flow</p>
             </div>
           </div>
