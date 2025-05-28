@@ -42,18 +42,21 @@ export default function SignatureSettings() {
     console.log("Action autorisée !");
     return true;
   };
+
   const showError = (message: string) => {
     setError(message);
     setTimeout(() => {
       setError(null);
     }, 3000);
   };
+
   const showSuccess = (message: string) => {
     setSuccess(message);
     setTimeout(() => {
       setSuccess(null);
     }, 3000);
   };
+
   const themes = {
     classique: {
       font: "Arial",
@@ -76,6 +79,7 @@ export default function SignatureSettings() {
       bgColor: bgColor || "#ffffff",
     },
   };
+
   const uploadLogo = async (file) => {
     const {
       data: { session },
@@ -112,6 +116,15 @@ export default function SignatureSettings() {
   };
 
   const applyTheme = themes[selectedTheme];
+
+  useEffect(() => {
+    if (selectedTheme === "custom") {
+      setCustomOpen(true);
+    } else {
+      setCustomOpen(false);
+    }
+  }, [selectedTheme]);
+
   const saveToSupabase = async () => {
     const {
       data: { session },
@@ -143,6 +156,7 @@ export default function SignatureSettings() {
       showSuccess("Signature enregistrée avec succès !");
     }
   };
+
   useEffect(() => {
     const loadFromSupabase = async () => {
       const {
@@ -169,7 +183,6 @@ export default function SignatureSettings() {
         const el = doc.querySelector(selector);
         if (!el) return "";
         const text = el.textContent?.trim() || "";
-        // S'il y a un ":", on prend ce qu’il y a après, sinon on garde tout
         const parts = text.split(":");
         return parts.length > 1 ? parts.slice(1).join(":").trim() : text;
       };
@@ -187,6 +200,32 @@ export default function SignatureSettings() {
       setLogoUrl(
         doc.querySelector(".signature-logo")?.getAttribute("src") || ""
       );
+      if (data?.signature_template === "custom") {
+        const containerDiv = doc.querySelector(
+          "div[style*='background-color']"
+        );
+        const table = doc.querySelector("table[style]");
+
+        const extractInlineStyle = (
+          el: Element | null,
+          prop: string
+        ): string => {
+          if (!el) return "";
+          const styleAttr = el.getAttribute("style") || "";
+          const match = styleAttr.match(new RegExp(`${prop}\\s*:\\s*([^;]+)`));
+          return match ? match[1].trim() : "";
+        };
+
+        const bg =
+          extractInlineStyle(containerDiv, "background-color") || "#ffffff";
+        const color = extractInlineStyle(table, "color") || "#000000";
+        const font = extractInlineStyle(table, "font-family") || "Arial";
+
+        setBgColor(bg);
+        setTextColor(color);
+        setFont(font);
+      }
+
     };
 
     loadFromSupabase();
