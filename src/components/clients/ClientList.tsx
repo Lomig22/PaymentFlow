@@ -1,7 +1,15 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { Client, ReminderProfile } from "../../types/database";
-import { Search, Edit, Trash2, X, Info, MoreHorizontal } from "lucide-react";
+import {
+  Search,
+  Edit,
+  Trash2,
+  X,
+  Info,
+  MoreHorizontal,
+  ChevronDown,
+} from "lucide-react";
 import ClientForm from "./ClientForm";
 import CSVImportModal, { CSVMapping } from "./CSVImportModal";
 import SortableColHead from "../Common/SortableColHead";
@@ -12,6 +20,7 @@ import {
 } from "../../lib/comparers";
 import Swal from "sweetalert2";
 import { useAbonnement } from "../context/AbonnementContext";
+import { motion } from "framer-motion";
 
 type ClientListProps = {
   showForm: boolean;
@@ -56,8 +65,8 @@ function ClientList({
   const [selectedClientIds, setSelectedClientIds] = useState<string[]>([]);
   const handleClick = () => {
     if (!checkAbonnement()) return;
-  //  console.log("Action autorisée !");
-    return true
+    //  console.log("Action autorisée !");
+    return true;
   };
   const showError = (message: string) => {
     setError(message);
@@ -65,7 +74,7 @@ function ClientList({
       setError(null);
     }, 3000);
   };
-/*   const showSuccess = (message: string) => {
+  /*   const showSuccess = (message: string) => {
     setSuccess(message);
     setTimeout(() => {
       setSuccess(null);
@@ -183,7 +192,7 @@ function ClientList({
 
       if (!dropdown) return;
 
-     /*  const dropdownHeight = dropdown.getBoundingClientRect().height;
+      /*  const dropdownHeight = dropdown.getBoundingClientRect().height;
       const tableHeight = table.offsetHeight;
  
         if (mousePosition.y > tableHeight) {
@@ -199,6 +208,16 @@ function ClientList({
       //    }
     }
   }, [openDropdownId]);
+
+  const columnFilters = [
+    { key: "status", label: "Statut" },
+    { key: "client", label: "Client" },
+    { key: "client_code", label: "Code Client" },
+    { key: "amount", label: "Montant" },
+    { key: "paid_amount", label: "Montant Réglé" },
+    { key: "due_date", label: "Échéance" },
+    { key: "delay_in_days", label: "Retard" },
+  ];
 
   const handleDeleteClick = (client: Client) => {
     setClientToDelete(client);
@@ -298,15 +317,14 @@ function ClientList({
       if (receivablesError) throw receivablesError;
       // Suppression des clients via Supabase
       const { data, error } = await supabase
-        .from("clients") 
+        .from("clients")
         .delete()
-        .in("id", selectedClientIds); 
+        .in("id", selectedClientIds);
 
       if (error) {
         throw new Error(error.message);
       }
 
-      
       // Par exemple, filtrer les clients supprimés de la liste affichée
       console.log("Clients supprimés:", data);
     } catch (error) {
@@ -455,15 +473,81 @@ function ClientList({
         </div>
       )}
 
-      <div className="ml-4 bg-white rounded-lg shadow overflow-hidden">
-        <div className="overflow-x-auto">
-          <table
-            className="min-w-full divide-y divide-gray-200"
-            ref={tableRefs}
-          >
-            <thead className="bg-gray-50">
+      <div className="ml-4 overflow-hidden">
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="mb-6 p-4 rounded-xl bg-gradient-to-br from-white via-gray-50 to-white shadow-md flex flex-wrap items-center gap-3 border border-gray-200"
+        >
+          {columnFilters.map((col) => {
+            const isActive = sortConfig?.key === col.key;
+            const isAsc = isActive && sortConfig.sort === "asc";
+
+            return (
+              <motion.button
+                key={col.key}
+                onClick={() => handleSortOnClick(col.key as keyof CSVMapping)}
+                whileHover={{ scale: 1.06 }}
+                whileTap={{ scale: 0.97 }}
+                transition={{ type: "spring", stiffness: 280, damping: 18 }}
+                className={`
+                  relative px-5 py-2.5 text-sm font-semibold transition-all duration-300
+                  rounded-xl overflow-hidden flex items-center gap-2 shadow-sm group border
+                  ${
+                    isActive
+                      ? isAsc
+                        ? "bg-blue-600 text-white border-blue-600"
+                        : "bg-red-600 text-white border-red-600"
+                      : "bg-white text-gray-700 border-gray-300"
+                  }
+                  ${
+                    !isActive &&
+                    "hover:text-white hover:bg-gradient-to-r hover:from-indigo-500 hover:to-blue-500 hover:border-transparent hover:shadow-lg"
+                  }
+                `}
+              >
+                <span className="z-10">{col.label}</span>
+
+                {isActive && (
+                  <motion.span
+                    initial={{ rotate: 0 }}
+                    animate={{ rotate: isAsc ? 180 : 0 }}
+                    transition={{ duration: 0.25 }}
+                    className="z-10"
+                  >
+                    <ChevronDown className="w-4 h-4" />
+                  </motion.span>
+                )}
+
+                {isActive && (
+                  <motion.div
+                    layoutId="activeTab"
+                    className={`absolute inset-0 rounded-xl ${
+                      isAsc ? "bg-blue-600" : "bg-red-600"
+                    }`}
+                    style={{ zIndex: 0 }}
+                  />
+                )}
+
+                {!isActive && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    whileHover={{ opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                    className="absolute inset-0 rounded-xl bg-gradient-to-r from-indigo-500 to-blue-500 z-0 opacity-0"
+                  />
+                )}
+              </motion.button>
+            );
+          })}
+        </motion.div>
+
+        <div className="overflow-x-auto rounded-xl border border-gray-200">
+          <table className="min-w-full divide-y divide-gray-200 text-sm">
+            <thead className="bg-gray-100 text-gray-800 uppercase text-xs font-semibold">
               <tr>
-                <th className="px-6 py-3">
+                <th className="px-4 py-3 text-left">
                   <input
                     type="checkbox"
                     checked={
