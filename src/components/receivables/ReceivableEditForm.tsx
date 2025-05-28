@@ -269,15 +269,15 @@ export default function ReceivableEditForm({
               showError("La notification par email a échouée!");
             }
           }
-        }
+        }/* 
         if (noOtherUnpaidReceivables) {
           await updateClientReminderStatus(receivable.client.id, false);
           //Jet notification
-        }
+        } */
       }
-      if (receivable.status === "pending") {
+    //  if (receivable.status === "pending") {
         await updateClientReminderStatus(receivable.client.id, true);
-      }
+    //  }
       if (data) {
         showSuccess("Mise à jour complète.");
         onReceivableUpdated({
