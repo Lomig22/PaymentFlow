@@ -264,16 +264,26 @@ export async function sendManualReminder(
 			finalContent,
 			receivable.invoice_pdf_url
 		);
-
 		if (emailSent) {
 			// Enregistrer la relance
-			await supabase.from('reminders').insert({
+			const client = receivable.client;
+
+			if (
+			  client.reminder_enable_1 ||
+			  client.reminder_enable_2 ||
+			  client.reminder_enable_3 ||
+			  client.reminder_enable_finale ||
+			  client.pre_reminder_enable
+			) {
+			  await supabase.from('reminders').insert({
 				receivable_id: receivableId,
 				reminder_type: level,
 				reminder_date: new Date().toISOString(),
 				email_sent: true,
 				email_content: finalContent,
-			});
+			  });
+			}
+			
 		//	alert("level:"+level)
 			
 			// Mettre à jour le statut

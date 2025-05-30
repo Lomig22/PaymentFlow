@@ -16,7 +16,7 @@ const SupportOptions: React.FC = () => {
       title: 'Support téléphonique',
       description: 'Parlez directement avec un spécialiste',
       icon: <PhoneCall className="h-8 w-8 text-blue-500" />,
-      action: '+33 1 23 45 67 89',
+      action: '+33637018517',
       available: true,
       time: 'Lun-Ven, 9h-18h',
     },
@@ -51,9 +51,25 @@ const SupportOptions: React.FC = () => {
                 <h4 className="font-medium text-gray-800">{option.title}</h4>
                 <p className="text-gray-600 text-sm">{option.description}</p>
                 <div className="mt-2 flex justify-between items-center">
-                  <button className="text-blue-600 hover:text-blue-800 font-medium text-sm transition-colors focus:outline-none">
-                    {option.action}
-                  </button>
+                <button
+  className="text-blue-600 hover:text-blue-800 font-medium text-sm transition-colors focus:outline-none"
+  onClick={() => {
+    if (option.title === "Chat en direct") {
+      if (window.Chatling && typeof window.Chatling.open === "function") {
+        window.Chatling.open();
+      } else {
+        console.warn("Chatling n’est pas encore chargé.");
+      }
+    } else if (option.title === "Support par email") {
+      window.location.href = "mailto:contact@payment-flow.fr";
+    } else if (option.title === "Support téléphonique") {
+      window.location.href = `tel:${option.action}`;
+    }
+  }}
+>
+  {option.action}
+</button>
+
                   <div className="flex items-center text-xs text-gray-500">
                     <Clock className="h-3 w-3 mr-1" />
                     {option.time}
