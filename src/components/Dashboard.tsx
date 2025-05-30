@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import {
   BarChart3,
@@ -77,7 +77,25 @@ export default function Dashboard() {
     },
   });
   const [success, setSuccess] = useState<string | null>(null);
-	const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   const showError = (message: string) => {
     setError(message);
     setTimeout(() => {
@@ -221,25 +239,24 @@ export default function Dashboard() {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-  
+
       if (!user) throw new Error("Utilisateur non authentifié");
-  
+
       const userEmail = user.email;
-  
+
       // 1. Récupère les IDs des utilisateurs qui ont invité l'utilisateur actuel
       const { data: invitedByData, error: invitedByError } = await supabase
         .from("invited_users")
         .select("invited_by")
         .eq("invited_email", userEmail);
-  
+
       if (invitedByError) throw invitedByError;
-  
+
       const invitedByIds = invitedByData.map((entry) => entry.invited_by);
-  
+
       // 2. Inclure l'utilisateur actuel dans les IDs à filtrer
       const allOwnerIds = [user.id, ...invitedByIds];
-  
-      
+
       // console.log("user: ", user?.id);
       const { data, error } = await supabase
         .from("notifications")
@@ -340,73 +357,77 @@ export default function Dashboard() {
     const {
       data: { user },
     } = await supabase.auth.getUser();
-  
+
     try {
       if (!user) throw new Error("Utilisateur non authentifié");
-  
+
       const userEmail = user.email;
-  
+
       // 1. Récupérer les IDs des utilisateurs qui ont invité cet utilisateur
       const { data: invitedByData, error: invitedByError } = await supabase
         .from("invited_users")
         .select("invited_by")
         .eq("invited_email", userEmail);
-  
+
       if (invitedByError) throw invitedByError;
-  
-      const invitedByIds = invitedByData.map(entry => entry.invited_by);
+
+      const invitedByIds = invitedByData.map((entry) => entry.invited_by);
       const allOwnerIds = [user.id, ...invitedByIds];
-  
+
       // 2. Récupérer les clients
       const { data: clientsData, error: clientsError } = await supabase
         .from("clients")
         .select("*")
         .in("owner_id", allOwnerIds);
-  
+
       if (clientsError) throw clientsError;
-  
+
       // 3. Récupérer les créances avec leurs clients
       const { data: receivablesData, error: receivablesError } = await supabase
         .from("receivables")
         .select(`*, client:clients(*)`)
         .in("owner_id", allOwnerIds);
-  
+
       if (receivablesError) throw receivablesError;
-  
+
       // 4. Calcul des statistiques
       const totalClients = clientsData?.length || 0;
       const clientsNeedingReminder =
-        clientsData?.filter(c => c.needs_reminder)?.length || 0;
-  
+        clientsData?.filter((c) => c.needs_reminder)?.length || 0;
+
       const receivables = receivablesData || [];
       const totalReceivables = receivables.length;
       const totalAmount = receivables.reduce((sum, r) => sum + r.amount, 0);
-  
+
       const today = new Date();
       const overdueReceivables = receivables.filter(
-        r => new Date(r.due_date) < today
+        (r) => new Date(r.due_date) < today
       );
       const overdueAmount = overdueReceivables.reduce(
         (sum, r) => sum + r.amount,
         0
       );
-  
+
       const delays = receivables
-        .filter(r => r.status === "paid")
-        .map(r => {
+        .filter((r) => r.status === "paid")
+        .map((r) => {
           const dueDate = new Date(r.due_date);
           const paidDate = new Date(r.updated_at);
           return Math.max(
             0,
-            Math.ceil((paidDate.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24))
+            Math.ceil(
+              (paidDate.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24)
+            )
           );
         });
-  
+
       const averagePaymentDelay =
         delays.length > 0
-          ? Math.round(delays.reduce((sum, delay) => sum + delay, 0) / delays.length)
+          ? Math.round(
+              delays.reduce((sum, delay) => sum + delay, 0) / delays.length
+            )
           : 0;
-  
+
       const reminderSteps = {
         first: 0,
         second: 0,
@@ -414,7 +435,7 @@ export default function Dashboard() {
         final: 0,
         legal: 0,
       };
-  
+
       receivables.forEach((r) => {
         if (r.status === "legal") reminderSteps.legal++;
         if (r.status === "Relance 1") reminderSteps.first++;
@@ -422,12 +443,13 @@ export default function Dashboard() {
         if (r.status === "Relance 3") reminderSteps.third++;
         if (r.status === "Relance finale") reminderSteps.final++;
       });
-  
+
       setStats({
         totalClients,
         clientsNeedingReminder,
         activeReminders: overdueReceivables.length,
-        resolvedReminders: receivables.filter((r) => r.status === "paid").length,
+        resolvedReminders: receivables.filter((r) => r.status === "paid")
+          .length,
         totalReceivables,
         totalAmount,
         overdueAmount,
@@ -441,7 +463,6 @@ export default function Dashboard() {
       setLoading(false);
     }
   };
-  
 
   const [notifications, setNotifications] = useState([]);
   const [filter, setFilter] = useState("unread"); // 'all', 'read', 'unread'
@@ -613,7 +634,7 @@ export default function Dashboard() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="rounded-2xl shadow bg-white p-6 max-h-[300px] overflow-y-auto">
+              <div className="rounded-2xl shadow bg-white p-6 max-h-[300px] min-h-[270px] overflow-y-auto">
                 <div className="flex items-center space-x-2 mb-2">
                   <div className="bg-yellow-100 p-3 rounded-lg">
                     <Bell className="h-6 w-6 text-yellow-600" />
@@ -624,34 +645,35 @@ export default function Dashboard() {
                 </div>
 
                 <div className="mb-3 flex gap-2">
-                  <div className="relative inline-block text-left mb-4">
-                    <div>
-                      <button
-                        type="button"
-                        className="inline-flex justify-center mt-5 w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
-                        onClick={() => setDropdownOpen(!dropdownOpen)}
+                  <div
+                    className="relative inline-block text-left mb-4"
+                    ref={dropdownRef}
+                  >
+                    <button
+                      type="button"
+                      className="inline-flex justify-center mt-5 w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
+                      onClick={() => setDropdownOpen(!dropdownOpen)}
+                    >
+                      Filtre :{" "}
+                      {filter === "all"
+                        ? "Toutes"
+                        : filter === "unread"
+                        ? "Non lues"
+                        : "Lues"}
+                      <svg
+                        className="-mr-1 ml-2 h-5 w-5"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        aria-hidden="true"
                       >
-                        Filtre :{" "}
-                        {filter === "all"
-                          ? "Toutes"
-                          : filter === "unread"
-                          ? "Non lues"
-                          : "Lues"}
-                        <svg
-                          className="-mr-1 ml-2 h-5 w-5"
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                          aria-hidden="true"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M5.23 7.21a.75.75 0 011.06.02L10 11.584l3.71-4.354a.75.75 0 111.14.976l-4.25 5a.75.75 0 01-1.14 0l-4.25-5a.75.75 0 01.02-1.06z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                      </button>
-                    </div>
+                        <path
+                          fillRule="evenodd"
+                          d="M5.23 7.21a.75.75 0 011.06.02L10 11.584l3.71-4.354a.75.75 0 111.14.976l-4.25 5a.75.75 0 01-1.14 0l-4.25-5a.75.75 0 01.02-1.06z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </button>
 
                     {dropdownOpen && (
                       <div className="absolute z-10 mt-2 w-40 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">

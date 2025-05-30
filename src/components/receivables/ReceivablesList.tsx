@@ -25,6 +25,12 @@ import {
   Play,
   PencilIcon,
   ChevronDown,
+  Calendar,
+  DollarSign,
+  User,
+  Tag,
+  Key,
+  Filter,
 } from "lucide-react";
 import ReceivableForm from "./ReceivableForm";
 import ReceivableEditForm from "./ReceivableEditForm";
@@ -48,7 +54,7 @@ import ReceivableStatusBadge from "./receivableStatusBadge";
 import Tooltip from "../Common/Tooltip";
 import PlaySvg from "../../components/images/play-svgrepo-com.svg";
 import PauseSvg from "../../components/images/pause-svgrepo-com.svg";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { log } from "console";
 import { useAbonnement } from "../context/AbonnementContext";
 
@@ -74,6 +80,11 @@ function ReceivablesList() {
   const [showImportModal, setShowImportModal] = useState(false);
   const [importSuccess, setImportSuccess] = useState<string | null>(null);
   const [sendSuccess, setSendSuccess] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [sortConfig, setSortConfig] = useState<{
+    key: "client";
+    sort: "asc" | "desc";
+  } | null>(null);
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [receivableToDelete, setReceivableToDelete] = useState<
@@ -87,10 +98,6 @@ function ReceivablesList() {
   const [reminderProfiles, setReminderProfiles] = useState<ReminderProfile[]>(
     []
   );
-  const [sortConfig, setSortConfig] = useState<SortColumnConfig | null>({
-    key: "client",
-    sort: "asc",
-  });
   const [reminderTitles, setReminderTitles] = useState<Record<string, string>>(
     {}
   );
@@ -141,6 +148,27 @@ function ReceivablesList() {
     { id: "notes", label: "Commentaire" },
     { id: "invoice_pdf_url", label: "Invoice" },
   ]);
+
+  const getFilterIcon = (key: string) => {
+    switch (key) {
+      case "status":
+        return <Info className="h-4 w-4" />;
+      case "client":
+        return <User className="h-4 w-4" />;
+      case "client_code":
+        return <Key className="h-4 w-4" />;
+      case "amount":
+        return <DollarSign className="h-4 w-4" />;
+      case "paid_amount":
+        return <DollarSign className="h-4 w-4" />;
+      case "due_date":
+        return <Calendar className="h-4 w-4" />;
+      case "Delay in Days":
+        return <Clock className="h-4 w-4" />;
+      default:
+        return <Tag className="h-4 w-4" />;
+    }
+  };
 
   const fetchReceivables = async () => {
     try {
@@ -228,7 +256,7 @@ function ReceivablesList() {
         .eq("id", selectedReceivable?.client?.id)
         .select()
         .single();
-      console.log("client data updated", clientData);
+      // console.log("client data updated", clientData);
       if (error) throw error;
     };
 
@@ -956,12 +984,12 @@ function ReceivablesList() {
       !preAlreadySend &&
       client.pre_reminder_date
     ) {
-      console.log(
-        "client: ",
-        client.company_name,
-        " preAlreadySend:",
-        preAlreadySend
-      );
+      // console.log(
+      //   "client: ",
+      //   client.company_name,
+      //   " preAlreadySend:",
+      //   preAlreadySend
+      // );
       if (isBefore(new Date(client.pre_reminder_date), now)) {
         issues.push("La pré-relance est dépassée");
       }
@@ -982,7 +1010,7 @@ function ReceivablesList() {
       !reminder2AlreadySend &&
       client.reminder_date_2
     ) {
-      console.log("relance 2 already send:", reminder2AlreadySend);
+      // console.log("relance 2 already send:", reminder2AlreadySend);
 
       if (isBefore(new Date(client.reminder_date_2), now)) {
         issues.push("La relance 2 est dépassée");
@@ -994,7 +1022,7 @@ function ReceivablesList() {
       !reminder3AlreadySend &&
       client.reminder_date_3
     ) {
-      console.log("relance 3 already send:", reminder3AlreadySend);
+      // console.log("relance 3 already send:", reminder3AlreadySend);
 
       if (isBefore(new Date(client.reminder_date_3), now)) {
         issues.push("La relance 3 est dépassée");
@@ -1006,7 +1034,7 @@ function ReceivablesList() {
       !reminderFinalAlreadySend &&
       client.reminder_date_final
     ) {
-      console.log("relance final already send:", reminderFinalAlreadySend);
+      // console.log("relance final already send:", reminderFinalAlreadySend);
 
       if (isBefore(new Date(client.reminder_date_final), now)) {
         issues.push("La relance finale est dépassée");
@@ -1180,7 +1208,6 @@ function ReceivablesList() {
     }
   }
 
-
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
@@ -1241,112 +1268,140 @@ function ReceivablesList() {
           Relance manuelle effectuée correctement !
         </div>
       )}
-      <div className="ml-4 relative mb-6">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-        <input
-          type="text"
-          placeholder="Rechercher..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10 w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        />
-      </div>
-      {selectedIds.length > 0 && (
-        <div className="ml-4 mb-2 text-sm text-gray-700 flex items-center gap-3">
-          {selectedIds.length}{" "}
-          {selectedIds.length > 1
-            ? "éléments sélectionnés"
-            : "élément sélectionné"}{" "}
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              const allowed = handleClick();
-              if (!allowed) return;
-              handleBulkDeleteConfirmation();
-            }}
-            disabled={selectedIds.length === 0}
-            className={`inline-flex items-center gap-1 px-4 py-1.5 rounded-lg text-sm font-semibold transition duration-200 ${
-              selectedIds.length === 0
-                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                : "bg-red-600 text-white  hover:bg-red-200"
-            }`}
-          >
-            Supprimer la sélection
-          </button>
+
+      <div className="space-y-4 ml-4">
+        {/* Barre de recherche */}
+        <div className="relative rounded-md shadow-sm">
+          <input
+            type="text"
+            placeholder="Rechercher..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full rounded-md border border-gray-300 bg-white py-2.5 pl-10 pr-4 text-sm text-gray-700 placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition"
+          />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
         </div>
-      )}
 
-      <div className="ml-4 overflow-hidden">
-        {/* Filtres de colonnes */}
-        <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="mb-6 p-4 rounded-xl bg-gradient-to-br from-white via-gray-50 to-white shadow-md flex flex-wrap items-center gap-3 border border-gray-200"
-        >
-          {columnFilters.map((col) => {
-            const isActive = sortConfig?.key === col.key;
-            const isAsc = isActive && sortConfig.sort === "asc";
+        {/* Sélection actuelle */}
+        {selectedIds.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -5 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="flex items-center justify-between rounded-md border border-gray-200 bg-white px-4 py-2.5 shadow-sm"
+          >
+            <span className="text-sm text-gray-700">
+              {selectedIds.length}{" "}
+              {selectedIds.length > 1
+                ? "éléments sélectionnés"
+                : "élément sélectionné"}
+            </span>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                const allowed = handleClick();
+                if (!allowed) return;
+                handleBulkDeleteConfirmation();
+              }}
+              disabled={selectedIds.length === 0}
+              className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium transition
+        ${
+          selectedIds.length === 0
+            ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+            : "bg-red-500 text-white hover:bg-red-600"
+        }`}
+            >
+              <Trash className="h-4 w-4" />
+              Supprimer
+            </button>
+          </motion.div>
+        )}
 
-            return (
-              <motion.button
-                key={col.key}
-                onClick={() => handleSortOnClick(col.key as keyof CSVMapping)}
-                whileHover={{ scale: 1.06 }}
-                whileTap={{ scale: 0.97 }}
-                transition={{ type: "spring", stiffness: 280, damping: 18 }}
-                className={`
-                  relative px-5 py-2.5 text-sm font-semibold transition-all duration-300
-                  rounded-xl overflow-hidden flex items-center gap-2 shadow-sm group border
-                  ${
-                    isActive
-                      ? isAsc
-                        ? "bg-blue-600 text-white border-blue-600"
-                        : "bg-red-600 text-white border-red-600"
-                      : "bg-white text-gray-700 border-gray-300"
-                  }
-                  ${
-                    !isActive &&
-                    "hover:text-white hover:bg-gradient-to-r hover:from-indigo-500 hover:to-blue-500 hover:border-transparent hover:shadow-lg"
-                  }
-                `}
+        {/* Section de filtres */}
+        <div className="relative" style={{ marginBottom: "4vh" }}>
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-white font-medium shadow-md
+                   hover:bg-blue-700 transition-all duration-300 ease-in-out
+                   focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75"
+          >
+            {showFilters ? (
+              <>
+                <X className="h-5 w-5" />
+                <span>Masquer les filtres</span>
+              </>
+            ) : (
+              <>
+                <Filter className="h-5 w-5" />
+                <span>Afficher les filtres</span>
+              </>
+            )}
+          </button>
+
+          <AnimatePresence>
+            {showFilters && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
+                className="absolute z-10 mt-3 rounded-md border border-gray-200 bg-white shadow-lg p-4 w-fit min-w-[200px]"
               >
-                <span className="z-10">{col.label}</span>
+                <div className="flex flex-wrap items-center gap-2">
+                  {columnFilters.map((col) => {
+                    const isActive = sortConfig?.key === col.key;
+                    const isAsc = isActive && sortConfig.sort === "asc";
 
-                {isActive && (
-                  <motion.span
-                    initial={{ rotate: 0 }}
-                    animate={{ rotate: isAsc ? 180 : 0 }}
-                    transition={{ duration: 0.25 }}
-                    className="z-10"
-                  >
-                    <ChevronDown className="w-4 h-4" />
-                  </motion.span>
-                )}
+                    return (
+                      <button
+                        key={col.key}
+                        onClick={() => handleSortOnClick(col.key)}
+                        className={`
+                          relative flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg
+                          backdrop-blur-sm
+                          border border-opacity-30
+                          transition-all duration-300 ease-in-out transform
+                          
+                          ${
+                            isActive
+                              ? isAsc
+                                ? "bg-blue-500/20 text-blue-800 border-blue-400/50 shadow-md"
+                                : "bg-red-500/20 text-red-800 border-red-400/50 shadow-md"
+                              : "bg-gray-100/30 text-gray-700 border-gray-300/50 hover:bg-gray-200/40"
+                          }
 
-                {isActive && (
-                  <motion.div
-                    layoutId="activeTab"
-                    className={`absolute inset-0 rounded-xl ${
-                      isAsc ? "bg-blue-600" : "bg-red-600"
-                    }`}
-                    style={{ zIndex: 0 }}
-                  />
-                )}
+                          hover:scale-[1.02] hover:shadow-lg
+                          focus:outline-none focus:ring-2 focus:ring-offset-2
+                          ${
+                            isActive
+                              ? isAsc
+                                ? "focus:ring-blue-300"
+                                : "focus:ring-red-300"
+                              : "focus:ring-gray-400"
+                          }
+                        `}
+                      >
+                        <span className="relative z-10 flex items-center gap-1.5">
+                          {getFilterIcon(col.key)}
+                          <span>{col.label}</span>
+                        </span>
 
-                {!isActive && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    whileHover={{ opacity: 1 }}
-                    transition={{ duration: 0.3 }}
-                    className="absolute inset-0 rounded-xl bg-gradient-to-r from-indigo-500 to-blue-500 z-0 opacity-0"
-                  />
-                )}
-              </motion.button>
-            );
-          })}
-        </motion.div>
+                        {isActive && (
+                          <ChevronDown
+                            className={`h-4 w-4 transition-transform duration-300 ${
+                              isAsc ? "rotate-180" : ""
+                            }`}
+                          />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
         {/* Table */}
         <div className="overflow-x-auto rounded-xl border border-gray-200">
