@@ -630,190 +630,24 @@ function ClientList({
                         setSelectedClientIds([]);
                       }
                     }}
-                    className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
+                    className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                     title="Tout sélectionner"
                   />
                 </th>
-
-                <th
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider"
-                  style={{ maxWidth: "80px" }}
-                >
-                  Actions
-                </th>
-                <th
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider"
-                  style={{ maxWidth: "80px" }}
-                >
-                  <SortableColHead
-                    colKey="reminderProfile"
-                    label="Profil de rappel"
-                    onClick={(col: string) =>
-                      handleSortOnClick(col as keyof CSVMapping)
-                    }
-                    selectedColKey={sortConfig?.key ?? ""}
-                    sort={sortConfig?.sort ?? "none"}
-                  />
-                </th>
-
-                <th
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider"
-                  style={{ maxWidth: "80px" }}
-                >
-                  <SortableColHead
-                    colKey="needs_reminder"
-                    label="Relance"
-                    onClick={(col: string) =>
-                      handleSortOnClick(col as keyof CSVMapping)
-                    }
-                    selectedColKey={sortConfig?.key ?? ""}
-                    sort={sortConfig?.sort ?? "none"}
-                  />
-                </th>
-
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wide">
-                  <SortableColHead
-                    colKey="company_name"
-                    label="Entreprise"
-                    onClick={(col: string) =>
-                      handleSortOnClick(col as keyof CSVMapping)
-                    }
-                    selectedColKey={sortConfig?.key ?? ""}
-                    sort={sortConfig?.sort ?? "none"}
-                  />
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
-                  <SortableColHead
-                    colKey="client_code"
-                    label="Code Client"
-                    onClick={(col: string) =>
-                      handleSortOnClick(col as keyof CSVMapping)
-                    }
-                    selectedColKey={sortConfig?.key ?? ""}
-                    sort={sortConfig?.sort ?? "none"}
-                  />
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
-                  <SortableColHead
-                    colKey="email"
-                    label="Email"
-                    onClick={(col: string) =>
-                      handleSortOnClick(col as keyof CSVMapping)
-                    }
-                    selectedColKey={sortConfig?.key ?? ""}
-                    sort={sortConfig?.sort ?? "none"}
-                  />
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
-                  <SortableColHead
-                    colKey="phone"
-                    label="Téléphone"
-                    onClick={(col: string) =>
-                      handleSortOnClick(col as keyof CSVMapping)
-                    }
-                    selectedColKey={sortConfig?.key ?? ""}
-                    sort={sortConfig?.sort ?? "none"}
-                  />
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
-                  <SortableColHead
-                    colKey="address"
-                    label="Adresse"
-                    onClick={(col: string) =>
-                      handleSortOnClick(col as keyof CSVMapping)
-                    }
-                    selectedColKey={sortConfig?.key ?? ""}
-                    sort={sortConfig?.sort ?? "none"}
-                  />
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
-                  <SortableColHead
-                    colKey="city"
-                    label="Ville"
-                    onClick={(col: string) =>
-                      handleSortOnClick(col as keyof CSVMapping)
-                    }
-                    selectedColKey={sortConfig?.key ?? ""}
-                    sort={sortConfig?.sort ?? "none"}
-                  />
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
-                  <SortableColHead
-                    colKey="postal_code"
-                    label="Code postal"
-                    onClick={(col: string) =>
-                      handleSortOnClick(col as keyof CSVMapping)
-                    }
-                    selectedColKey={sortConfig?.key ?? ""}
-                    sort={sortConfig?.sort ?? "none"}
-                  />
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
-                  <SortableColHead
-                    colKey="country"
-                    label="Pays"
-                    onClick={(col: string) =>
-                      handleSortOnClick(col as keyof CSVMapping)
-                    }
-                    selectedColKey={sortConfig?.key ?? ""}
-                    sort={sortConfig?.sort ?? "none"}
-                  />
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
-                  <SortableColHead
-                    colKey="industry"
-                    label="Secteur"
-                    onClick={(col: string) =>
-                      handleSortOnClick(col as keyof CSVMapping)
-                    }
-                    selectedColKey={sortConfig?.key ?? ""}
-                    sort={sortConfig?.sort ?? "none"}
-                  />
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
-                  <SortableColHead
-                    colKey="website"
-                    label="Site web"
-                    onClick={(col: string) =>
-                      handleSortOnClick(col as keyof CSVMapping)
-                    }
-                    selectedColKey={sortConfig?.key ?? ""}
-                    sort={sortConfig?.sort ?? "none"}
-                  />
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
-                  <SortableColHead
-                    colKey="created_at"
-                    label="Créé le"
-                    onClick={(col: string) =>
-                      handleSortOnClick(col as keyof CSVMapping)
-                    }
-                    selectedColKey={sortConfig?.key ?? ""}
-                    sort={sortConfig?.sort ?? "none"}
-                  />
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
-                  <SortableColHead
-                    colKey="updated_at"
-                    label="Mis à jour"
-                    onClick={(col: string) =>
-                      handleSortOnClick(col as keyof CSVMapping)
-                    }
-                    selectedColKey={sortConfig?.key ?? ""}
-                    sort={sortConfig?.sort ?? "none"}
-                  />
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
-                  <SortableColHead
-                    colKey="comment"
-                    label="Commentaire"
-                    onClick={(col: string) =>
-                      handleSortOnClick(col as keyof CSVMapping)
-                    }
-                    selectedColKey={sortConfig?.key ?? ""}
-                    sort={sortConfig?.sort ?? "none"}
-                  />
-                </th>
+                <th className="px-4 py-3 text-left">Actions</th>
+                <th className="px-4 py-3 text-left">Statut</th>
+                <th className="px-4 py-3 text-left">Client</th>
+                <th className="px-4 py-3 text-left">Code Client</th>
+                <th className="px-4 py-3 text-left">Email</th>
+                <th className="px-4 py-3 text-left">Facture</th>
+                <th className="px-4 py-3 text-left">Montant</th>
+                <th className="px-4 py-3 text-left">Réglé</th>
+                <th className="px-4 py-3 text-left">Date pièce</th>
+                <th className="px-4 py-3 text-left">Échéance</th>
+                <th className="px-4 py-3 text-left">Retard</th>
+                <th className="px-4 py-3 text-left">N° Échéance</th>
+                <th className="px-4 py-3 text-left">Commentaire</th>
+                <th className="px-4 py-3 text-left">Invoice</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
