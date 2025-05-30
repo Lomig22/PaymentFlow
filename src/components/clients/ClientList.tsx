@@ -1,7 +1,22 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { Client, ReminderProfile } from "../../types/database";
-import { Search, Edit, Trash2, X, Info, MoreHorizontal } from "lucide-react";
+import {
+  Search,
+  Edit,
+  Trash2,
+  X,
+  Info,
+  MoreHorizontal,
+  ChevronDown,
+  Filter,
+  Calendar,
+  DollarSign,
+  Clock,
+  User,
+  Tag,
+  Key,
+} from "lucide-react";
 import ClientForm from "./ClientForm";
 import CSVImportModal, { CSVMapping } from "./CSVImportModal";
 import SortableColHead from "../Common/SortableColHead";
@@ -12,6 +27,7 @@ import {
 } from "../../lib/comparers";
 import Swal from "sweetalert2";
 import { useAbonnement } from "../context/AbonnementContext";
+import { motion, AnimatePresence } from "framer-motion";
 
 type ClientListProps = {
   showForm: boolean;
@@ -54,10 +70,11 @@ function ClientList({
   });
   const [success, setSuccess] = useState<string | null>(null);
   const [selectedClientIds, setSelectedClientIds] = useState<string[]>([]);
+  const [showFilters, setShowFilters] = useState(false);
   const handleClick = () => {
     if (!checkAbonnement()) return;
-  //  console.log("Action autorisée !");
-    return true
+    //  console.log("Action autorisée !");
+    return true;
   };
   const showError = (message: string) => {
     setError(message);
@@ -65,7 +82,7 @@ function ClientList({
       setError(null);
     }, 3000);
   };
-/*   const showSuccess = (message: string) => {
+  /*   const showSuccess = (message: string) => {
     setSuccess(message);
     setTimeout(() => {
       setSuccess(null);
@@ -183,7 +200,7 @@ function ClientList({
 
       if (!dropdown) return;
 
-     /*  const dropdownHeight = dropdown.getBoundingClientRect().height;
+      /*  const dropdownHeight = dropdown.getBoundingClientRect().height;
       const tableHeight = table.offsetHeight;
  
         if (mousePosition.y > tableHeight) {
@@ -199,6 +216,37 @@ function ClientList({
       //    }
     }
   }, [openDropdownId]);
+
+  const columnFilters = [
+    { key: "status", label: "Statut" },
+    { key: "client", label: "Client" },
+    { key: "client_code", label: "Code Client" },
+    { key: "amount", label: "Montant" },
+    { key: "paid_amount", label: "Montant Réglé" },
+    { key: "due_date", label: "Échéance" },
+    { key: "delay_in_days", label: "Retard" },
+  ];
+
+  const getFilterIcon = (key: string) => {
+    switch (key) {
+      case "status":
+        return <Info className="h-4 w-4" />;
+      case "client":
+        return <User className="h-4 w-4" />;
+      case "client_code":
+        return <Key className="h-4 w-4" />;
+      case "amount":
+        return <DollarSign className="h-4 w-4" />;
+      case "paid_amount":
+        return <DollarSign className="h-4 w-4" />;
+      case "due_date":
+        return <Calendar className="h-4 w-4" />;
+      case "delay_in_days":
+        return <Clock className="h-4 w-4" />;
+      default:
+        return <Tag className="h-4 w-4" />;
+    }
+  };
 
   const handleDeleteClick = (client: Client) => {
     setClientToDelete(client);
@@ -298,15 +346,14 @@ function ClientList({
       if (receivablesError) throw receivablesError;
       // Suppression des clients via Supabase
       const { data, error } = await supabase
-        .from("clients") 
+        .from("clients")
         .delete()
-        .in("id", selectedClientIds); 
+        .in("id", selectedClientIds);
 
       if (error) {
         throw new Error(error.message);
       }
 
-      
       // Par exemple, filtrer les clients supprimés de la liste affichée
       console.log("Clients supprimés:", data);
     } catch (error) {
@@ -455,15 +502,119 @@ function ClientList({
         </div>
       )}
 
-      <div className="ml-4 bg-white rounded-lg shadow overflow-hidden">
-        <div className="overflow-x-auto">
-          <table
-            className="min-w-full divide-y divide-gray-200"
-            ref={tableRefs}
+      <div className="ml-4 overflow-hidden">
+        <div className="relative" style={{ marginBottom: "4vh" }}>
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-white font-medium shadow-md
+                   hover:bg-blue-700 transition-all duration-300 ease-in-out
+                   focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75"
           >
-            <thead className="bg-gray-50">
+            {showFilters ? (
+              <>
+                <X className="h-5 w-5" />
+                <span>Masquer les filtres</span>
+              </>
+            ) : (
+              <>
+                <Filter className="h-5 w-5" />
+                <span>Afficher les filtres</span>
+              </>
+            )}
+          </button>
+          <AnimatePresence>
+            {showFilters && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
+                className="absolute z-10 mt-3 rounded-md border border-gray-200 bg-white shadow-lg p-4 w-fit min-w-[200px]"
+              >
+                <div className="flex flex-wrap items-center gap-2">
+                  {columnFilters.map((col) => {
+                    const isActive = sortConfig?.key === col.key;
+                    const isAsc = isActive && sortConfig.sort === "asc";
+
+                    return (
+                      <motion.button
+                        key={col.key}
+                        onClick={() => handleSortOnClick(col.key)}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.98 }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 300,
+                          damping: 25,
+                        }}
+                        className={`
+                    relative flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg
+                    backdrop-blur-sm border border-opacity-30
+                    transition-all duration-300 ease-in-out transform
+                    
+                    ${
+                      isActive
+                        ? isAsc
+                          ? "bg-blue-500/20 text-blue-800 border-blue-400/50 shadow-md"
+                          : "bg-red-500/20 text-red-800 border-red-400/50 shadow-md"
+                        : "bg-gray-100/30 text-gray-700 border-gray-300/50 hover:bg-gray-200/40"
+                    }
+
+                    focus:outline-none focus:ring-2 focus:ring-offset-2
+                    ${
+                      isActive
+                        ? isAsc
+                          ? "focus:ring-blue-300"
+                          : "focus:ring-red-300"
+                        : "focus:ring-gray-400"
+                    }
+                  `}
+                      >
+                        <span className="relative z-10 flex items-center gap-2">
+                          {" "}
+                          {getFilterIcon(col.key)}
+                          <span>{col.label}</span>
+                        </span>
+
+                        {isActive && (
+                          <motion.span
+                            initial={{ rotate: 0 }}
+                            animate={{ rotate: isAsc ? 180 : 0 }}
+                            transition={{ duration: 0.25 }}
+                            className="relative z-10"
+                          >
+                            <ChevronDown className="w-4 h-4" />
+                          </motion.span>
+                        )}
+
+                        {isActive && (
+                          <motion.div
+                            layoutId="activeFilterTab"
+                            className={`absolute inset-0 rounded-lg ${
+                              isAsc ? "bg-blue-500/15" : "bg-red-500/15"
+                            }`}
+                            style={{ zIndex: 0 }}
+                            transition={{
+                              type: "spring",
+                              stiffness: 300,
+                              damping: 25,
+                            }}
+                          />
+                        )}
+                      </motion.button>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        <div className="overflow-x-auto rounded-xl border border-gray-200">
+          <table className="min-w-full divide-y divide-gray-200 text-sm">
+            <thead className="bg-gray-100 text-gray-800 uppercase text-xs font-semibold">
               <tr>
-                <th className="px-6 py-3">
+                <th className="px-4 py-3 text-left">
                   <input
                     type="checkbox"
                     checked={
@@ -479,190 +630,24 @@ function ClientList({
                         setSelectedClientIds([]);
                       }
                     }}
-                    className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
+                    className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                     title="Tout sélectionner"
                   />
                 </th>
-
-                <th
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider"
-                  style={{ maxWidth: "80px" }}
-                >
-                  Actions
-                </th>
-                <th
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider"
-                  style={{ maxWidth: "80px" }}
-                >
-                  <SortableColHead
-                    colKey="reminderProfile"
-                    label="Profil de rappel"
-                    onClick={(col: string) =>
-                      handleSortOnClick(col as keyof CSVMapping)
-                    }
-                    selectedColKey={sortConfig?.key ?? ""}
-                    sort={sortConfig?.sort ?? "none"}
-                  />
-                </th>
-
-                <th
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider"
-                  style={{ maxWidth: "80px" }}
-                >
-                  <SortableColHead
-                    colKey="needs_reminder"
-                    label="Relance"
-                    onClick={(col: string) =>
-                      handleSortOnClick(col as keyof CSVMapping)
-                    }
-                    selectedColKey={sortConfig?.key ?? ""}
-                    sort={sortConfig?.sort ?? "none"}
-                  />
-                </th>
-
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wide">
-                  <SortableColHead
-                    colKey="company_name"
-                    label="Entreprise"
-                    onClick={(col: string) =>
-                      handleSortOnClick(col as keyof CSVMapping)
-                    }
-                    selectedColKey={sortConfig?.key ?? ""}
-                    sort={sortConfig?.sort ?? "none"}
-                  />
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
-                  <SortableColHead
-                    colKey="client_code"
-                    label="Code Client"
-                    onClick={(col: string) =>
-                      handleSortOnClick(col as keyof CSVMapping)
-                    }
-                    selectedColKey={sortConfig?.key ?? ""}
-                    sort={sortConfig?.sort ?? "none"}
-                  />
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
-                  <SortableColHead
-                    colKey="email"
-                    label="Email"
-                    onClick={(col: string) =>
-                      handleSortOnClick(col as keyof CSVMapping)
-                    }
-                    selectedColKey={sortConfig?.key ?? ""}
-                    sort={sortConfig?.sort ?? "none"}
-                  />
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
-                  <SortableColHead
-                    colKey="phone"
-                    label="Téléphone"
-                    onClick={(col: string) =>
-                      handleSortOnClick(col as keyof CSVMapping)
-                    }
-                    selectedColKey={sortConfig?.key ?? ""}
-                    sort={sortConfig?.sort ?? "none"}
-                  />
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
-                  <SortableColHead
-                    colKey="address"
-                    label="Adresse"
-                    onClick={(col: string) =>
-                      handleSortOnClick(col as keyof CSVMapping)
-                    }
-                    selectedColKey={sortConfig?.key ?? ""}
-                    sort={sortConfig?.sort ?? "none"}
-                  />
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
-                  <SortableColHead
-                    colKey="city"
-                    label="Ville"
-                    onClick={(col: string) =>
-                      handleSortOnClick(col as keyof CSVMapping)
-                    }
-                    selectedColKey={sortConfig?.key ?? ""}
-                    sort={sortConfig?.sort ?? "none"}
-                  />
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
-                  <SortableColHead
-                    colKey="postal_code"
-                    label="Code postal"
-                    onClick={(col: string) =>
-                      handleSortOnClick(col as keyof CSVMapping)
-                    }
-                    selectedColKey={sortConfig?.key ?? ""}
-                    sort={sortConfig?.sort ?? "none"}
-                  />
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
-                  <SortableColHead
-                    colKey="country"
-                    label="Pays"
-                    onClick={(col: string) =>
-                      handleSortOnClick(col as keyof CSVMapping)
-                    }
-                    selectedColKey={sortConfig?.key ?? ""}
-                    sort={sortConfig?.sort ?? "none"}
-                  />
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
-                  <SortableColHead
-                    colKey="industry"
-                    label="Secteur"
-                    onClick={(col: string) =>
-                      handleSortOnClick(col as keyof CSVMapping)
-                    }
-                    selectedColKey={sortConfig?.key ?? ""}
-                    sort={sortConfig?.sort ?? "none"}
-                  />
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
-                  <SortableColHead
-                    colKey="website"
-                    label="Site web"
-                    onClick={(col: string) =>
-                      handleSortOnClick(col as keyof CSVMapping)
-                    }
-                    selectedColKey={sortConfig?.key ?? ""}
-                    sort={sortConfig?.sort ?? "none"}
-                  />
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
-                  <SortableColHead
-                    colKey="created_at"
-                    label="Créé le"
-                    onClick={(col: string) =>
-                      handleSortOnClick(col as keyof CSVMapping)
-                    }
-                    selectedColKey={sortConfig?.key ?? ""}
-                    sort={sortConfig?.sort ?? "none"}
-                  />
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
-                  <SortableColHead
-                    colKey="updated_at"
-                    label="Mis à jour"
-                    onClick={(col: string) =>
-                      handleSortOnClick(col as keyof CSVMapping)
-                    }
-                    selectedColKey={sortConfig?.key ?? ""}
-                    sort={sortConfig?.sort ?? "none"}
-                  />
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
-                  <SortableColHead
-                    colKey="comment"
-                    label="Commentaire"
-                    onClick={(col: string) =>
-                      handleSortOnClick(col as keyof CSVMapping)
-                    }
-                    selectedColKey={sortConfig?.key ?? ""}
-                    sort={sortConfig?.sort ?? "none"}
-                  />
-                </th>
+                <th className="px-4 py-3 text-left">Actions</th>
+                <th className="px-4 py-3 text-left">Statut</th>
+                <th className="px-4 py-3 text-left">Client</th>
+                <th className="px-4 py-3 text-left">Code Client</th>
+                <th className="px-4 py-3 text-left">Email</th>
+                <th className="px-4 py-3 text-left">Facture</th>
+                <th className="px-4 py-3 text-left">Montant</th>
+                <th className="px-4 py-3 text-left">Réglé</th>
+                <th className="px-4 py-3 text-left">Date pièce</th>
+                <th className="px-4 py-3 text-left">Échéance</th>
+                <th className="px-4 py-3 text-left">Retard</th>
+                <th className="px-4 py-3 text-left">N° Échéance</th>
+                <th className="px-4 py-3 text-left">Commentaire</th>
+                <th className="px-4 py-3 text-left">Invoice</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">

@@ -32,7 +32,7 @@ function AbonnementInfo() {
         <div className="text-sm text-center">
           {abonnement && expiryDate ? (
             <p className={getColorClass()}>
-                Abonnement <strong>{abonnement}</strong> – expire { abonnement === "Essai gratuit" ? "dans":"le"}{" "}
+                {(abonnement!=="Essai gratuit")?"Abonnement":""} <strong>{abonnement}</strong> – expire { abonnement === "Essai gratuit" ? "dans":"le"}{" "}
               <strong>{expiryDate}</strong>
             </p>
           ) : (

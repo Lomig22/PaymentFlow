@@ -24,8 +24,14 @@ const monthLabels = [
 ];
 
 const DsoChart = () => {
-  const [selectedYear, setSelectedYear] = useState<number>(2025);
-  const [selectedMonth, setSelectedMonth] = useState<string>("");
+  const today = new Date();
+  const currentMonth = today.getMonth();
+  const currentYear = today.getFullYear();
+  const [selectedYear, setSelectedYear] = useState<number>(currentYear);
+  const [selectedMonth, setSelectedMonth] = useState<string>(
+    monthLabels[currentMonth]
+  );
+
   const [dsoData, setDsoData] = useState<
     Record<string, { month: string; value: number }[]>
   >({});
@@ -35,23 +41,22 @@ const DsoChart = () => {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-  
+
       if (!user) throw new Error("Utilisateur non authentifié");
-  
+
       const userEmail = user.email;
-  
+
       const { data: invitedByData, error: invitedByError } = await supabase
         .from("invited_users")
         .select("invited_by")
         .eq("invited_email", userEmail);
-  
+
       if (invitedByError) throw invitedByError;
-  
+
       const invitedByIds = invitedByData.map((entry) => entry.invited_by);
-  
+
       const allOwnerIds = [user.id, ...invitedByIds];
-  
-      
+
       const { data, error } = await supabase
         .from("receivables")
         .select("due_date, document_date, created_at")
@@ -121,16 +126,25 @@ const DsoChart = () => {
 
   let filteredData: { month: string; value: number }[] = [];
 
-  if (!selectedMonth) {
-    filteredData = currentYearData;
-  } else {
-    const startIndex = monthLabels.findIndex((m) =>
-      selectedMonth.startsWith(m)
-    );
-    filteredData = [
-      ...currentYearData.slice(startIndex),
-      ...nextYearData.slice(0, startIndex + 1),
-    ];
+  if (selectedMonth) {
+    const startMonthIndex = monthLabels.findIndex((m) => m === selectedMonth);
+    const monthsToDisplay: { year: number; monthIndex: number }[] = [];
+
+    for (let i = 0; i <= 12; i++) {
+      const monthOffset = (startMonthIndex + i) % 12;
+      const yearOffset = Math.floor((startMonthIndex + i) / 12);
+      monthsToDisplay.push({
+        year: selectedYear - 1 + yearOffset,
+        monthIndex: monthOffset,
+      });
+    }
+
+    filteredData = monthsToDisplay.map(({ year, monthIndex }) => {
+      const yearData = dsoData[year] || [];
+      const label = `${monthLabels[monthIndex]} ${String(year).slice(-2)}`;
+      const item = yearData.find((d) => d.month === label);
+      return item || { month: label, value: 0 };
+    });
   }
 
   const max = Math.max(...filteredData.map((d) => d.value || 0));
@@ -142,7 +156,7 @@ const DsoChart = () => {
     return last - prev;
   })();
 
-  const isDown = diff < 0;  
+  const isDown = diff < 0;
   const arrow = isDown ? "↓" : "↑";
   const colorClass = isDown ? "text-green-600" : "text-red-600";
 
@@ -154,7 +168,12 @@ const DsoChart = () => {
             <Clock className="h-6 w-6 text-yellow-600" />
           </div>
           <h2 className="text-gray-800 font-semibold text-lg">DSO</h2>
-          <div className={`inline-flex items-center gap-1 ${colorClass}`}>
+          <div
+            className={`inline-flex items-center gap-1 ${colorClass}`}
+            title={`Différence entre les deux derniers mois visibles : ${Math.abs(
+              diff
+            )} jour(s)`}
+          >
             <span className="text-sm font-semibold">{arrow}</span>
             <span className="text-sm font-medium">
               {Math.abs(diff)} jour(s)
@@ -182,10 +201,10 @@ const DsoChart = () => {
       <div className="text-sm text-gray-500 mb-2">
         Période affichée :{" "}
         {!selectedMonth
-          ? `Année ${selectedYear}`
-          : `${selectedMonth} ${selectedYear} à ${selectedMonth} ${
-              selectedYear + 1
-            }`}
+          ? `Janvier à Décembre ${selectedYear}`
+          : `${selectedMonth} ${
+              selectedYear - 1
+            } → ${selectedMonth} ${selectedYear}`}
       </div>
 
       {filteredData.length > 0 ? (
@@ -204,14 +223,16 @@ const DsoChart = () => {
                 </span>
                 <div
                   className="w-full rounded-md transition-all duration-300"
+                  title={`Mois : ${d.month} — DSO moyen : ${d.value} jour(s)`}
                   style={{
                     height: `${(d.value / (max || 1)) * 130}px`,
                     backgroundColor:
                       i === filteredData.length - 1 ? "#1E60FF" : "#5CA9FF",
                   }}
                 />
+
                 <span className="text-xs text-gray-500 mt-2 text-center whitespace-nowrap">
-                  {d.month}
+                  {d.month.split(" ")[0].replace(".", "")}
                 </span>
               </div>
             ))}
