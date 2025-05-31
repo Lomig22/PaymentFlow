@@ -71,6 +71,7 @@ function ClientList({
   const [success, setSuccess] = useState<string | null>(null);
   const [selectedClientIds, setSelectedClientIds] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
+
   const handleClick = () => {
     if (!checkAbonnement()) return;
     //  console.log("Action autorisée !");
@@ -142,6 +143,7 @@ function ClientList({
     }
   }, [importSuccess]);
   const dropdownRefs = useRef({});
+  const filterRef = useRef(null);
   const [openDropdownId, setOpenDropdownId] = useState(null);
 
   useEffect(() => {
@@ -182,6 +184,23 @@ function ClientList({
 
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        filterRef.current &&
+        !filterRef.current.contains(event.target as Node)
+      ) {
+        setShowFilters(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   const buttonRefs = useRef({});
   const tableRefs = useRef<HTMLTableElement | null>(null);
 
@@ -503,7 +522,11 @@ function ClientList({
       )}
 
       <div className="ml-4 overflow-hidden">
-        <div className="relative" style={{ marginBottom: "4vh" }}>
+        <div
+          className="relative"
+          style={{ marginBottom: "4vh" }}
+          ref={filterRef}
+        >
           <button
             onClick={() => setShowFilters(!showFilters)}
             className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-white font-medium shadow-md
@@ -513,12 +536,12 @@ function ClientList({
             {showFilters ? (
               <>
                 <X className="h-5 w-5" />
-                <span>Masquer les filtres</span>
+                <span>Paramètre de tri</span>
               </>
             ) : (
               <>
                 <Filter className="h-5 w-5" />
-                <span>Afficher les filtres</span>
+                <span>Paramètre de tri</span>
               </>
             )}
           </button>

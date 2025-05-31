@@ -878,6 +878,23 @@ function ReceivablesList() {
     useState(false);
   const [preAlreadySend, setPreAlreadySend] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
+  const filterRef = useRef(null);
+
+    useEffect(() => {
+      const handleClickOutside = (event: MouseEvent) => {
+        if (
+          filterRef.current &&
+          !filterRef.current.contains(event.target as Node)
+        ) {
+          setShowFilters(false);
+        }
+      };
+  
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }, []);
 
   useLayoutEffect(() => {
     if (
@@ -1319,7 +1336,11 @@ function ReceivablesList() {
         )}
 
         {/* Section de filtres */}
-        <div className="relative" style={{ marginBottom: "4vh" }}>
+        <div
+          className="relative"
+          style={{ marginBottom: "4vh" }}
+          ref={filterRef}
+        >
           <button
             onClick={() => setShowFilters(!showFilters)}
             className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-white font-medium shadow-md
@@ -1329,12 +1350,12 @@ function ReceivablesList() {
             {showFilters ? (
               <>
                 <X className="h-5 w-5" />
-                <span>Masquer les filtres</span>
+                <span>Paramètre de tri</span>
               </>
             ) : (
               <>
                 <Filter className="h-5 w-5" />
-                <span>Afficher les filtres</span>
+                <span>Paramètre de tri</span>
               </>
             )}
           </button>
