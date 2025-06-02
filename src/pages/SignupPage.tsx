@@ -37,15 +37,11 @@ export default function SignupPage() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [company, setCompany] = useState("");
-  const [selectedPlan, setSelectedPlan] = useState("");
-  const [billingInterval, setBillingInterval] = useState("");
+  const [selectedPlan, setSelectedPlan] = useState("basic");
 
   useEffect(() => {
     const savedPlan = localStorage.getItem("selectedPlan");
     if (savedPlan) setSelectedPlan(savedPlan);
-
-    const savedInterval = localStorage.getItem("billingInterval");
-    if (savedInterval) setSelectedPlan(savedPlan);
   }, []);
 
   const validateForm = () => {
@@ -87,10 +83,113 @@ export default function SignupPage() {
     return true;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {};
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    // if (!validateForm()) return;
 
-  const handleGoogleSignup = async () => {};
-  
+    setLoading(true);
+    setMessage(null);
+
+    try {
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+
+      if (signUpError) throw signUpError;
+
+      if (data?.user?.identities?.length === 0) {
+        setMessage({
+          type: "error",
+          text: "Cette adresse email est déjà utilisée.",
+        });
+        return;
+      }
+
+      if (data?.user) {
+        const userId = data.user.id;
+        const formatedEmail = email.toLowerCase();
+        localStorage.setItem("pendingUserId", userId);
+        localStorage.setItem("pendingEmail", email.toLowerCase());
+        const { error: upsertError } = await supabase
+          .from("pending_profiles")
+          .upsert(
+            [
+              {
+                id: userId,
+                name,
+                phone,
+                company,
+                email: formatedEmail,
+              },
+            ],
+            {
+              onConflict: "id",
+            }
+          );
+
+        if (upsertError) {
+          console.error(
+            "Erreur lors du upsert dans profiles:",
+            upsertError.message
+          );
+        } else {
+          console.log("Profil mis à jour ou inséré avec succès !");
+        }
+      }
+      setMessage({
+        type: "success",
+        text: "Un e-mail de confirmation vous a été envoyé. Veuillez vérifier votre boîte de réception.",
+      });
+
+      setTimeout(async () => await createStripeSession(), 3000);
+    } catch (error: any) {
+      setMessage({
+        type: "error",
+        text:
+          error.message ||
+          "Une erreur est survenue lors de la création du compte",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSignup = async () => {
+    const formatedEmail = email.toLowerCase();
+    try {
+      // Maintenant, upsert dans la table pending_profiles en utilisant email comme clé de conflit
+      const { error: upsertError } = await supabase
+        .from("pending_profiles")
+        .upsert(
+          [
+            {
+              email: formatedEmail,
+              name,
+              phone,
+              company,
+            },
+          ],
+          {
+            onConflict: "email", // On utilise l'email pour gérer les conflits
+          }
+        );
+
+      if (upsertError) {
+        console.error(
+          "Erreur lors du upsert dans pending_profiles:",
+          upsertError.message
+        );
+      } else {
+        console.log("Profil Google inséré ou mis à jour !");
+      }
+      await supabase.auth.signInWithOAuth({
+        provider: "google",
+      });
+    } catch (err) {
+      console.error("Erreur auth Google", err);
+    }
+  };
   const [step, setStep] = useState(1);
 
   const priceMap = {
@@ -109,34 +208,23 @@ export default function SignupPage() {
   };
 
   const createStripeSession = async () => {
-    const plan = selectedPlan || localStorage.getItem("selectedPlan");
-    const interval =
-      (billingInterval as "monthly" | "yearly") ||
-      (localStorage.getItem("selectedInterval") as "monthly" | "yearly");
-
-    // si un seul manque on stoppe
-    if (!plan || !interval) {
-      console.warn("Aucun plan ou intervalle sélectionné, on ne redirige pas.");
-      return;
-    }
-
-    // sécurisation de l’accès à priceMap
-    const priceId = priceMap[plan]?.[interval];
-    if (!priceId) {
-      console.error("Clé de prix invalide pour", plan, interval);
-      return;
-    }
-
-    const payload = {
-      price_id: priceId,
-      success_url: window.location.origin + "/paiement-abonement",
-      cancel_url: window.location.origin + "/pricing",
-    };
+    const plan = localStorage.getItem("selectedPlan");
+    const interval = localStorage.getItem("selectedInterval");
 
     if (!selectedPlan) {
       console.error("Aucun plan sélectionné !");
       return;
     }
+
+    const payload = {
+      price_id: priceMap[plan][interval],
+      success_url: window.location.origin + "/paiement-abonement",
+      cancel_url: window.location.origin + "/pricing",
+    };
+
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
 
     const token = import.meta.env.VITE_TOKEN_STRIPE;
     const res = await fetch(
@@ -236,7 +324,7 @@ export default function SignupPage() {
                       className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-md 
             shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 
             focus:border-blue-500 sm:text-sm"
-                      placeholder="+33XXXXXXXXX"
+                      placeholder="+33000000000"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                     />
@@ -260,7 +348,7 @@ export default function SignupPage() {
                       className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-md 
             shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 
             focus:border-blue-500 sm:text-sm"
-                      placeholder="Payment-flow"
+                      placeholder="Onirtech"
                       value={company}
                       onChange={(e) => setCompany(e.target.value)}
                     />

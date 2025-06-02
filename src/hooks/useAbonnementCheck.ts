@@ -18,9 +18,7 @@ export default function useAbonnementCheck() {
       const { data: sessionData } = await supabase.auth.getSession();
       const user = sessionData?.session?.user;
 
-      if (!user) {
-        console.log("tsy mis user session");
-        
+      if (!user) {        
         setIsExpired(true);
         setLoading(false);
         return;
@@ -43,7 +41,7 @@ export default function useAbonnementCheck() {
         const { data: abonnementData } = await supabase
           .from("subscriptions")
           .select("plan, subscription_expiry")
-          .eq("user_id", user.id);        
+          .eq("user_id", user.id);          
 
         if (abonnementData && abonnementData.length > 0) {
           const latest = abonnementData
@@ -54,17 +52,31 @@ export default function useAbonnementCheck() {
                 new Date(a.subscription_expiry).getTime()
             )[0];
 
-          const expiry = new Date(latest.subscription_expiry);
-          const expired = isBefore(expiry, now);
-
-          setAbonnement(latest.plan || null);
-          setRawExpiryDate(expiry);
-          setExpiryDate(format(expiry, "d MMMM yyyy", { locale: fr }));
-          setIsExpired(expired);
-          setLoading(false);
+            if(latest?.subscription_expiry){
+              const expiry = new Date(latest.subscription_expiry);
+              const expired = isBefore(expiry, now);
+    
+              setAbonnement(latest.plan || null);
+              setRawExpiryDate(expiry);
+              setExpiryDate(format(expiry, "d MMMM yyyy", { locale: fr }));
+              setIsExpired(expired);
+              setLoading(false);
+              return;
+            }else{
+              setAbonnement(null);
+              setRawExpiryDate(null);
+              setExpiryDate(null);
+              setIsExpired(true);
+              setLoading(false);
+              return;
+            }
+          
         } else {
+          console.log("No active subscription found for user:", user.id);
+          setAbonnement
           setIsExpired(true);
           setLoading(false);
+          return;
         }
       }
 
