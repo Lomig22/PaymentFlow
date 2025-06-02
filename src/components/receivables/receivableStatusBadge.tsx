@@ -62,7 +62,7 @@ const ReceivableStatusBadge = ({ receivable }) => {
   const realStatus = resolveStatus(receivable);
   return (
     <span
-      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusStyle(realStatus)}`}
+      className={`px-4 inline-flex text-xs text-center leading-5 font-semibold rounded-full ${getStatusStyle(realStatus)}`}
     >
       {getStatusLabel(realStatus)}
     </span>

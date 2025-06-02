@@ -62,7 +62,6 @@ export default function DashboardLayout() {
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
 
-
   useEffect(() => {
     (async () => {
       const {
@@ -167,9 +166,7 @@ export default function DashboardLayout() {
             </h2>
             <div className={`inline-flex items-center gap-1 ${colorClass}`}>
               <span className="font-semibold">{arrow}</span>
-              <span className="font-medium">
-                {Math.abs(diffPct)}%
-              </span>
+              <span className="font-medium">{Math.abs(diffPct)}%</span>
             </div>
           </div>
           <div className="flex gap-3">
@@ -198,15 +195,38 @@ export default function DashboardLayout() {
               <XAxis dataKey="label" stroke="#6b7280" />
               <YAxis stroke="#6b7280" tickFormatter={formatEuro} />
               <Tooltip
-                formatter={(v: number, name: string) => [
-                  `${formatEuro(v)}`,
-                  name,
-                ]}
-                labelFormatter={(lbl, payload) => {
-                  const yr = payload?.[0]?.payload?.year;
-                  return `${lbl} ${yr}`;
+                content={({ active, payload, label }) => {
+                  if (active && payload && payload.length) {
+                    const year = payload[0].payload.year;
+                    return (
+                      <div className="bg-white shadow-lg rounded-lg p-4 border border-gray-200">
+                        <p className="text-sm text-gray-500 mb-2 font-medium">
+                          {label} {year}
+                        </p>
+                        {payload.map((entry, index) => (
+                          <div
+                            key={index}
+                            className="flex justify-between items-center mb-1"
+                          >
+                            <span className="flex items-center text-sm font-medium text-gray-700">
+                              <span
+                                className="w-3 h-3 rounded-full mr-2"
+                                style={{ backgroundColor: entry.color }}
+                              ></span>
+                              {entry.name}
+                            </span>
+                            <span className="text-sm font-semibold text-gray-900">
+                              {formatEuro(entry.value)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  }
+                  return null;
                 }}
               />
+
               <Legend iconType="circle" />
               <Line
                 type="monotone"
