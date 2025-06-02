@@ -901,7 +901,7 @@ function ReceivablesList() {
         document.removeEventListener("mousedown", handleClickOutside);
       };
     }, []);
-
+/* 
   useLayoutEffect(() => {
     if (
       openDropdownId &&
@@ -926,12 +926,42 @@ function ReceivablesList() {
         top: buttonRect.top - dropdownHeight,
         left: buttonRect.left,
       });
+    } else { 
+      setDropdownPosition({
+        top: buttonRect.top,
+        left: buttonRect.left,
+      });
+      /*   }
+    }
+  }, [openDropdownId]); */
+
+  useLayoutEffect(() => {
+    if (
+      openDropdownId &&
+      buttonRefs.current[openDropdownId] &&
+      dropdownRefs.current[openDropdownId]
+    ) {
+      const buttonRect =
+        buttonRefs.current[openDropdownId]!.getBoundingClientRect();
+      const dropdown = dropdownRefs.current[openDropdownId];
+      const table = tableRefs.current;
+
+      if (!dropdown) return;
+
+      /*  const dropdownHeight = dropdown.getBoundingClientRect().height;
+      const tableHeight = table.offsetHeight;
+ 
+        if (mousePosition.y > tableHeight) {
+      setDropdownPosition({
+        top: buttonRect.top - dropdownHeight,
+        left: buttonRect.left,
+      });
     } else { */
       setDropdownPosition({
         top: buttonRect.top,
         left: buttonRect.left,
       });
-      /*   }*/
+      //    }
     }
   }, [openDropdownId]);
 
@@ -1548,8 +1578,12 @@ function ReceivablesList() {
                     {openDropdownId === receivable.id && (
                       <div
                         ref={(el) => (dropdownRefs.current[receivable.id] = el)}
-                        className="absolute z-50 w-56 mt-2 bg-white border border-gray-200 rounded-md shadow-lg"
-                      >
+                        className="fixed z-[51] w-48 origin-top-left rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-10 ml-2"
+                        style={{
+                          top: `${dropdownPosition.top}px`,
+                          left: `${dropdownPosition.left}px`,
+                        }}
+                        >
                         <div className="py-1">
                           <button
                             onClick={() => {
@@ -1557,7 +1591,7 @@ function ReceivablesList() {
                               setSelectedReceivable(receivable);
                               setOpenDropdownId(null);
                             }}
-                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            className="flex  w-full px-2 py-2 text-sm text-gray-700 hover:bg-gray-100"
                           >
                             <Edit className="w-4 h-4 mr-2" /> Modifier
                           </button>
@@ -1568,7 +1602,7 @@ function ReceivablesList() {
                                 setShowConfirmReminder(true);
                                 setOpenDropdownId(null);
                               }}
-                              className="flex items-center w-full px-4 py-2 text-sm text-yellow-600 hover:bg-yellow-100"
+                              className="flex  w-full px-2 py-2 text-sm text-yellow-600 hover:bg-yellow-100"
                             >
                               <Mail className="w-4 h-4 mr-2" /> Envoyer une
                               relance
@@ -1581,7 +1615,7 @@ function ReceivablesList() {
                               setShowSettings(true);
                               setOpenDropdownId(null);
                             }}
-                            className="flex items-center w-full px-4 py-2 text-sm text-gray-600 hover:bg-gray-100"
+                            className="flex  w-full px-2 py-2 text-sm text-gray-600 hover:bg-gray-100"
                           >
                             <Clock className="w-4 h-4 mr-2" /> Paramètres de
                             relance
@@ -1592,7 +1626,7 @@ function ReceivablesList() {
                               setShowReminderHistory(true);
                               setOpenDropdownId(null);
                             }}
-                            className="flex items-center w-full px-4 py-2 text-sm text-gray-600 hover:bg-gray-100"
+                            className="flex  w-full px-2 py-2 text-sm text-gray-600 hover:bg-gray-100"
                           >
                             <ListRestart className="w-4 h-4 mr-2" /> Historique
                             des relances
@@ -1602,7 +1636,7 @@ function ReceivablesList() {
                               handleDeleteClick(receivable);
                               setOpenDropdownId(null);
                             }}
-                            className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-100"
+                            className="flex  w-full px-2 py-2 text-sm text-red-600 hover:bg-red-100"
                           >
                             <Trash2 className="w-4 h-4 mr-2" /> Supprimer
                           </button>
