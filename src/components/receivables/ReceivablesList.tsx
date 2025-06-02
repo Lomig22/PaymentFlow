@@ -129,9 +129,15 @@ function ReceivablesList() {
     { key: "paid_amount", label: "Montant Réglé" },
     { key: "due_date", label: "Échéance" },
     { key: "Delay in Days", label: "Retard" },
+    { key: "status", label: "Statut" },
+    { key: "email", label: "Email" },
+    { key: "invoice_number", label: "Facture" },
+    { key: "document_date", label: "Date pièce" },
+    { key: "installment_number", label: "N° Échéance" },
+    { key: "notes", label: "Commentaire" },
   ];
 
-  const [columns, setColumns] = useState([
+ /*  const [columns, setColumns] = useState([
     { id: "select", label: "" },
     { id: "actions", label: "Actions" },
     { id: "status", label: "Statut" },
@@ -147,7 +153,7 @@ function ReceivablesList() {
     { id: "installment_number", label: "N° Échéance" },
     { id: "notes", label: "Commentaire" },
     { id: "invoice_pdf_url", label: "Invoice" },
-  ]);
+  ]); */
 
   const getFilterIcon = (key: string) => {
     switch (key) {
@@ -1318,7 +1324,7 @@ function ReceivablesList() {
           </motion.div>
         )}
 
-        {/* Section de filtres */}
+        {/* Section de tris */}
         <div className="relative" style={{ marginBottom: "4vh" }}>
           <button
             onClick={() => setShowFilters(!showFilters)}
@@ -1329,12 +1335,12 @@ function ReceivablesList() {
             {showFilters ? (
               <>
                 <X className="h-5 w-5" />
-                <span>Masquer les filtres</span>
+                <span>Masquer les tris</span>
               </>
             ) : (
               <>
                 <Filter className="h-5 w-5" />
-                <span>Afficher les filtres</span>
+                <span>Afficher les tris</span>
               </>
             )}
           </button>
