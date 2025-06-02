@@ -5,6 +5,7 @@ import { registerLocale } from "react-datepicker";
 import fr from "date-fns/locale/fr";
 import { supabase } from "../../lib/supabase";
 import { Clock } from "lucide-react";
+import { dateDiff } from "../../lib/dateDiff";
 import { YearPicker } from "../../components/ui/year-picker";
 registerLocale("fr", fr);
 
@@ -67,12 +68,12 @@ const DsoChart = () => {
         return;
       }
 
-      const getDelay = (due: string, base: string) => {
+/*       const getDelay = (due: string, base: string) => {
         const d1 = new Date(base);
         const d2 = new Date(due);
         const diffMs = d2.getTime() - d1.getTime();
         return Math.floor(diffMs / (1000 * 60 * 60 * 24)); // jours
-      };
+      }; */
 
       const grouped: Record<number, Record<string, number[]>> = {};
 
@@ -81,7 +82,7 @@ const DsoChart = () => {
         const baseDate = item.document_date || item.created_at;
         if (!baseDate) continue;
 
-        const delay = getDelay(item.due_date, baseDate);
+        const delay = dateDiff(item.due_date, baseDate);
         const date = new Date(item.due_date);
         const year = date.getFullYear();
         const month = date.getMonth();

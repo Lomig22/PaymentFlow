@@ -168,7 +168,7 @@ export default function DashboardLayout() {
             <div className={`inline-flex items-center gap-1 ${colorClass}`}>
               <span className="font-semibold">{arrow}</span>
               <span className="font-medium">
-                {formatEuro(Math.abs(diff))} ({Math.abs(diffPct)}%)
+                {Math.abs(diffPct)}%
               </span>
             </div>
           </div>
