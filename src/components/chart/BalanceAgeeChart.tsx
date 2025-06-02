@@ -66,13 +66,13 @@ export default function BalanceAgeeChart() {
         "30-60 jours": 0,
         "60-90 jours": 0,
         "90-120 jours": 0,
-        "120+ jours": 0,
+        "120>jours": 0,
       };
 
       receivables?.forEach((item) => {
         const dueDate = dayjs(item.due_date);
         const daysOverdue = refDay.diff(dueDate, "day");
-        const amount = Number(item.amount || 0); // ✅ correction ici
+        const amount = Number(item.amount || 0);
 
         if (daysOverdue <= 30) {
           grouped["0-30 jours"] += amount;
@@ -83,7 +83,7 @@ export default function BalanceAgeeChart() {
         } else if (daysOverdue <= 120) {
           grouped["90-120 jours"] += amount;
         } else {
-          grouped["120+ jours"] += amount;
+          grouped["120>jours"] += amount;
         }
       });
 
@@ -96,6 +96,37 @@ export default function BalanceAgeeChart() {
 
     fetchOverdueReceivables();
   }, [referenceDate]);
+
+  function CustomYAxisTick({ x, y, payload }) {
+    const value = payload.value;
+    let displayValue = "";
+    let unit = "";
+
+    if (value >= 1_000_000) {
+      displayValue = (value / 1_000_000).toFixed(2);
+      unit = "M€";
+    } else if (value >= 1_000) {
+      displayValue = (value / 1_000).toFixed(2);
+      unit = "k€";
+    } else {
+      displayValue = value.toFixed(2);
+      unit = "€";
+    }
+
+    return (
+      <g transform={`translate(${x},${y})`}>
+        <text x={0} y={0} dy={0} textAnchor="end" fill="#6b7280" fontSize={15}>
+          <tspan x={0} dy={0}>
+            {displayValue}
+          </tspan>
+          <tspan x={0} dy={14}>
+            {unit}
+          </tspan>
+        </text>
+      </g>
+    );
+  }
+
 
   return (
     <div className="rounded-2xl w-full h-full">
@@ -127,19 +158,17 @@ export default function BalanceAgeeChart() {
           >
             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
             <XAxis dataKey="periode" stroke="#6b7280" />
-            <YAxis
-              stroke="#6b7280"
-              tickFormatter={(v) => {
-                if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)} M€`;
-                if (v >= 1_000) return `${(v / 1_000).toFixed(1)} k€`;
-                return `${v} €`;
-              }}
-            />
+            <YAxis stroke="#6b7280" tick={<CustomYAxisTick />} />
 
-            <Tooltip formatter={(value: number) => [`${value} €`, "Montant"]} />
+            <Tooltip
+              formatter={(value: number) => [
+                `${value.toFixed(2)} €`,
+                "Montant",
+              ]}
+            />
             <Bar
               dataKey="montant"
-              fill="rgb(255, 67, 67)" // rouge plus vif
+              fill="rgb(255, 67, 67)"
               radius={[4, 4, 0, 0]}
             />
           </BarChart>

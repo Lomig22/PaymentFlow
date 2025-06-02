@@ -129,9 +129,15 @@ function ReceivablesList() {
     { key: "paid_amount", label: "Montant Réglé" },
     { key: "due_date", label: "Échéance" },
     { key: "Delay in Days", label: "Retard" },
+    { key: "status", label: "Statut" },
+    { key: "email", label: "Email" },
+    { key: "invoice_number", label: "Facture" },
+    { key: "document_date", label: "Date pièce" },
+    { key: "installment_number", label: "N° Échéance" },
+    { key: "notes", label: "Commentaire" },
   ];
 
-  const [columns, setColumns] = useState([
+ /*  const [columns, setColumns] = useState([
     { id: "select", label: "" },
     { id: "actions", label: "Actions" },
     { id: "status", label: "Statut" },
@@ -147,7 +153,7 @@ function ReceivablesList() {
     { id: "installment_number", label: "N° Échéance" },
     { id: "notes", label: "Commentaire" },
     { id: "invoice_pdf_url", label: "Invoice" },
-  ]);
+  ]); */
 
   const getFilterIcon = (key: string) => {
     switch (key) {
@@ -878,7 +884,24 @@ function ReceivablesList() {
     useState(false);
   const [preAlreadySend, setPreAlreadySend] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
+  const filterRef = useRef(null);
 
+    useEffect(() => {
+      const handleClickOutside = (event: MouseEvent) => {
+        if (
+          filterRef.current &&
+          !filterRef.current.contains(event.target as Node)
+        ) {
+          setShowFilters(false);
+        }
+      };
+  
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }, []);
+/* 
   useLayoutEffect(() => {
     if (
       openDropdownId &&
@@ -903,12 +926,42 @@ function ReceivablesList() {
         top: buttonRect.top - dropdownHeight,
         left: buttonRect.left,
       });
+    } else { 
+      setDropdownPosition({
+        top: buttonRect.top,
+        left: buttonRect.left,
+      });
+      /*   }
+    }
+  }, [openDropdownId]); */
+
+  useLayoutEffect(() => {
+    if (
+      openDropdownId &&
+      buttonRefs.current[openDropdownId] &&
+      dropdownRefs.current[openDropdownId]
+    ) {
+      const buttonRect =
+        buttonRefs.current[openDropdownId]!.getBoundingClientRect();
+      const dropdown = dropdownRefs.current[openDropdownId];
+      const table = tableRefs.current;
+
+      if (!dropdown) return;
+
+      /*  const dropdownHeight = dropdown.getBoundingClientRect().height;
+      const tableHeight = table.offsetHeight;
+ 
+        if (mousePosition.y > tableHeight) {
+      setDropdownPosition({
+        top: buttonRect.top - dropdownHeight,
+        left: buttonRect.left,
+      });
     } else { */
       setDropdownPosition({
         top: buttonRect.top,
         left: buttonRect.left,
       });
-      /*   }*/
+      //    }
     }
   }, [openDropdownId]);
 
@@ -1312,13 +1365,19 @@ function ReceivablesList() {
             : "bg-red-500 text-white hover:bg-red-600"
         }`}
             >
-              <Trash className="h-4 w-4" />
+              <Trash2 className="h-4 w-4" />
               Supprimer
             </button>
           </motion.div>
         )}
 
         {/* Section de filtres */}
+        <div
+          className="relative"
+          style={{ marginBottom: "4vh" }}
+          ref={filterRef}
+        >
+        {/* Section de tris */}
         <div className="relative" style={{ marginBottom: "4vh" }}>
           <button
             onClick={() => setShowFilters(!showFilters)}
@@ -1329,12 +1388,12 @@ function ReceivablesList() {
             {showFilters ? (
               <>
                 <X className="h-5 w-5" />
-                <span>Masquer les filtres</span>
+                <span>Masquer les tris</span>
               </>
             ) : (
               <>
                 <Filter className="h-5 w-5" />
-                <span>Afficher les filtres</span>
+                <span>Afficher les tris</span>
               </>
             )}
           </button>
@@ -1519,8 +1578,12 @@ function ReceivablesList() {
                     {openDropdownId === receivable.id && (
                       <div
                         ref={(el) => (dropdownRefs.current[receivable.id] = el)}
-                        className="absolute z-50 w-56 mt-2 bg-white border border-gray-200 rounded-md shadow-lg"
-                      >
+                        className="fixed z-[51] w-48 origin-top-left rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-10 ml-2"
+                        style={{
+                          top: `${dropdownPosition.top}px`,
+                          left: `${dropdownPosition.left}px`,
+                        }}
+                        >
                         <div className="py-1">
                           <button
                             onClick={() => {
@@ -1528,7 +1591,7 @@ function ReceivablesList() {
                               setSelectedReceivable(receivable);
                               setOpenDropdownId(null);
                             }}
-                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            className="flex  w-full px-2 py-2 text-sm text-gray-700 hover:bg-gray-100"
                           >
                             <Edit className="w-4 h-4 mr-2" /> Modifier
                           </button>
@@ -1539,7 +1602,7 @@ function ReceivablesList() {
                                 setShowConfirmReminder(true);
                                 setOpenDropdownId(null);
                               }}
-                              className="flex items-center w-full px-4 py-2 text-sm text-yellow-600 hover:bg-yellow-100"
+                              className="flex  w-full px-2 py-2 text-sm text-yellow-600 hover:bg-yellow-100"
                             >
                               <Mail className="w-4 h-4 mr-2" /> Envoyer une
                               relance
@@ -1552,7 +1615,7 @@ function ReceivablesList() {
                               setShowSettings(true);
                               setOpenDropdownId(null);
                             }}
-                            className="flex items-center w-full px-4 py-2 text-sm text-gray-600 hover:bg-gray-100"
+                            className="flex  w-full px-2 py-2 text-sm text-gray-600 hover:bg-gray-100"
                           >
                             <Clock className="w-4 h-4 mr-2" /> Paramètres de
                             relance
@@ -1563,7 +1626,7 @@ function ReceivablesList() {
                               setShowReminderHistory(true);
                               setOpenDropdownId(null);
                             }}
-                            className="flex items-center w-full px-4 py-2 text-sm text-gray-600 hover:bg-gray-100"
+                            className="flex  w-full px-2 py-2 text-sm text-gray-600 hover:bg-gray-100"
                           >
                             <ListRestart className="w-4 h-4 mr-2" /> Historique
                             des relances
@@ -1573,7 +1636,7 @@ function ReceivablesList() {
                               handleDeleteClick(receivable);
                               setOpenDropdownId(null);
                             }}
-                            className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-100"
+                            className="flex  w-full px-2 py-2 text-sm text-red-600 hover:bg-red-100"
                           >
                             <Trash2 className="w-4 h-4 mr-2" /> Supprimer
                           </button>
@@ -1617,8 +1680,12 @@ function ReceivablesList() {
                     {new Date(receivable.due_date).toLocaleDateString("fr-FR")}
                   </td>
                   <td className="px-4 py-3 text-gray-500">
-                    {dateDiff(new Date(receivable.due_date), new Date())}
+                    {Math.max(
+                      0,
+                      dateDiff(new Date(receivable.due_date), new Date())
+                    )}
                   </td>
+
                   <td className="px-4 py-3 text-gray-500">
                     {receivable.installment_number || "-"}
                   </td>
@@ -1893,6 +1960,7 @@ function ReceivablesList() {
           }
         `}
       </style>
+    </div>
     </div>
   );
 }
