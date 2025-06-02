@@ -213,6 +213,7 @@ if (updatedTotalAmount >= maxOverDues) {
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
             invoice_pdf_url: invoicePath ? invoicePath : undefined,
+            automatic_reminder:false,
           },
         ])
         .select("*, client:clients(*)")
