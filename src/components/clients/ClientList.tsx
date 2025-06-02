@@ -240,10 +240,9 @@ function ClientList({
     { key: "status", label: "Statut" },
     { key: "client", label: "Client" },
     { key: "client_code", label: "Code Client" },
-    { key: "amount", label: "Montant" },
-    { key: "paid_amount", label: "Montant Réglé" },
-    { key: "due_date", label: "Échéance" },
-    { key: "delay_in_days", label: "Retard" },
+    { key: "address", label: "Adresse" },
+    { key: "phone", label: "Téléphone" },
+    { key: "postal_code", label: "Code postale" },
   ];
 
   const getFilterIcon = (key: string) => {
@@ -536,12 +535,12 @@ function ClientList({
             {showFilters ? (
               <>
                 <X className="h-5 w-5" />
-                <span>Paramètre de tri</span>
+                <span>Masquer les tris</span>{" "}
               </>
             ) : (
               <>
                 <Filter className="h-5 w-5" />
-                <span>Paramètre de tri</span>
+                <span>Afficher les tris</span>
               </>
             )}
           </button>
@@ -657,20 +656,64 @@ function ClientList({
                     title="Tout sélectionner"
                   />
                 </th>
-                <th className="px-4 py-3 text-left">Actions</th>
-                <th className="px-4 py-3 text-left">Statut</th>
-                <th className="px-4 py-3 text-left">Client</th>
-                <th className="px-4 py-3 text-left">Code Client</th>
-                <th className="px-4 py-3 text-left">Email</th>
-                <th className="px-4 py-3 text-left">Facture</th>
-                <th className="px-4 py-3 text-left">Montant</th>
-                <th className="px-4 py-3 text-left">Réglé</th>
-                <th className="px-4 py-3 text-left">Date pièce</th>
-                <th className="px-4 py-3 text-left">Échéance</th>
-                <th className="px-4 py-3 text-left">Retard</th>
-                <th className="px-4 py-3 text-left">N° Échéance</th>
-                <th className="px-4 py-3 text-left">Commentaire</th>
-                <th className="px-4 py-3 text-left">Invoice</th>
+
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
+                  Actions
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
+                  Profil de rappel
+                </th>
+
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
+                  Relance
+                   
+                </th>
+
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wide">
+                Entreprise
+                 
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
+                  Code Client
+                </th>
+
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
+                Email
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
+                  Téléphone
+                
+                </th>
+
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
+                 Adresse
+                </th>
+
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
+                  Ville
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
+                  Code postal
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
+                  Pays
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
+                  Secteur
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
+                  Site web
+                </th>
+
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
+                  Créé le
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
+                  Mis à jour
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
+                  Commentaire
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
