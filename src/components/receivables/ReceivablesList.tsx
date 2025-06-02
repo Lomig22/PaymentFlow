@@ -1617,8 +1617,12 @@ function ReceivablesList() {
                     {new Date(receivable.due_date).toLocaleDateString("fr-FR")}
                   </td>
                   <td className="px-4 py-3 text-gray-500">
-                    {dateDiff(new Date(receivable.due_date), new Date())}
+                    {Math.max(
+                      0,
+                      dateDiff(new Date(receivable.due_date), new Date())
+                    )}
                   </td>
+
                   <td className="px-4 py-3 text-gray-500">
                     {receivable.installment_number || "-"}
                   </td>
