@@ -3,7 +3,7 @@ import { cn } from "../../lib/utils";
 import { useState } from "react";
 import { CalendarIcon, CheckIcon } from "lucide-react";
 
-const getYears = (start = 2015, end = new Date().getFullYear() + 5) =>
+const getYears = (start = 2015, end = new Date().getFullYear()) =>
   Array.from({ length: end - start + 1 }, (_, i) => start + i);
 
 type YearPickerProps = {

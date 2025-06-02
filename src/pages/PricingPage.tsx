@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import Footer from "../components/Footer";
 import { useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
@@ -27,9 +28,9 @@ const fadeInLeft = {
 };
 type Props = {
   setShowContact: React.Dispatch<React.SetStateAction<boolean>>;
-  setDefaultSubject: React.Dispatch<React.SetStateAction<string>>
+  setDefaultSubject: React.Dispatch<React.SetStateAction<string>>;
 };
-const PricingPage = ({setShowContact,setDefaultSubject}:Props) => {
+const PricingPage = ({ setShowContact, setDefaultSubject }: Props) => {
   const [billingInterval, setBillingInterval] = useState<"monthly" | "yearly">(
     "monthly"
   );
@@ -37,7 +38,7 @@ const PricingPage = ({setShowContact,setDefaultSubject}:Props) => {
   const [message, setMessage] = useState<string | null>(null);
   const location = useLocation();
   const isPricingPage = location.pathname === "/pricing";
- 
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -175,8 +176,8 @@ const PricingPage = ({setShowContact,setDefaultSubject}:Props) => {
     const userEmail = session?.user?.email;
     const userId = session?.user?.id;
     if (!userEmail) {
-      navigate("/signup")
-    //  setMessage("Utilisateur non connecté.");
+      navigate("/signup");
+      //  setMessage("Utilisateur non connecté.");
       return;
     }
 
@@ -201,21 +202,21 @@ const PricingPage = ({setShowContact,setDefaultSubject}:Props) => {
       )[0];
 
     const now = new Date();
-    if (
-      latest?.subscription_expiry &&
-      new Date(latest.subscription_expiry) > now
-    ) {
-      const formatted = new Date(latest.subscription_expiry).toLocaleDateString(
-        "fr-FR",
-        {
-          day: "numeric",
-          month: "long",
-          year: "numeric",
-        }
-      );
-      setMessage(`Vous avez déjà un abonnement actif jusqu’au ${formatted}.`);
-      return;
-    }
+    // if (
+    //   latest?.subscription_expiry &&
+    //   new Date(latest.subscription_expiry) > now
+    // ) {
+    //   const formatted = new Date(latest.subscription_expiry).toLocaleDateString(
+    //     "fr-FR",
+    //     {
+    //       day: "numeric",
+    //       month: "long",
+    //       year: "numeric",
+    //     }
+    //   );
+    //   setMessage(`Vous avez déjà un abonnement actif jusqu’au ${formatted}.`);
+    //   return;
+    // }
 
     // Vérification de la validité du plan/interval
     if (!priceMap[plan] || !priceMap[plan][interval]) {
@@ -271,7 +272,17 @@ const PricingPage = ({setShowContact,setDefaultSubject}:Props) => {
     >
       {/* Main Pricing Content */}
       <main>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-2 pt-4">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 text-xl font-medium text-blue-600 hover:text-blue-800 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Retour
+          </button>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
           {message && (
             <div className="mb-4 p-3 rounded-md bg-yellow-50 text-yellow-700 border border-yellow-200">
               {message}
@@ -423,17 +434,13 @@ const PricingPage = ({setShowContact,setDefaultSubject}:Props) => {
                 Solution sur mesure pour les grandes entreprises
               </p>
               <div className="mb-6">
-      
-                <span className="text-4xl font-bold">
-                  Sur devis
-                </span>
-   
+                <span className="text-4xl font-bold">Sur devis</span>
               </div>
               <ul className="space-y-3 mb-8">
                 <FeatureItem text=">1M d’euros d’encours" />
                 <FeatureItem text="jusqu’à 10 utilisateurs" />
                 <FeatureItem text="5 modèles de relances" />
-                <FeatureItem text="créances actives illimités"  />
+                <FeatureItem text="créances actives illimités" />
                 <FeatureItem text="Rapport mensuels" />
                 <FeatureItem text="Rapport journaliers et/ou hebdomadaire" />
                 <FeatureItem text="Support prioritaire" />
@@ -442,12 +449,10 @@ const PricingPage = ({setShowContact,setDefaultSubject}:Props) => {
                 <FeatureItem text="10 utilisateurs" />
               </ul>
               <button
-                onClick={() =>
-                 {
-                  setDefaultSubject("pricing")
-                    setShowContact(true)
-                 }
-                }
+                onClick={() => {
+                  setDefaultSubject("pricing");
+                  setShowContact(true);
+                }}
                 className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors"
               >
                 Contacter les ventes
@@ -456,7 +461,7 @@ const PricingPage = ({setShowContact,setDefaultSubject}:Props) => {
           </motion.div>
 
           {/* Enterprise Contact Section */}
- {/*          {isPricingPage && (
+          {/*          {isPricingPage && (
             <motion.div
               className="mt-20 text-center"
               variants={fadeInUp}
