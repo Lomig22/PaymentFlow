@@ -10,6 +10,7 @@ import {
   Clipboard,
   ChevronDown,
   ChevronUp,
+  X,
 } from "lucide-react";
 import { useAbonnement } from "../context/AbonnementContext";
 
@@ -225,7 +226,6 @@ export default function SignatureSettings() {
         setTextColor(color);
         setFont(font);
       }
-
     };
 
     loadFromSupabase();
@@ -275,7 +275,7 @@ export default function SignatureSettings() {
     console.log(publicUrlData);
 
     if (publicUrlData?.publicUrl) {
-      setLogoUrl(publicUrlData.publicUrl); // ✔️ Ceci sera utilisé dans ta signature HTML
+      setLogoUrl(publicUrlData.publicUrl);
       showSuccess("Logo uploadé avec succès !");
     } else {
       // alert(error)
@@ -344,6 +344,12 @@ export default function SignatureSettings() {
       setSelectedTheme("classique");
       setCustomOpen(false);
     }
+  };
+
+  const removeLogoUrl = () => {
+    setLogoUrl("");
+    setLocalLogo(null);
+    showSuccess("Logo supprimé avec succès !");
   };
 
   return (
@@ -484,7 +490,7 @@ export default function SignatureSettings() {
                 handleFileChange(e);
               }}
             />
-            Cliquer ou déposer le fichier
+            Importer un fichier
           </label>
         </div>
       </main>
@@ -550,6 +556,7 @@ export default function SignatureSettings() {
                 textColor={applyTheme.textColor}
                 bgColor={applyTheme.bgColor}
                 company={companyName}
+                removeLogoUrl={removeLogoUrl}
               />
             </div>
           )}
@@ -623,6 +630,7 @@ function EmailSignature({
   textColor,
   bgColor,
   company,
+  removeLogoUrl,
 }: {
   name: string;
   role: string;
@@ -637,6 +645,7 @@ function EmailSignature({
   textColor: string;
   bgColor: string;
   company: string;
+  removeLogoUrl: () => void;
 }) {
   return (
     <table
@@ -651,14 +660,35 @@ function EmailSignature({
         <tr>
           <td style={{ paddingRight: "10px" }}>
             {logo && (
-              <img
-                src={logo}
-                alt="Logo"
-                className="signature-logo"
-                style={{ width: "80px", height: "auto", borderRadius: "6px" }}
-              />
+              <div style={{ position: "relative", display: "inline-block" }}>
+                <X
+                  onClick={() => removeLogoUrl()}
+                  className="text-red-500 hover:text-red-700 cursor-pointer transition-all"
+                  style={{
+                    position: "absolute",
+                    top: "-8px",
+                    right: "-8px",
+                    backgroundColor: "white",
+                    borderRadius: "9999px",
+                    border: "1px solid #f87171",
+                    padding: "2px",
+                    width: "20px",
+                    height: "20px",
+                  }}
+                />
+                <img
+                  src={logo}
+                  alt="Logo"
+                  className="signature-logo"
+                  style={{
+                    width: "80px",
+                    height: "auto",
+                  }}
+                />
+              </div>
             )}
           </td>
+
           <td>
             <strong className="signature-nom">{name}</strong>
             <br />
