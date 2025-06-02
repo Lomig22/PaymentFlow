@@ -1927,6 +1927,7 @@ function ReceivablesList() {
         `}
       </style>
     </div>
+    </div>
   );
 }
 
