@@ -1312,7 +1312,7 @@ function ReceivablesList() {
             : "bg-red-500 text-white hover:bg-red-600"
         }`}
             >
-              <Trash className="h-4 w-4" />
+              <Trash2 className="h-4 w-4" />
               Supprimer
             </button>
           </motion.div>
