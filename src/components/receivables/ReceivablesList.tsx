@@ -884,6 +884,23 @@ function ReceivablesList() {
     useState(false);
   const [preAlreadySend, setPreAlreadySend] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
+  const filterRef = useRef(null);
+
+    useEffect(() => {
+      const handleClickOutside = (event: MouseEvent) => {
+        if (
+          filterRef.current &&
+          !filterRef.current.contains(event.target as Node)
+        ) {
+          setShowFilters(false);
+        }
+      };
+  
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }, []);
 
   useLayoutEffect(() => {
     if (
@@ -1324,6 +1341,12 @@ function ReceivablesList() {
           </motion.div>
         )}
 
+        {/* Section de filtres */}
+        <div
+          className="relative"
+          style={{ marginBottom: "4vh" }}
+          ref={filterRef}
+        >
         {/* Section de tris */}
         <div className="relative" style={{ marginBottom: "4vh" }}>
           <button
