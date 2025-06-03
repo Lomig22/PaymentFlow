@@ -621,7 +621,7 @@ function ReceivablesList() {
         const success = await sendManualReminder(
           selectedReceivable.id,
           subject?.trim() || undefined,
-          content?.trim() || undefined
+          content || undefined
         );
         if (success) {
           setSendSuccess(true);
