@@ -233,7 +233,7 @@ const PricingPage = ({ setShowContact, setDefaultSubject }: Props) => {
     const payload = {
       price_id: priceMap[plan][interval],
       success_url: window.location.origin + "/paiement-abonement",
-      cancel_url: window.location.origin + "/pricing",
+      cancel_url: window.location,
     };
 
     try {
@@ -272,6 +272,7 @@ const PricingPage = ({ setShowContact, setDefaultSubject }: Props) => {
     >
       {/* Main Pricing Content */}
       <main>
+      {isPricingPage && (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-2 pt-4">
           <button
             onClick={() => navigate(-1)}
@@ -280,7 +281,7 @@ const PricingPage = ({ setShowContact, setDefaultSubject }: Props) => {
             <ArrowLeft className="w-4 h-4" />
             Retour
           </button>
-        </div>
+        </div>)}
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
           {message && (

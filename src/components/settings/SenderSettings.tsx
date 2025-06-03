@@ -234,55 +234,72 @@ export default function SignatureSettings() {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    setLocalLogo(file); // utile si tu veux prévisualiser dans un <img />
-
+  
+    const isValidSize = await new Promise<boolean>((resolve, reject) => {
+      const img = new Image();
+      const reader = new FileReader();
+  
+      reader.onload = (event) => {
+        if (!event.target?.result) return reject("Erreur de lecture du fichier");
+        img.src = event.target.result as string;
+      };
+  
+      img.onload = () => {
+        const isValid = img.width <= 300 && img.height <= 100;
+        resolve(isValid);
+      };
+  
+      img.onerror = () => reject("Erreur de chargement de l'image");
+  
+      reader.readAsDataURL(file);
+    });
+  
+    if (!isValidSize) {
+      showError("L'image dépasse les dimensions maximales de 300px x 100px.");
+      return;
+    }
+  
+    setLocalLogo(file); // utile pour prévisualiser
+  
     const {
       data: { session },
       error: sessionError,
     } = await supabase.auth.getSession();
-
+  
     if (sessionError || !session) {
       console.error("Utilisateur non authentifié");
       showError("Veuillez vous connecter d'abord");
       return;
     }
-
+  
     const user = session.user;
     const filePath = `${user.id}/${file.name}`;
-
-    // Upload du fichier vers Supabase Storage
+  
     const { error: uploadError } = await supabase.storage
-      .from("logos") // remplace par le nom exact de ton bucket Supabase
+      .from("logos")
       .upload(filePath, file, {
-        upsert: true, // autorise le remplacement d'anciens fichiers
+        upsert: true,
         contentType: file.type,
       });
-
-    console.log("uploadError");
-
+  
     if (uploadError) {
       console.error("Erreur d'upload:", uploadError);
       showError("Erreur lors de l'envoi du logo");
       return;
     }
-
-    // Récupère l'URL publique du fichier
+  
     const { data: publicUrlData } = supabase.storage
       .from("logos")
       .getPublicUrl(filePath);
-
-    console.log(publicUrlData);
-
+  
     if (publicUrlData?.publicUrl) {
       setLogoUrl(publicUrlData.publicUrl);
       showSuccess("Logo uploadé avec succès !");
     } else {
-      // alert(error)
       showError("Échec de la récupération de l'URL du logo");
     }
-    // alert("terminé")
   };
+  
 
   const copySignatureToClipboard = async () => {
     try {
@@ -661,21 +678,6 @@ function EmailSignature({
           <td style={{ paddingRight: "10px" }}>
             {logo && (
               <div style={{ position: "relative", display: "inline-block" }}>
-                <X
-                  onClick={() => removeLogoUrl()}
-                  className="text-red-500 hover:text-red-700 cursor-pointer transition-all"
-                  style={{
-                    position: "absolute",
-                    top: "-8px",
-                    right: "-8px",
-                    backgroundColor: "white",
-                    borderRadius: "9999px",
-                    border: "1px solid #f87171",
-                    padding: "2px",
-                    width: "20px",
-                    height: "20px",
-                  }}
-                />
                 <img
                   src={logo}
                   alt="Logo"
