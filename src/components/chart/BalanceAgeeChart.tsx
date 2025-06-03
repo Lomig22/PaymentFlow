@@ -66,7 +66,7 @@ export default function BalanceAgeeChart() {
         "30-60 jours": 0,
         "60-90 jours": 0,
         "90-120 jours": 0,
-        "120>jours": 0,
+        ">120 jours": 0,
       };
 
       receivables?.forEach((item) => {
@@ -83,7 +83,7 @@ export default function BalanceAgeeChart() {
         } else if (daysOverdue <= 120) {
           grouped["90-120 jours"] += amount;
         } else {
-          grouped["120>jours"] += amount;
+          grouped[">120 jours"] += amount;
         }
       });
 
