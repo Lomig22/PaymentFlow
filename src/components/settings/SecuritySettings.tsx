@@ -161,7 +161,9 @@ export default function PasswordSettings() {
           <button
             type="submit"
             disabled={loading}
-            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-white font-medium shadow-md
+                   hover:bg-blue-700 transition-all duration-300 ease-in-out
+                   focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75"
           >
             <Save className="h-5 w-5 mr-2" />
             {loading ? "Enregistrement..." : "Changer le mot de passe"}

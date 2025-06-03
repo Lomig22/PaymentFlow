@@ -227,8 +227,7 @@ const DsoChart = () => {
                   title={`Mois : ${d.month} — DSO moyen : ${d.value} jour(s)`}
                   style={{
                     height: `${(d.value / (max || 1)) * 130}px`,
-                    backgroundColor:
-                      i === filteredData.length - 1 ? "#1E60FF" : "#5CA9FF",
+                    backgroundColor:"#1E60FF"
                   }}
                 />
 
