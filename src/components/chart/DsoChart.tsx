@@ -82,7 +82,10 @@ const DsoChart = () => {
         const baseDate = item.document_date || item.created_at;
         if (!baseDate) continue;
 
-        const delay = dateDiff(new Date(item.due_date), new Date());
+        const delay = Math.max(
+          0,
+          dateDiff(new Date(item.due_date), new Date())
+        );
         const date = new Date(item.due_date);
         const year = date.getFullYear();
         const month = date.getMonth();
