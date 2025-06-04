@@ -70,9 +70,11 @@ const DeleteAccount = () => {
   };
 
   return (
-    <div className="p-4 max-w-md mx-auto">
+    <div className="p-4 max-w-md">
       <h2 className="text-xl font-bold mb-4">Supprimer votre compte</h2>
-      <p className="mb-2">Cette action est irréversible. Entrez votre mot de passe pour confirmer.</p>
+      <p className="mb-2">
+        Cette action est irréversible. Entrez votre mot de passe pour confirmer.
+      </p>
 
       <div className="relative mb-4">
         <input
@@ -87,7 +89,7 @@ const DeleteAccount = () => {
           onClick={() => setShowPassword(!showPassword)}
           className="absolute right-2 top-2 text-sm text-gray-600"
         >
-{showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+          {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
         </button>
       </div>
 

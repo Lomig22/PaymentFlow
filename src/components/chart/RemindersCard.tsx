@@ -53,7 +53,7 @@ const RemindersCard = () => {
   return (
     <div className="bg-blue-50 rounded-xl p-6 shadow-md w-full h-full flex flex-col">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-semibold text-gray-900">Relances</h2>
+        <h3 className="text-[20px] font-bold text-black mb-4 mt-4">Relances</h3>
         {/* Optionnel : icône flèche ou bouton */}
         {/* <button className="text-blue-600 hover:text-blue-800 transition">
       &rarr;

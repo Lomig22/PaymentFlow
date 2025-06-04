@@ -114,9 +114,9 @@ export default function ClientBalanceBar() {
           <div className="bg-green-100 p-3 rounded-lg">
             <BanknoteIcon className="h-6 w-6 text-green-600" />
           </div>
-          <h2 className="text-gray-800 text-lg font-medium mb-1 flex items-center">
+          <h3 className="text-[20px] font-bold text-black mb-4 mt-4">
             Encours client
-          </h2>
+          </h3>
         </div>
 
         <div className="text-3xl font-bold text-gray-900">

@@ -171,7 +171,7 @@ const DsoChart = () => {
           <div className="bg-yellow-100 p-3 rounded-lg">
             <Clock className="h-6 w-6 text-yellow-600" />
           </div>
-          <h2 className="text-gray-800 font-semibold text-lg">DSO</h2>
+          <h3 className="text-[20px] font-bold text-black mb-4 mt-4">DSO</h3>
           <div
             className={`inline-flex items-center gap-1 ${colorClass}`}
             title={`Différence entre les deux derniers mois visibles : ${Math.abs(
