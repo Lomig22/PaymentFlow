@@ -232,6 +232,7 @@ export async function sendManualReminder(
 		if (!level || (!template && !content)) return false;
 
 		// ✅ Générer le contenu personnalisé ou utiliser le template par défaut
+		console.log("content: ",content)
 
 		const defaultEmailContent = formatTemplate(content || template, {
 			company: receivable.client.company_name,
@@ -240,7 +241,8 @@ export async function sendManualReminder(
 			due_date: receivable.due_date,
 			days_late: daysLate || 0,
 			days_left: Math.max(0, -1 * daysLate),
-		});
+		  }).replace(/\n/g, '<br>');
+		  
 		
 /* 		if (content){
 			content=formatTemplate(content, {

@@ -137,7 +137,7 @@ function ReceivablesList() {
     { key: "notes", label: "Commentaire" },
   ];
 
- /*  const [columns, setColumns] = useState([
+  /*  const [columns, setColumns] = useState([
     { id: "select", label: "" },
     { id: "actions", label: "Actions" },
     { id: "status", label: "Statut" },
@@ -621,7 +621,7 @@ function ReceivablesList() {
         const success = await sendManualReminder(
           selectedReceivable.id,
           subject?.trim() || undefined,
-          content?.trim() || undefined
+          content || undefined
         );
         if (success) {
           setSendSuccess(true);
@@ -886,22 +886,22 @@ function ReceivablesList() {
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
   const filterRef = useRef(null);
 
-    useEffect(() => {
-      const handleClickOutside = (event: MouseEvent) => {
-        if (
-          filterRef.current &&
-          !filterRef.current.contains(event.target as Node)
-        ) {
-          setShowFilters(false);
-        }
-      };
-  
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => {
-        document.removeEventListener("mousedown", handleClickOutside);
-      };
-    }, []);
-/* 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        filterRef.current &&
+        !filterRef.current.contains(event.target as Node)
+      ) {
+        setShowFilters(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+  /* 
   useLayoutEffect(() => {
     if (
       openDropdownId &&
@@ -1216,18 +1216,19 @@ function ReceivablesList() {
       issues.push("une ou plusieurs dates de relance sont dépassées");
     } */
 
-    if (!receivable.automatic_reminder && issues.length === 0) {
-      return "Relance en pause";
-    }
     if (
-      receivable.reminder_enable_1 === false &&
-      receivable.reminder_enable_2 === false &&
-      receivable.reminder_enable_3 === false &&
-      receivable.reminder_enable_final === false &&
-      receivable.pre_reminder_enable === false
+      !receivable.reminder_enable_1 &&
+      !receivable.reminder_enable_2 &&
+      !receivable.reminder_enable_3 &&
+      !receivable.reminder_enable_final &&
+      !receivable.pre_reminder_enable
     ) {
       return "Aucune relance n'est activée!";
     }
+    if (!receivable.automatic_reminder && issues.length === 0) {
+      return "Relance en pause";
+    }
+
     return issues.join(", ");
   }
 
@@ -1267,7 +1268,11 @@ function ReceivablesList() {
         <div className="flex gap-4 items-center">
           <h1 className=" ml-4 text-2xl font-bold text-gray-900">Créances</h1>
           <Link to="/reminders" className="flex items-center h-16 px-4">
-            <button className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2">
+            <button
+              className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-white font-medium shadow-md
+                   hover:bg-blue-700 transition-all duration-300 ease-in-out
+                   focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75"
+            >
               <Clock className="h-5 w-5" />
               {/* <Upload className='h-5 w-5' /> */}
               Historique des relances
@@ -1282,7 +1287,9 @@ function ReceivablesList() {
               if (!allowed) return;
               setShowImportModal(true);
             }}
-            className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors flex items-center gap-2"
+            className="flex items-center gap-2 rounded-md bg-green-600 px-4 py-2 text-white font-medium shadow-md
+                   hover:bg-green-700 transition-all duration-300 ease-in-out
+                   focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-75"
           >
             <Upload className="h-5 w-5" />
             Importer CSV
@@ -1294,7 +1301,9 @@ function ReceivablesList() {
               if (!allowed) return;
               setShowForm(true);
             }}
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2"
+            className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-white font-medium shadow-md
+                   hover:bg-blue-700 transition-all duration-300 ease-in-out
+                   focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75"
           >
             <Plus className="h-5 w-5" />
             Nouvelle créance
@@ -1341,7 +1350,7 @@ function ReceivablesList() {
             initial={{ opacity: 0, y: -5 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className="flex items-center justify-between rounded-md border border-gray-200 bg-white px-4 py-2.5 shadow-sm"
+            className="flex left-3 items-center justify-between rounded-md border border-gray-200 bg-white px-4 py-2.5 mb-2 shadow-sm"
           >
             <span className="text-sm text-gray-700">
               {selectedIds.length}{" "}
@@ -1358,7 +1367,7 @@ function ReceivablesList() {
                 handleBulkDeleteConfirmation();
               }}
               disabled={selectedIds.length === 0}
-              className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium transition
+              className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-white font-medium transition
         ${
           selectedIds.length === 0
             ? "bg-gray-200 text-gray-400 cursor-not-allowed"
@@ -1377,46 +1386,46 @@ function ReceivablesList() {
           style={{ marginBottom: "4vh" }}
           ref={filterRef}
         >
-        {/* Section de tris */}
-        <div className="relative" style={{ marginBottom: "4vh" }}>
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-white font-medium shadow-md
+          {/* Section de tris */}
+          <div className="relative" style={{ marginBottom: "4vh" }}>
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-white font-medium shadow-md
                    hover:bg-blue-700 transition-all duration-300 ease-in-out
                    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75"
-          >
-            {showFilters ? (
-              <>
-                <X className="h-5 w-5" />
-                <span>Masquer les tris</span>
-              </>
-            ) : (
-              <>
-                <Filter className="h-5 w-5" />
-                <span>Afficher les tris</span>
-              </>
-            )}
-          </button>
+            >
+              {showFilters ? (
+                <>
+                  <X className="h-5 w-5" />
+                  <span>Masquer les tris</span>
+                </>
+              ) : (
+                <>
+                  <Filter className="h-5 w-5" />
+                  <span>Afficher les tris</span>
+                </>
+              )}
+            </button>
 
-          <AnimatePresence>
-            {showFilters && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.3 }}
-                className="absolute z-10 mt-3 rounded-md border border-gray-200 bg-white shadow-lg p-4 w-fit min-w-[200px]"
-              >
-                <div className="flex flex-wrap items-center gap-2">
-                  {columnFilters.map((col) => {
-                    const isActive = sortConfig?.key === col.key;
-                    const isAsc = isActive && sortConfig.sort === "asc";
+            <AnimatePresence>
+              {showFilters && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3 }}
+                  className="absolute z-10 mt-3 rounded-md border border-gray-200 bg-white shadow-lg p-4 w-fit min-w-[200px]"
+                >
+                  <div className="flex flex-wrap items-center gap-2">
+                    {columnFilters.map((col) => {
+                      const isActive = sortConfig?.key === col.key;
+                      const isAsc = isActive && sortConfig.sort === "asc";
 
-                    return (
-                      <button
-                        key={col.key}
-                        onClick={() => handleSortOnClick(col.key)}
-                        className={`
+                      return (
+                        <button
+                          key={col.key}
+                          onClick={() => handleSortOnClick(col.key)}
+                          className={`
                           relative flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg
                           backdrop-blur-sm
                           border border-opacity-30
@@ -1440,527 +1449,540 @@ function ReceivablesList() {
                               : "focus:ring-gray-400"
                           }
                         `}
-                      >
-                        <span className="relative z-10 flex items-center gap-1.5">
-                          {getFilterIcon(col.key)}
-                          <span>{col.label}</span>
-                        </span>
+                        >
+                          <span className="relative z-10 flex items-center gap-1.5">
+                            {getFilterIcon(col.key)}
+                            <span>{col.label}</span>
+                          </span>
 
-                        {isActive && (
-                          <ChevronDown
-                            className={`h-4 w-4 transition-transform duration-300 ${
-                              isAsc ? "rotate-180" : ""
-                            }`}
-                          />
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+                          {isActive && (
+                            <ChevronDown
+                              className={`h-4 w-4 transition-transform duration-300 ${
+                                isAsc ? "rotate-180" : ""
+                              }`}
+                            />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
 
-        {/* Table */}
-        <div className="overflow-x-auto rounded-xl border border-gray-200">
-          <table className="min-w-full divide-y divide-gray-200 text-sm">
-            <thead className="bg-gray-100 text-gray-800 uppercase text-xs font-semibold">
-              <tr>
-                <th className="px-4 py-3 text-left">
-                  <input
-                    type="checkbox"
-                    checked={selectedAll}
-                    onChange={handleSelectAll}
-                    className="h-4 w-4 text-blue-600 border-gray-300 rounded"
-                    title="Tout sélectionner"
-                  />
-                </th>
-                <th className="px-4 py-3 text-left">Actions</th>
-                <th className="px-4 py-3 text-left">Statut</th>
-                <th className="px-4 py-3 text-left">Client</th>
-                <th className="px-4 py-3 text-left">Code Client</th>
-                <th className="px-4 py-3 text-left">Email</th>
-                <th className="px-4 py-3 text-left">Facture</th>
-                <th className="px-4 py-3 text-left">Montant</th>
-                <th className="px-4 py-3 text-left">Réglé</th>
-                <th className="px-4 py-3 text-left">Date pièce</th>
-                <th className="px-4 py-3 text-left">Échéance</th>
-                <th className="px-4 py-3 text-left">Retard</th>
-                <th className="px-4 py-3 text-left">N° Échéance</th>
-                <th className="px-4 py-3 text-left">Commentaire</th>
-                <th className="px-4 py-3 text-left">Invoice</th>
-              </tr>
-            </thead>
-
-            <tbody className="bg-white divide-y divide-gray-100">
-              {filteredReceivables.map((receivable) => (
-                <tr key={receivable.id} className="hover:bg-gray-50 transition">
-                  <td className="px-4 py-3">
+          {/* Table */}
+          <div className="overflow-x-auto rounded-xl border border-gray-200">
+            <table className="min-w-full divide-y divide-gray-200 text-sm">
+              <thead className="bg-gray-100 text-gray-800 uppercase text-xs font-semibold">
+                <tr>
+                  <th className="px-4 py-3 text-left">
                     <input
                       type="checkbox"
-                      checked={selectedIds.includes(receivable.id)}
-                      onChange={() => handleSelectRow(receivable.id)}
+                      checked={selectedAll}
+                      onChange={handleSelectAll}
                       className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+                      title="Tout sélectionner"
                     />
-                  </td>
+                  </th>
+                  <th className="px-4 py-3 text-left">Actions</th>
+                  <th className="px-4 py-3 text-left">Statut</th>
+                  <th className="px-4 py-3 text-left">Client</th>
+                  <th className="px-4 py-3 text-left">Code Client</th>
+                  <th className="px-4 py-3 text-left">Email</th>
+                  <th className="px-4 py-3 text-left">Facture</th>
+                  <th className="px-4 py-3 text-left">Montant</th>
+                  <th className="px-4 py-3 text-left">Réglé</th>
+                  <th className="px-4 py-3 text-left">Date pièce</th>
+                  <th className="px-4 py-3 text-left">Échéance</th>
+                  <th className="px-4 py-3 text-left">Retard</th>
+                  <th className="px-4 py-3 text-left">N° Échéance</th>
+                  <th className="px-4 py-3 text-left">Commentaire</th>
+                  <th className="px-4 py-3 text-left">Invoice</th>
+                </tr>
+              </thead>
 
-                  {/* Actions */}
-                  <td className="px-4 py-3 relative">
-                    <div className="flex gap-2 items-center">
-                      <Tooltip label="Options supplémentaires">
+              <tbody className="bg-white divide-y divide-gray-100">
+                {filteredReceivables.map((receivable) => (
+                  <tr
+                    key={receivable.id}
+                    className="hover:bg-gray-50 transition"
+                  >
+                    <td className="px-4 py-3">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.includes(receivable.id)}
+                        onChange={() => handleSelectRow(receivable.id)}
+                        className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+                      />
+                    </td>
+
+                    {/* Actions */}
+                    <td className="px-4 py-3 relative">
+                      <div className="flex gap-2 items-center">
+                        <Tooltip label="Options supplémentaires">
+                          <span
+                            ref={(el) =>
+                              (buttonRefs.current[receivable.id] = el)
+                            }
+                            className="w-6 h-6 flex items-center justify-center cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (!handleClick()) return;
+                              setOpenDropdownId(
+                                openDropdownId === receivable.id
+                                  ? null
+                                  : receivable.id
+                              );
+                            }}
+                          >
+                            <MoreHorizontal className="w-5 h-5 text-gray-600 hover:text-gray-900" />
+                          </span>
+                        </Tooltip>
+
                         <span
-                          ref={(el) => (buttonRefs.current[receivable.id] = el)}
                           className="w-6 h-6 flex items-center justify-center cursor-pointer"
                           onClick={(e) => {
                             e.stopPropagation();
                             if (!handleClick()) return;
-                            setOpenDropdownId(
-                              openDropdownId === receivable.id
-                                ? null
-                                : receivable.id
-                            );
+                            handleAutomaticReminderToggle(receivable);
                           }}
                         >
-                          <MoreHorizontal className="w-5 h-5 text-gray-600 hover:text-gray-900" />
+                          {!receivable.automatic_reminder ? (
+                            <Tooltip
+                              label="Activer les relances"
+                              theme="orange"
+                            >
+                              <motion.img
+                                src={PlaySvg}
+                                alt="Play"
+                                className="w-5 h-5"
+                                initial={{ scale: 1 }}
+                                animate={{ rotate: 360, scale: 1.2 }}
+                                transition={{
+                                  type: "spring",
+                                  stiffness: 300,
+                                  damping: 20,
+                                }}
+                              />
+                            </Tooltip>
+                          ) : (
+                            <Tooltip label="Mettre en pause" theme="green">
+                              <motion.img
+                                src={PauseSvg}
+                                alt="Pause"
+                                className="w-5 h-5"
+                                initial={{ scale: 1 }}
+                                animate={{ scale: 1.2 }}
+                                transition={{
+                                  type: "spring",
+                                  stiffness: 300,
+                                  damping: 20,
+                                }}
+                              />
+                            </Tooltip>
+                          )}
                         </span>
-                      </Tooltip>
 
-                      <span
-                        className="w-6 h-6 flex items-center justify-center cursor-pointer"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (!handleClick()) return;
-                          handleAutomaticReminderToggle(receivable);
-                        }}
-                      >
-                        {!receivable.automatic_reminder ? (
-                          <Tooltip label="Activer les relances" theme="orange">
-                            <motion.img
-                              src={PlaySvg}
-                              alt="Play"
-                              className="w-5 h-5"
-                              initial={{ scale: 1 }}
-                              animate={{ rotate: 360, scale: 1.2 }}
-                              transition={{
-                                type: "spring",
-                                stiffness: 300,
-                                damping: 20,
-                              }}
-                            />
-                          </Tooltip>
-                        ) : (
-                          <Tooltip label="Mettre en pause" theme="green">
-                            <motion.img
-                              src={PauseSvg}
-                              alt="Pause"
-                              className="w-5 h-5"
-                              initial={{ scale: 1 }}
-                              animate={{ scale: 1.2 }}
-                              transition={{
-                                type: "spring",
-                                stiffness: 300,
-                                damping: 20,
-                              }}
-                            />
+                        {getReminderIssues(receivable) && (
+                          <Tooltip label={getReminderIssues(receivable)}>
+                            <Info className="w-5 h-5 text-yellow-500" />
                           </Tooltip>
                         )}
-                      </span>
+                      </div>
 
-                      {getReminderIssues(receivable) && (
-                        <Tooltip label={getReminderIssues(receivable)}>
-                          <Info className="w-5 h-5 text-yellow-500" />
-                        </Tooltip>
-                      )}
-                    </div>
-
-                    {/* Dropdown */}
-                    {openDropdownId === receivable.id && (
-                      <div
-                        ref={(el) => (dropdownRefs.current[receivable.id] = el)}
-                        className="fixed z-[51] w-48 origin-top-left rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-10 ml-2"
-                        style={{
-                          top: `${dropdownPosition.top}px`,
-                          left: `${dropdownPosition.left}px`,
-                        }}
+                      {/* Dropdown */}
+                      {openDropdownId === receivable.id && (
+                        <div
+                          ref={(el) =>
+                            (dropdownRefs.current[receivable.id] = el)
+                          }
+                          className="fixed z-[51] w-48 origin-top-left rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-10 ml-2"
+                          style={{
+                            top: `${dropdownPosition.top}px`,
+                            left: `${dropdownPosition.left}px`,
+                          }}
                         >
-                        <div className="py-1">
-                          <button
-                            onClick={() => {
-                              setShowEditForm(true);
-                              setSelectedReceivable(receivable);
-                              setOpenDropdownId(null);
-                            }}
-                            className="flex  w-full px-2 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                          >
-                            <Edit className="w-4 h-4 mr-2" /> Modifier
-                          </button>
-                          {receivable.status !== "paid" && (
+                          <div className="py-1">
+                            <button
+                              onClick={() => {
+                                setShowEditForm(true);
+                                setSelectedReceivable(receivable);
+                                setOpenDropdownId(null);
+                              }}
+                              className="flex  w-full px-2 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            >
+                              <Edit className="w-4 h-4 mr-2" /> Modifier
+                            </button>
+                            {receivable.status !== "paid" && (
+                              <button
+                                onClick={() => {
+                                  setSelectedReceivable(receivable);
+                                  setShowConfirmReminder(true);
+                                  setOpenDropdownId(null);
+                                }}
+                                className="flex  w-full px-2 py-2 text-sm text-yellow-600 hover:bg-yellow-100"
+                              >
+                                <Mail className="w-4 h-4 mr-2" /> Envoyer une
+                                relance
+                              </button>
+                            )}
+                            <button
+                              onClick={() => {
+                                setSelectedClient(receivable.client);
+                                setSelectedReceivable(receivable);
+                                setShowSettings(true);
+                                setOpenDropdownId(null);
+                              }}
+                              className="flex  w-full px-2 py-2 text-sm text-gray-600 hover:bg-gray-100"
+                            >
+                              <Clock className="w-4 h-4 mr-2" /> Paramètres de
+                              relance
+                            </button>
                             <button
                               onClick={() => {
                                 setSelectedReceivable(receivable);
-                                setShowConfirmReminder(true);
+                                setShowReminderHistory(true);
                                 setOpenDropdownId(null);
                               }}
-                              className="flex  w-full px-2 py-2 text-sm text-yellow-600 hover:bg-yellow-100"
+                              className="flex  w-full px-2 py-2 text-sm text-gray-600 hover:bg-gray-100"
                             >
-                              <Mail className="w-4 h-4 mr-2" /> Envoyer une
-                              relance
+                              <ListRestart className="w-4 h-4 mr-2" />{" "}
+                              Historique des relances
                             </button>
-                          )}
-                          <button
-                            onClick={() => {
-                              setSelectedClient(receivable.client);
-                              setSelectedReceivable(receivable);
-                              setShowSettings(true);
-                              setOpenDropdownId(null);
-                            }}
-                            className="flex  w-full px-2 py-2 text-sm text-gray-600 hover:bg-gray-100"
-                          >
-                            <Clock className="w-4 h-4 mr-2" /> Paramètres de
-                            relance
-                          </button>
-                          <button
-                            onClick={() => {
-                              setSelectedReceivable(receivable);
-                              setShowReminderHistory(true);
-                              setOpenDropdownId(null);
-                            }}
-                            className="flex  w-full px-2 py-2 text-sm text-gray-600 hover:bg-gray-100"
-                          >
-                            <ListRestart className="w-4 h-4 mr-2" /> Historique
-                            des relances
-                          </button>
-                          <button
-                            onClick={() => {
-                              handleDeleteClick(receivable);
-                              setOpenDropdownId(null);
-                            }}
-                            className="flex  w-full px-2 py-2 text-sm text-red-600 hover:bg-red-100"
-                          >
-                            <Trash2 className="w-4 h-4 mr-2" /> Supprimer
-                          </button>
+                            <button
+                              onClick={() => {
+                                handleDeleteClick(receivable);
+                                setOpenDropdownId(null);
+                              }}
+                              className="flex  w-full px-2 py-2 text-sm text-red-600 hover:bg-red-100"
+                            >
+                              <Trash2 className="w-4 h-4 mr-2" /> Supprimer
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </td>
+                      )}
+                    </td>
 
-                  {/* Données */}
-                  <td className="px-4 py-3">
-                    <ReceivableStatusBadge receivable={receivable} />
-                  </td>
-                  <td className="px-4 py-3">
-                    {receivable.client?.company_name ?? "Client inconnu"}
-                  </td>
-                  <td className="px-4 py-3">
-                    {receivable.client?.client_code ?? "inconnu"}
-                  </td>
-                  <td className="px-4 py-3">
-                    {receivable.email || receivable.client.email.split(",")[0]}
-                  </td>
-                  <td className="px-4 py-3">{receivable.invoice_number}</td>
-                  <td className="px-4 py-3">
-                    {new Intl.NumberFormat("fr-FR", {
-                      style: "currency",
-                      currency: "EUR",
-                    }).format(receivable.amount)}
-                  </td>
-                  <td className="px-4 py-3">
-                    {receivable.paid_amount
-                      ? new Intl.NumberFormat("fr-FR", {
-                          style: "currency",
-                          currency: "EUR",
-                        }).format(receivable.paid_amount)
-                      : "-"}
-                  </td>
-                  <td className="px-4 py-3 text-gray-500">
-                    {formatDate(receivable.document_date)}
-                  </td>
-                  <td className="px-4 py-3 text-gray-500">
-                    {new Date(receivable.due_date).toLocaleDateString("fr-FR")}
-                  </td>
-                  <td className="px-4 py-3 text-gray-500">
-                    {Math.max(
-                      0,
-                      dateDiff(new Date(receivable.due_date), new Date())
-                    )}
-                  </td>
+                    {/* Données */}
+                    <td className="px-4 py-3">
+                      <ReceivableStatusBadge receivable={receivable} />
+                    </td>
+                    <td className="px-4 py-3">
+                      {receivable.client?.company_name ?? "Client inconnu"}
+                    </td>
+                    <td className="px-4 py-3">
+                      {receivable.client?.client_code ?? "inconnu"}
+                    </td>
+                    <td className="px-4 py-3">
+                      {receivable.email ||
+                        receivable.client.email.split(",")[0]}
+                    </td>
+                    <td className="px-4 py-3">{receivable.invoice_number}</td>
+                    <td className="px-4 py-3">
+                      {new Intl.NumberFormat("fr-FR", {
+                        style: "currency",
+                        currency: "EUR",
+                      }).format(receivable.amount)}
+                    </td>
+                    <td className="px-4 py-3">
+                      {receivable.paid_amount
+                        ? new Intl.NumberFormat("fr-FR", {
+                            style: "currency",
+                            currency: "EUR",
+                          }).format(receivable.paid_amount)
+                        : "-"}
+                    </td>
+                    <td className="px-4 py-3 text-gray-500">
+                      {formatDate(receivable.document_date)}
+                    </td>
+                    <td className="px-4 py-3 text-gray-500">
+                      {new Date(receivable.due_date).toLocaleDateString(
+                        "fr-FR"
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-gray-500">
+                      {Math.max(
+                        0,
+                        dateDiff(new Date(receivable.due_date), new Date())
+                      )}
+                    </td>
 
-                  <td className="px-4 py-3 text-gray-500">
-                    {receivable.installment_number || "-"}
-                  </td>
-                  <td className="px-4 py-3 text-gray-500">
-                    {receivable.notes || "-"}
-                  </td>
-                  <td className="px-4 py-3">
-                    {receivable.invoice_pdf_url ? (
-                      <a
-                        href={receivable.invoice_pdf_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        title="Voir la facture"
-                        className="text-blue-600 hover:text-blue-800"
-                      >
-                        <File className="w-5 h-5" />
-                      </a>
-                    ) : (
-                      "-"
-                    )}
-                  </td>
-                </tr>
-              ))}
-              {filteredReceivables.length === 0 && (
-                <tr>
-                  <td colSpan={15} className="text-center py-6 text-gray-500">
-                    Aucune créance trouvée
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                    <td className="px-4 py-3 text-gray-500">
+                      {receivable.installment_number || "-"}
+                    </td>
+                    <td className="px-4 py-3 text-gray-500">
+                      {receivable.notes || "-"}
+                    </td>
+                    <td className="px-4 py-3">
+                      {receivable.invoice_pdf_url ? (
+                        <a
+                          href={receivable.invoice_pdf_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title="Voir la facture"
+                          className="text-blue-600 hover:text-blue-800"
+                        >
+                          <File className="w-5 h-5" />
+                        </a>
+                      ) : (
+                        "-"
+                      )}
+                    </td>
+                  </tr>
+                ))}
+                {filteredReceivables.length === 0 && (
+                  <tr>
+                    <td colSpan={15} className="text-center py-6 text-gray-500">
+                      Aucune créance trouvée
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
 
-      {showForm && (
-        <ReceivableForm
-          onClose={() => setShowForm(false)}
-          onReceivableAdded={(receivable) => {
-            setReceivables([receivable, ...receivables]);
-            setShowForm(false);
-          }}
-        />
-      )}
+        {showForm && (
+          <ReceivableForm
+            onClose={() => setShowForm(false)}
+            onReceivableAdded={(receivable) => {
+              setReceivables([receivable, ...receivables]);
+              setShowForm(false);
+            }}
+          />
+        )}
 
-      {selectedReceivable && showEditForm && (
-        <ReceivableEditForm
-          receivable={selectedReceivable}
-          onClose={() => {
-            setShowEditForm(false);
-            setSelectedReceivable(null);
-          }}
-          onReceivableUpdated={(updatedReceivable) => {
-            setTimeout(() => {
-              setReceivables(
-                receivables.map((r) =>
-                  r.id === updatedReceivable.id ? updatedReceivable : r
-                )
-              );
+        {selectedReceivable && showEditForm && (
+          <ReceivableEditForm
+            receivable={selectedReceivable}
+            onClose={() => {
+              setShowEditForm(false);
               setSelectedReceivable(null);
-            }, 2000);
-          }}
-        />
-      )}
+            }}
+            onReceivableUpdated={(updatedReceivable) => {
+              setTimeout(() => {
+                setReceivables(
+                  receivables.map((r) =>
+                    r.id === updatedReceivable.id ? updatedReceivable : r
+                  )
+                );
+                setSelectedReceivable(null);
+              }, 2000);
+            }}
+          />
+        )}
 
-      {showSettings && selectedClient && selectedReceivable && (
-        <ReminderSettingsModal
-          client={selectedClient}
-          onClose={() => {
-            setShowSettings(false);
-            setSelectedClient(null);
-            setSelectedReceivable(null);
-            // Rafraîchir les données pour mettre à jour l'affichage des icônes d'avertissement
-            fetchReceivables();
-          }}
-          reminderProfiles={reminderProfiles}
-          receivable={selectedReceivable}
-        />
-      )}
+        {showSettings && selectedClient && selectedReceivable && (
+          <ReminderSettingsModal
+            client={selectedClient}
+            onClose={() => {
+              setShowSettings(false);
+              setSelectedClient(null);
+              setSelectedReceivable(null);
+              // Rafraîchir les données pour mettre à jour l'affichage des icônes d'avertissement
+              fetchReceivables();
+            }}
+            reminderProfiles={reminderProfiles}
+            receivable={selectedReceivable}
+          />
+        )}
 
-      {showImportModal && (
-        <CSVImportModal
-          onClose={() => setShowImportModal(false)}
-          onImportSuccess={handleImportSuccess}
-          receivables={receivables}
-        />
-      )}
+        {showImportModal && (
+          <CSVImportModal
+            onClose={() => setShowImportModal(false)}
+            onImportSuccess={handleImportSuccess}
+            receivables={receivables}
+          />
+        )}
 
-      {showConfirmSendReminder && selectedReceivable && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-medium text-gray-900">
-                Confirmation d'envoi
-              </h3>
-              <button
-                onClick={() => {
-                  setShowConfirmReminder(false);
-                  setSelectedReceivable(null);
-                  fetchReceivables;
-                }}
-                className="text-gray-400 hover:text-gray-500"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <p className="text-sm text-gray-500 mb-4">
-              Êtes-vous sûr de vouloir envoyer la relance manuelle ?
-            </p>
-
-            <form className="space-y-4">
-              <div>
-                <label
-                  htmlFor="subject"
-                  className="block text-sm font-medium text-gray-700"
+        {showConfirmSendReminder && selectedReceivable && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium text-gray-900">
+                  Confirmation d'envoi
+                </h3>
+                <button
+                  onClick={() => {
+                    setShowConfirmReminder(false);
+                    setSelectedReceivable(null);
+                    fetchReceivables;
+                  }}
+                  className="text-gray-400 hover:text-gray-500"
                 >
-                  Objet
-                </label>
-                <input
-                  type="text"
-                  id="subject"
-                  name="subject"
-                  value={subject}
-                  onChange={(e) => setSubject(e.target.value)}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  placeholder="Entrez l'objet"
-                />
+                  <X className="h-5 w-5" />
+                </button>
               </div>
 
-              <div>
-                <label
-                  htmlFor="message"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Message
-                </label>
-                <textarea
-                  id="message"
-                  name="message"
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  rows={6}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  placeholder="Entrez votre message"
-                ></textarea>
-              </div>
-              <div className="mb-4">
-                <label
-                  htmlFor="signature"
-                  className="hidden block text-sm font-medium text-gray-700"
-                >
-                  Signature (HTML)
-                </label>
-                <textarea
-                  id="signature"
-                  name="signature"
-                  value={signature}
-                  onChange={(e) => setSignature(e.target.value)}
-                  rows={6}
-                  className="hidden mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  placeholder="Entrez votre signature HTML"
-                ></textarea>
-              </div>
+              <p className="text-sm text-gray-500 mb-4">
+                Êtes-vous sûr de vouloir envoyer la relance manuelle ?
+              </p>
 
-              <div className="mt-4">
-                <div className="flex justify-between items-center mb-1">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Aperçu de la signature :
-                  </label>
-                  <button
-                    onClick={sendToSignatureSetting}
-                    className="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    title="Personnaliser la signature"
-                    type="button"
+              <form className="space-y-4">
+                <div>
+                  <label
+                    htmlFor="subject"
+                    className="block text-sm font-medium text-gray-700"
                   >
-                    <PencilIcon className="h-5 w-5 mr-1" aria-hidden="true" />
-                    Modifier
-                  </button>
+                    Objet
+                  </label>
+                  <input
+                    type="text"
+                    id="subject"
+                    name="subject"
+                    value={subject}
+                    onChange={(e) => setSubject(e.target.value)}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    placeholder="Entrez l'objet"
+                  />
                 </div>
-                <div
-                  className="border p-4 rounded bg-white shadow"
-                  dangerouslySetInnerHTML={{ __html: signature }}
-                />
+
+                <div>
+                  <label
+                    htmlFor="message"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Message
+                  </label>
+                  <textarea
+                    id="message"
+                    name="message"
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                    rows={6}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    placeholder="Entrez votre message"
+                  ></textarea>
+                </div>
+                <div className="mb-4">
+                  <label
+                    htmlFor="signature"
+                    className="hidden block text-sm font-medium text-gray-700"
+                  >
+                    Signature (HTML)
+                  </label>
+                  <textarea
+                    id="signature"
+                    name="signature"
+                    value={signature}
+                    onChange={(e) => setSignature(e.target.value)}
+                    rows={6}
+                    className="hidden mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    placeholder="Entrez votre signature HTML"
+                  ></textarea>
+                </div>
+
+                <div className="mt-4">
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Aperçu de la signature :
+                    </label>
+                    <button
+                      onClick={sendToSignatureSetting}
+                      className="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      title="Personnaliser la signature"
+                      type="button"
+                    >
+                      <PencilIcon className="h-5 w-5 mr-1" aria-hidden="true" />
+                      Modifier
+                    </button>
+                  </div>
+                  <div
+                    className="border p-4 rounded bg-white shadow"
+                    dangerouslySetInnerHTML={{ __html: signature }}
+                  />
+                </div>
+              </form>
+
+              <div className="flex justify-end space-x-4 mt-6">
+                <button
+                  onClick={() => {
+                    setShowConfirmReminder(false);
+                    setSelectedReceivable(null);
+                    fetchReceivables();
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 border border-gray-300 rounded-md"
+                  disabled={sending}
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={() => {
+                    handleSendReminder();
+                    fetchReceivables();
+                  }}
+                  disabled={sending}
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md disabled:opacity-50"
+                >
+                  {sending ? "Envoi..." : "Envoyer la relance"}
+                </button>
               </div>
-            </form>
-
-            <div className="flex justify-end space-x-4 mt-6">
-              <button
-                onClick={() => {
-                  setShowConfirmReminder(false);
-                  setSelectedReceivable(null);
-                  fetchReceivables();
-                }}
-                className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 border border-gray-300 rounded-md"
-                disabled={sending}
-              >
-                Annuler
-              </button>
-              <button
-                onClick={() => {
-                  handleSendReminder();
-                  fetchReceivables();
-                }}
-                disabled={sending}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md disabled:opacity-50"
-              >
-                {sending ? "Envoi..." : "Envoyer la relance"}
-              </button>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {showDeleteConfirm && receivableToDelete && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-medium text-gray-900">
-                Confirmer la suppression
-              </h3>
-              <button
-                onClick={() => {
-                  setShowDeleteConfirm(false);
-                  setReceivableToDelete(null);
-                }}
-                className="text-gray-400 hover:text-gray-500"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
+        {showDeleteConfirm && receivableToDelete && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium text-gray-900">
+                  Confirmer la suppression
+                </h3>
+                <button
+                  onClick={() => {
+                    setShowDeleteConfirm(false);
+                    setReceivableToDelete(null);
+                  }}
+                  className="text-gray-400 hover:text-gray-500"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
 
-            <p className="text-sm text-gray-500 mb-4">
-              Êtes-vous sûr de vouloir supprimer la créance "
-              {receivableToDelete.invoice_number}" pour le client "
-              {receivableToDelete.client?.company_name || "inconnue"}" ? Cette
-              action est irréversible.
-            </p>
+              <p className="text-sm text-gray-500 mb-4">
+                Êtes-vous sûr de vouloir supprimer la créance "
+                {receivableToDelete.invoice_number}" pour le client "
+                {receivableToDelete.client?.company_name || "inconnue"}" ? Cette
+                action est irréversible.
+              </p>
 
-            <div className="flex justify-end space-x-4">
-              <button
-                onClick={() => {
-                  setShowDeleteConfirm(false);
-                  setReceivableToDelete(null);
-                }}
-                className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 border border-gray-300 rounded-md"
-              >
-                Annuler
-              </button>
-              <button
-                onClick={handleDeleteConfirm}
-                disabled={deleting}
-                className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md disabled:opacity-50"
-              >
-                {deleting ? "Suppression..." : "Supprimer"}
-              </button>
+              <div className="flex justify-end space-x-4">
+                <button
+                  onClick={() => {
+                    setShowDeleteConfirm(false);
+                    setReceivableToDelete(null);
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 border border-gray-300 rounded-md"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={handleDeleteConfirm}
+                  disabled={deleting}
+                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md disabled:opacity-50"
+                >
+                  {deleting ? "Suppression..." : "Supprimer"}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-      {showReminderHistory && selectedReceivable && (
-        <ReminderHistory
-          receivableId={selectedReceivable?.id}
-          reminders={reminderHistroy}
-          onClose={handleOnClose}
-        />
-      )}
-      <style>
-        {`
+        )}
+        {showReminderHistory && selectedReceivable && (
+          <ReminderHistory
+            receivableId={selectedReceivable?.id}
+            reminders={reminderHistroy}
+            onClose={handleOnClose}
+          />
+        )}
+        <style>
+          {`
           [data-framer-motion-layout-id="activeTab"] {
             transition: all 0.3s ease-in-out;
           }
         `}
-      </style>
-    </div>
+        </style>
+      </div>
     </div>
   );
 }

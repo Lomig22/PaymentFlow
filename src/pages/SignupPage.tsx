@@ -219,7 +219,7 @@ export default function SignupPage() {
     const payload = {
       price_id: priceMap[plan][interval],
       success_url: window.location.origin + "/paiement-abonement",
-      cancel_url: window.location.origin + "/pricing",
+      cancel_url: window.location,
     };
 
     const {

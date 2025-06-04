@@ -95,7 +95,9 @@ const DeleteAccount = () => {
       <button
         onClick={handleDelete}
         disabled={loading}
-        className="bg-red-600 text-white px-4 py-2 rounded"
+        className="flex items-center gap-2 rounded-md bg-red-600 px-4 py-2 text-white font-medium shadow-md
+                   hover:bg-red-700 transition-all duration-300 ease-in-out
+                   focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-75"
       >
         {loading ? "Suppression en cours..." : "Supprimer mon compte"}
       </button>
