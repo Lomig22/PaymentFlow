@@ -8,6 +8,7 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
+  Area,
 } from "recharts";
 import { Card } from "../ui/card";
 import { supabase } from "../../lib/supabase";
@@ -161,9 +162,10 @@ export default function DashboardLayout() {
             <div className="bg-blue-100 p-3 rounded-lg">
               <Activity className="h-6 w-6 text-blue-600" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-800">
+            <h3 className="text-[20px] font-bold text-black mb-4 mt-4">
               Activité récente
-            </h2>
+            </h3>
+
             <div className={`inline-flex items-center gap-1 ${colorClass}`}>
               <span className="font-semibold">{arrow}</span>
               <span className="font-medium">{Math.abs(diffPct)}%</span>
@@ -189,18 +191,41 @@ export default function DashboardLayout() {
           <ResponsiveContainer width="100%" height={320}>
             <LineChart
               data={filteredData}
-              margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+              margin={{ top: 20, right: 20, left: 0, bottom: 0 }}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="label" stroke="#6b7280" />
-              <YAxis stroke="#6b7280" tickFormatter={formatEuro} />
+              <defs>
+                <linearGradient id="paidShadow" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#00C853" stopOpacity={0.4} />
+                  <stop offset="100%" stopColor="#00C853" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="unpaidShadow" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#FF4333" stopOpacity={0.4} />
+                  <stop offset="100%" stopColor="#FF4333" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+
+              <CartesianGrid
+                strokeDasharray="1 1"
+                stroke="#e5e7eb"
+                vertical={false}
+              />
+              <XAxis
+                dataKey="label"
+                stroke="#374151"
+                tick={{ fontSize: 13, fontWeight: 500 }}
+              />
+              <YAxis
+                stroke="#374151"
+                tick={{ fontSize: 13, fontWeight: 500 }}
+                tickFormatter={formatEuro}
+              />
               <Tooltip
                 content={({ active, payload, label }) => {
                   if (active && payload && payload.length) {
                     const year = payload[0].payload.year;
                     return (
-                      <div className="bg-white shadow-lg rounded-lg p-4 border border-gray-200">
-                        <p className="text-sm text-gray-500 mb-2 font-medium">
+                      <div className="bg-white shadow-xl rounded-xl p-4 border border-gray-200">
+                        <p className="text-sm text-gray-500 mb-2 font-semibold">
                           {label} {year}
                         </p>
                         {payload.map((entry, index) => (
@@ -215,7 +240,7 @@ export default function DashboardLayout() {
                               ></span>
                               {entry.name}
                             </span>
-                            <span className="text-sm font-semibold text-gray-900">
+                            <span className="text-sm font-semibold text-gray-900 ml-2">
                               {formatEuro(entry.value)}
                             </span>
                           </div>
@@ -227,20 +252,45 @@ export default function DashboardLayout() {
                 }}
               />
 
-              <Legend iconType="circle" />
+              <Legend iconType="circle" wrapperStyle={{ paddingTop: 8 }} />
+
+              {/* Ombre sous les lignes */}
+              <Area
+                type="monotone"
+                dataKey="paid"
+                stroke="#00C853"
+                strokeWidth={3}
+                fill="url(#paidShadow)"
+                fillOpacity={1}
+                dot={false}
+                name="Payé"
+              />
+              <Area
+                type="monotone"
+                dataKey="unpaid"
+                stroke="#FF4333"
+                strokeWidth={3}
+                fill="url(#unpaidShadow)"
+                fillOpacity={1}
+                dot={false}
+                name="En attente"
+              />
+
               <Line
                 type="monotone"
                 dataKey="paid"
                 stroke="#00C853"
+                strokeWidth={3}
+                dot={{ r: 0 }}
                 name="Payé"
-                dot={{ r: 4 }}
               />
               <Line
                 type="monotone"
                 dataKey="unpaid"
                 stroke="#FF4333"
+                strokeWidth={3}
+                dot={{ r: 0 }}
                 name="En attente"
-                dot={{ r: 4 }}
               />
             </LineChart>
           </ResponsiveContainer>

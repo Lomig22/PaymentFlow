@@ -111,9 +111,9 @@ const OverdueInvoices = () => {
         <div className="bg-blue-100 p-3 rounded-lg">
           <Users className="h-6 w-6 text-blue-600" />
         </div>
-        <h2 className="text-xl font-semibold text-gray-800">
+        <h3 className="text-[20px] font-bold text-black mb-4 mt-4">
           Principaux débiteurs
-        </h2>
+        </h3>
       </div>
 
       <ul className="divide-y divide-gray-200">

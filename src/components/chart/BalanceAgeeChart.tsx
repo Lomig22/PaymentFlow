@@ -136,9 +136,9 @@ export default function BalanceAgeeChart() {
             <div className="bg-red-100 p-3 rounded-lg">
               <AlertCircle className="h-6 w-6 text-red-600" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-800">
+            <h3 className="text-[20px] font-bold text-black mb-4 mt-4">
               Balance âgée (retards)
-            </h2>
+            </h3>
           </div>
           <div className="flex items-center gap-2">
             <label className="text-sm text-gray-600">Date de référence:</label>
