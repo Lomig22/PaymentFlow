@@ -499,7 +499,12 @@ function ClientList({
         />
       </div>
       {selectedClientIds.length > 0 && (
-        <div className="ml-4 mb-2 text-sm text-gray-700">
+        <motion.div
+        initial={{ opacity: 0, y: -5 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="flex w-[99%] ml-4 items-center justify-between rounded-md border border-gray-200 bg-white px-4 py-2.5 mb-2 shadow-sm"
+      >
           {selectedClientIds.length} client(s) sélectionné(s)
           <button
             type="button"
@@ -509,7 +514,7 @@ function ClientList({
               handleBulkDeleteConfirmation();
             }}
             disabled={selectedClientIds.length === 0}
-            className={`ml-2 px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors duration-200 ${
+            className={`ml-2 px-4 py-1.5 rounded-lg text-white font-semibold transition-colors duration-200 ${
               selectedClientIds.length === 0
                 ? "bg-gray-200 text-gray-400 cursor-not-allowed"
                 : "bg-red-600 text-white hover:bg-red-200"
@@ -517,7 +522,7 @@ function ClientList({
           >
             Supprimer la sélection
           </button>
-        </div>
+        </motion.div>
       )}
 
       <div className="ml-4 overflow-hidden">
@@ -636,7 +641,7 @@ function ClientList({
           <table className="min-w-full divide-y divide-gray-200 text-sm">
             <thead className="bg-gray-100 text-gray-800 uppercase text-xs font-semibold">
               <tr>
-                <th className="px-4 py-3 text-left">
+                <th className="px-6 py-4 text-left">
                   <input
                     type="checkbox"
                     checked={

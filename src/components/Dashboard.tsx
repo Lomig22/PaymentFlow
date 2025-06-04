@@ -465,7 +465,7 @@ export default function Dashboard() {
   };
 
   const [notifications, setNotifications] = useState([]);
-  const [filter, setFilter] = useState("unread"); // 'all', 'read', 'unread'
+  const [filter, setFilter] = useState("all"); // 'all', 'read', 'unread'
   const [visibleCount, setVisibleCount] = useState(5);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 

@@ -31,7 +31,9 @@ const ClientPage = () => {
               if (!allowed) return;
               setShowImportModal(true);
             }}
-            className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors flex items-center gap-2"
+            className="flex items-center gap-2 rounded-md bg-green-600 px-4 py-2 text-white font-medium shadow-md
+                   hover:bg-green-700 transition-all duration-300 ease-in-out
+                   focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-75"
           >
             <Upload className="h-5 w-5" />
             Importer CSV
@@ -43,7 +45,9 @@ const ClientPage = () => {
               if (!allowed) return;
               setShowForm(true);
             }}
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2"
+            className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-white font-medium shadow-md
+                   hover:bg-blue-700 transition-all duration-300 ease-in-out
+                   focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75"
           >
             <Plus className="h-5 w-5" />
             Nouveau client
