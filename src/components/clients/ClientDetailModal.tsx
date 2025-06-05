@@ -1,70 +1,77 @@
 import React from "react";
 import { Dialog } from "@headlessui/react";
 import { motion } from "framer-motion";
-import { XCircle, CalendarDays, Globe, Mail, Phone } from "lucide-react";
-import { h1 } from "framer-motion/client";
+import {
+  X,
+  Building,
+  BadgeInfo,
+  Briefcase,
+  Globe,
+  MapPin,
+  Phone,
+  Mail,
+  StickyNote,
+  Calendar,
+  Wrench,
+  FileText,
+} from "lucide-react";
 
 const ClientDetailModal = ({ client, isOpen, onClose }) => {
   if (!client) return null;
-
-  const fadeIn = {
-    hidden: { opacity: 0, y: 40 },
-    visible: { opacity: 1, y: 0 },
-  };
-
-
-  const Field = ({ label, value, icon, isLink = false }) => (
-    <div className="mb-3">
-      <div className="text-sm text-gray-500 flex items-center gap-1">
-        {icon && <span>{icon}</span>} {label}
-      </div>
-      {isLink ? (
-        <a
-          href={value}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-blue-600 hover:underline text-base font-medium"
-        >
-          {value}
-        </a>
-      ) : (
-        <div className="text-base font-medium text-gray-800">{value}</div>
-      )}
-    </div>
-  );
-
-  const Section = ({ title, children }) => (
-    <div className="mb-8">
-      <h2 className="text-xl font-semibold text-gray-700 mb-4 border-b pb-1">
-        {title}
-      </h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-        {children}
-      </div>
-    </div>
-  );
-
-  const ReminderBadge = ({ label, enabled, delay }) => (
-    <div className="flex items-center gap-3 text-sm text-gray-700">
-      <span className="font-medium w-32">{label}</span>
-      <span
-        className={`px-2 py-1 rounded-full text-xs font-bold ${
-          enabled ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-        }`}
-      >
-        {enabled ? "✅ Activé" : "❌ Désactivé"}
-      </span>
-      {enabled && delay?.m !== undefined && (
-        <span className="text-gray-500">({delay.m} min)</span>
-      )}
-    </div>
-  );
 
   const formatDate = (dateString) =>
     new Date(dateString).toLocaleString("fr-FR", {
       dateStyle: "medium",
       timeStyle: "short",
     });
+
+  const Field = ({ label, value, Icon, isLink = false }) => (
+    <div className="flex items-start gap-3">
+      {Icon && <Icon className="w-5 h-5 text-blue-500 mt-1" />}
+      <div>
+        <p className="text-sm text-gray-500">{label}</p>
+        {isLink ? (
+          <a
+            href={value}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-base font-semibold text-blue-600 hover:underline"
+          >
+            {value}
+          </a>
+        ) : (
+          <p className="text-base font-medium text-gray-800">{value}</p>
+        )}
+      </div>
+    </div>
+  );
+
+  const Section = ({ title, children }) => (
+    <div className="mb-8">
+      <h2 className="text-xl font-semibold text-gray-800 border-b pb-2 mb-4">
+        {title}
+      </h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-4">
+        {children}
+      </div>
+    </div>
+  );
+
+  const ReminderBadge = ({ label, enabled, delay }) => (
+    <div className="flex items-center gap-4">
+      <span className="w-32 text-sm text-gray-600">{label}</span>
+      <span
+        className={`px-2 py-1 rounded-full text-xs font-bold ${
+          enabled ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+        }`}
+      >
+        {enabled ? "Activé" : "Désactivé"}
+      </span>
+      {enabled && delay?.m !== undefined && (
+        <span className="text-sm text-gray-500">({delay.m} min)</span>
+      )}
+    </div>
+  );
 
   return (
     <Dialog open={isOpen} onClose={onClose} className="fixed inset-0 z-50">
@@ -81,29 +88,47 @@ const ClientDetailModal = ({ client, isOpen, onClose }) => {
           className="relative z-50 bg-white rounded-2xl shadow-2xl max-w-4xl w-full p-8 overflow-y-auto max-h-[90vh]"
         >
           <div className="flex items-center justify-between mb-6">
-            <Dialog.Title className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-              🧾 Détails du client
+            <Dialog.Title className="flex items-center gap-3 text-2xl font-semibold text-gray-800">
+              <FileText className="w-6 h-6 text-blue-600" />
+              Détails du client
             </Dialog.Title>
-            <button onClick={onClose}>
-              <XCircle className="text-gray-500 hover:text-gray-700 w-7 h-7" />
+
+            <button
+              onClick={onClose}
+              className="text-gray-500 hover:text-red-600"
+            >
+              <X className="w-7 h-7" />
             </button>
           </div>
 
           <Section title="Informations générales">
-            <Field icon="🏢" label="Entreprise" value={client.company_name} />
-            <Field icon="🆔" label="Code client" value={client.client_code} />
-            <Field icon="💼" label="Secteur" value={client.industry} />
-            <Field icon="🌐" label="Site web" value={client.website} isLink />
             <Field
-              icon="📍"
+              label="Entreprise"
+              value={client.company_name}
+              Icon={Building}
+            />
+            <Field
+              label="Code client"
+              value={client.client_code}
+              Icon={BadgeInfo}
+            />
+            <Field label="Secteur" value={client.industry} Icon={Briefcase} />
+            <Field
+              label="Site web"
+              value={client.website}
+              Icon={Globe}
+              isLink
+            />
+            <Field
               label="Adresse"
               value={`${client.address}, ${client.postal_code} ${client.city}, ${client.country}`}
+              Icon={MapPin}
             />
           </Section>
 
           <Section title="Contact">
-            <Field icon="📞" label="Téléphone" value={client.phone} />
-            <Field icon="✉️" label="Email" value={client.email} />
+            <Field label="Téléphone" value={client.phone} Icon={Phone} />
+            <Field label="Email" value={client.email} Icon={Mail} />
           </Section>
 
           <Section title="Statut des rappels">
@@ -138,40 +163,45 @@ const ClientDetailModal = ({ client, isOpen, onClose }) => {
             <Field
               label="Pré-rappel"
               value={formatDate(client.pre_reminder_date)}
+              Icon={Calendar}
             />
             <Field
               label="Rappel 1"
               value={formatDate(client.reminder_date_1)}
+              Icon={Calendar}
             />
             <Field
               label="Rappel 2"
               value={formatDate(client.reminder_date_2)}
+              Icon={Calendar}
             />
             <Field
               label="Rappel 3"
               value={formatDate(client.reminder_date_3)}
+              Icon={Calendar}
             />
             <Field
               label="Rappel final"
               value={formatDate(client.reminder_date_final)}
+              Icon={Calendar}
             />
           </Section>
 
           <Section title="Autres">
             <Field
-              icon="🗒️"
               label="Notes"
               value={client.notes || "Aucune note"}
+              Icon={StickyNote}
             />
             <Field
-              icon="📅"
               label="Créé le"
               value={formatDate(client.created_at)}
+              Icon={Calendar}
             />
             <Field
-              icon="🛠️"
               label="Modifié le"
               value={formatDate(client.updated_at)}
+              Icon={Wrench}
             />
           </Section>
         </motion.div>

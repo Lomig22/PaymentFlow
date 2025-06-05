@@ -639,9 +639,9 @@ export default function Dashboard() {
                   <div className="bg-yellow-100 p-3 rounded-lg">
                     <Bell className="h-6 w-6 text-yellow-600" />
                   </div>
-                  <h2 className="text-xl font-semibold text-gray-800">
+                  <h3 className="text-[20px] font-bold text-black mb-4 mt-4">
                     Notifications
-                  </h2>
+                  </h3>
                 </div>
 
                 <div className="mb-3 flex gap-2">
@@ -894,9 +894,9 @@ export default function Dashboard() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-gray-800 font-semibold text-lg mb-6">
+            <h3 className="text-[20px] font-bold text-black mb-4 mt-4">
               Étapes de relance
-            </h2>
+            </h3>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">1ère relance</span>
@@ -1003,9 +1003,9 @@ export default function Dashboard() {
 
           {/* Statistiques générales */}
           <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-gray-800 font-semibold text-lg mb-6">
+            <h3 className="text-[20px] font-bold text-black mb-4 mt-4">
               Statistiques générales
-            </h2>
+            </h3>
             <div className="space-y-4">
               {/* Clients à relancer */}
               <div className="grid grid-cols-8 items-center gap-2">
