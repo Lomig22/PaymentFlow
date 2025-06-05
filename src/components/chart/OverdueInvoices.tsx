@@ -11,7 +11,7 @@ const OverdueInvoices = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [clientDetails, setClientDetails] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
-
+  const [loading, setLoading] = useState<boolean>(true);
   const openModal = (debtor) => {
     setSelectedDebtor(debtor);
     setIsOpen(true);
@@ -24,28 +24,28 @@ const OverdueInvoices = () => {
 
   useEffect(() => {
     const fetchOverdues = async () => {
+      setLoading(true);
       const {
         data: { user },
       } = await supabase.auth.getUser();
-  
+
       if (!user) throw new Error("Utilisateur non authentifié");
-  
+
       const userEmail = user.email;
-  
+
       // 1. Récupère les IDs des utilisateurs qui ont invité l'utilisateur actuel
       const { data: invitedByData, error: invitedByError } = await supabase
         .from("invited_users")
         .select("invited_by")
         .eq("invited_email", userEmail);
-  
+
       if (invitedByError) throw invitedByError;
-  
+
       const invitedByIds = invitedByData.map((entry) => entry.invited_by);
-  
+
       // 2. Inclure l'utilisateur actuel dans les IDs à filtrer
       const allOwnerIds = [user.id, ...invitedByIds];
-  
-      
+
       const { data, error } = await supabase
         .from("receivables")
         .select(
@@ -87,6 +87,7 @@ const OverdueInvoices = () => {
         .slice(0, 6);
 
       setTopDebtors(sorted);
+      setLoading(false);
     };
 
     fetchOverdues();
@@ -116,29 +117,40 @@ const OverdueInvoices = () => {
         </h3>
       </div>
 
-      <ul className="divide-y divide-gray-200">
-        {topDebtors.map((debtor, i) => (
-          <li key={i}>
-            <button
-              onClick={() => handleDebtorClick(debtor.code)}
-              className="flex items-center justify-between w-full px-2 py-3 rounded-md hover:bg-blue-50 transition group"
-            >
-              <div className="text-sm font-semibold text-gray-800 group-hover:text-blue-600">
-                {debtor.name}
-              </div>
-              <div className="text-sm font-medium text-gray-800 group-hover:text-blue-600">
-                {debtor.amount.toLocaleString("fr-FR", {
-                  style: "currency",
-                  currency: "EUR",
-                  minimumFractionDigits: 0,
-                })}
-                <span className="text-gray-900 ml-4">›</span>
-              </div>
-            </button>
-          </li>
-        ))}
-      </ul>
-
+      {loading ? (
+        <div
+          className="flex justify-center align-center items-center"
+          style={{ height: "100px" }}
+        >
+          <span className="animate-spin border-t-4 border-blue-600 rounded-full h-8 w-8"></span>
+          <p className="text-gray-600 ml-3 font-semibold">
+            Chargement des données...
+          </p>
+        </div>
+      ) : (
+        <ul className="divide-y divide-gray-200">
+          {topDebtors.map((debtor, i) => (
+            <li key={i}>
+              <button
+                onClick={() => handleDebtorClick(debtor.code)}
+                className="flex items-center justify-between w-full px-2 py-3 rounded-md hover:bg-blue-50 transition group"
+              >
+                <div className="text-sm font-semibold text-gray-800 group-hover:text-blue-600">
+                  {debtor.name}
+                </div>
+                <div className="text-sm font-medium text-gray-800 group-hover:text-blue-600">
+                  {debtor.amount.toLocaleString("fr-FR", {
+                    style: "currency",
+                    currency: "EUR",
+                    minimumFractionDigits: 0,
+                  })}
+                  <span className="text-gray-900 ml-4">›</span>
+                </div>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
       <ClientDetailModal
         client={clientDetails}
         isOpen={modalOpen}

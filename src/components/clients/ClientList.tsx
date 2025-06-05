@@ -237,8 +237,8 @@ function ClientList({
   }, [openDropdownId]);
 
   const columnFilters = [
-    { key: "status", label: "Statut" },
-    { key: "client", label: "Client" },
+    { key: "needs_reminder", label: "Relance" },
+    { key: "company_name", label: "Entreprise" },
     { key: "client_code", label: "Code Client" },
     { key: "address", label: "Adresse" },
     { key: "phone", label: "Téléphone" },
@@ -247,9 +247,9 @@ function ClientList({
 
   const getFilterIcon = (key: string) => {
     switch (key) {
-      case "status":
+      case "needs_reminder":
         return <Info className="h-4 w-4" />;
-      case "client":
+      case "company_name":
         return <User className="h-4 w-4" />;
       case "client_code":
         return <Key className="h-4 w-4" />;

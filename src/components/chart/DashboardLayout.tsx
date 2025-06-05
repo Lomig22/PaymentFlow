@@ -9,6 +9,7 @@ import {
   Tooltip,
   Legend,
   Area,
+  AreaChart,
 } from "recharts";
 import { Card } from "../ui/card";
 import { supabase } from "../../lib/supabase";
@@ -59,12 +60,14 @@ export default function DashboardLayout() {
   const [selectedYear, setSelectedYear] = useState<number>(defaultYear);
   const [selectedMonth, setSelectedMonth] = useState<string>(defaultMonth);
   const [dataByYear, setDataByYear] = useState<Record<number, any[]>>({});
+  const [loading, setLoading] = useState<boolean>(true);
 
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
 
   useEffect(() => {
     (async () => {
+      setLoading(true);
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -105,6 +108,7 @@ export default function DashboardLayout() {
       });
 
       setDataByYear(grouped);
+      setLoading(false);
     })();
   }, []);
 
@@ -188,112 +192,101 @@ export default function DashboardLayout() {
         </div>
 
         {filteredData.length > 0 ? (
-          <ResponsiveContainer width="100%" height={320}>
-            <LineChart
-              data={filteredData}
-              margin={{ top: 20, right: 20, left: 0, bottom: 0 }}
-            >
-              <defs>
-                <linearGradient id="paidShadow" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#00C853" stopOpacity={0.4} />
-                  <stop offset="100%" stopColor="#00C853" stopOpacity={0} />
-                </linearGradient>
-                <linearGradient id="unpaidShadow" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#FF4333" stopOpacity={0.4} />
-                  <stop offset="100%" stopColor="#FF4333" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-
-              <CartesianGrid
-                strokeDasharray="1 1"
-                stroke="#e5e7eb"
-                vertical={false}
-              />
-              <XAxis
-                dataKey="label"
-                stroke="#374151"
-                tick={{ fontSize: 13, fontWeight: 500 }}
-              />
-              <YAxis
-                stroke="#374151"
-                tick={{ fontSize: 13, fontWeight: 500 }}
-                tickFormatter={formatEuro}
-              />
-              <Tooltip
-                content={({ active, payload, label }) => {
-                  if (active && payload && payload.length) {
-                    const year = payload[0].payload.year;
-                    return (
-                      <div className="bg-white shadow-xl rounded-xl p-4 border border-gray-200">
-                        <p className="text-sm text-gray-500 mb-2 font-semibold">
-                          {label} {year}
-                        </p>
-                        {payload.map((entry, index) => (
-                          <div
-                            key={index}
-                            className="flex justify-between items-center mb-1"
-                          >
-                            <span className="flex items-center text-sm font-medium text-gray-700">
-                              <span
-                                className="w-3 h-3 rounded-full mr-2"
-                                style={{ backgroundColor: entry.color }}
-                              ></span>
-                              {entry.name}
-                            </span>
-                            <span className="text-sm font-semibold text-gray-900 ml-2">
-                              {formatEuro(entry.value)}
-                            </span>
+          <>
+            {loading ? (
+              <div className="flex justify-center align-center items-center" style={{ height: 320 }}>
+                <span className="animate-spin border-t-4 border-blue-600 rounded-full h-8 w-8"></span>
+                <p className="text-gray-600 ml-3 font-semibold">Chargement des données...</p>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={320}>
+                <AreaChart
+                  data={filteredData}
+                  margin={{ top: 20, right: 20, left: 0, bottom: 0 }}
+                >
+                  <defs>
+                    <linearGradient id="paidFill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#00C853" stopOpacity={0.5} />
+                      <stop offset="100%" stopColor="#00C853" stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="unpaidFill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#FF4333" stopOpacity={0.5} />
+                      <stop offset="100%" stopColor="#FF4333" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid
+                    strokeDasharray="1 1"
+                    stroke="#e5e7eb"
+                    vertical={false}
+                  />
+                  <XAxis
+                    dataKey="label"
+                    stroke="#374151"
+                    tick={{ fontSize: 13, fontWeight: 500 }}
+                  />
+                  <YAxis
+                    stroke="#374151"
+                    tick={{ fontSize: 13, fontWeight: 500 }}
+                    tickFormatter={formatEuro}
+                  />
+                  <Tooltip
+                    content={({ active, payload, label }) => {
+                      if (active && payload && payload.length) {
+                        const year = payload[0].payload.year;
+                        return (
+                          <div className="bg-white shadow-xl rounded-xl p-4 border border-gray-200">
+                            {" "}
+                            <p className="text-sm text-gray-500 mb-2 font-semibold">
+                              {" "}
+                              {label} {year}{" "}
+                            </p>{" "}
+                            {payload.map((entry, index) => (
+                              <div
+                                key={index}
+                                className="flex justify-between items-center mb-1"
+                              >
+                                {" "}
+                                <span className="flex items-center text-sm font-medium text-gray-700">
+                                  {" "}
+                                  <span
+                                    className="w-3 h-3 rounded-full mr-2"
+                                    style={{ backgroundColor: entry.color }}
+                                  ></span>{" "}
+                                  {entry.name}{" "}
+                                </span>{" "}
+                                <span className="text-sm font-semibold text-gray-900 ml-2">
+                                  {" "}
+                                  {formatEuro(entry.value)}{" "}
+                                </span>{" "}
+                              </div>
+                            ))}{" "}
                           </div>
-                        ))}
-                      </div>
-                    );
-                  }
-                  return null;
-                }}
-              />
-
-              <Legend iconType="circle" wrapperStyle={{ paddingTop: 8 }} />
-
-              {/* Ombre sous les lignes */}
-              <Area
-                type="monotone"
-                dataKey="paid"
-                stroke="#00C853"
-                strokeWidth={3}
-                fill="url(#paidShadow)"
-                fillOpacity={1}
-                dot={false}
-                name="Payé"
-              />
-              <Area
-                type="monotone"
-                dataKey="unpaid"
-                stroke="#FF4333"
-                strokeWidth={3}
-                fill="url(#unpaidShadow)"
-                fillOpacity={1}
-                dot={false}
-                name="En attente"
-              />
-
-              <Line
-                type="monotone"
-                dataKey="paid"
-                stroke="#00C853"
-                strokeWidth={3}
-                dot={{ r: 0 }}
-                name="Payé"
-              />
-              <Line
-                type="monotone"
-                dataKey="unpaid"
-                stroke="#FF4333"
-                strokeWidth={3}
-                dot={{ r: 0 }}
-                name="En attente"
-              />
-            </LineChart>
-          </ResponsiveContainer>
+                        );
+                      }
+                      return null;
+                    }}
+                  />{" "}
+                  <Legend iconType="circle" wrapperStyle={{ paddingTop: 8 }} />
+                  <Area
+                    type="monotone"
+                    dataKey="paid"
+                    stroke="#00C853"
+                    strokeWidth={2}
+                    fill="url(#paidFill)"
+                    name="Payé"
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="unpaid"
+                    stroke="#FF4333"
+                    strokeWidth={2}
+                    fill="url(#unpaidFill)"
+                    name="En attente"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
+          </>
         ) : (
           <p className="text-sm italic text-gray-500">
             Aucune donnée pour la période sélectionnée.

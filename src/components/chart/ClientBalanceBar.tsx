@@ -2,53 +2,45 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { BanknoteIcon } from "lucide-react";
 const statusColors: Record<string, string> = {
-  late: "#FF7F50", // corail vif
-  pending: "#4D6DFF", // bleu vif
-  legal: "#FF4C4C", // rouge vif
-  promesse: "#3CE58D", // vert menthe vif
-  // recouvrement: "#FFC107", // jaune doré vif (commentée)
-  // avoir: "#A569FF",        // violet vif (commentée)
+  late: "#FF7F50",
+  pending: "#4D6DFF",
+  legal: "#FF4C4C",
+  promesse: "#3CE58D",
 };
-
 
 const labelMapping: Record<string, string> = {
   late: "Échu",
   pending: "Non-échu",
   legal: "Litige",
   promesse: "Promesse de paiement",
-  // recouvrement: "Recouvrement",
-  // avoir: "Avoirs non associés",
 };
 
 export default function ClientBalanceBar() {
   const [data, setData] = useState<
     { label: string; value: number; color: string }[]
   >([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     async function fetchData() {
+      setLoading(true);
       const {
         data: { user },
       } = await supabase.auth.getUser();
-  
+
       if (!user) throw new Error("Utilisateur non authentifié");
-  
+
       const userEmail = user.email;
-  
-      // 1. Récupère les IDs des utilisateurs qui ont invité l'utilisateur actuel
+
       const { data: invitedByData, error: invitedByError } = await supabase
         .from("invited_users")
         .select("invited_by")
         .eq("invited_email", userEmail);
-  
+
       if (invitedByError) throw invitedByError;
-  
+
       const invitedByIds = invitedByData.map((entry) => entry.invited_by);
-  
-      // 2. Inclure l'utilisateur actuel dans les IDs à filtrer
       const allOwnerIds = [user.id, ...invitedByIds];
-  
-      
 
       const { data: receivables, error } = await supabase
         .from("receivables")
@@ -61,8 +53,8 @@ export default function ClientBalanceBar() {
       }
 
       const totals: Record<string, number> = {
-        pending: 0, // Non-échu
-        late: 0, // Échu
+        pending: 0,
+        late: 0,
         legal: 0,
         promesse: 0,
       };
@@ -94,6 +86,7 @@ export default function ClientBalanceBar() {
       }));
 
       setData(formatted);
+      setLoading(false);
     }
 
     fetchData();
@@ -119,9 +112,18 @@ export default function ClientBalanceBar() {
           </h3>
         </div>
 
-        <div className="text-3xl font-bold text-gray-900">
-          {format(data.reduce((sum, d) => sum + d.value, 0))}
-        </div>
+        {loading ? (
+          <div className="flex justify-center items-center h-32">
+            <span className="animate-spin border-t-4 border-blue-600 rounded-full h-8 w-8"></span>
+            <p className="text-gray-600 ml-3 font-semibold">Chargement des données...</p>
+          </div>
+        ) : (
+          <>
+            <div className="text-3xl font-bold text-gray-900">
+              {format(data.reduce((sum, d) => sum + d.value, 0))}
+            </div>
+          </>
+        )}
       </div>
 
       <div className="w-full h-4 rounded-full overflow-hidden flex shadow-inner mb-6">

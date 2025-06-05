@@ -80,6 +80,14 @@ export default function EmailSettings() {
 
     initializeSettings();
   }, []);
+    useEffect(() => {
+      const navigateInfo = localStorage.getItem("navigateAfterPayment");
+      if (navigateInfo) {
+        const { pathname, state } = JSON.parse(navigateInfo);
+        navigate(pathname, { state });
+        localStorage.removeItem("navigateAfterPayment");
+      }
+    }, []);
   async function fetchSubscription(supabase: any, userId: any) {
     const { data, error } = await supabase
       .from("subscriptions")
