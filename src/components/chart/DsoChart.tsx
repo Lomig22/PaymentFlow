@@ -32,13 +32,14 @@ const DsoChart = () => {
   const [selectedMonth, setSelectedMonth] = useState<string>(
     monthLabels[currentMonth]
   );
-
+  const [loading, setLoading] = useState<boolean>(true);
   const [dsoData, setDsoData] = useState<
     Record<string, { month: string; value: number }[]>
   >({});
 
   useEffect(() => {
     const fetchDSO = async () => {
+      setLoading(true);
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -116,6 +117,7 @@ const DsoChart = () => {
       });
 
       setDsoData(finalData);
+      setLoading(false);
     };
 
     fetchDSO();
@@ -201,50 +203,58 @@ const DsoChart = () => {
           </select>
         </div>
       </div>
-
-      <div className="text-sm text-gray-500 mb-2">
-        Période affichée :{" "}
-        {!selectedMonth
-          ? `Janvier à Décembre ${selectedYear}`
-          : `${selectedMonth} ${
-              selectedYear - 1
-            } → ${selectedMonth} ${selectedYear}`}
-      </div>
-
-      {filteredData.length > 0 ? (
-        <div className="overflow-x-auto w-full">
-          <div
-            className="flex items-end gap-4 min-w-[600px]"
-            style={{ height: "180px" }}
-          >
-            {filteredData.map((d, i) => (
-              <div
-                key={i}
-                className="flex flex-col items-center w-10 sm:w-12 flex-shrink-0"
-              >
-                <span className="text-sm text-gray-700 font-medium mb-1">
-                  {d.value}
-                </span>
-                <div
-                  className="w-full rounded-md transition-all duration-300"
-                  title={`Mois : ${d.month} — DSO moyen : ${d.value} jour(s)`}
-                  style={{
-                    height: `${(d.value / (max || 1)) * 130}px`,
-                    backgroundColor:"#1E60FF"
-                  }}
-                />
-
-                <span className="text-xs text-gray-500 mt-2 text-center whitespace-nowrap">
-                  {d.month.split(" ")[0].replace(".", "")}
-                </span>
-              </div>
-            ))}
-          </div>
+      {loading ? (
+        <div className="flex justify-center items-center h-32">
+          <span className="animate-spin border-t-4 border-blue-600 rounded-full h-8 w-8"></span>
+          <p className="text-gray-600 ml-3">Chargement des données...</p>
         </div>
       ) : (
-        <p className="text-sm text-gray-500 italic">
-          Aucune donnée disponible pour la période sélectionnée.
-        </p>
+        <>
+          <div className="text-sm text-gray-500 mb-2">
+            Période affichée :{" "}
+            {!selectedMonth
+              ? `Janvier à Décembre ${selectedYear}`
+              : `${selectedMonth} ${
+                  selectedYear - 1
+                } → ${selectedMonth} ${selectedYear}`}
+          </div>
+
+          {filteredData.length > 0 ? (
+            <div className="overflow-x-auto w-full">
+              <div
+                className="flex items-end gap-4 min-w-[600px]"
+                style={{ height: "180px" }}
+              >
+                {filteredData.map((d, i) => (
+                  <div
+                    key={i}
+                    className="flex flex-col items-center w-10 sm:w-12 flex-shrink-0"
+                  >
+                    <span className="text-sm text-gray-700 font-medium mb-1">
+                      {d.value}
+                    </span>
+                    <div
+                      className="w-full rounded-md transition-all duration-300"
+                      title={`Mois : ${d.month} — DSO moyen : ${d.value} jour(s)`}
+                      style={{
+                        height: `${(d.value / (max || 1)) * 130}px`,
+                        backgroundColor: "#1E60FF",
+                      }}
+                    />
+
+                    <span className="text-xs text-gray-500 mt-2 text-center whitespace-nowrap">
+                      {d.month.split(" ")[0].replace(".", "")}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-gray-500 italic">
+              Aucune donnée disponible pour la période sélectionnée.
+            </p>
+          )}
+        </>
       )}
     </div>
   );
