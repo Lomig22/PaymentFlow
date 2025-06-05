@@ -50,10 +50,22 @@ const RemindersCard = () => {
 
     fetchData();
   }, []);
+
+  const LoadingDots = () => {
+    return (
+      <span className="inline-flex">
+        <span className="animate-pulse">.</span>
+        <span className="animate-pulse delay-200">.</span>
+        <span className="animate-pulse delay-400">.</span>
+      </span>
+    );
+  };
+  
   return (
+    <>
     <div className="bg-blue-50 rounded-xl p-6 shadow-md w-full h-full flex flex-col">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-semibold text-gray-900">Relances</h2>
+        <h3 className="text-[20px] font-bold text-black mb-4 mt-4">Relances</h3>
         {/* Optionnel : icône flèche ou bouton */}
         {/* <button className="text-blue-600 hover:text-blue-800 transition">
       &rarr;
@@ -66,7 +78,7 @@ const RemindersCard = () => {
             À effectuer
           </div>
           <div className="text-3xl font-extrabold text-gray-900">
-            {loading ? "..." : receivables.length}
+            {loading ? <LoadingDots /> : receivables.length}
           </div>
         </div>
 
@@ -77,7 +89,7 @@ const RemindersCard = () => {
             Montant à relancer
           </div>
           <div className="text-3xl font-extrabold text-gray-900">
-            {loading ? "..." : `${(totalAmount / 1_000_000).toFixed(2)} M €`}
+            {loading ? <LoadingDots /> : `${(totalAmount / 1_000_000).toFixed(2)} M €`}
           </div>
         </div>
       </div>
@@ -89,6 +101,27 @@ const RemindersCard = () => {
   </div> 
   */}
     </div>
+    <style>
+      {`
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
+
+        .animate-pulse {
+          animation: pulse 1s infinite;
+        }
+
+        .delay-200 {
+          animation-delay: 200ms;
+        }
+
+        .delay-400 {
+          animation-delay: 400ms;
+        }
+      `}
+    </style>
+    </>
   );
 };
 

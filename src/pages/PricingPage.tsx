@@ -38,16 +38,16 @@ const PricingPage = ({ setShowContact, setDefaultSubject }: Props) => {
   const [message, setMessage] = useState<string | null>(null);
   const location = useLocation();
   const isPricingPage = location.pathname === "/pricing";
+  const isSettingsPage = location.pathname === "/settings";
 
   const navigate = useNavigate();
-
   useEffect(() => {
     if (message) {
       const timer = setTimeout(() => {
         setMessage(null);
       }, 5000);
 
-      return () => clearTimeout(timer); // nettoyage
+      return () => clearTimeout(timer);
     }
   }, [message]);
 
@@ -230,10 +230,18 @@ const PricingPage = ({ setShowContact, setDefaultSubject }: Props) => {
 
     const token = import.meta.env.VITE_TOKEN_STRIPE;
 
+    if(isSettingsPage){
+      localStorage.setItem("navigateAfterPayment", JSON.stringify({
+        pathname: "/settings",
+        state: { initialSectionId: "billing", initialSubTabId: "subscription" }
+      }));
+    }
+    
+
     const payload = {
       price_id: priceMap[plan][interval],
       success_url: window.location.origin + "/paiement-abonement",
-      cancel_url: window.location,
+      cancel_url: window.location.href,
     };
 
     try {
@@ -250,6 +258,8 @@ const PricingPage = ({ setShowContact, setDefaultSubject }: Props) => {
       );
 
       const result = await res.json();
+      console.log("Stripe session result:", result);
+      
 
       if (result?.url) {
         window.location.href = result.url;

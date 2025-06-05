@@ -80,6 +80,14 @@ export default function EmailSettings() {
 
     initializeSettings();
   }, []);
+    useEffect(() => {
+      const navigateInfo = localStorage.getItem("navigateAfterPayment");
+      if (navigateInfo) {
+        const { pathname, state } = JSON.parse(navigateInfo);
+        navigate(pathname, { state });
+        localStorage.removeItem("navigateAfterPayment");
+      }
+    }, []);
   async function fetchSubscription(supabase: any, userId: any) {
     const { data, error } = await supabase
       .from("subscriptions")
@@ -271,9 +279,14 @@ export default function EmailSettings() {
   return (
     <div className="bg-white rounded-lg shadow p-6">
       {isDisabled && (
-        <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md text-yellow-700">
-          Votre plan actuel ne permet pas de modifier ces paramètres. Passez à
-          un plan supérieur pour débloquer cette fonctionnalité.
+        <div className="mb-2 p-3 bg-yellow-50 border border-yellow-200 rounded-md text-yellow-700 text-sm flex justify-between items-center">
+          <span>Votre plan actuel ne permet pas cette modification.</span>
+          <a
+            href="/pricing"
+            className="text-yellow-600 font-medium hover:underline"
+          >
+            Passer à un plan supérieur
+          </a>
         </div>
       )}
 
