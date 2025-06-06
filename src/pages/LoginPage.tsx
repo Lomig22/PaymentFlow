@@ -13,6 +13,9 @@ export default function LoginPage() {
   } | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+  const [showTotpPrompt, setShowTotpPrompt] = useState(false);
+  const [totpCode, setTotpCode] = useState("");
+  const [mfaChallenge, setMfaChallenge] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,48 +23,87 @@ export default function LoginPage() {
     setMessage(null);
 
     try {
-      const {
-        data: { user },
-        error,
-      } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
+        if (error.name === "MFARequiredError") {
+          // Si MFA est requis
+          setMfaChallenge(error.message); // message = mfa ticket
+          setShowTotpPrompt(true);
+          return; // On attend la saisie du code MFA
+        }
+
         if (error.message.includes("Invalid login credentials")) {
           throw new Error("Email ou mot de passe incorrect.");
         }
         throw error;
       }
 
-      if (!user) throw new Error("Utilisateur non trouvé");
+      if (!data.user) throw new Error("Utilisateur non trouvé");
 
-      // Check if user has an active subscription
+      // Vérifier l’abonnement
       const { data: subscriptions, error: subError } = await supabase
         .from("subscriptions")
         .select("id")
-        .eq("user_id", user.id);
+        .eq("user_id", data.user.id);
 
-      if (subError) {
-        console.error("Subscription check error:", subError);
-        throw new Error("Erreur de vérification de l'abonnement");
-      }
+      if (subError) throw new Error("Erreur de vérification de l'abonnement");
       if (!subscriptions || subscriptions.length === 0) {
         await supabase.auth.signOut();
         throw new Error("Vous n'avez pas d'abonnement actif.");
       }
 
-      navigate(`/dashboard/${encodeURIComponent(user.email)}`);
+      navigate(`/dashboard/${encodeURIComponent(data.user.email)}`);
     } catch (error: any) {
       setMessage({
         type: "error",
-        text: error.message || "Une erreur est survenue lors de la connexion",
+        text: error.message || "Erreur lors de la connexion",
       });
     } finally {
       setLoading(false);
     }
   };
+  const handleTotpVerification = async () => {
+    setLoading(true);
+    setMessage(null);
+
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({
+        type: "mfa",
+        token: totpCode,
+        factorId: null, // facultatif
+        challengeId: mfaChallenge!,
+      });
+
+      if (error) throw error;
+      if (!data.session || !data.user) throw new Error("MFA échoué");
+
+      // Vérifier l’abonnement comme plus haut
+      const { data: subscriptions, error: subError } = await supabase
+        .from("subscriptions")
+        .select("id")
+        .eq("user_id", data.user.id);
+
+      if (subError) throw new Error("Erreur de vérification de l'abonnement");
+      if (!subscriptions || subscriptions.length === 0) {
+        await supabase.auth.signOut();
+        throw new Error("Vous n'avez pas d'abonnement actif.");
+      }
+
+      navigate(`/dashboard/${encodeURIComponent(data.user.email)}`);
+    } catch (error: any) {
+      setMessage({
+        type: "error",
+        text: error.message || "Erreur MFA",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleGoogleLogin = async () => {
     setLoading(true);
     setMessage(null);
@@ -103,6 +145,29 @@ export default function LoginPage() {
             }`}
           >
             {message.text}
+          </div>
+        )}
+        {showTotpPrompt && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Code de vérification (MFA)
+            </label>
+            <input
+              type="text"
+              value={totpCode}
+              onChange={(e) => setTotpCode(e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+              placeholder="123 456"
+            />
+            <button
+              type="button"
+              onClick={handleTotpVerification}
+              disabled={loading}
+              className="mt-4 w-full bg-blue-600 text-white p-3 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-50"
+            >
+              Vérifier le code
+            </button>
           </div>
         )}
 

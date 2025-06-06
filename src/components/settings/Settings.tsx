@@ -4,7 +4,7 @@ import { Elements } from "@stripe/react-stripe-js"; // Importer Elements
 import { loadStripe } from "@stripe/stripe-js"; // Importer loadStripe
 // Composants à créer ou importer
 import EmailSettings from "./EmailSettings";
-import PasswordSettings from "./SecuritySettings";
+import { SecuritySettings} from "./SecuritySettings";
 //import UserManagementSettings from './UserManagementSettings';
 
 import {
@@ -48,7 +48,7 @@ const sections = [
       {
         id: "password",
         name: "Paramètre de sécurité",
-        component: PasswordSettings,
+        component: SecuritySettings,
       },
       {
         id: "account",
