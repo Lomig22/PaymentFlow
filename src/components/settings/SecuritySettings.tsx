@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabase";
 import { AlertCircle, Save, Lock } from "lucide-react";
 import { useAbonnement } from "../context/AbonnementContext";
+import SecretKeyDisplay from "./SecretKeyDisplay";
 export function SecuritySettings() {
   return (
     <div className="space-y-10 max-w-2xl mx-auto">
@@ -159,20 +160,8 @@ export function MfaSettings() {
   <div>
     <p>Scanne ce QR code avec une application comme Google Authenticator :</p>
     <img src={qrCodeUrl} className="my-4" alt="QR Code MFA" />
-    {secretKey && (
-  <div className="mt-2">
-    <p className="text-sm text-gray-700">
-      Clé secrète : 
-      <span className="font-mono block mt-1">{secretKey}</span>
-    </p>
-    <button
-      onClick={() => navigator.clipboard.writeText(secretKey)}
-      className="mt-1 px-2 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm"
-    >
-      Copier la clé
-    </button>
-  </div>
-)}
+    {secretKey && <SecretKeyDisplay secretKey={secretKey} />}
+
 
     <input
       type="text"
