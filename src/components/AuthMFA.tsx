@@ -53,7 +53,7 @@ export default function AuthMFA({ onMFASuccess }: Props) {
       onMFASuccess(); */
     } catch (err: any) {
       console.error("❌ Erreur MFA:", err);
-      setError(err.message || "Erreur inconnue");
+      setError(err || "Erreur inconnue");
     } finally {
       setLoading(false);
     }
