@@ -6,74 +6,99 @@ import AppRoutes from "./AppRoutes";
 
 export default function AppWithMFA() {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true); // chargement global
+  const [isLoading, setIsLoading] = useState(true);
   const [showMFAScreen, setShowMFAScreen] = useState(false);
 
   const handleMFASuccess = () => {
     setShowMFAScreen(false);
   };
 
+  // Vérifie l'authentification et récupère l'utilisateur
   useEffect(() => {
     const initAuth = async () => {
       try {
         const session = await checkAuth();
         const currentUser = session?.user ?? null;
         setUser(currentUser);
-
-        if (currentUser) {
-          await checkMFAStatus();
-        }
       } catch (error) {
-        console.error("Erreur d'authentification ou MFA :", error);
+        console.error("Erreur d'authentification :", error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    const checkMFAStatus = async () => {
-      try {
-        const { data, error } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-        if (error) throw error;
-
-        const { currentLevel, nextLevel } = data ?? {};
-        console.log("MFA Status:", { currentLevel, nextLevel });
-
-        // Affiche l'écran MFA si nécessaire
-        if (nextLevel === "aal2" && currentLevel !== nextLevel) {
-          setShowMFAScreen(true);
-        } else {
-          setShowMFAScreen(false);
-        }
-      } catch (err) {
-        console.error("Erreur MFA :", err);
-        setShowMFAScreen(false); // Choix de fallback
-      }
-    };
-
     initAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        const currentUser = session?.user ?? null;
-        console.log("Auth state changed:", _event, currentUser);
-        setUser(currentUser);
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
 
-        // MFA terminé ?
-        if (_event === "MFA_CHALLENGE_VERIFIED") {
-          handleMFASuccess();
-        }
-
-        // Toujours re-check
-        await checkMFAStatus();
+      if (_event === "MFA_CHALLENGE_VERIFIED") {
+        handleMFASuccess();
       }
-    );
+      const checkMFAStatus = async () => {
+        if (!user) return;
+
+        try {
+          const { data, error } =
+            await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+          if (error) throw error;
+
+          const { currentLevel, nextLevel } = data ?? {};
+          console.log("🔐 MFA status:", { currentLevel, nextLevel });
+
+          if (nextLevel === "aal2" && currentLevel !== nextLevel) {
+            console.log("➡️ Need MFA challenge screen");
+            setShowMFAScreen(true);
+          } else {
+            console.log("✅ MFA already satisfied");
+            setShowMFAScreen(false);
+          }
+        } catch (err) {
+          console.error("❌ Erreur MFA (fallback sur AuthMFA) :", err);
+          setShowMFAScreen(true); // Fallback MFA
+        }
+      };
+      // Toujours revérifier
+      await checkMFAStatus();
+    });
 
     return () => {
       subscription?.unsubscribe();
     };
   }, []);
 
-  // Loader tant que authentification/MFA n'a pas été vérifiée
+  // 🔁 Nouvelle vérification MFA quand `user` est défini (ex. après refresh)
+  useEffect(() => {
+    const checkMFAStatus = async () => {
+      if (!user) return;
+
+      try {
+        const { data, error } =
+          await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+        if (error) throw error;
+
+        const { currentLevel, nextLevel } = data ?? {};
+        console.log("🔐 MFA status:", { currentLevel, nextLevel });
+
+        if (nextLevel === "aal2" && currentLevel !== nextLevel) {
+          console.log("➡️ Need MFA challenge screen");
+          setShowMFAScreen(true);
+        } else {
+          console.log("✅ MFA already satisfied");
+          setShowMFAScreen(false);
+        }
+      } catch (err) {
+        console.error("❌ Erreur MFA (fallback sur AuthMFA) :", err);
+        setShowMFAScreen(true); // Fallback MFA
+      }
+    };
+
+    checkMFAStatus();
+  }, [user]); // ⬅️ se déclenche dès que `user` est défini
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -82,16 +107,13 @@ export default function AppWithMFA() {
     );
   }
 
-  // Pas connecté
   if (!user) {
     return <AppRoutes user={null} mfaRequired={false} />;
   }
 
-  // Connecté mais pas encore passé MFA (TOTP)
   if (showMFAScreen) {
     return <AuthMFA onMFASuccess={handleMFASuccess} />;
   }
 
-  // Connecté et MFA OK
   return <AppRoutes user={user} mfaRequired={false} />;
 }
