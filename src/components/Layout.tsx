@@ -153,38 +153,94 @@ export default function Layout() {
   }, []); // ne s'exécute qu'une seule fois au montage
   useEffect(() => {
     const verifySubscription = async () => {
-      const {
-        data: { session },
-        error: sessionError,
-      } = await supabase.auth.getSession();
-
-      if (sessionError || !session) {
-        navigate("/login");
-        return;
+      try {
+        console.log("⏳ Vérification de la session utilisateur...");
+  
+        // Fonction pour limiter getSession à 3 secondes max
+        const timeout = (delay) =>
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("⏱ Timeout getSession")), delay)
+          );
+  
+        let user = null;
+  
+        // 1. Tenter d'obtenir la session Supabase avec timeout
+        try {
+          const { data, error } = await Promise.race([
+            supabase.auth.getSession(),
+            timeout(3000),
+          ]);
+  
+          if (error) {
+            console.warn("❌ Erreur Supabase getSession:", error.message);
+          } else if (data?.session?.user) {
+            user = data.session.user;
+            console.log("✅ Session récupérée via Supabase pour l'utilisateur :", user.id);
+          }
+        } catch (err) {
+          console.warn("⏱ Timeout ou erreur lors de getSession :", err.message);
+        }
+  
+        // 2. Si pas de session, tenter depuis localStorage
+        if (!user && localStorage.getItem("paymentflow-auth")) {
+          console.log("📦 Tentative de récupération via localStorage...");
+          try {
+            const stored = JSON.parse(localStorage.getItem("paymentflow-auth"));
+            const token = stored?.access_token;
+            const userData = stored?.user;
+  
+            if (token && userData) {
+              user = userData;
+              console.log("✅ Session locale trouvée pour :", user.identities?.[0]?.identity_id);
+  
+              // Réinitialiser une session Supabase
+              await supabase.auth.setSession({
+                access_token: token,
+                refresh_token: stored?.refresh_token,
+              });
+            }
+          } catch (e) {
+            console.error("❌ Erreur parsing localStorage:", e);
+          }
+        }
+  
+        // 3. Si aucune session valide → redirection
+        if (!user) {
+          console.warn("🔒 Aucune session valide. Redirection vers /login");
+          navigate("/login");
+          return;
+        }
+  
+        // 4. Vérifier l'abonnement utilisateur
+        const { data: subscriptions, error: subError } = await supabase
+          .from("subscriptions")
+          .select("id")
+          .eq("user_id", user.identities?.[0]?.identity_id || user.id); // fallback sur user.id au cas où
+  
+        if (subError) {
+          console.error("❌ Erreur lors de la récupération des abonnements :", subError);
+          await supabase.auth.signOut();
+          return;
+        }
+  
+        if (!subscriptions || subscriptions.length === 0) {
+          console.log("📭 Aucun abonnement trouvé, redirection ou appel à handleSubscribe()");
+          await handleSubscribe();
+        } else {
+          console.log("🎉 Abonnement actif détecté !");
+        }
+      } catch (e) {
+        console.error("🔥 Erreur globale dans verifySubscription :", e);
+      } finally {
+        setChecking(false);
       }
-
-      const user = session.user;
-
-      const { data: subscriptions, error: subError } = await supabase
-        .from("subscriptions")
-        .select("id")
-        .eq("user_id", user.id);
-
-      if (subError) {
-        console.error("Erreur abonnement", subError);
-        await supabase.auth.signOut();
-        return;
-      }
-
-      if (!subscriptions || subscriptions.length === 0) {
-        // 👇 créer un souscription gratuit
-        handleSubscribe();
-      }
-      setChecking(false);
     };
-
+  
     verifySubscription();
   }, []);
+  
+  
+  
 
   return (
     <div>

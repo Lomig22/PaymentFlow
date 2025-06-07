@@ -1,121 +1,85 @@
-import React, { useEffect, useState } from "react";
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom";
+import { useState, useEffect } from "react";
 import { supabase, checkAuth } from "./lib/supabase";
 import { User } from "@supabase/supabase-js";
+import AuthMFA from "./components/AuthMFA";
+import AppRoutes from "./AppRoutes";
 
-import LandingPage from "./pages/LandingPage";
-import SignupPage from "./pages/SignupPage";
-import Layout from "./components/Layout";
-import ResetPassword from "./components/ResetPassword";
-import Dashboard from "./components/Dashboard";
-import ReceivablesList from "./components/receivables/ReceivablesList";
-import Settings from "./components/settings/Settings";
-import ClientPage from "./components/clients/ClientPage";
-import LoginPage from "./pages/LoginPage";
-import ForgotPassword from "./pages/ForgotPassword";
-import PricingPage from "./pages/PricingPage";
-import AppHeader from "./components/AppHeader";
-import ReminderList  from "./components/reminders/ReminderList"
-import HelpAndSupport from "./pages/HelpAndSupport";
-import ContactPage from "./pages/ContactPage";
-import AbonnementSuccess from "./pages/success";
-import PaymentSuccess from "./pages/PaymentSuccess";
-import OAuthCallback from "./pages/SubscribePage";
-import SubscribePage from "./pages/SubscribePage";
-import Success from "./components/settings/paymentSuccess";
-
-function App() {
+export default function AppWithMFA() {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showMFAScreen, setShowMFAScreen] = useState(false);
 
+ /*  useEffect(() => {
+    // Vérifie s'il y a un MFA en attente dans la session
+    const mfaPending = sessionStorage.getItem("mfa_pending") === "true";
+    if (mfaPending) {
+      setShowMFAScreen(true);
+    }
+  }, []); */
+
+  const handleMFASuccess = () => {
+    sessionStorage.removeItem("mfa_pending");
+    setShowMFAScreen(false);
+  };
   useEffect(() => {
     const initAuth = async () => {
       try {
         const session = await checkAuth();
-        setUser(session?.user ?? null);
-    
+        const currentUser = session?.user ?? null;
+        setUser(currentUser);
+  
+        if (currentUser) {
+          await checkMFAStatus(); // Vérifie AAL dès le chargement
+        }
       } catch (error) {
-        console.error("Auth initialization error:", error);
+        console.error("Erreur d'authentification ou MFA :", error);
       } finally {
         setIsLoading(false);
       }
     };
-
+  
+    const checkMFAStatus = async () => {
+      try {
+        const { data, error } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+        if (error) throw error;
+  
+        const { currentLevel, nextLevel } = data ?? {};
+        console.log("MFA Status:", { currentLevel, nextLevel });
+  
+ /*        if (nextLevel === "aal2" && currentLevel !== nextLevel) {
+          setShowMFAScreen(true);
+        } else {
+          setShowMFAScreen(false);
+        } */
+      } catch (err) {
+        console.error("Erreur MFA :", err);
+        setShowMFAScreen(false);
+      }
+    };
+  
     initAuth();
-    
+  
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       const currentUser = session?.user ?? null;
-      setUser(currentUser);
-
-    });
-
-    return () => subscription?.unsubscribe();
-  }, []);
-  useEffect(() => {
-    const CHATLING_SCRIPT_ID = "chatling-embed-script";
-  
-    let observer: MutationObserver | null = null;
-  
-    const removeChatlingElements = () => {
-      // Supprime le script
-      const script = document.getElementById(CHATLING_SCRIPT_ID);
-      if (script) script.remove();
-  
-      // Supprime la config globale
-      delete window.chtlConfig;
-  
-      // Supprime les iframes
-      const iframe = document.querySelector("iframe[src*='chatling']");
-      if (iframe) iframe.remove();
-  
-      // Supprime les boutons flottants Chatling
-      const chatlingButtonContainer = Array.from(document.querySelectorAll("div"))
-        .find(div => div.style.position === "fixed" && div.innerHTML.includes("chtl-open-chat-icon"));
-      if (chatlingButtonContainer) chatlingButtonContainer.remove();
-    };
-  
-    if (!user ||location.pathname==="/help") {
-      // Ajouter le script si non connecté
-      if (!document.getElementById(CHATLING_SCRIPT_ID)) {
-        const script = document.createElement("script");
-        script.src = "https://chatling.ai/js/embed.js";
-        script.async = true;
-        script.id = CHATLING_SCRIPT_ID;
-        script.setAttribute("data-id", "4596411993");
-        document.body.appendChild(script);
-  
-        window.chtlConfig = { chatbotId: "4596411993" };
+      console.log("Auth state changed:", _event, currentUser);
+      if (_event==="MFA_CHALLENGE_VERIFIED"){
+        handleMFASuccess()
       }
-    } else {
-      removeChatlingElements();
+      // Toujours appeler checkMFAStatus, même si currentUser ne change pas
+      await checkMFAStatus();
   
-      // Observer si quelque chose est injecté après coup
-      observer = new MutationObserver(() => {
-        const iframe = document.querySelector("iframe[src*='chatling']");
-        const chatIcon = document.getElementById("chtl-open-chat-icon");
-  
-        if (iframe || chatIcon) {
-          removeChatlingElements();
-          if (observer) observer.disconnect();
-        }
-      });
-  
-      observer.observe(document.body, { childList: true, subtree: true });
-    }
+      // On met à jour l'utilisateur *même s'il n’a pas changé*
+       setUser(currentUser);
+    });
   
     return () => {
-      if (observer) observer.disconnect();
+      subscription?.unsubscribe();
     };
-  }, [user]);
+  }, []); // pas de dépendance à `user`
   
-  
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -124,71 +88,13 @@ function App() {
     );
   }
 
-  return (
-    <Router>
-      {!user && <AppHeader user={user} onContactClick={() => {}} />}
+  if (!user) {
+    return <AppRoutes user={null} mfaRequired={false} />;
+  }
 
-      <Routes>
-        {/* Public routes */}
-        <Route
-          path="/"
-          element={
-            !user ? (
-              <LandingPage onGetStarted={() => {}} />
-            ) : (
-              <Navigate to="/dashboard" replace />
-            )
-          }
-        />
-        <Route path="/help" element={<HelpAndSupport/>} />
-        <Route path="/subscribe" element={<SubscribePage />} />
-        <Route path="/paiement-abonement" element={<AbonnementSuccess />} />
-        <Route
-          path="/signup"
-          element={
-            !user ? <SignupPage /> : <Navigate to="/dashboard" replace />
-          }
-        />
-        <Route
-          path="/login"
-          element={!user ? <LoginPage /> : <Navigate to="/" replace />}
-        />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/pricing" element={<PricingPage />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-        {/* Auth-protected routes */}
-        <Route
-          path="/"
-          element={user ? <Layout /> : <Navigate to="/login" replace />}
-        >
-          <Route path="dashboard">
-            <Route
-              index
-              element={
-                <Navigate
-                  to={`/dashboard/${encodeURIComponent(user?.email || "")}`}
-                  replace
-                />
-              }
-            />
-            <Route path=":email" element={<Dashboard user={user} />} />
-          </Route>
+  if (showMFAScreen) {
+    return <AuthMFA onMFASuccess={handleMFASuccess} />;
+  }
 
-          <Route path="/clients" element={<ClientPage />} />
-          <Route path="/receivables" element={<ReceivablesList />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/reminders" element={<ReminderList />} />
-          <Route path="/success" element={<Success />} />
-        </Route>
-
-        {/* Redirects */}
-        <Route
-          path="*"
-          element={<Navigate to={user ? "/dashboard" : "/"} replace />}
-        />
-      </Routes>
-    </Router>
-  );
+  return <AppRoutes user={user} mfaRequired={false} />;
 }
-
-export default App;
