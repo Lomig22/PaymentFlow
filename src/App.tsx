@@ -115,5 +115,5 @@ export default function AppWithMFA() {
     return <AuthMFA onMFASuccess={handleMFASuccess} />;
   }
 
-  return <AppRoutes user={user} mfaRequired={false} />;
+  return <AppRoutes user={user} mfaRequired={false} onMFASuccess={handleMFASuccess} />;
 }
