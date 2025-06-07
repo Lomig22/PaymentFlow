@@ -18,6 +18,8 @@ export function MfaSettings() {
   const [code, setCode] = useState("");
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [secretKey, setSecretKey] = useState<string | null>(null);
+
   useEffect(() => {
     const fetchFactors = async () => {
       const { data, error } = await supabase.auth.mfa.listFactors();
@@ -32,6 +34,7 @@ export function MfaSettings() {
       if (totpFactor) {
         setFactorId(totpFactor.id);
         setQrCodeUrl(totpFactor.totp?.qr_code || null);
+        setSecretKey(totpFactor.totp?.secret ||null)
         setSuccess(totpFactor.status === "verified");
       }
     };
@@ -45,16 +48,18 @@ export function MfaSettings() {
       issuer: "PaymentFlow",
       friendlyName: "Payment-flow totp",
     });
-
+  
     if (error) {
       setError(error.message);
       return;
     }
-
+  
     setFactorId(data.id);
     setQrCodeUrl(data.totp.qr_code);
+    setSecretKey(data.totp.secret); // 🔑 ici
     setError(null);
   };
+  
 
   const verify = async () => {
     if (!factorId) {
@@ -150,25 +155,41 @@ export function MfaSettings() {
         </button>
       )}
 
-      {qrCodeUrl && !success && (
-        <div>
-          <p>Scanne ce QR code avec une application comme Google Authenticator :</p>
-          <img src={qrCodeUrl} className="my-4" alt="QR Code MFA" />
-          <input
-            type="text"
-            placeholder="Code à 6 chiffres"
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            className="border p-2 mt-2 block w-full"
-          />
-          <button
-            onClick={verify}
-            className="mt-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-          >
-            Valider le code
-          </button>
-        </div>
-      )}
+{qrCodeUrl && !success && (
+  <div>
+    <p>Scanne ce QR code avec une application comme Google Authenticator :</p>
+    <img src={qrCodeUrl} className="my-4" alt="QR Code MFA" />
+    {secretKey && (
+  <div className="mt-2">
+    <p className="text-sm text-gray-700">
+      Clé secrète : 
+      <span className="font-mono block mt-1">{secretKey}</span>
+    </p>
+    <button
+      onClick={() => navigator.clipboard.writeText(secretKey)}
+      className="mt-1 px-2 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm"
+    >
+      Copier la clé
+    </button>
+  </div>
+)}
+
+    <input
+      type="text"
+      placeholder="Code à 6 chiffres"
+      value={code}
+      onChange={(e) => setCode(e.target.value)}
+      className="border p-2 mt-2 block w-full"
+    />
+    <button
+      onClick={verify}
+      className="mt-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+    >
+      Valider le code
+    </button>
+  </div>
+)}
+
 {success && (
   <div className="space-y-2">
     <p className="text-green-600">MFA activée avec succès !</p>
