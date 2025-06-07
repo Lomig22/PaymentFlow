@@ -13,9 +13,7 @@ import ReceivablesList from "./components/receivables/ReceivablesList";
 import Settings from "./components/settings/Settings";
 import ReminderList from "./components/reminders/ReminderList";
 import HelpAndSupport from "./pages/HelpAndSupport";
-import ContactPage from "./pages/ContactPage";
 import AbonnementSuccess from "./pages/success";
-import PaymentSuccess from "./pages/PaymentSuccess";
 import SubscribePage from "./pages/SubscribePage";
 import Success from "./components/settings/paymentSuccess";
 import AppHeader from "./components/AppHeader";
@@ -24,7 +22,9 @@ import { User } from "@supabase/supabase-js";
 
 interface AppRoutesProps {
   user: User | null;
+  mfaRequired?: boolean;
 }
+
 
 export default function AppRoutes({ user }: AppRoutesProps) {
   return (
