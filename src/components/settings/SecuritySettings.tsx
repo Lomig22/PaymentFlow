@@ -2,8 +2,212 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabase";
 import { AlertCircle, Save, Lock } from "lucide-react";
 import { useAbonnement } from "../context/AbonnementContext";
+import SecretKeyDisplay from "./SecretKeyDisplay";
+export function SecuritySettings() {
+  return (
+    <div className="space-y-10 max-w-2xl mx-auto">
+      <h1 className="text-2xl font-bold mb-6">Paramètres de sécurité</h1>
+      <MfaSettings />
+      <hr />
+      <PasswordSettings />
+    </div>
+  );
+}
+export function MfaSettings() {
+  const [factorId, setFactorId] = useState<string | null>(null);
+  const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
+  const [code, setCode] = useState("");
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [secretKey, setSecretKey] = useState<string | null>(null);
 
-export default function PasswordSettings() {
+  useEffect(() => {
+    const fetchFactors = async () => {
+      const { data, error } = await supabase.auth.mfa.listFactors();
+  
+      if (error) {
+        console.error("Erreur récupération MFA:", error);
+        return;
+      }
+  
+      const totpFactor = data?.all?.find((f) => f.factor_type === "totp");
+  
+      if (totpFactor) {
+        setFactorId(totpFactor.id);
+        setQrCodeUrl(totpFactor.totp?.qr_code || null);
+        setSecretKey(totpFactor.totp?.secret ||null)
+        setSuccess(totpFactor.status === "verified");
+      }
+    };
+  
+    fetchFactors();
+  }, []);
+  
+  const generate = async () => {
+    const { data, error } = await supabase.auth.mfa.enroll({
+      factorType: "totp",
+      issuer: "PaymentFlow",
+      friendlyName: "Payment-flow totp",
+    });
+  
+    if (error) {
+      setError(error.message);
+      return;
+    }
+  
+    setFactorId(data.id);
+    setQrCodeUrl(data.totp.qr_code);
+    setSecretKey(data.totp.secret); // 🔑 ici
+    setError(null);
+  };
+  
+
+  const verify = async () => {
+    if (!factorId) {
+      setError("Le factorId est manquant");
+      return;
+    }
+
+    // Étape 1 : générer un challenge
+    const { data: challengeData, error: challengeError } = await supabase.auth.mfa.challenge({ factorId });
+
+    if (challengeError) {
+      setError(challengeError.message);
+      return;
+    }
+
+    const challengeId = challengeData.id;
+
+    // Étape 2 : vérifier le code TOTP
+    const { error: verifyError } = await supabase.auth.mfa.verify({
+      factorId,
+      challengeId,
+      code,
+    });
+
+    if (verifyError) {
+      setError(verifyError.message);
+      return;
+    }
+
+    setSuccess(true);
+    setError(null);
+  };
+
+  const removeMfa = async () => {
+    if (!factorId) {
+      setError("Aucun facteur d'authentification à supprimer.");
+      return;
+    }
+  
+    // Étape 1 : Créer un challenge
+    const { data: challengeData, error: challengeError } = await supabase.auth.mfa.challenge({ factorId });
+  
+    if (challengeError) {
+      setError(challengeError.message);
+      return;
+    }
+  
+    const challengeId = challengeData.id;
+    if (!code || code.trim() === "") {
+      setError("Veuillez entrer le code TOTP avant de désactiver le MFA.");
+      return;
+    }
+    
+    // Étape 2 : Vérifier le code (re-saisir le code TOTP de l'utilisateur)
+    const { error: verifyError } = await supabase.auth.mfa.verify({
+      factorId,
+      challengeId,
+      code, // le code TOTP que l'utilisateur a saisi
+    });
+  
+    if (verifyError) {
+      setError(verifyError.message);
+      return;
+    }
+  
+    // Étape 3 : Maintenant que l’utilisateur est "AAL2", on peut désactiver le MFA
+    const { error: unenrollError } = await supabase.auth.mfa.unenroll({ factorId });
+  
+    if (unenrollError) {
+      setError(unenrollError.message);
+      return;
+    }
+  
+    // Réinitialisation des états
+    setSuccess(false);
+    setQrCodeUrl(null);
+    setFactorId(null);
+    setCode("");
+    setError(null);
+  };
+  
+
+  return (
+    <div className="space-y-4">
+      <h2 className="text-lg font-bold">Activer la double authentification</h2>
+
+      {!qrCodeUrl && !success && (
+        <button
+          onClick={generate}
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
+          Générer le QR Code
+        </button>
+      )}
+
+{qrCodeUrl && !success && (
+  <div>
+    <p>Scanne ce QR code avec une application comme Google Authenticator :</p>
+    <img src={qrCodeUrl} className="my-4" alt="QR Code MFA" />
+    {secretKey && <SecretKeyDisplay secretKey={secretKey} />}
+
+
+    <input
+      type="text"
+      placeholder="Code à 6 chiffres"
+      value={code}
+      onChange={(e) => setCode(e.target.value)}
+      className="border p-2 mt-2 block w-full"
+    />
+    <button
+      onClick={verify}
+      className="mt-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+    >
+      Valider le code
+    </button>
+  </div>
+)}
+
+{success && (
+  <div className="space-y-2">
+    <p className="text-green-600">MFA activée avec succès !</p>
+
+    <input
+      type="text"
+      placeholder="Code à 6 chiffres"
+      value={code}
+      onChange={(e) => setCode(e.target.value)}
+      className="border p-2 mt-2 block w-full"
+    />
+    <button
+      onClick={removeMfa}
+      className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+    >
+      Supprimer la double authentification
+    </button>
+  </div>
+)}
+
+
+      {error && <p className="text-red-600">{error}</p>}
+    </div>
+  );
+}
+
+
+
+export  function PasswordSettings() {
   const { checkAbonnement } = useAbonnement();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
