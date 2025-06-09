@@ -75,7 +75,7 @@ export default function LoginPage() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: "https://lomig.onirtech.com/dashboard/",
+          redirectTo: "https://payment-flow.fr/dashboard/",
         },
       });
 
