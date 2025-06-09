@@ -13,6 +13,9 @@ export default function LoginPage() {
   } | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+  const [showTotpPrompt, setShowTotpPrompt] = useState(false);
+  const [totpCode, setTotpCode] = useState("");
+  const [mfaChallenge, setMfaChallenge] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,48 +23,50 @@ export default function LoginPage() {
     setMessage(null);
 
     try {
-      const {
-        data: { user },
-        error,
-      } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
+        if (error.name === "MFARequiredError") {
+          // Si MFA est requis
+          setMfaChallenge(error.message); // message = mfa ticket
+          setShowTotpPrompt(true);
+          return; // On attend la saisie du code MFA
+        }
+
         if (error.message.includes("Invalid login credentials")) {
           throw new Error("Email ou mot de passe incorrect.");
         }
         throw error;
       }
 
-      if (!user) throw new Error("Utilisateur non trouvé");
+      if (!data.user) throw new Error("Utilisateur non trouvé");
 
-      // Check if user has an active subscription
+      // Vérifier l’abonnement
       const { data: subscriptions, error: subError } = await supabase
         .from("subscriptions")
         .select("id")
-        .eq("user_id", user.id);
+        .eq("user_id", data.user.id);
 
-      if (subError) {
-        console.error("Subscription check error:", subError);
-        throw new Error("Erreur de vérification de l'abonnement");
-      }
+      if (subError) throw new Error("Erreur de vérification de l'abonnement");
       if (!subscriptions || subscriptions.length === 0) {
         await supabase.auth.signOut();
         throw new Error("Vous n'avez pas d'abonnement actif.");
       }
 
-      navigate(`/dashboard/${encodeURIComponent(user.email)}`);
+      navigate(`/dashboard/${encodeURIComponent(data.user.email)}`);
     } catch (error: any) {
       setMessage({
         type: "error",
-        text: error.message || "Une erreur est survenue lors de la connexion",
+        text: error.message || "Erreur lors de la connexion",
       });
     } finally {
       setLoading(false);
     }
   };
+
   const handleGoogleLogin = async () => {
     setLoading(true);
     setMessage(null);
@@ -70,7 +75,7 @@ export default function LoginPage() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: "https://payment-flow.fr/dashboard/",
+          redirectTo: "https://lomig.onirtech.com/dashboard/",
         },
       });
 
