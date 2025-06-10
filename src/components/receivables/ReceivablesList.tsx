@@ -1216,11 +1216,11 @@ function ReceivablesList() {
     } */
 
     if (
-      !receivable.reminder_enable_1 &&
-      !receivable.reminder_enable_2 &&
-      !receivable.reminder_enable_3 &&
-      !receivable.reminder_enable_final &&
-      !receivable.pre_reminder_enable
+      !client.reminder_enable_1 &&
+      !client.reminder_enable_2 &&
+      !client.reminder_enable_3 &&
+      !client.reminder_enable_final &&
+      !client.pre_reminder_enable
     ) {
       return "Aucune relance n'est activée!";
     }
