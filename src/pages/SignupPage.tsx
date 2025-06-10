@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { Lock, Mail, Eye, EyeOff } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import ReCAPTCHA from "react-google-recaptcha";
 
 const validatePassword = (password: string) => {
   const minLength = password.length >= 8;
@@ -39,11 +38,6 @@ export default function SignupPage() {
   const [phone, setPhone] = useState("");
   const [company, setCompany] = useState("");
   const [selectedPlan, setSelectedPlan] = useState("basic");
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
-
-  const handleRecaptchaChange = (token: string | null) => {
-    setCaptchaToken(token);
-  };
 
   useEffect(() => {
     const savedPlan = localStorage.getItem("selectedPlan");
@@ -97,36 +91,6 @@ export default function SignupPage() {
     setMessage(null);
 
     try {
-      // 1. Vérification du reCAPTCHA via la Edge Function
-      if (!captchaToken) {
-        setMessage({ type: "error", text: "Veuillez valider le reCAPTCHA." });
-        return;
-      }
-
-      const res = await fetch(
-        "https://rsomeerndudkhyhpigmn.supabase.co/functions/v1/recaptcha",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            token: captchaToken,
-          }),
-        }
-      );
-
-      const result = await res.json();
-
-      if (!res.ok) {
-        setMessage({
-          type: "error",
-          text: result.error || "Échec de la vérification du reCAPTCHA.",
-        });
-        return;
-      }
-
-      // 2. reCAPTCHA validé → on peut procéder à l'inscription
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
@@ -146,8 +110,7 @@ export default function SignupPage() {
         const userId = data.user.id;
         const formatedEmail = email.toLowerCase();
         localStorage.setItem("pendingUserId", userId);
-        localStorage.setItem("pendingEmail", formatedEmail);
-
+        localStorage.setItem("pendingEmail", email.toLowerCase());
         const { error: upsertError } = await supabase
           .from("pending_profiles")
           .upsert(
@@ -174,7 +137,6 @@ export default function SignupPage() {
           console.log("Profil mis à jour ou inséré avec succès !");
         }
       }
-
       setMessage({
         type: "success",
         text: "Un e-mail de confirmation vous a été envoyé. Veuillez vérifier votre boîte de réception.",
@@ -196,35 +158,6 @@ export default function SignupPage() {
   const handleGoogleSignup = async () => {
     const formatedEmail = email.toLowerCase();
     try {
-      // 1. Vérification du reCAPTCHA via la Edge Function
-      if (!captchaToken) {
-        setMessage({ type: "error", text: "Veuillez valider le reCAPTCHA." });
-        return;
-      }
-
-      const res = await fetch(
-        "https://rsomeerndudkhyhpigmn.supabase.co/functions/v1/recaptcha",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            token: captchaToken,
-          }),
-        }
-      );
-
-      const result = await res.json();
-
-      if (!res.ok) {
-        setMessage({
-          type: "error",
-          text: result.error || "Échec de la vérification du reCAPTCHA.",
-        });
-        return;
-      }
-
       // Maintenant, upsert dans la table pending_profiles en utilisant email comme clé de conflit
       const { error: upsertError } = await supabase
         .from("pending_profiles")
@@ -543,10 +476,7 @@ export default function SignupPage() {
                   </button>
                 </div>
               </div>
-              <ReCAPTCHA
-                sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
-                onChange={handleRecaptchaChange}
-              />
+
               <button
                 type="submit"
                 disabled={loading}
