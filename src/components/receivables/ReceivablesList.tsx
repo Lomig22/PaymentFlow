@@ -1224,9 +1224,9 @@ function ReceivablesList() {
     ) {
       return "Aucune relance n'est activée!";
     }
-    if (!receivable.automatic_reminder && issues.length === 0) {
+/*     if (!receivable.automatic_reminder && issues.length === 0) {
       return "Relance en pause";
-    }
+    } */
 
     return issues.join(", ");
   }
