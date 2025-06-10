@@ -129,6 +129,7 @@ function ReceivablesList() {
     { key: "paid_amount", label: "Montant Réglé" },
     { key: "due_date", label: "Échéance" },
     { key: "Delay in Days", label: "Retard" },
+    { key: "status", label: "Statut" },
     { key: "email", label: "Email" },
     { key: "invoice_number", label: "Facture" },
     { key: "document_date", label: "Date pièce" },
