@@ -9,13 +9,14 @@ const themeClasses = {
   
   export default function Tooltip({ label, children, theme = "yellow", className = "" }) {
     return (
-      <div className="relative group inline-block">
+      <div className="relative group inline-block z-[51]">
         {children}
         <div
           className={`absolute bottom-full mt-1 left-0
          text-xs rounded px-2 py-1 
-          opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50
+          opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-[51]
           ${themeClasses[theme] || themeClasses.yellow} ${className}`}
+          style={{width: "170px"}}
         >
           {label}
         </div>
