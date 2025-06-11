@@ -2,14 +2,17 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
 import { MantineProvider } from "@mantine/core";
+import CalendlyAndChatlingLoader from "../src/components/CalendlyAndChatlingLoader"
 import { AbonnementProvider } from "../src/components/context/AbonnementContext.tsx";
 import AppWithMFA from "./App.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <MantineProvider defaultColorScheme="light">
+            <CalendlyAndChatlingLoader />
+
       <AbonnementProvider>
-        <AppWithMFA />
+                <AppWithMFA />
       </AbonnementProvider>
     </MantineProvider>
   </StrictMode>
