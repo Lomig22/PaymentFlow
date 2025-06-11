@@ -1584,7 +1584,7 @@ function ReceivablesList() {
                         </span>
 
                         {getReminderIssues(receivable) && (
-                          <Tooltip label={getReminderIssues(receivable)}>
+                          <Tooltip label={getReminderIssues(receivable) }>
                             <Info className="w-5 h-5 text-yellow-500" />
                           </Tooltip>
                         )}
