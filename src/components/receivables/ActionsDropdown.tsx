@@ -49,7 +49,7 @@ export function ActionsDropdown({
 
 			{open && (
 				<div
-					className={`fixed w-56 origin-top-left rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 ${
+					className={`fixed w-56 origin-top-left rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 z-[60] ${
 						openUpwards ? 'bottom-full mb-2' : 'mt-2'
 					}`}
 				>
