@@ -1519,13 +1519,13 @@ function ReceivablesList() {
 
                     {/* Actions */}
                     <td className="px-4 py-3 relative">
-                      <div className="flex gap-2 items-center">
+                      <div className="flex gap-2 items-center relative z-0">
                         <Tooltip label="Options supplémentaires">
                           <span
                             ref={(el) =>
                               (buttonRefs.current[receivable.id] = el)
                             }
-                            className="w-6 h-6 flex items-center justify-center cursor-pointer"
+                            className="w-6 h-6 flex items-center justify-center cursor-pointer relative z-0"
                             onClick={(e) => {
                               e.stopPropagation();
                               if (!handleClick()) return;
@@ -1541,7 +1541,7 @@ function ReceivablesList() {
                         </Tooltip>
 
                         <span
-                          className="w-6 h-6 flex items-center justify-center cursor-pointer"
+                          className="w-6 h-6 flex items-center justify-center cursor-pointer relative z-0"
                           onClick={(e) => {
                             e.stopPropagation();
                             if (!handleClick()) return;
@@ -1586,7 +1586,7 @@ function ReceivablesList() {
 
                         {getReminderIssues(receivable) && (
                           <Tooltip label={getReminderIssues(receivable) }>
-                            <Info className="w-5 h-5 text-yellow-500" />
+                            <Info className="w-5 h-5 text-yellow-500 relative z-0" />
                           </Tooltip>
                         )}
                       </div>
