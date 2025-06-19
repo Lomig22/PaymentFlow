@@ -22,6 +22,8 @@ import AbonnementSuccess from "./pages/success";
 import SubscribePage from "./pages/SubscribePage";
 import Success from "./components/settings/paymentSuccess";
 import AppHeader from "./components/AppHeader";
+import ReportingRecouvrement from "./pages/ReportingRecouvrement";
+import CrmPage from "./pages/CrmPage";
 
 import { User } from "@supabase/supabase-js";
 import AuthMFA from "./components/AuthMFA";
@@ -51,6 +53,8 @@ export default function AppRoutes({ user,onMFASuccess  }: AppRoutesProps) {
         />
         <Route path="/help" element={<HelpAndSupport />} />
         <Route path="/subscribe" element={<SubscribePage />} />
+        <Route path="/reporting-recouvrement" element={<ReportingRecouvrement />} />
+        <Route path="/crm" element={<CrmPage />} />
         <Route path="/paiement-abonement" element={<AbonnementSuccess />} />
         <Route
           path="/signup"
