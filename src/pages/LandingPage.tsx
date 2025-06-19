@@ -276,20 +276,49 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
               amount: window.innerWidth < 768 ? 0.1 : 0.25,
             }}
             variants={fadeInUp}
-            className="text-center"
+            className="grid md:grid-cols-2 gap-8 items-center"
           >
-            <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
-              Automatisez vos relances clients
-            </h1>
-            <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-              Automatisez et personnalisez vos relances commerciales pour
-              convertir plus de prospects en clients fidèles.
-            </p>
-            <Link to="/signup">
-              <button className="bg-blue-600 text-white px-8 py-4 rounded-md text-lg font-medium hover:bg-blue-700 transition-colors">
-                Essayer gratuitement
-              </button>
-            </Link>
+            {/* Left Column - Text Content */}
+            <div className="text-center md:text-left">
+              <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
+                Automatisez vos<br />
+                <span className="text-blue-600">relances clients</span>
+              </h1>
+              <div className="text-xl text-gray-600 mb-8 space-y-4">
+                <p className="flex items-center gap-2">
+                  <CheckCircle className="h-6 w-6 text-green-600 flex-shrink-0" />
+                  Accélérez vos encaissements de plus de 40 %
+                </p>
+                <p className="flex items-center gap-2">
+                  <CheckCircle className="h-6 w-6 text-green-600 flex-shrink-0" />
+                  Gagnez 75 % de temps sur la gestion des relances
+                </p>
+                <p className="flex items-center gap-2">
+                  <CheckCircle className="h-6 w-6 text-green-600 flex-shrink-0" />
+                  Gardez vos impayés sous contrôle, en dessous de 1 %
+                </p>
+              </div>
+              <Link to="/signup">
+                <button className="bg-blue-600 text-white px-8 py-4 rounded-md text-lg font-medium hover:bg-blue-700 transition-colors">
+                  Essayer gratuitement
+                </button>
+              </Link>
+            </div>
+            {/* Right Column - Image */}
+            <div className="relative bg-white rounded-xl shadow-2xl overflow-hidden">
+              <div className="relative aspect-[16/9]">
+                <img
+                  src="/images/hero-dashboard.png.jpg"
+                  alt="PaymentFlow Dashboard"
+                  className="w-full h-full object-cover"
+                />
+                {/* Overlay gradient */}
+                <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/10 to-transparent pointer-events-none" />
+              </div>
+              {/* Decorative elements */}
+              <div className="absolute -top-6 -right-6 w-12 h-12 bg-blue-100 rounded-full z-0" />
+              <div className="absolute -bottom-4 -left-4 w-8 h-8 bg-green-100 rounded-full z-0" />
+            </div>
           </motion.div>
           {/* Features */}
           <motion.div
