@@ -23,6 +23,7 @@ import "swiper/css/pagination";
 
 import { User } from "@supabase/supabase-js";
 import { Link } from "react-router-dom";
+import { Menu } from '@headlessui/react';
 import Footer from "../components/Footer";
 import PricingPage from "./PricingPage";
 interface LandingPageProps {
