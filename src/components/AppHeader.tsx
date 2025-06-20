@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { TrendingUp, Menu, X } from "lucide-react";
+import { TrendingUp, X, BarChart3, Users, FileText, Settings } from "lucide-react";
+import { Menu as HeadlessMenu } from "@headlessui/react";
 import { supabase } from "../lib/supabase";
 import { User } from "@supabase/supabase-js";
 import ContactModal from "../pages/ContactModal";
@@ -15,6 +16,7 @@ export default function AppHeader({ user }: AppHeaderProps) {
   const calendlyRef = useRef<any>(null);
   const [showContactModal, setShowContactModal] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const showContactModalRef = useRef(showContactModal);
   const isMobileMenuOpenRef = useRef(isMobileMenuOpen);
@@ -90,12 +92,67 @@ export default function AppHeader({ user }: AppHeaderProps) {
         {/* Desktop Navigation (only if user is not logged in) */}
         {!user && (
           <div className="hidden md:flex space-x-8">
-            <button
-              onClick={() => handleNavToSection("features")}
-              className="text-gray-600 hover:text-gray-900"
+            <div 
+              className="relative inline-block text-left" 
+              onMouseEnter={() => setIsMenuOpen(true)}
+              onMouseLeave={() => setIsMenuOpen(false)}
             >
-              Fonctionnalités
-            </button>
+              <button 
+                className="text-gray-600 hover:text-gray-900 inline-flex items-center px-3 py-2 -mx-3 cursor-pointer"
+              >
+                Fonctionnalités
+                <svg 
+                  className={`ml-1 h-5 w-5 transform transition-transform duration-200 ${isMenuOpen ? 'rotate-180' : ''}`} 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {isMenuOpen && (
+                <div className="absolute left-0 top-full">
+                  <div className="h-2 w-full" />
+                  <div className="w-64 origin-top-left bg-white border border-gray-200 divide-y divide-gray-100 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                    <div className="p-1">
+                      <button
+                        onClick={() => navigate("/reporting-recouvrement")}
+                        className="group flex rounded-md items-center w-full px-3 py-2 text-sm text-gray-900 hover:bg-blue-50 transition-colors"
+                      >
+                        <BarChart3 className="mr-3 h-5 w-5 text-blue-600" />
+                        Reporting de recouvrement
+                      </button>
+                      <button
+                        onClick={() => navigate("/crm")}
+                        className="group flex rounded-md items-center w-full px-3 py-2 text-sm text-gray-900 hover:bg-blue-50 transition-colors"
+                      >
+                        <Users className="mr-3 h-5 w-5 text-blue-600" />
+                        CRM
+                      </button>
+
+
+
+                      <button
+                        onClick={() => handleNavToSection("tools")}
+                        className="group flex rounded-md items-center w-full px-3 py-2 text-sm text-gray-900 hover:bg-blue-50 transition-colors"
+                      >
+                        <FileText className="mr-3 h-5 w-5 text-blue-600" />
+                        Outils de créances
+                      </button>
+
+                      <button
+                        onClick={() => handleNavToSection("customization")}
+                        className="group flex rounded-md items-center w-full px-3 py-2 text-sm text-gray-900 hover:bg-blue-50 transition-colors"
+                      >
+                        <Settings className="mr-3 h-5 w-5 text-blue-600" />
+                        Personnalisation
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
             <button
               onClick={() => handleNavToSection("testimonials")}
               className="text-gray-600 hover:text-gray-900"
@@ -104,11 +161,11 @@ export default function AppHeader({ user }: AppHeaderProps) {
             </button>
             <button
               onClick={() => handleNavToSection("pricing")}
-              className="text-gray-600 hover:text-gray-900"
+              className="text-gray-600 hover:text-gray-900 px-3 py-2 -mx-3"
             >
               Tarifs
             </button>
-            <a href="/help" className="text-gray-600 hover:text-gray-900">
+            <a href="/help" className="text-gray-600 hover:text-gray-900 px-3 py-2 -mx-3">
               Guides
             </a>
 
@@ -150,7 +207,7 @@ export default function AppHeader({ user }: AppHeaderProps) {
             {isMobileMenuOpen ? (
               <X className="h-6 w-6" />
             ) : (
-              <Menu className="h-6 w-6" />
+              <TrendingUp className="h-6 w-6" />
             )}
           </button>
         </div>
