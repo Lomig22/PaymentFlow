@@ -2,22 +2,33 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <!-- Recommended favicon configuration -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PaymentFlow</title>
+
+    <!-- Favicons -->
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" href="/icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>PaymentFlow</title>
+    <!-- Styles -->
+    <link href="https://calendly.com/assets/external/widget.css" rel="stylesheet" />
 
-    <!-- Rest of your scripts -->
-    <script >
+    <!-- Error handling and configuration -->
+    <script>
+      window.addEventListener('error', function(event) {
+        console.error('Global error:', event.error);
+        console.error('Message:', event.message);
+        console.error('Source:', event.filename);
+        console.error('Line:', event.lineno);
+        console.error('Column:', event.colno);
+      });
+
+      window.addEventListener('unhandledrejection', function(event) {
+        console.error('Unhandled promise rejection:', event.reason);
+      });
+
       window.chtlConfig = { chatbotId: "4596411993" };
     </script>
-     <link
-      href="https://calendly.com/assets/external/widget.css"
-      rel="stylesheet"
-    />
    <!-- <script
       async
       data-id="4596411993"
