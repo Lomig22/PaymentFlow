@@ -6,17 +6,15 @@ interface LandingPageProps {
   onGetStarted: () => void;
 }
 
-// Composant pour insérer l'iframe Storylane et charger le script dynamiquement
+// Composant Storylane qui ne s'affiche que côté client
 function StorylaneDemoEmbed() {
+  const [isClient, setIsClient] = React.useState(false);
+
   React.useEffect(() => {
-    // Vérifie si le script existe déjà pour éviter de le charger plusieurs fois
-    if (!document.querySelector('script[src="https://js.storylane.io/js/v2/storylane.js"]')) {
-      const script = document.createElement('script');
-      script.src = "https://js.storylane.io/js/v2/storylane.js";
-      script.async = true;
-      document.body.appendChild(script);
-    }
+    setIsClient(true);
   }, []);
+
+  if (!isClient) return null;
 
   return (
     <div className="sl-embed" style={{ position: 'relative', paddingBottom: 'calc(50.42% + 25px)', width: '100%', height: 0, transform: 'scale(1)' }}>
@@ -42,6 +40,7 @@ function StorylaneDemoEmbed() {
     </div>
   );
 }
+
 
 export default function LandingPage({ onGetStarted }: LandingPageProps) {
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
