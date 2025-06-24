@@ -31,6 +31,43 @@ interface LandingPageProps {
   user?: User; // Add this if you want to pass the user as a prop
 }
 
+// Composant pour insérer l'iframe Storylane et charger le script dynamiquement
+function StorylaneDemoEmbed() {
+  React.useEffect(() => {
+    // Vérifie si le script existe déjà pour éviter de le charger plusieurs fois
+    if (!document.querySelector('script[src="https://js.storylane.io/js/v2/storylane.js"]')) {
+      const script = document.createElement('script');
+      script.src = "https://js.storylane.io/js/v2/storylane.js";
+      script.async = true;
+      document.body.appendChild(script);
+    }
+  }, []);
+
+  return (
+    <div className="sl-embed" style={{ position: 'relative', paddingBottom: 'calc(50.42% + 25px)', width: '100%', height: 0, transform: 'scale(1)' }}>
+      <iframe
+        loading="lazy"
+        className="sl-demo"
+        src="https://app.storylane.io/demo/otrw27xywyf3?embed=inline"
+        name="sl-embed"
+        allow="fullscreen"
+        allowFullScreen
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          border: '1px solid rgba(63,95,172,0.35)',
+          boxShadow: '0px 0px 18px rgba(26, 19, 72, 0.15)',
+          borderRadius: '10px',
+          boxSizing: 'border-box',
+        }}
+      />
+    </div>
+  );
+}
+
 export default function LandingPage({ onGetStarted }: LandingPageProps) {
   const navigate = useNavigate();
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
@@ -397,6 +434,24 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
               </p>
             </motion.div>
           </motion.div>
+
+          {/* Intégration de la démo Storylane */}
+          <motion.div
+            className="mt-16"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{
+              once: true,
+              amount: 0.2
+            }}
+            variants={fadeInUp}
+          >
+            <h2 className="text-2xl font-bold text-center mb-8">Découvrez PaymentFlow en action</h2>
+            <div className="max-w-4xl mx-auto">
+              <StorylaneDemoEmbed />
+            </div>
+          </motion.div>
+
           {/* Use Cases */}
           <motion.div
             className="mt-32"
