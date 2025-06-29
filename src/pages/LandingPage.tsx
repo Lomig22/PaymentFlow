@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { Helmet } from "react-helmet-async";
 import { motion, useInView } from "framer-motion";
 import { InlineWidget } from "react-calendly";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -30,6 +31,17 @@ interface LandingPageProps {
   onGetStarted: () => void;
   user?: User; // Add this if you want to pass the user as a prop
 }
+
+// Animation variants (copied from PricingPage.tsx)
+const fadeInUp = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
+};
+
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.2 } },
+};
 
 // Composant pour insérer l'iframe Storylane et charger le script dynamiquement
 function StorylaneDemoEmbed() {
@@ -69,6 +81,46 @@ function StorylaneDemoEmbed() {
 }
 
 export default function LandingPage({ onGetStarted }: LandingPageProps) {
+  // ...
+  // Fonction pour ouvrir le popup Calendly de façon robuste
+  const openCalendlyPopup = () => {
+    const calendlyUrl = "https://calendly.com/paymentfloww/30min";
+    // Si Calendly est déjà chargé
+    if ((window as any).Calendly && typeof (window as any).Calendly.initPopupWidget === "function") {
+      (window as any).Calendly.initPopupWidget({ url: calendlyUrl });
+      return;
+    }
+    // Sinon, charger dynamiquement le script puis ouvrir le popup
+    const existingScript = document.querySelector('script[src="https://assets.calendly.com/assets/external/widget.js"]');
+    if (!existingScript) {
+      const script = document.createElement('script');
+      script.src = "https://assets.calendly.com/assets/external/widget.js";
+      script.async = true;
+      script.onload = () => {
+        if ((window as any).Calendly && typeof (window as any).Calendly.initPopupWidget === "function") {
+          (window as any).Calendly.initPopupWidget({ url: calendlyUrl });
+        } else {
+          alert("Erreur : Impossible de charger Calendly.");
+        }
+      };
+      script.onerror = () => {
+        alert("Erreur de chargement du widget Calendly.");
+      };
+      document.body.appendChild(script);
+    } else {
+      // Si le script existe mais Calendly pas encore prêt, attendre qu'il soit chargé
+      existingScript.addEventListener('load', () => {
+        if ((window as any).Calendly && typeof (window as any).Calendly.initPopupWidget === "function") {
+          (window as any).Calendly.initPopupWidget({ url: calendlyUrl });
+        } else {
+          alert("Erreur : Impossible de charger Calendly.");
+        }
+      });
+      existingScript.addEventListener('error', () => {
+        alert("Erreur de chargement du widget Calendly.");
+      });
+    }
+  };
   const navigate = useNavigate();
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
@@ -225,14 +277,12 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
   const heroRef = useRef(null);
   const featuresRef = useRef(null);
   const useCasesRef = useRef(null);
-  const pricingRef = useRef(null);
   const testimonialsRef = useRef(null);
 
   // Check when sections are in view
   const heroInView = useInView(heroRef, { once: true, margin: "-100px" });
   const featuresInView = useInView(featuresRef, { once: true, amount: 0.25 });
   const useCasesInView = useInView(useCasesRef, { once: true, amount: 0.1 });
-  const pricingInView = useInView(pricingRef, { once: true, amount: 0.1 });
   const testimonialsInView = useInView(testimonialsRef, {
     once: true,
     amount: 0.1,
@@ -264,7 +314,7 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
     },
   };
 
-  // New fadeInLeft animation variant
+  // fadeInLeft animation variant (copied from PricingPage.tsx)
   const fadeInLeft = {
     hidden: { opacity: 0, x: -20 },
     visible: {
@@ -273,6 +323,7 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
       transition: { duration: 0.6, ease: "easeOut" },
     },
   };
+
 
   const [billingInterval, setBillingInterval] = useState<"monthly" | "yearly">(
     "monthly"
@@ -299,23 +350,27 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-      {/* Header */}
-
-      {/* Hero Section */}
-      <main>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{
-              once: true,
-              margin: window.innerWidth < 768 ? "-20px" : "-100px",
-              amount: window.innerWidth < 768 ? 0.1 : 0.25,
-            }}
-            variants={fadeInUp}
-            className="grid md:grid-cols-2 gap-8 items-center"
-          >
+    <>
+      <Helmet>
+        <title>PaymentFlow - Automatisez vos relances clients</title>
+        <meta name="description" content="Automatisez et optimisez vos relances clients avec PaymentFlow : la solution SaaS pour accélérer vos encaissements, simplifier le suivi et améliorer la trésorerie de votre entreprise." />
+      </Helmet>
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+        {/* Header */}
+        {/* Hero Section */}
+        <main>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{
+                once: true,
+                margin: window.innerWidth < 768 ? "-20px" : "-100px",
+                amount: window.innerWidth < 768 ? 0.1 : 0.25,
+              }}
+              variants={fadeInUp}
+              className="grid md:grid-cols-2 gap-8 items-center"
+            >
             {/* Left Column - Text Content */}
             <div className="text-center md:text-left">
               <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
@@ -586,20 +641,18 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
             </div>
           </motion.div>
 
-          {/* Pricing Section */}
-          <motion.div
-            id="pricing"
-            className="mt-32"
-            variants={staggerContainer}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.3 }}
-          >
-            <PricingPage
-              setShowContact={setShowContact}
-              setDefaultSubject={setDefaultSubject}
-            />
-          </motion.div>
+          {/* Section Tarifs supprimée. Voir la page dédiée. */}
+          <div className="flex justify-center my-20">
+            <button
+              className="bg-blue-600 text-white px-8 py-4 rounded-md text-lg font-medium hover:bg-blue-700 transition-colors shadow-lg"
+              onClick={() => {
+                navigate('/pricing');
+                window.scrollTo({ top: 0, behavior: 'auto' });
+              }}
+            >
+              Voir les tarifs
+            </button>
+          </div>
 
           {/* Testimonials */}
           <motion.div
@@ -775,15 +828,18 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
         </div>
         <div className="fixed bottom-20 right-4 z-[60] md:bottom-20">
           <button
-            onClick={() =>
-              (window as any).Calendly.initPopupWidget({
-                url: "https://calendly.com/paymentfloww/30min",
-              })
-            }
-            className="bg-blue-600 text-white px-4 py-2 rounded-full shadow-lg hover:bg-blue-700 transition-all text-sm md:text-base md:px-6 md:py-3"
-          >
-            planifier une réunion
-          </button>
+             onClick={() => {
+               const calendlySection = document.querySelector('.calendly-container');
+               if (calendlySection) {
+                 calendlySection.scrollIntoView({ behavior: 'smooth' });
+               } else {
+                 window.location.hash = '#calendly';
+               }
+             }}
+             className="bg-blue-600 text-white px-4 py-2 rounded-full shadow-lg hover:bg-blue-700 transition-all text-sm md:text-base md:px-6 md:py-3"
+           >
+             planifier une réunion
+           </button>
         </div>
       </main>
 
@@ -1252,5 +1308,6 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
         </>
       )}
     </div>
-  );
-}
+  </> 
+);
+} 

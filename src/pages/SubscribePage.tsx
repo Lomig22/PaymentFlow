@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import { sendEmail } from "../lib/email";
+import { getEmailSettings } from "../lib/reminderService";
+import { getWelcomeEmailHtml } from "../lib/welcomeEmailTemplate";
 
 export default function SubscribePage() {
   const [email, setEmail] = useState("");
@@ -13,7 +16,7 @@ export default function SubscribePage() {
         navigate("/login");
         return;
       }
-      setEmail(session.user.email);
+      setEmail(session.user.email ?? "");
     };
 
     getUserEmail();
@@ -33,7 +36,26 @@ export default function SubscribePage() {
 
     if (error) {
       console.error("Erreur création abonnement", error);
+      alert("Erreur lors de la création de l'abonnement. Veuillez réessayer.");
       return;
+    }
+
+    // Envoi automatique de l'email de bienvenue animé
+    try {
+      const emailSettings = await getEmailSettings(user.id);
+      if (!emailSettings) throw new Error("Paramètres email non trouvés");
+      if (!user.email) throw new Error("Email utilisateur non défini");
+      const htmlContent = getWelcomeEmailHtml(user.email);
+      await sendEmail(
+        emailSettings,
+        user.email,
+        "🎉 Bienvenue sur PaymentFlow !",
+        htmlContent
+      );
+      alert("Un email de bienvenue vous a été envoyé ! 🎉");
+    } catch (err) {
+      console.error("Erreur lors de l'envoi de l'email de bienvenue", err);
+      alert("Votre abonnement est activé, mais l'email de bienvenue n'a pas pu être envoyé.");
     }
 
     navigate("/dashboard");
