@@ -279,9 +279,67 @@ const ContactModal = ({ onClose, defaultSubject }: ContactModalProps) => {
               <h2 className="text-xl font-bold mb-4 text-gray-800">
                 Politique de confidentialité
               </h2>
-              <p className="text-sm text-gray-600">
-                [Insérez ici votre politique de confidentialité...]
-              </p>
+              <div className="text-sm text-gray-600 space-y-3" style={{ whiteSpace: 'pre-line' }}>
+  <strong>1. Responsable du traitement</strong>
+  <p>
+    La société Payment Flow, immatriculée sous le numéro [SIRET à compléter], dont le siège social est situé à [adresse à compléter], est responsable du traitement des données personnelles collectées via ce formulaire de contact.
+  </p>
+  <strong>2. Données collectées</strong>
+  <p>
+    Lorsque vous utilisez notre formulaire de contact, nous collectons les données suivantes : <br />
+    - Nom et prénom<br />
+    - Adresse e-mail<br />
+    - Numéro de téléphone (si fourni)<br />
+    - Nom de votre entreprise (le cas échéant)<br />
+    - Contenu du message
+  </p>
+  <strong>3. Finalité du traitement</strong>
+  <p>
+    Les données personnelles collectées via ce formulaire sont utilisées uniquement pour :
+    <br />- Répondre à vos demandes ou questions
+    <br />- Vous recontacter si nécessaire
+    <br />- Vous proposer une démonstration ou un rendez-vous, si cela est mentionné dans votre message
+  </p>
+  <strong>4. Base légale du traitement</strong>
+  <p>
+    Le traitement de vos données repose sur votre consentement explicite, exprimé lorsque vous soumettez le formulaire.
+  </p>
+  <strong>5. Durée de conservation</strong>
+  <p>
+    Vos données sont conservées pendant 12 mois à compter de la dernière interaction, sauf demande de suppression de votre part avant ce délai.
+  </p>
+  <strong>6. Destinataires des données</strong>
+  <p>
+    Vos données personnelles sont uniquement accessibles par :
+    <br />- L’équipe interne de Payment Flow
+    <br />- Nos prestataires techniques (hébergement, CRM), soumis à des clauses de confidentialité strictes
+    <br />Aucune donnée n’est transférée ou vendue à des tiers à des fins commerciales.
+  </p>
+  <strong>7. Hébergement des données</strong>
+  <p>
+    Les données sont hébergées au sein de l’Union Européenne, via nos partenaires techniques conformes au RGPD.
+  </p>
+  <strong>8. Vos droits</strong>
+  <ul className="list-disc ml-5">
+    <li>Droit d’accès à vos données</li>
+    <li>Droit de rectification</li>
+    <li>Droit à l’effacement (droit à l’oubli)</li>
+    <li>Droit à la limitation du traitement</li>
+    <li>Droit d’opposition</li>
+    <li>Droit à la portabilité</li>
+  </ul>
+  <p>
+    Pour exercer vos droits, contactez-nous à l’adresse : <a href="mailto:contact@paymentflow.fr" className="text-blue-600 underline">contact@paymentflow.fr</a>.
+  </p>
+  <strong>9. Réclamations</strong>
+  <p>
+    Si vous estimez que vos droits ne sont pas respectés, vous pouvez adresser une réclamation à la CNIL (Commission Nationale de l’Informatique et des Libertés) : <a href="https://www.cnil.fr" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">www.cnil.fr</a>.
+  </p>
+  <strong>10. Modification de la politique</strong>
+  <p>
+    Payment Flow se réserve le droit de modifier la présente Politique de Confidentialité. Toute modification importante vous sera notifiée via le site.
+  </p>
+</div>
             </div>
           </div>
         )}
