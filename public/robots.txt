@@ -1,0 +1,8 @@
+User-agent: *
+Disallow:
+
+# Facultatif - à adapter selon la structure réelle
+Disallow: /admin
+Disallow: /api
+
+Sitemap: https://www.payment-flow.fr/sitemap.xml

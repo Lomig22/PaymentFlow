@@ -39,6 +39,8 @@
     "react-datetime": "^3.3.1",
     "react-datetime-picker": "^6.0.1",
     "react-dom": "^18.3.1",
+    "react-helmet-async": "^2.0.5",
+    "react-hook-form": "^7.59.0",
     "react-intersection-observer": "^9.16.0",
     "react-router-dom": "^6.22.3",
     "react-toastify": "^11.0.5",

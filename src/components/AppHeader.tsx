@@ -134,7 +134,7 @@ export default function AppHeader({ user }: AppHeaderProps) {
 
 
                       <button
-                        onClick={() => handleNavToSection("tools")}
+                        onClick={() => navigate("/simulateur-dso")}
                         className="group flex rounded-md items-center w-full px-3 py-2 text-sm text-gray-900 hover:bg-blue-50 transition-colors"
                       >
                         <FileText className="mr-3 h-5 w-5 text-blue-600" />
@@ -159,12 +159,12 @@ export default function AppHeader({ user }: AppHeaderProps) {
             >
               Témoignages
             </button>
-            <button
-              onClick={() => handleNavToSection("pricing")}
+            <Link
+              to="/pricing"
               className="text-gray-600 hover:text-gray-900 px-3 py-2 -mx-3"
             >
               Tarifs
-            </button>
+            </Link>
             <a href="/help" className="text-gray-600 hover:text-gray-900 px-3 py-2 -mx-3">
               Guides
             </a>
