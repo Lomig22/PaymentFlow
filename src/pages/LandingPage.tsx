@@ -84,7 +84,7 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
   // ...
   // Fonction pour ouvrir le popup Calendly de façon robuste
   const openCalendlyPopup = () => {
-    const calendlyUrl = "https://calendly.com/paymentfloww/30min";
+    const calendlyUrl = "https://calendly.com/paymentfloww/30min?locale=fr";
     // Si Calendly est déjà chargé
     if ((window as any).Calendly && typeof (window as any).Calendly.initPopupWidget === "function") {
       (window as any).Calendly.initPopupWidget({ url: calendlyUrl });

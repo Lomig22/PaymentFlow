@@ -1,0 +1,9 @@
+/* TEAM PAYMENT FLOW */
+
+Team: Payment Flow
+Site: https://www.payment-flow.fr
+Contact: contact@payment-flow.fr
+
+Thanks: React, Vite, Supabase, Netlify, OpenAI, Stripe, Swiper, Calendly, Lucide Icons
+
+/* END */
