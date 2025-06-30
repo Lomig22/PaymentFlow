@@ -11,6 +11,14 @@ import SignupPage from "./pages/SignupPage";
 import LoginPage from "./pages/LoginPage";
 import ForgotPassword from "./pages/ForgotPassword";
 import PricingPage from "./pages/PricingPage";
+import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
+import LegalNoticePage from "./pages/LegalNoticePage";
+import TermsOfUsePage from "./pages/TermsOfUsePage";
+import BlogPage from "./pages/BlogPage";
+import BlogGarage from "./pages/BlogGarage";
+import BlogManufacture from "./pages/BlogManufacture";
+import BlogCommunication from "./pages/BlogCommunication";
+import BlogComptableBanque from "./pages/BlogComptableBanque";
 import Layout from "./components/Layout";
 import Dashboard from "./components/Dashboard";
 import ClientPage from "./components/clients/ClientPage";
@@ -70,6 +78,14 @@ export default function AppRoutes({ user,onMFASuccess  }: AppRoutesProps) {
         />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/pricing" element={<PricingPage />} />
+        <Route path="/privacy" element={<PrivacyPolicyPage />} />
+        <Route path="/mentions-legales" element={<LegalNoticePage />} />
+        <Route path="/conditions-utilisation" element={<TermsOfUsePage />} />
+        <Route path="/blog" element={<BlogPage setShowContact={() => {}} setDefaultSubject={() => {}} />} />
+<Route path="/blog-garage" element={<BlogGarage />} />
+<Route path="/blog-manufacture" element={<BlogManufacture />} />
+<Route path="/blog-communication" element={<BlogCommunication />} />
+<Route path="/blog-comptable-banque" element={<BlogComptableBanque />} />
         <Route path="/reset-password" element={<ForgotPassword />} />
 
         {/* Routes protégées */}
@@ -79,9 +95,9 @@ export default function AppRoutes({ user,onMFASuccess  }: AppRoutesProps) {
         >
           <Route path="dashboard">
             <Route index element={<DashboardRedirect />} />
-            <Route path=":email" element={<Dashboard user={user} />} />
+            <Route path=":email" element={<Dashboard />} />
           </Route>
-          <Route path="mfa" element={<AuthMFA onMFASuccess={onMFASuccess}/>} />
+          <Route path="mfa" element={<AuthMFA onMFASuccess={onMFASuccess || (() => {})}/>} />
           <Route path="clients" element={<ClientPage />} />
           <Route path="receivables" element={<ReceivablesList />} />
           <Route path="settings" element={<Settings />} />
