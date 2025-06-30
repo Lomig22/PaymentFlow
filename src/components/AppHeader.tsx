@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { TrendingUp, X, BarChart3, Users, FileText, Settings } from "lucide-react";
+import AnimatedResourceIcon from "./AnimatedResourceIcon";
 import { Menu as HeadlessMenu } from "@headlessui/react";
 import { supabase } from "../lib/supabase";
 import { User } from "@supabase/supabase-js";
@@ -16,7 +17,8 @@ export default function AppHeader({ user }: AppHeaderProps) {
   const calendlyRef = useRef<any>(null);
   const [showContactModal, setShowContactModal] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isFeaturesMenuOpen, setIsFeaturesMenuOpen] = useState(false);
+  const [isResourcesMenuOpen, setIsResourcesMenuOpen] = useState(false);
 
   const showContactModalRef = useRef(showContactModal);
   const isMobileMenuOpenRef = useRef(isMobileMenuOpen);
@@ -94,15 +96,15 @@ export default function AppHeader({ user }: AppHeaderProps) {
           <div className="hidden md:flex space-x-8">
             <div 
               className="relative inline-block text-left" 
-              onMouseEnter={() => setIsMenuOpen(true)}
-              onMouseLeave={() => setIsMenuOpen(false)}
+              onMouseEnter={() => { setIsFeaturesMenuOpen(true); setIsResourcesMenuOpen(false); }}
+              onMouseLeave={() => setIsFeaturesMenuOpen(false)}
             >
               <button 
                 className="text-gray-600 hover:text-gray-900 inline-flex items-center px-3 py-2 -mx-3 cursor-pointer"
               >
                 Fonctionnalités
                 <svg 
-                  className={`ml-1 h-5 w-5 transform transition-transform duration-200 ${isMenuOpen ? 'rotate-180' : ''}`} 
+                  className={`ml-1 h-5 w-5 transform transition-transform duration-200 ${isFeaturesMenuOpen ? 'rotate-180' : ''}`} 
                   fill="none" 
                   viewBox="0 0 24 24" 
                   stroke="currentColor"
@@ -111,7 +113,7 @@ export default function AppHeader({ user }: AppHeaderProps) {
                 </svg>
               </button>
 
-              {isMenuOpen && (
+              {isFeaturesMenuOpen && (
                 <div className="absolute left-0 top-full">
                   <div className="h-2 w-full" />
                   <div className="w-64 origin-top-left bg-white border border-gray-200 divide-y divide-gray-100 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
@@ -153,21 +155,62 @@ export default function AppHeader({ user }: AppHeaderProps) {
                 </div>
               )}
             </div>
-            <button
-              onClick={() => handleNavToSection("testimonials")}
-              className="text-gray-600 hover:text-gray-900"
+            <div 
+              className="relative inline-block text-left"
+              onMouseEnter={() => { setIsResourcesMenuOpen(true); setIsFeaturesMenuOpen(false); }}
+              onMouseLeave={() => setIsResourcesMenuOpen(false)}
             >
-              Témoignages
-            </button>
+              <button 
+                className="text-gray-600 hover:text-gray-900 inline-flex items-center px-3 py-2 -mx-3 cursor-pointer"
+              >
+                Ressources
+                <svg 
+                  className={`ml-1 h-5 w-5 transform transition-transform duration-200 ${isResourcesMenuOpen ? 'rotate-180' : ''}`} 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {isResourcesMenuOpen && (
+                <div className="absolute left-0 top-full z-50">
+                  <div className="h-2 w-full" />
+                  <div className="w-48 origin-top-left bg-white border border-gray-200 divide-y divide-gray-100 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                    <div className="p-1">
+                      <button
+                        onClick={() => handleNavToSection("testimonials")}
+                        className="group flex rounded-md items-center w-full px-3 py-2 text-sm text-gray-900 hover:bg-blue-50 transition-colors gap-2"
+                      >
+                        <AnimatedResourceIcon type="testimonials" />
+                        Témoignages
+                      </button>
+                      <button
+                        onClick={() => navigate("/blog")}
+                        className="group flex rounded-md items-center w-full px-3 py-2 text-sm text-gray-900 hover:bg-blue-50 transition-colors gap-2"
+                      >
+                        <AnimatedResourceIcon type="blog" />
+                        Blog
+                      </button>
+                      <button
+                        onClick={() => navigate("/help")}
+                        className="group flex rounded-md items-center w-full px-3 py-2 text-sm text-gray-900 hover:bg-blue-50 transition-colors gap-2"
+                      >
+                        <AnimatedResourceIcon type="guides" />
+                        Guides
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
             <Link
               to="/pricing"
               className="text-gray-600 hover:text-gray-900 px-3 py-2 -mx-3"
             >
               Tarifs
             </Link>
-            <a href="/help" className="text-gray-600 hover:text-gray-900 px-3 py-2 -mx-3">
-              Guides
-            </a>
+
 
             <button
               onClick={() => setShowContactModal(true)}
@@ -225,12 +268,47 @@ export default function AppHeader({ user }: AppHeaderProps) {
                 >
                   Fonctionnalités
                 </button>
-                <button
-                  onClick={() => scrollToSection("testimonials")}
-                  className="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md"
-                >
-                  Témoignages
-                </button>
+                <div className="relative">
+                  <button
+                    onClick={() => setIsMenuOpen(!isMenuOpen)}
+                    className="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md flex items-center justify-between"
+                  >
+                    Ressources
+                    <svg
+                      className={`ml-2 h-5 w-5 transform transition-transform duration-200 ${isMenuOpen ? 'rotate-180' : ''}`}
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {isMenuOpen && (
+                    <div className="absolute left-0 w-48 mt-2 bg-white border border-gray-200 rounded-md shadow-lg z-50">
+                      <button
+                        onClick={() => { scrollToSection("testimonials"); setIsMenuOpen(false); setIsMobileMenuOpen(false); }}
+                        className="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md flex items-center gap-2 group"
+                      >
+                        <AnimatedResourceIcon type="testimonials" />
+                        Témoignages
+                      </button>
+                      <button
+                        onClick={() => { navigate("/blog"); setIsMenuOpen(false); setIsMobileMenuOpen(false); }}
+                        className="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md flex items-center gap-2 group"
+                      >
+                        <AnimatedResourceIcon type="blog" />
+                        Blog
+                      </button>
+                      <button
+                        onClick={() => { navigate("/help"); setIsMenuOpen(false); setIsMobileMenuOpen(false); }}
+                        className="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md flex items-center gap-2 group"
+                      >
+                        <AnimatedResourceIcon type="guides" />
+                        Guides
+                      </button>
+                    </div>
+                  )}
+                </div>
                 <Link
                   to="/pricing"
                   className="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md"

@@ -1,7 +1,7 @@
 User-agent: *
 Disallow:
 
-# Facultatif - à adapter selon la structure réelle
+# Bloquer uniquement les dossiers sensibles ou non-indexables
 Disallow: /admin
 Disallow: /api
 
