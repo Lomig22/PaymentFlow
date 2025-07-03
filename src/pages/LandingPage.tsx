@@ -398,19 +398,20 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
               </Link>
             </div>
             {/* Right Column - Image */}
-            <div className="relative bg-white rounded-xl shadow-2xl overflow-hidden">
-              <div className="relative aspect-[16/9]">
-                <img
-                  src="/images/hero-dashboard.png.jpg"
-                  alt="PaymentFlow Dashboard"
-                  className="w-full h-full object-cover"
-                />
-                {/* Overlay gradient */}
-                <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/10 to-transparent pointer-events-none" />
-              </div>
-              {/* Decorative elements */}
-              <div className="absolute -top-6 -right-6 w-12 h-12 bg-blue-100 rounded-full z-0" />
-              <div className="absolute -bottom-4 -left-4 w-8 h-8 bg-green-100 rounded-full z-0" />
+            <div>
+              <img
+                src="/images/landing-page.png"
+                alt="Aperçu outil Payment Flow"
+                style={{
+                  maxWidth: '680px',
+                  width: '100%',
+                  borderRadius: '1.5rem',
+                  objectFit: 'contain',
+                  display: 'block',
+                  boxShadow: 'none'
+                }}
+                className="mx-auto"
+              />
             </div>
           </motion.div>
           {/* Features */}
@@ -442,8 +443,7 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
               </div>
               <h3 className="text-xl font-semibold mb-4">Ciblage précis</h3>
               <p className="text-gray-600">
-                Identifiez les meilleurs moments pour relancer vos prospects
-                B2B.
+                Identifiez les meilleurs moments pour relancer vos créanciers.
               </p>
             </motion.div>
 
@@ -509,137 +509,180 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
 
           {/* Use Cases */}
           <motion.div
-            className="mt-32"
-            variants={staggerContainer}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.3 }}
-          >
-            <h2 className="text-3xl font-bold text-center mb-16">
-              Comment PaymentFlow peut vous aider
-            </h2>
-
-            <div className="space-y-24">
-              {/* Section 1 */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-                <motion.div variants={fadeInLeft}>
-                  <h3 className="text-2xl font-bold mb-4">
-                    Gestion des créances impayées
-                  </h3>
-                  <p className="text-gray-600 mb-6">
-                    Identifiez rapidement les factures en retard et lancez des
-                    séquences de relance automatisées pour accélérer vos
-                    encaissements.
+  className="mt-32"
+  initial="hidden"
+  whileInView="visible"
+  viewport={{ once: true, amount: 0.3 }}
+>
+  <h2 className="text-3xl md:text-4xl font-extrabold text-center text-neutral-900 mb-10 tracking-tight">
+    Découvrez comment Payment Flow peut vous aider !
+  </h2>
+  <div className="flex flex-col items-center">
+    <div className="relative w-full max-w-[950px] mx-auto">
+      {/* Flèches Swiper custom hors cadre */}
+      <div className="absolute -left-10 top-1/2 z-10 hidden md:block">
+        <div className="swiper-button-prev custom-swiper-arrow left-0 text-blue-600 hover:text-blue-800 transition-colors" />
+      </div>
+      <div className="absolute -right-10 top-1/2 z-10 hidden md:block">
+        <div className="swiper-button-next custom-swiper-arrow right-0 text-blue-600 hover:text-blue-800 transition-colors" />
+      </div>
+      <div className="bg-white rounded-2xl shadow-xl border border-blue-100 px-0 md:px-4 py-8 md:py-10 flex flex-col md:flex-row items-stretch gap-0 md:gap-8">
+        <Swiper
+          modules={[Navigation, Pagination]}
+          navigation={{
+            prevEl: '.swiper-button-prev',
+            nextEl: '.swiper-button-next',
+          }}
+          pagination={{ clickable: true }}
+          spaceBetween={0}
+          slidesPerView={1}
+          className="flex-1"
+          style={{ minWidth: 0 }}
+        >
+          <SwiperSlide>
+            <div className="w-full flex flex-col">
+              <h3 className="text-2xl md:text-3xl font-bold mb-6 text-blue-700 text-center">
+                Automatisez vos relances et gagnez du temps
+              </h3>
+              <div className="flex flex-col md:flex-row items-center md:items-stretch">
+                {/* Zone texte à gauche */}
+                <div className="w-full md:w-1/3 flex flex-col justify-center px-6 md:pl-8 md:pr-6 py-4">
+                  <p className="text-gray-700 mb-6 text-base md:text-lg">
+                    Payment Flow vous permet de centraliser toutes vos créances, d’automatiser vos relances et de suivre vos paiements en temps réel. Gagnez en sérénité et concentrez-vous sur l’essentiel : votre activité.
                   </p>
-                  <ul className="space-y-2">
-                    <li className="flex items-start">
-                      <ChevronRight className="h-5 w-5 text-blue-600 mr-2 mt-0.5" />
-                      <span>
-                        Tableau de bord centralisé pour toutes vos créances
-                      </span>
-                    </li>
-                    <li className="flex items-start">
-                      <ChevronRight className="h-5 w-5 text-blue-600 mr-2 mt-0.5" />
-                      <span>
-                        Alertes automatiques pour les retards de paiement
-                      </span>
-                    </li>
-                    <li className="flex items-start">
-                      <ChevronRight className="h-5 w-5 text-blue-600 mr-2 mt-0.5" />
-                      <span>Suivi détaillé de l'historique des relances</span>
-                    </li>
-                  </ul>
-                </motion.div>
-                <motion.div
-                  variants={fadeInScale}
-                  className="bg-gray-100 p-6 rounded-lg shadow-inner"
-                >
+                  {/* Avis testeuse */}
+                  <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-lg shadow-sm flex flex-col gap-2">
+                    <span className="italic text-blue-900 text-sm md:text-base">“J’ai testé Payment Flow pendant 1 mois et j’ai réduit mes impayés de moitié, sans stress. L’outil est intuitif et le support au top !”</span>
+                    <span className="font-semibold text-blue-700">— Claire, testeuse PME</span>
+                  </div>
+                  {/* Call-to-action */}
+                  <button
+                    className="mt-8 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg shadow transition-all text-lg w-fit"
+                    onClick={() => navigate('/signup')}
+                  >
+                    Essayez gratuitement Payment Flow
+                  </button>
+                </div>
+                {/* Image à droite */}
+                <div className="w-full md:w-2/3 flex items-center justify-center p-2 md:p-4">
                   <img
-                    src="https://images.unsplash.com/photo-1554224155-6726b3ff858f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2011&q=80"
-                    alt="Gestion des créances"
-                    className="rounded-lg shadow-md w-full"
+                    src="/images/1.png"
+                    alt="Présentation Payment Flow 1"
+                    className="w-full object-contain rounded-xl"
+                    style={{ maxHeight: 540, background: '#fff' }}
                   />
-                </motion.div>
-              </div>
-
-              {/* Section 2 */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-                <motion.div
-                  variants={fadeInScale}
-                  className="order-2 md:order-1 bg-gray-100 p-6 rounded-lg shadow-inner"
-                >
-                  <img
-                    src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
-                    alt="Automatisation des relances"
-                    className="rounded-lg shadow-md w-full"
-                  />
-                </motion.div>
-                <motion.div
-                  variants={fadeInLeft}
-                  className="order-1 md:order-2"
-                >
-                  <h3 className="text-2xl font-bold mb-4">
-                    Automatisation des relances
-                  </h3>
-                  <p className="text-gray-600 mb-6">
-                    Configurez des modèles de relance personnalisés et laissez
-                    PaymentFlow s'occuper de l'envoi au moment optimal.
-                  </p>
-                  <ul className="space-y-2">
-                    <li className="flex items-start">
-                      <ChevronRight className="h-5 w-5 text-blue-600 mr-2 mt-0.5" />
-                      <span>Modèles d'emails personnalisables</span>
-                    </li>
-                    <li className="flex items-start">
-                      <ChevronRight className="h-5 w-5 text-blue-600 mr-2 mt-0.5" />
-                      <span>Séquences de relance multi-étapes</span>
-                    </li>
-                    <li className="flex items-start">
-                      <ChevronRight className="h-5 w-5 text-blue-600 mr-2 mt-0.5" />
-                      <span>Planification intelligente des envois</span>
-                    </li>
-                  </ul>
-                </motion.div>
-              </div>
-
-              {/* Section 3 */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-                <motion.div variants={fadeInLeft}>
-                  <h3 className="text-2xl font-bold mb-4">
-                    Analyse et reporting
-                  </h3>
-                  <p className="text-gray-600 mb-6">
-                    Obtenez des insights précieux sur vos performances de
-                    recouvrement et identifiez les opportunités d'amélioration.
-                  </p>
-                  <ul className="space-y-2">
-                    <li className="flex items-start">
-                      <ChevronRight className="h-5 w-5 text-blue-600 mr-2 mt-0.5" />
-                      <span>Tableaux de bord analytiques en temps réel</span>
-                    </li>
-                    <li className="flex items-start">
-                      <ChevronRight className="h-5 w-5 text-blue-600 mr-2 mt-0.5" />
-                      <span>Rapports détaillés sur les délais de paiement</span>
-                    </li>
-                    <li className="flex items-start">
-                      <ChevronRight className="h-5 w-5 text-blue-600 mr-2 mt-0.5" />
-                      <span>Identification des clients à risque</span>
-                    </li>
-                  </ul>
-                </motion.div>
-                <motion.div
-                  variants={fadeInScale}
-                  className="bg-gray-100 p-6 rounded-lg shadow-inner"
-                >
-                  <img
-                    src="https://images.unsplash.com/photo-1551434678-e076c223a692?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
-                    alt="Analyse et reporting"
-                    className="rounded-lg shadow-md w-full"
-                  />
-                </motion.div>
+                </div>
               </div>
             </div>
-          </motion.div>
+          </SwiperSlide>
+          <SwiperSlide>
+            <div className="w-full flex flex-col">
+              <h3 className="text-2xl md:text-3xl font-bold mb-6 text-blue-700 text-center">
+                Visualisez l’impact de vos actions
+              </h3>
+              <div className="flex flex-col md:flex-row items-center md:items-stretch">
+                {/* Zone texte à gauche */}
+                <div className="w-full md:w-1/3 flex flex-col justify-center px-6 md:pl-8 md:pr-6 py-4">
+                  <p className="text-gray-700 mb-6 text-base md:text-lg">
+                    Suivez l’évolution de votre DSO, analysez vos résultats et partagez des rapports clairs à vos équipes ou partenaires. Payment Flow, c’est la maîtrise de votre trésorerie en un coup d’œil.
+                  </p>
+                  {/* Avis testeuse */}
+                  <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-lg shadow-sm flex flex-col gap-2">
+                    <span className="italic text-blue-900 text-sm md:text-base">“La visualisation des résultats est super claire, et j’ai enfin une vue d’ensemble sur mes paiements. Je recommande à tous les entrepreneurs !”</span>
+                    <span className="font-semibold text-blue-700">— Sophie, testeuse TPE</span>
+                  </div>
+                  {/* Call-to-action */}
+                  <button
+                    className="mt-8 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg shadow transition-all text-lg w-fit"
+                    onClick={() => navigate('/signup')}
+                  >
+                    Essayez gratuitement Payment Flow
+                  </button>
+                </div>
+                {/* Image à droite */}
+                <div className="w-full md:w-2/3 flex items-center justify-center p-2 md:p-4">
+                  <img
+                    src="/images/2.png"
+                    alt="Présentation Payment Flow 2"
+                    className="w-full object-contain rounded-xl"
+                    style={{ maxHeight: 540, background: '#fff' }}
+                  />
+                </div>
+              </div>
+            </div>
+          </SwiperSlide>
+          <SwiperSlide>
+            <div className="w-full flex flex-col items-center justify-center min-h-[350px] py-8">
+              <h3 className="text-2xl md:text-3xl font-bold mb-6 text-blue-700 text-center">
+                Essayez Payment Flow gratuitement pendant 30 jours !
+              </h3>
+              <div className="flex flex-col md:flex-row items-center md:items-stretch w-full max-w-3xl mx-auto">
+                {/* Zone texte à gauche */}
+                <div className="w-full md:w-1/2 flex flex-col justify-center px-6 py-4 items-center md:items-start">
+                  <p className="text-gray-700 mb-6 text-base md:text-lg text-center md:text-left">
+                    Profitez de toutes les fonctionnalités de Payment Flow sans engagement et sans carte bancaire. Testez la gestion automatisée de vos créances, le reporting en temps réel et l’accompagnement personnalisé : 0 risque, 100% efficacité.
+                  </p>
+                  <ul className="mb-6 text-blue-700 text-sm md:text-base flex flex-col gap-1">
+                    <li className="flex items-center gap-2"><span className="inline-block w-4 h-4"><svg xmlns='http://www.w3.org/2000/svg' className='text-blue-600' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M5 13l4 4L19 7' /></svg></span>30 jours d’accès complet</li>
+                    <li className="flex items-center gap-2"><span className="inline-block w-4 h-4"><svg xmlns='http://www.w3.org/2000/svg' className='text-blue-600' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M5 13l4 4L19 7' /></svg></span>Sans carte bancaire</li>
+                    <li className="flex items-center gap-2"><span className="inline-block w-4 h-4"><svg xmlns='http://www.w3.org/2000/svg' className='text-blue-600' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M5 13l4 4L19 7' /></svg></span>Sans engagement</li>
+                  </ul>
+                  <button
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg shadow transition-all text-lg w-fit"
+                    onClick={() => navigate('/signup') }
+                  >
+                    Commencer mon essai gratuit
+                  </button>
+                </div>
+                {/* Logos clients et avis certifiés */}
+                <div className="w-full md:w-1/2 flex flex-col items-center justify-center p-6 gap-8">
+                  <div className="flex flex-row items-center justify-center gap-8 mb-4">
+                    <div className="flex flex-col items-center">
+                      <img src="/images/image-de-marque.webp" alt="Logo Image de Marque" className="h-16 w-auto mb-2 rounded shadow-md bg-white p-2" />
+                      <div className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded shadow text-xs md:text-sm max-w-[180px]">
+                        <span className="italic">“Grâce à Payment Flow, nous avons récupéré 98% de nos créances en 2 mois !”</span>
+                        <br />— Julie, Dir. admin. Image de Marque
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-center">
+                      <img src="/images/ouestelio.png" alt="Logo Ouestelio" className="h-16 w-auto mb-2 rounded shadow-md bg-white p-2" />
+                      <div className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded shadow text-xs md:text-sm max-w-[180px]">
+                        <span className="italic">“La relance automatique a transformé notre trésorerie, c’est bluffant.”</span>
+                        <br />— Marc, Gérant Ouestelio
+                      </div>
+                    </div>
+                  </div>
+                  {/* Flèche animée orientée vers le bouton (sous les logos) */}
+                  <div className="w-full flex justify-center mt-4">
+                    {/* Desktop : flèche courbée vers le bas et la droite */}
+                    <div className="hidden md:block">
+                      <svg width="90" height="70" viewBox="0 0 90 70" fill="none" xmlns="http://www.w3.org/2000/svg" className="animate-bounce">
+                        <path d="M10 10 C 60 10, 70 60, 80 60" stroke="#2563eb" strokeWidth="5" fill="none" strokeLinecap="round"/>
+                        <polygon points="80,60 72,54 74,64" fill="#2563eb" />
+                      </svg>
+                    </div>
+                    {/* Mobile : flèche courbée vers le bas */}
+                    <div className="block md:hidden">
+                      <svg width="60" height="60" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg" className="animate-bounce">
+                        <path d="M10 10 Q 30 50, 50 50" stroke="#2563eb" strokeWidth="5" fill="none" strokeLinecap="round"/>
+                        <polygon points="50,50 44,44 46,54" fill="#2563eb" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </SwiperSlide>
+        </Swiper>
+      </div>
+      {/* Pagination Swiper en-dessous */}
+      <div className="flex justify-center mt-6">
+        <div className="swiper-pagination" />
+      </div>
+    </div>
+  </div>
+</motion.div>
+
 
           {/* Section Tarifs supprimée. Voir la page dédiée. */}
           <div className="flex justify-center my-20">
