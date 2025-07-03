@@ -268,14 +268,15 @@ export default function AppHeader({ user }: AppHeaderProps) {
                 >
                   Fonctionnalités
                 </button>
+                {/* Mobile Ressources submenu */}
                 <div className="relative">
                   <button
-                    onClick={() => setIsMenuOpen(!isMenuOpen)}
+                    onClick={() => setIsResourcesMenuOpen(!isResourcesMenuOpen)}
                     className="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md flex items-center justify-between"
                   >
                     Ressources
                     <svg
-                      className={`ml-2 h-5 w-5 transform transition-transform duration-200 ${isMenuOpen ? 'rotate-180' : ''}`}
+                      className={`ml-2 h-5 w-5 transform transition-transform duration-200 ${isResourcesMenuOpen ? 'rotate-180' : ''}`}
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -283,24 +284,24 @@ export default function AppHeader({ user }: AppHeaderProps) {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
-                  {isMenuOpen && (
+                  {isResourcesMenuOpen && (
                     <div className="absolute left-0 w-48 mt-2 bg-white border border-gray-200 rounded-md shadow-lg z-50">
                       <button
-                        onClick={() => { scrollToSection("testimonials"); setIsMenuOpen(false); setIsMobileMenuOpen(false); }}
+                        onClick={() => { scrollToSection("testimonials"); setIsResourcesMenuOpen(false); setIsMobileMenuOpen(false); }}
                         className="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md flex items-center gap-2 group"
                       >
                         <AnimatedResourceIcon type="testimonials" />
                         Témoignages
                       </button>
                       <button
-                        onClick={() => { navigate("/blog"); setIsMenuOpen(false); setIsMobileMenuOpen(false); }}
+                        onClick={() => { navigate("/blog"); setIsResourcesMenuOpen(false); setIsMobileMenuOpen(false); }}
                         className="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md flex items-center gap-2 group"
                       >
                         <AnimatedResourceIcon type="blog" />
                         Blog
                       </button>
                       <button
-                        onClick={() => { navigate("/help"); setIsMenuOpen(false); setIsMobileMenuOpen(false); }}
+                        onClick={() => { navigate("/help"); setIsResourcesMenuOpen(false); setIsMobileMenuOpen(false); }}
                         className="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md flex items-center gap-2 group"
                       >
                         <AnimatedResourceIcon type="guides" />
@@ -309,12 +310,6 @@ export default function AppHeader({ user }: AppHeaderProps) {
                     </div>
                   )}
                 </div>
-                <Link
-                  to="/pricing"
-                  className="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md"
-                >
-                  Tarifs
-                </Link>
                 <a
                   href="/help"
                   className="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md"
