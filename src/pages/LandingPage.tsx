@@ -352,7 +352,7 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
   return (
     <>
       <Helmet>
-        <title>PaymentFlow - Automatisez vos relances clients</title>
+        <title>PaymentFlow | Automatisez vos relances clients</title>
         <meta name="description" content="Automatisez et optimisez vos relances clients avec PaymentFlow : la solution SaaS pour accélérer vos encaissements, simplifier le suivi et améliorer la trésorerie de votre entreprise." />
       </Helmet>
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
