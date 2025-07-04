@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Helmet } from "react-helmet-async";
 import { motion, useInView } from "framer-motion";
 import { InlineWidget } from "react-calendly";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -351,10 +350,6 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
 
   return (
     <>
-      <Helmet>
-        <title>PaymentFlow | Automatisez vos relances clients</title>
-        <meta name="description" content="Automatisez et optimisez vos relances clients avec PaymentFlow : la solution SaaS pour accélérer vos encaissements, simplifier le suivi et améliorer la trésorerie de votre entreprise." />
-      </Helmet>
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
         {/* Header */}
         {/* Hero Section */}
