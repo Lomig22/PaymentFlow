@@ -34,9 +34,10 @@ interface LandingPageProps {
 // Animation variants (copied from PricingPage.tsx)
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.42, 0, 0.58, 1] as [number, number, number, number] } },
 };
 
+// If you have other animation variants with 'ease: [0.42, 0, 0.58, 1] as [number, number, number, number]', replace them similarly.
 const staggerContainer = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { staggerChildren: 0.2 } },
@@ -292,7 +293,7 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.6, ease: "easeOut" },
+      transition: { duration: 0.6, ease: [0.42, 0, 0.58, 1] as [number, number, number, number] },
     },
   };
 
@@ -305,7 +306,8 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
     },
   };
 
-  const staggerContainer = {
+  // If you have other animation variants with 'ease: [0.42, 0, 0.58, 1] as [number, number, number, number]', replace them similarly.
+const staggerContainer = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -319,7 +321,7 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
     visible: {
       opacity: 1,
       x: 0,
-      transition: { duration: 0.6, ease: "easeOut" },
+      transition: { duration: 0.6, ease: [0.42, 0, 0.58, 1] as [number, number, number, number] },
     },
   };
 
@@ -647,23 +649,8 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
                       </div>
                     </div>
                   </div>
-                  {/* Flèche animée orientée vers le bouton (sous les logos) */}
-                  <div className="w-full flex justify-center mt-4">
-                    {/* Desktop : flèche courbée vers le bas et la droite */}
-                    <div className="hidden md:block">
-                      <svg width="90" height="70" viewBox="0 0 90 70" fill="none" xmlns="http://www.w3.org/2000/svg" className="animate-bounce">
-                        <path d="M10 10 C 60 10, 70 60, 80 60" stroke="#2563eb" strokeWidth="5" fill="none" strokeLinecap="round"/>
-                        <polygon points="80,60 72,54 74,64" fill="#2563eb" />
-                      </svg>
-                    </div>
-                    {/* Mobile : flèche courbée vers le bas */}
-                    <div className="block md:hidden">
-                      <svg width="60" height="60" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg" className="animate-bounce">
-                        <path d="M10 10 Q 30 50, 50 50" stroke="#2563eb" strokeWidth="5" fill="none" strokeLinecap="round"/>
-                        <polygon points="50,50 44,44 46,54" fill="#2563eb" />
-                      </svg>
-                    </div>
-                  </div>
+                  {/* (Arrow removed to preserve layout; spacing retained) */}
+                  <div className="w-full flex justify-center mt-4"></div>
                 </div>
               </div>
             </div>

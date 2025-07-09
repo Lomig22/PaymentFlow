@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useForm, Controller } from "react-hook-form";
 import "./DSOSimulator.css";
 import { motion } from "framer-motion";
+import DSOIntro from "../components/DSOIntro";
+import Footer from "../components/Footer";
 
 interface DSOSimulatorInputs {
   receivables: number; // encours client
@@ -48,6 +50,10 @@ function calculateResults(values: DSOSimulatorInputs) {
 }
 
 export default function DSOSimulator() {
+  const simulatorRef = useRef<HTMLDivElement>(null);
+  const scrollToSimulator = () => {
+    simulatorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
   const { control, handleSubmit, watch, formState } = useForm<DSOSimulatorInputs>({ defaultValues });
   const [showResults, setShowResults] = useState(false);
   const values = watch();
@@ -58,7 +64,9 @@ export default function DSOSimulator() {
   };
 
   return (
-    <motion.div
+    <>
+      <DSOIntro onScrollToSimulator={scrollToSimulator} />
+      <motion.div ref={simulatorRef}
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       className="max-w-2xl mx-auto p-6 bg-white rounded-xl shadow-lg mt-8"
@@ -188,5 +196,8 @@ export default function DSOSimulator() {
         </motion.div>
       )}
     </motion.div>
+      <div style={{ height: '0.5cm' }} />
+      <Footer />
+    </>
   );
 }

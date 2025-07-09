@@ -33,6 +33,7 @@ import AppHeader from "./components/AppHeader";
 import ReportingRecouvrement from "./pages/ReportingRecouvrement";
 import CrmPage from "./pages/CrmPage";
 import DSOSimulator from "./pages/DSOSimulator";
+import Personnalisation from "./pages/Personnalisation";
 
 import { User } from "@supabase/supabase-js";
 import AuthMFA from "./components/AuthMFA";
@@ -65,6 +66,7 @@ export default function AppRoutes({ user,onMFASuccess  }: AppRoutesProps) {
         <Route path="/reporting-recouvrement" element={<ReportingRecouvrement />} />
         <Route path="/crm" element={<CrmPage />} />
         <Route path="/simulateur-dso" element={<DSOSimulator />} />
+        <Route path="/personnalisation" element={<Personnalisation />} />
         <Route path="/paiement-abonement" element={<AbonnementSuccess />} />
         <Route
           path="/signup"

@@ -24,3 +24,5 @@ dist-ssr
 *.sw?
 node_modules_save
 supabase/functions/node_modules
+# Local Netlify folder
+.netlify

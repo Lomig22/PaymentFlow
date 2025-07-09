@@ -1,8 +1,20 @@
 import { Users, MessageSquare, Database, BarChart } from 'lucide-react';
+import Footer from '../components/Footer';
+import CrmIntro from '../components/CrmIntro';
+
+import { useNavigate } from 'react-router-dom';
 
 const CrmPage = () => {
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* CRM Immersive Intro Section */}
+      <CrmIntro onScrollToDemo={() => {
+        const demo = document.getElementById('crm-demo-section');
+        if (demo) {
+          demo.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }} />
       {/* Hero Section */}
       <div className="bg-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -18,7 +30,7 @@ const CrmPage = () => {
       </div>
 
       {/* Demo Section */}
-      <div className="py-12 bg-white">
+      <div id="crm-demo-section" className="py-12 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div>
             <script async src="https://js.storylane.io/js/v2/storylane.js"></script>
@@ -115,11 +127,16 @@ const CrmPage = () => {
           <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
             Découvrez comment notre CRM peut transformer votre processus de recouvrement.
           </p>
-          <button className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors">
+          <button
+            className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors"
+            onClick={() => navigate('/signup')}
+          >
             Commencer maintenant
           </button>
         </div>
       </div>
+      <div style={{height: '0.5cm'}} />
+      <Footer />
     </div>
   );
 };
