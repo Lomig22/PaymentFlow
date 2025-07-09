@@ -144,7 +144,7 @@ export default function AppHeader({ user }: AppHeaderProps) {
                       </button>
 
                       <button
-                        onClick={() => handleNavToSection("customization")}
+                        onClick={() => { setIsFeaturesMenuOpen(false); navigate("/personnalisation"); }}
                         className="group flex rounded-md items-center w-full px-3 py-2 text-sm text-gray-900 hover:bg-blue-50 transition-colors"
                       >
                         <Settings className="mr-3 h-5 w-5 text-blue-600" />

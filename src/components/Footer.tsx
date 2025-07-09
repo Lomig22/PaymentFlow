@@ -1,5 +1,5 @@
 import { motion, useInView } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useRef, useState, useEffect } from "react";
 import {
   BarChart2,
@@ -33,7 +33,7 @@ const fadeInLeft = {
   visible: {
     opacity: 1,
     x: 0,
-    transition: { duration: 0.6, ease: "easeOut" },
+    transition: { duration: 0.6, ease: [0.42, 0, 0.58, 1] as [number, number, number, number] },
   },
 };
 
@@ -85,9 +85,10 @@ const Footer = () => {
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.6, ease: "easeOut" },
+      transition: { duration: 0.6, ease: [0.42, 0, 0.58, 1] as [number, number, number, number] },
     },
   };
+
 
   const handleNavToSection = (id: string) => {
     if (window.location.pathname === "/") {
@@ -134,12 +135,17 @@ const Footer = () => {
                 </button>
               </li>
               <li>
-                <button
-                  onClick={() => handleNavToSection("pricing")}
+                <Link
+                  to="/pricing"
                   className="text-gray-500 hover:text-gray-700"
+                  onClick={e => {
+                    e.preventDefault();
+                    navigate('/pricing');
+                    window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+                  }}
                 >
                   Tarifs
-                </button>
+                </Link>
               </li>
               <li>
                 <button
@@ -164,14 +170,17 @@ const Footer = () => {
                 </button>
               </li>
               <li>
-                <button className="text-gray-500 hover:text-gray-700">
-                  Guides
-                </button>
+                <button
+  className="text-gray-500 hover:text-gray-700"
+  onClick={() => navigate('/help')}
+>
+  Guides
+</button>
               </li>
               <li>
-                <button className="text-gray-500 hover:text-gray-700">
-                  Support
-                </button>
+                <button className="text-gray-500 hover:text-gray-700" onClick={() => navigate('/help')}>
+  Support
+</button>
               </li>
             </ul>
           </div>
@@ -205,7 +214,7 @@ const Footer = () => {
               </li>
               <li>
                 <button
-                  onClick={() => setShowContact(true)}
+                  onClick={() => setShowContactModal(true)}
                   className="text-gray-500 hover:text-gray-700"
                 >
                   Contactez-nous
@@ -214,6 +223,9 @@ const Footer = () => {
             </ul>
           </div>
         </motion.div>
+        {showContactModal && (
+          <ContactModal onClose={() => setShowContactModal(false)} />
+        )}
         <motion.div
           className="pt-8 border-t border-gray-200 text-center text-sm text-gray-500"
           variants={fadeInLeft}
