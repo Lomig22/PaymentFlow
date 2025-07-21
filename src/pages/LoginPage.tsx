@@ -56,6 +56,9 @@ export default function LoginPage() {
         throw new Error("Vous n'avez pas d'abonnement actif.");
       }
 
+      if (!data.user.email) {
+        throw new Error("Email utilisateur introuvable. Veuillez réessayer.");
+      }
       navigate(`/dashboard/${encodeURIComponent(data.user.email)}`);
     } catch (error: any) {
       setMessage({

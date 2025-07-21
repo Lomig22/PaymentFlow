@@ -216,8 +216,12 @@ export default function SignupPage() {
       return;
     }
 
+    if (!plan || !interval) {
+      console.error("Plan ou intervalle non défini dans le localStorage");
+      return;
+    }
     const payload = {
-      price_id: priceMap[plan][interval],
+      price_id: priceMap[plan as keyof typeof priceMap][interval as "monthly" | "yearly"],
       success_url: window.location.origin + "/paiement-abonement",
       cancel_url: window.location,
     };

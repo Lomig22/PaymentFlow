@@ -371,7 +371,7 @@ const staggerContainer = {
             {/* Left Column - Text Content */}
             <div className="text-center md:text-left">
               <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
-                Automatisez vos<br />
+                Automatisez vos <br />
                 <span className="text-blue-600">relances clients</span>
               </h1>
               <div className="text-xl text-gray-600 mb-8 space-y-4">
