@@ -9,7 +9,7 @@ import { ArrowLeft } from "lucide-react";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.42, 0, 0.58, 1] as [number, number, number, number] } },
 };
 
 const fadeInScale = {
@@ -24,7 +24,7 @@ const staggerContainer = {
 
 const fadeInLeft = {
   hidden: { opacity: 0, x: -20 },
-  visible: { opacity: 1, x: 0, transition: { duration: 0.6, ease: "easeOut" } },
+  visible: { opacity: 1, x: 0, transition: { duration: 0.6, ease: [0.42, 0, 0.58, 1] as [number, number, number, number] } },
 };
 type Props = {
   setShowContact: React.Dispatch<React.SetStateAction<boolean>>;
@@ -163,9 +163,12 @@ const PricingPage = ({ setShowContact, setDefaultSubject }: Props) => {
     },
   };
 
+  type PlanType = keyof typeof priceMap; // 'basic' | 'pro' | 'enterprise'
+  type IntervalType = keyof typeof priceMap[PlanType]; // 'monthly' | 'yearly'
+
   const handleStripePayment = async (
-    plan: string,
-    interval: "monthly" | "yearly"
+    plan: PlanType,
+    interval: IntervalType
   ) => {
     setMessage(null);
 
@@ -539,7 +542,7 @@ const PricingPage = ({ setShowContact, setDefaultSubject }: Props) => {
               />
               <FAQItem
                 question="Proposez-vous une période d'essai ?"
-                answer="Oui, nous offrons un essai gratuit de 14 jours sans engagement."
+                answer="Oui, nous offrons un essai gratuit de 30 jours sans engagement."
               />
             </motion.div>
           </motion.div>
