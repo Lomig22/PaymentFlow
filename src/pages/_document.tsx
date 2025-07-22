@@ -16,6 +16,18 @@ export default function Document() {
             `,
           }}
         />
+        {/* Google Analytics (G-WWHHYD4YZP) */}
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-WWHHYD4YZP"></script>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'G-WWHHYD4YZP');
+            `,
+          }}
+        />
       </Head>
       <body>
         <Main />
