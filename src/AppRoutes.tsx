@@ -37,6 +37,7 @@ import Personnalisation from "./pages/Personnalisation";
 
 import { User } from "@supabase/supabase-js";
 import AuthMFA from "./components/AuthMFA";
+import ResetPassword from "./components/ResetPassword";
 
 interface AppRoutesProps {
   user: User | null;
@@ -44,7 +45,7 @@ interface AppRoutesProps {
   onMFASuccess?: () => void;
 }
 
-export default function AppRoutes({ user,onMFASuccess  }: AppRoutesProps) {
+export default function AppRoutes({ user, onMFASuccess }: AppRoutesProps) {
   return (
     <Router>
       {!user && <AppHeader user={user} onContactClick={() => {}} />}
@@ -63,7 +64,10 @@ export default function AppRoutes({ user,onMFASuccess  }: AppRoutesProps) {
         />
         <Route path="/help" element={<HelpAndSupport />} />
         <Route path="/subscribe" element={<SubscribePage />} />
-        <Route path="/reporting-recouvrement" element={<ReportingRecouvrement />} />
+        <Route
+          path="/reporting-recouvrement"
+          element={<ReportingRecouvrement />}
+        />
         <Route path="/crm" element={<CrmPage />} />
         <Route path="/simulateur-dso" element={<DSOSimulator />} />
         <Route path="/personnalisation" element={<Personnalisation />} />
@@ -83,12 +87,20 @@ export default function AppRoutes({ user,onMFASuccess  }: AppRoutesProps) {
         <Route path="/privacy" element={<PrivacyPolicyPage />} />
         <Route path="/mentions-legales" element={<LegalNoticePage />} />
         <Route path="/conditions-utilisation" element={<TermsOfUsePage />} />
-        <Route path="/blog" element={<BlogPage setShowContact={() => {}} setDefaultSubject={() => {}} />} />
-<Route path="/blog-garage" element={<BlogGarage />} />
-<Route path="/blog-manufacture" element={<BlogManufacture />} />
-<Route path="/blog-communication" element={<BlogCommunication />} />
-<Route path="/blog-comptable-banque" element={<BlogComptableBanque />} />
-        <Route path="/reset-password" element={<ForgotPassword />} />
+        <Route
+          path="/blog"
+          element={
+            <BlogPage setShowContact={() => {}} setDefaultSubject={() => {}} />
+          }
+        />
+        <Route path="/blog-garage" element={<BlogGarage />} />
+        <Route path="/blog-manufacture" element={<BlogManufacture />} />
+        <Route path="/blog-communication" element={<BlogCommunication />} />
+        <Route
+          path="/blog-comptable-banque"
+          element={<BlogComptableBanque />}
+        />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
         {/* Routes protégées */}
         <Route
@@ -99,7 +111,10 @@ export default function AppRoutes({ user,onMFASuccess  }: AppRoutesProps) {
             <Route index element={<DashboardRedirect />} />
             <Route path=":email" element={<Dashboard />} />
           </Route>
-          <Route path="mfa" element={<AuthMFA onMFASuccess={onMFASuccess || (() => {})}/>} />
+          <Route
+            path="mfa"
+            element={<AuthMFA onMFASuccess={onMFASuccess || (() => {})} />}
+          />
           <Route path="clients" element={<ClientPage />} />
           <Route path="receivables" element={<ReceivablesList />} />
           <Route path="settings" element={<Settings />} />
