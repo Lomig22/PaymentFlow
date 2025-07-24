@@ -49,7 +49,18 @@ function calculateResults(values: DSOSimulatorInputs) {
   };
 }
 
+import { Helmet } from "react-helmet";
+
 export default function DSOSimulator() {
+  /* SEO Helmet */
+  const helmetBlock = (
+    <Helmet>
+      <title>Simulateur DSO | Payment Flow</title>
+      <meta name="description" content="Simulez l'impact de la relance client sur votre DSO et calculez vos gains de trésorerie avec notre outil gratuit." />
+      <meta name="robots" content="index, follow" />
+      <link rel="canonical" href="https://www.payment-flow.fr/simulateur-dso" />
+    </Helmet>
+  );
   const simulatorRef = useRef<HTMLDivElement>(null);
   const scrollToSimulator = () => {
     simulatorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -65,6 +76,7 @@ export default function DSOSimulator() {
 
   return (
     <>
+      {helmetBlock}
       <DSOIntro onScrollToSimulator={scrollToSimulator} />
       <motion.div ref={simulatorRef}
       initial={{ opacity: 0, y: 30 }}
