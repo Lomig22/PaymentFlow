@@ -11,13 +11,26 @@ import Footer from "../components/Footer";
 
 import { useNavigate } from "react-router-dom";
 
+import { Helmet } from "react-helmet";
+
 export default function Personnalisation() {
   const navigate = useNavigate();
   return (
-    <div className="relative min-h-screen overflow-x-hidden">
-      {/* Fond dynamique animé */}
+    <>
+      <Helmet>
+        <title>Personnalisation | Payment Flow</title>
+        <meta name="description" content="Personnalisez vos relances clients avec Payment Flow : email, SMS, ton, modèles et canaux adaptés à votre secteur et à votre clientèle." />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href="https://www.payment-flow.fr/personnalisation" />
+      </Helmet>
+      <div className="relative min-h-screen overflow-x-hidden">
+        {/* Fond dynamique animé */}
       <div className="absolute inset-0 -z-10 animate-gradient-x bg-gradient-to-br from-blue-50 via-blue-100 to-blue-200 opacity-80">
         <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-r from-blue-200 via-blue-100 to-transparent blur-2xl opacity-60 animate-pulse" />
+      </div>
+      <div className="container mx-auto py-12">
+        <h1 className="text-4xl font-bold text-gray-900 mb-4">Personnalisation</h1>
+        <h2 className="text-xl text-gray-700 mb-8">Adaptez vos relances à votre image et à vos clients.</h2>
         <div className="absolute bottom-0 right-0 w-1/2 h-40 bg-gradient-to-tr from-blue-100 via-blue-200 to-transparent blur-2xl opacity-50 animate-pulse" />
       </div>
 
@@ -129,5 +142,6 @@ export default function Personnalisation() {
       <div style={{height: '0.5cm'}} />
       <Footer />
     </div>
+    </>
   );
 }

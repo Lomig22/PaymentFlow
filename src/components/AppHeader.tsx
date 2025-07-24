@@ -13,12 +13,42 @@ interface AppHeaderProps {
 }
 
 export default function AppHeader({ user }: AppHeaderProps) {
+  const mobileFeaturesMenuRef = useRef<HTMLDivElement>(null);
+  const mobileResourcesMenuRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const calendlyRef = useRef<any>(null);
   const [showContactModal, setShowContactModal] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isFeaturesMenuOpen, setIsFeaturesMenuOpen] = useState(false);
   const [isResourcesMenuOpen, setIsResourcesMenuOpen] = useState(false);
+  const [isMobileFeaturesMenuOpen, setIsMobileFeaturesMenuOpen] = useState(false);
+
+  // Ferme les menus déroulants mobile si clic en dehors
+  useEffect(() => {
+    if (!isMobileFeaturesMenuOpen && !isResourcesMenuOpen) return;
+    function handleClickOutside(event: MouseEvent | TouchEvent) {
+      if (
+        mobileFeaturesMenuRef.current &&
+        !mobileFeaturesMenuRef.current.contains(event.target as Node) &&
+        isMobileFeaturesMenuOpen
+      ) {
+        setIsMobileFeaturesMenuOpen(false);
+      }
+      if (
+        mobileResourcesMenuRef.current &&
+        !mobileResourcesMenuRef.current.contains(event.target as Node) &&
+        isResourcesMenuOpen
+      ) {
+        setIsResourcesMenuOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [isMobileFeaturesMenuOpen, isResourcesMenuOpen]);
 
   const showContactModalRef = useRef(showContactModal);
   const isMobileMenuOpenRef = useRef(isMobileMenuOpen);
@@ -250,7 +280,7 @@ export default function AppHeader({ user }: AppHeaderProps) {
             {isMobileMenuOpen ? (
               <X className="h-6 w-6" />
             ) : (
-              <TrendingUp className="h-6 w-6" />
+              <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" y1="6" x2="20" y2="6" /><line x1="4" y1="12" x2="20" y2="12" /><line x1="4" y1="18" x2="20" y2="18" /></svg>
             )}
           </button>
         </div>
@@ -262,16 +292,59 @@ export default function AppHeader({ user }: AppHeaderProps) {
           <div className="px-2 pt-2 pb-3 space-y-1">
             {!user && (
               <>
-                <button
-                  onClick={() => scrollToSection("features")}
-                  className="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md"
-                >
-                  Fonctionnalités
-                </button>
-                {/* Mobile Ressources submenu */}
-                <div className="relative">
+                {/* Mobile Fonctionnalités submenu */}
+                <div className="relative" ref={mobileFeaturesMenuRef}>
                   <button
-                    onClick={() => setIsResourcesMenuOpen(!isResourcesMenuOpen)}
+                    onClick={() => { setIsMobileFeaturesMenuOpen((v: boolean) => { if (!v) setIsResourcesMenuOpen(false); return !v; }); }}
+                    className="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md flex items-center justify-between"
+                  >
+                    Fonctionnalités
+                    <svg
+                      className={`ml-2 h-5 w-5 transform transition-transform duration-200 ${isMobileFeaturesMenuOpen ? 'rotate-180' : ''}`}
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {isMobileFeaturesMenuOpen && (
+                    <div className="absolute left-0 w-56 mt-2 bg-white border border-gray-200 rounded-md shadow-lg z-50">
+                      <button
+                        onClick={() => { navigate("/reporting-recouvrement"); setIsMobileFeaturesMenuOpen(false); setIsMobileMenuOpen(false); }}
+                        className="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md flex items-center gap-2"
+                      >
+                        <BarChart3 className="h-5 w-5 text-blue-600" />
+                        Reporting de recouvrement
+                      </button>
+                      <button
+                        onClick={() => { navigate("/crm"); setIsMobileFeaturesMenuOpen(false); setIsMobileMenuOpen(false); }}
+                        className="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md flex items-center gap-2"
+                      >
+                        <Users className="h-5 w-5 text-blue-600" />
+                        CRM
+                      </button>
+                      <button
+                        onClick={() => { navigate("/simulateur-dso"); setIsMobileFeaturesMenuOpen(false); setIsMobileMenuOpen(false); }}
+                        className="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md flex items-center gap-2"
+                      >
+                        <FileText className="h-5 w-5 text-blue-600" />
+                        Outils de créances
+                      </button>
+                      <button
+                        onClick={() => { navigate("/personnalisation"); setIsMobileFeaturesMenuOpen(false); setIsMobileMenuOpen(false); }}
+                        className="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md flex items-center gap-2"
+                      >
+                        <Settings className="h-5 w-5 text-blue-600" />
+                        Personnalisation
+                      </button>
+                    </div>
+                  )}
+                </div>
+                {/* Mobile Ressources submenu */}
+                <div className="relative" ref={mobileResourcesMenuRef}>
+                  <button
+                    onClick={() => { setIsResourcesMenuOpen((v: boolean) => { if (!v) setIsMobileFeaturesMenuOpen(false); return !v; }); }}
                     className="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md flex items-center justify-between"
                   >
                     Ressources

@@ -25,6 +25,7 @@ import { User } from "@supabase/supabase-js";
 import { Link } from "react-router-dom";
 import { Menu } from '@headlessui/react';
 import Footer from "../components/Footer";
+import { Helmet } from "react-helmet";
 import PricingPage from "./PricingPage";
 interface LandingPageProps {
   onGetStarted: () => void;
@@ -81,6 +82,15 @@ function StorylaneDemoEmbed() {
 }
 
 export default function LandingPage({ onGetStarted }: LandingPageProps) {
+  /* SEO Helmet */
+  const helmetBlock = (
+    <Helmet>
+      <title>Accueil | Payment Flow</title>
+      <meta name="description" content="Solution SaaS de relance client automatisée : améliorez votre trésorerie, réduisez votre DSO et optimisez votre relation client avec Payment Flow." />
+      <meta name="robots" content="index, follow" />
+      <link rel="canonical" href="https://www.payment-flow.fr/" />
+    </Helmet>
+  );
   // ...
   // Fonction pour ouvrir le popup Calendly de façon robuste
   const openCalendlyPopup = () => {

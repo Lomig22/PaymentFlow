@@ -1,9 +1,21 @@
 import React from 'react';
+import { Helmet } from "react-helmet";
 import { motion } from 'framer-motion';
 
 export default function RelanceClient() {
+  /* SEO Helmet */
+  const helmetBlock = (
+    <Helmet>
+      <title>Relance Client | Payment Flow</title>
+      <meta name="description" content="Automatisez vos relances clients, réduisez les impayés et améliorez votre trésorerie avec Payment Flow." />
+      <meta name="robots" content="index, follow" />
+      <link rel="canonical" href="https://www.payment-flow.fr/relance-client" />
+    </Helmet>
+  );
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
+      {helmetBlock}
+      <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -82,5 +94,6 @@ export default function RelanceClient() {
         </div>
       </div>
     </div>
+    </>
   );
 }
