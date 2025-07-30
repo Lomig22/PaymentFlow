@@ -195,7 +195,8 @@ export default function BalanceAgeeChart() {
               <Bar
                 dataKey="montant"
                 fill="rgb(255, 67, 67)"
-                radius={[4, 4, 0, 0]}
+                radius={[12, 12, 12, 12]}
+                barSize={54}
               />
             </BarChart>
           </ResponsiveContainer>

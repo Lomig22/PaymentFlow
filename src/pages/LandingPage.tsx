@@ -85,7 +85,7 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
   /* SEO Helmet */
   const helmetBlock = (
     <Helmet>
-      <title>Accueil | Payment Flow</title>
+      <title>Logiciel de recouvrement | Payment Flow</title>
       <meta name="description" content="Solution SaaS de relance client automatisée : améliorez votre trésorerie, réduisez votre DSO et optimisez votre relation client avec Payment Flow." />
       <meta name="robots" content="index, follow" />
       <link rel="canonical" href="https://www.payment-flow.fr/" />
@@ -380,10 +380,12 @@ const staggerContainer = {
             >
             {/* Left Column - Text Content */}
             <div className="text-center md:text-left">
-              <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
-                Automatisez vos <br />
-                <span className="text-blue-600">relances clients</span>
-              </h1>
+              <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-2">
+  Logiciel de recouvrement :
+</h1>
+<h2 className="text-4xl sm:text-5xl font-bold text-blue-600 mb-6">
+  Automatisez vos relances clients
+</h2>
               <div className="text-xl text-gray-600 mb-8 space-y-4">
                 <p className="flex items-center gap-2">
                   <CheckCircle className="h-6 w-6 text-green-600 flex-shrink-0" />

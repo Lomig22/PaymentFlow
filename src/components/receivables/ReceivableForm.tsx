@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
 import { Client } from "../../types/database";
 import { X, Upload, FileUp } from "lucide-react";
@@ -14,6 +15,16 @@ export default function ReceivableForm({
   onReceivableAdded,
   preselectedClient,
 }: ReceivableFormProps) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  // Parse query params for client_name and client_email
+  const queryParams = React.useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    return {
+      client_name: params.get("client_name") || "",
+      client_email: params.get("client_email") || "",
+    };
+  }, [location.search]);
   const [loading, setLoading] = useState(false);
   const [clients, setClients] = useState<Client[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -34,11 +45,11 @@ export default function ReceivableForm({
     status: "pending",
     invoice_pdf_url: "",
     notes: "",
-    email: preselectedClient?.email.split(",")[0] || "",
+    email: preselectedClient?.email?.split(",")[0] || queryParams.client_email || "",
   });
   const [newClientData, setNewClientData] = useState({
-    company_name: "",
-    email: "",
+    company_name: preselectedClient?.company_name || queryParams.client_name || "",
+    email: preselectedClient?.email || queryParams.client_email || "",
     phone: "",
     address: "",
     postal_code: "",
@@ -47,6 +58,21 @@ export default function ReceivableForm({
     needs_reminder: true,
     client_code: "", //Jet client_code
   });
+
+  // Effet pour mettre à jour les champs si queryParams changent et pas de client sélectionné
+  useEffect(() => {
+    if (!preselectedClient) {
+      setFormData((prev) => ({
+        ...prev,
+        email: queryParams.client_email || "",
+      }));
+      setNewClientData((prev) => ({
+        ...prev,
+        company_name: queryParams.client_name || "",
+        email: queryParams.client_email || "",
+      }));
+    }
+  }, [queryParams.client_name, queryParams.client_email, preselectedClient]);
   const showError = (message: string) => {
     setError(message);
     setTimeout(() => {
@@ -61,6 +87,25 @@ export default function ReceivableForm({
       setClients([preselectedClient]);
     }
   }, [preselectedClient]);
+
+  // Pré-sélection automatique du client et de l’email depuis les query params
+  useEffect(() => {
+    if (!preselectedClient && clients.length > 0 && (queryParams.client_name || queryParams.client_email)) {
+      // Trouver le client par nom ou email (tolérance sur le nom)
+      const foundClient = clients.find(
+        c => (queryParams.client_name && c.company_name?.toLowerCase().trim() === queryParams.client_name.toLowerCase().trim()) ||
+             (queryParams.client_email && c.email?.split(',').map(e => e.trim()).includes(queryParams.client_email))
+      );
+      if (foundClient) {
+        setFormData((prev) => ({
+          ...prev,
+          client_id: foundClient.id,
+          email: queryParams.client_email || foundClient.email?.split(',')[0] || "",
+        }));
+        setClientEmails(foundClient.email?.split(',').map(e => e.trim()) || []);
+      }
+    }
+  }, [clients, preselectedClient, queryParams.client_name, queryParams.client_email]);
 
   const fetchClients = async () => {
     try {
@@ -223,7 +268,7 @@ if (updatedTotalAmount >= maxOverDues) {
 
       if (data) {
         onReceivableAdded(data);
-        onClose();
+        navigate('/receivables');
       }
     } catch (error: any) {
       console.error("Erreur lors de l'ajout de la créance:", error);
@@ -244,12 +289,12 @@ if (updatedTotalAmount >= maxOverDues) {
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 z-50 overflow-y-scroll">
       <div className="min-h-screen py-8 px-4 flex items-center justify-center">
         <div className="relative bg-white rounded-lg shadow-xl p-8 w-full max-w-xl mx-auto">
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-          >
-            <X className="h-6 w-6" />
-          </button>
+            <button
+              onClick={() => navigate('/receivables')}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+            >
+              <X className="h-6 w-6" />
+            </button>
 
           <h2 className="text-2xl font-bold mb-6">Nouvelle créance</h2>
 
@@ -620,7 +665,7 @@ if (updatedTotalAmount >= maxOverDues) {
             <div className="flex justify-end space-x-4">
               <button
                 type="button"
-                onClick={onClose}
+                onClick={() => navigate('/receivables')}
                 className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
               >
                 Annuler

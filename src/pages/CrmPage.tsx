@@ -1,13 +1,19 @@
 import { Users, MessageSquare, Database, BarChart } from 'lucide-react';
 import Footer from '../components/Footer';
 import CrmIntro from '../components/CrmIntro';
+import { Helmet } from 'react-helmet';
 
 import { useNavigate } from 'react-router-dom';
 
 const CrmPage = () => {
   const navigate = useNavigate();
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
+      <Helmet>
+        <title>CRM de recouvrement | Payment Flow</title>
+        <meta name="description" content="Centralisez vos interactions clients et optimisez le recouvrement avec le CRM Payment Flow." />
+      </Helmet>
+      <div className="min-h-screen bg-gray-50">
       {/* CRM Immersive Intro Section */}
       <CrmIntro onScrollToDemo={() => {
         const demo = document.getElementById('crm-demo-section');
@@ -138,6 +144,7 @@ const CrmPage = () => {
       <div style={{height: '0.5cm'}} />
       <Footer />
     </div>
+    </>
   );
 };
 

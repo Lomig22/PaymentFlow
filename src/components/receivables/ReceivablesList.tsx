@@ -81,10 +81,18 @@ function ReceivablesList() {
   const [importSuccess, setImportSuccess] = useState<string | null>(null);
   const [sendSuccess, setSendSuccess] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-  const [sortConfig, setSortConfig] = useState<{
+  const RECEIVABLES_SORT_KEY = 'receivables_sort_config';
+const [sortConfig, setSortConfig] = useState<{
     key: "client";
     sort: "asc" | "desc";
-  } | null>(null);
+  } | null>(() => {
+    try {
+      const saved = localStorage.getItem(RECEIVABLES_SORT_KEY);
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [receivableToDelete, setReceivableToDelete] = useState<
@@ -129,7 +137,6 @@ function ReceivablesList() {
     { key: "paid_amount", label: "Montant Réglé" },
     { key: "due_date", label: "Échéance" },
     { key: "Delay in Days", label: "Retard" },
-    { key: "status", label: "Statut" },
     { key: "email", label: "Email" },
     { key: "invoice_number", label: "Facture" },
     { key: "document_date", label: "Date pièce" },
@@ -741,18 +748,32 @@ function ReceivablesList() {
   };
 
   const handleSortOnClick = (key: keyof CSVMapping | "Delay in Days") => {
+    let newConfig;
     if (sortConfig?.key === key) {
-      setSortConfig({
+      newConfig = {
         ...sortConfig,
         sort: sortConfig.sort === "asc" ? "desc" : "asc",
-      });
+      };
     } else {
-      setSortConfig({
+      newConfig = {
         key,
         sort: "asc",
-      });
+      };
     }
+    setSortConfig(newConfig);
+    try {
+      localStorage.setItem(RECEIVABLES_SORT_KEY, JSON.stringify(newConfig));
+    } catch {}
   };
+
+  // Persist sortConfig changes (in case setSortConfig is called elsewhere)
+  useEffect(() => {
+    if (sortConfig) {
+      try {
+        localStorage.setItem(RECEIVABLES_SORT_KEY, JSON.stringify(sortConfig));
+      } catch {}
+    }
+  }, [sortConfig]);
 
   const applySorting = (
     a: Receivable & { client: Client },

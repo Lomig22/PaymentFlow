@@ -19,10 +19,12 @@ import BlogGarage from "./pages/BlogGarage";
 import BlogManufacture from "./pages/BlogManufacture";
 import BlogCommunication from "./pages/BlogCommunication";
 import BlogComptableBanque from "./pages/BlogComptableBanque";
+import BlogOptimisationRelance from "./pages/BlogOptimisationRelance";
 import Layout from "./components/Layout";
 import Dashboard from "./components/Dashboard";
 import ClientPage from "./components/clients/ClientPage";
 import ReceivablesList from "./components/receivables/ReceivablesList";
+import ReceivableForm from "./components/receivables/ReceivableForm";
 import Settings from "./components/settings/Settings";
 import ReminderList from "./components/reminders/ReminderList";
 import HelpAndSupport from "./pages/HelpAndSupport";
@@ -100,6 +102,7 @@ export default function AppRoutes({ user, onMFASuccess }: AppRoutesProps) {
           path="/blog-comptable-banque"
           element={<BlogComptableBanque />}
         />
+        <Route path="/blog-optimisation-relance" element={<BlogOptimisationRelance />} />
         <Route path="/reset-password" element={<ResetPassword />} />
 
         {/* Routes protégées */}
@@ -117,6 +120,7 @@ export default function AppRoutes({ user, onMFASuccess }: AppRoutesProps) {
           />
           <Route path="clients" element={<ClientPage />} />
           <Route path="receivables" element={<ReceivablesList />} />
+          <Route path="receivables/new" element={<ReceivableForm onClose={() => {}} onReceivableAdded={() => {}} />} />
           <Route path="settings" element={<Settings />} />
           <Route path="reminders" element={<ReminderList />} />
           <Route path="success" element={<Success />} />

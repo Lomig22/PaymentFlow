@@ -1,4 +1,5 @@
 import React from 'react';
+import { Helmet } from 'react-helmet';
 import { BarChart3, PieChart, TrendingUp, FileSpreadsheet } from 'lucide-react';
 import Footer from '../components/Footer';
 import { useNavigate } from 'react-router-dom';
@@ -7,6 +8,10 @@ const ReportingRecouvrement = () => {
   const navigate = useNavigate();
   return (
     <React.Fragment>
+      <Helmet>
+        <title>Reporting recouvrement | Payment Flow</title>
+        <meta name="description" content="Visualisez vos performances de recouvrement avec des tableaux de bord et analyses avancées sur Payment Flow." />
+      </Helmet>
       <div className="min-h-screen bg-gray-50">
         {/* Hero Section */}
         <div className="bg-white py-16">
