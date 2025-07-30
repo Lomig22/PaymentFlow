@@ -64,10 +64,24 @@ function ClientList({
   const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [tooltipVisible, setTooltipVisible] = useState<string | null>(null);
-  const [sortConfig, setSortConfig] = useState<SortColumnConfig | null>({
-    key: "company_name",
-    sort: "asc",
+  const CLIENTS_SORT_KEY = 'clients_sort_config';
+  const [sortConfig, setSortConfig] = useState<SortColumnConfig | null>(() => {
+    try {
+      const saved = localStorage.getItem(CLIENTS_SORT_KEY);
+      return saved ? JSON.parse(saved) : { key: "company_name", sort: "asc" };
+    } catch {
+      return { key: "company_name", sort: "asc" };
+    }
   });
+
+  // Persist sortConfig changes (in case setSortConfig is called elsewhere)
+  useEffect(() => {
+    if (sortConfig) {
+      try {
+        localStorage.setItem(CLIENTS_SORT_KEY, JSON.stringify(sortConfig));
+      } catch {}
+    }
+  }, [sortConfig]);
   const [success, setSuccess] = useState<string | null>(null);
   const [selectedClientIds, setSelectedClientIds] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
@@ -400,17 +414,22 @@ function ClientList({
   };
 
   const handleSortOnClick = (key: keyof CSVMapping) => {
+    let newConfig: SortColumnConfig;
     if (sortConfig?.key === key) {
-      setSortConfig({
+      newConfig = {
         ...sortConfig,
         sort: sortConfig.sort === "asc" ? "desc" : "asc",
-      });
+      };
     } else {
-      setSortConfig({
+      newConfig = {
         key,
         sort: "asc",
-      });
+      };
     }
+    setSortConfig(newConfig);
+    try {
+      localStorage.setItem(CLIENTS_SORT_KEY, JSON.stringify(newConfig));
+    } catch {}
   };
 
   const applySorting = (

@@ -43,7 +43,7 @@ export default function CrmIntro({ onScrollToDemo }: { onScrollToDemo: () => voi
           <span className="text-blue-600">Payment Flow, si.</span>
         </h1>
         <p className="text-lg md:text-2xl text-gray-700 mb-4 max-w-2xl mx-auto">
-          Automatisez le suivi client, les relances et la facturation avec un CRM 100% orienté encaissements.
+          Automatisez le suivi client, les relances et la facturation avec un CRM de recouvrement 100% orienté encaissements.
         </p>
         {/* Animated Dashboard SVG Placeholder */}
         <div className="my-6">

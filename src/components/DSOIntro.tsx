@@ -16,9 +16,12 @@ export default function DSOIntro({ onScrollToSimulator }: { onScrollToSimulator:
     <section className="bg-gradient-to-b from-blue-50 via-white to-white w-full py-12 md:py-20 border-b border-blue-100">
       {/* Hero Section */}
       <div className="max-w-4xl mx-auto px-4 flex flex-col items-center text-center gap-4">
-        <h1 className="text-3xl md:text-5xl font-extrabold text-blue-700 mb-2">
-          Mesurez l’impact réel de vos impayés
+        <h1 className="text-3xl md:text-5xl font-extrabold text-gray-900 mb-0">
+          Logiciel de recouvrement créances
         </h1>
+        <h2 className="text-3xl md:text-5xl font-extrabold text-blue-700 mb-2">
+          Mesurez l’impact réel de vos impayés
+        </h2>
         <p className="text-lg md:text-2xl text-gray-700 mb-4 max-w-2xl mx-auto">
           Découvrez votre DSO en quelques clics et reprenez le contrôle de vos encaissements.
         </p>
@@ -68,12 +71,12 @@ export default function DSOIntro({ onScrollToSimulator }: { onScrollToSimulator:
 
       {/* Secteurs touchés */}
       <div className="max-w-5xl mx-auto mb-12">
-        <div className="text-center text-lg font-medium mb-4 text-blue-700">Certaines activités sont plus exposées aux retards de paiement. Et vous&nbsp;?</div>
+        <h3 className="text-center text-lg font-medium mb-4 text-blue-700">Certaines activités sont plus exposées aux retards de paiement. Et vous&nbsp;?</h3>
         <div className="flex flex-wrap gap-8 items-center justify-center opacity-70 grayscale">
           {sectors.map((s, i) => (
             <div key={i} className="flex flex-col items-center gap-1">
               <div className="bg-gray-200 rounded-full p-3">{s.icon}</div>
-              <span className="text-xs font-medium mt-1">{s.label}</span>
+              <h4 className="text-xs font-medium mt-1">{s.label}</h4>
             </div>
           ))}
         </div>

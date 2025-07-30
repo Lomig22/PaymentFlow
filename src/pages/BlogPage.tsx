@@ -36,6 +36,7 @@ interface BlogPageProps {
 }
 
 import Footer from "../components/Footer";
+import { Link } from "react-router-dom";
 
 const BlogPage: React.FC<BlogPageProps> = () => (
   <>
@@ -47,6 +48,17 @@ const BlogPage: React.FC<BlogPageProps> = () => (
         <link rel="canonical" href="https://www.payment-flow.fr/blog" />
       </Helmet>
       <h1 className="text-3xl font-bold mb-8">Blog sectoriel – Success Stories</h1>
+
+      {/* Article long format : Optimisation des relances */}
+      <div className="mb-10 p-6 bg-blue-900 rounded-xl shadow-md flex flex-col md:flex-row items-center gap-6 text-white">
+        <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80" alt="Optimisation relances clients" className="rounded-lg shadow-md w-32 h-32 object-cover border-2 border-orange-500" />
+        <div className="flex-1">
+          <h2 className="text-2xl font-bold mb-1">Les 5 erreurs à éviter quand on relance ses clients</h2>
+          <div className="text-orange-300 font-medium mb-2">Optimisation des relances clients pour PME & TPE</div>
+          <p className="mb-3 text-blue-100">Découvrez les erreurs les plus fréquentes et les solutions concrètes pour accélérer vos paiements, préserver la relation client et automatiser vos relances. Conseils concrets, visuels, et bonnes pratiques adaptées aux petites entreprises.</p>
+          <Link to="/blog-optimisation-relance" className="inline-block px-5 py-2 rounded bg-orange-500 hover:bg-orange-600 text-white font-semibold shadow transition-colors">Lire l'article</Link>
+        </div>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {sectorBlogs.map((sector, idx) => (
           <div key={idx} className="p-6 bg-white rounded-xl shadow-md flex flex-col justify-between">

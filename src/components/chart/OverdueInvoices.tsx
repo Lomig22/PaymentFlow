@@ -101,10 +101,12 @@ const OverdueInvoices = () => {
       .single();
 
     if (!error && data) {
+      console.log("Client récupéré pour la modale:", data); // DEBUG
       setClientDetails(data);
       setModalOpen(true);
     }
   };
+
 
   return (
     <div className="rounded-2xl p-6 max-h-[350px] overflow-y-auto">

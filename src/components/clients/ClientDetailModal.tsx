@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { Dialog } from "@headlessui/react";
 import { motion } from "framer-motion";
 import {
@@ -17,6 +18,7 @@ import {
 } from "lucide-react";
 
 const ClientDetailModal = ({ client, isOpen, onClose }) => {
+  const navigate = useNavigate();
   if (!client) return null;
 
   const formatDate = (dateString) =>
@@ -188,22 +190,40 @@ const ClientDetailModal = ({ client, isOpen, onClose }) => {
           </Section>
 
           <Section title="Autres">
-            <Field
-              label="Notes"
-              value={client.notes || "Aucune note"}
-              Icon={StickyNote}
-            />
-            <Field
-              label="Créé le"
-              value={formatDate(client.created_at)}
-              Icon={Calendar}
-            />
-            <Field
-              label="Modifié le"
-              value={formatDate(client.updated_at)}
-              Icon={Wrench}
-            />
-          </Section>
+  <Field
+    label="Notes"
+    value={client.notes || "Aucune note"}
+    Icon={StickyNote}
+  />
+  <Field
+    label="Créé le"
+    value={formatDate(client.created_at)}
+    Icon={Calendar}
+  />
+  <Field
+    label="Modifié le"
+    value={formatDate(client.updated_at)}
+    Icon={Wrench}
+  />
+</Section>
+<div className="w-full flex flex-col items-center mt-6">
+  <button
+    className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-md shadow transition-colors text-lg"
+    onClick={() => {
+      navigate(`/receivables/new?client_name=${encodeURIComponent(client.company_name || '')}&client_email=${encodeURIComponent(client.email || '')}`);
+    }}
+  >
+    <Mail className="w-5 h-5" aria-label="Mail" />
+    Relancer
+  </button>
+  {(!client.company_name || !client.email) && (
+    <div className="mt-2 text-sm text-red-600 text-center">
+      Attention : informations client incomplètes.<br />
+      { !client.company_name && 'Nom de l’entreprise manquant. '}
+      { !client.email && 'Email manquant.'}
+    </div>
+  )}
+</div>
         </motion.div>
       </div>
     </Dialog>
