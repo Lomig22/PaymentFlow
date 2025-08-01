@@ -523,6 +523,8 @@ const staggerContainer = {
   whileInView="visible"
   viewport={{ once: true, amount: 0.3 }}
 >
+  {/* Section desktop uniquement */}
+<div className="hidden md:block">
   <h2 className="text-3xl md:text-4xl font-extrabold text-center text-neutral-900 mb-10 tracking-tight">
     Découvrez comment Payment Flow peut vous aider !
   </h2>
@@ -668,13 +670,129 @@ const staggerContainer = {
             </div>
           </SwiperSlide>
         </Swiper>
-      </div>
       {/* Pagination Swiper en-dessous */}
       <div className="flex justify-center mt-6">
         <div className="swiper-pagination" />
       </div>
     </div>
   </div>
+</div>
+</div>
+
+{/* Section mobile/tablette uniquement */}
+<div className="block md:hidden">
+  <h2 className="text-2xl font-extrabold text-center text-neutral-900 mb-6 tracking-tight px-2">
+    Découvrez comment Payment Flow peut vous aider !
+  </h2>
+  <div className="flex flex-col items-center">
+    <div className="w-full max-w-md mx-auto">
+      <div className="relative bg-white rounded-xl shadow-lg border border-blue-100 px-2 py-4 mt-8">
+        <Swiper
+          modules={[Navigation, Pagination]}
+          pagination={{ clickable: true }}
+          spaceBetween={0}
+          slidesPerView={1}
+          className="w-full"
+        >
+          {/* Slide 1 */}
+          <SwiperSlide>
+            <div className="flex flex-col items-center">
+              <h3 className="text-xl font-bold mb-4 text-blue-700 text-center">Automatisez vos relances et gagnez du temps</h3>
+              <img
+                src="/images/1.png"
+                alt="Présentation Payment Flow 1"
+                className="w-full max-w-xs object-contain rounded-xl mb-4"
+                style={{ background: '#fff' }}
+              />
+              <p className="text-gray-700 mb-4 text-base text-center px-2">
+                Payment Flow vous permet de centraliser toutes vos créances, d’automatiser vos relances et de suivre vos paiements en temps réel. Gagnez en sérénité et concentrez-vous sur l’essentiel : votre activité.
+              </p>
+              <div className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded-lg shadow-sm flex flex-col gap-2 mb-4">
+                <span className="italic text-blue-900 text-sm">“J’ai testé Payment Flow pendant 1 mois et j’ai réduit mes impayés de moitié, sans stress. L’outil est intuitif et le support au top !”</span>
+                <span className="font-semibold text-blue-700">— Claire, testeuse PME</span>
+              </div>
+              <button
+                className="mt-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg shadow transition-all text-base w-fit"
+                onClick={() => navigate('/signup')}
+              >
+                Essayez gratuitement Payment Flow
+              </button>
+            </div>
+          </SwiperSlide>
+          {/* Slide 2 */}
+          <SwiperSlide>
+            <div className="flex flex-col items-center">
+              <h3 className="text-xl font-bold mb-4 text-blue-700 text-center">Visualisez l’impact de vos actions</h3>
+              <img
+                src="/images/2.png"
+                alt="Présentation Payment Flow 2"
+                className="w-full max-w-xs object-contain rounded-xl mb-4"
+                style={{ background: '#fff' }}
+              />
+              <p className="text-gray-700 mb-4 text-base text-center px-2">
+                Suivez l’évolution de votre DSO, analysez vos résultats et partagez des rapports clairs à vos équipes ou partenaires. Payment Flow, c’est la maîtrise de votre trésorerie en un coup d’œil.
+              </p>
+              <div className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded-lg shadow-sm flex flex-col gap-2 mb-4">
+                <span className="italic text-blue-900 text-sm">“La visualisation des résultats est super claire, et j’ai enfin une vue d’ensemble sur mes paiements. Je recommande à tous les entrepreneurs !”</span>
+                <span className="font-semibold text-blue-700">— Sophie, testeuse TPE</span>
+              </div>
+              <button
+                className="mt-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg shadow transition-all text-base w-fit"
+                onClick={() => navigate('/signup')}
+              >
+                Essayez gratuitement Payment Flow
+              </button>
+            </div>
+          </SwiperSlide>
+          {/* Slide 3 */}
+          <SwiperSlide>
+            <div className="flex flex-col items-center">
+              <h3 className="text-xl font-bold mb-4 text-blue-700 text-center">Essayez Payment Flow gratuitement pendant 30 jours !</h3>
+              <ul className="mb-4 text-blue-700 text-sm flex flex-col gap-1 px-2">
+                <li className="flex items-center gap-2"><span className="inline-block w-4 h-4"><svg xmlns='http://www.w3.org/2000/svg' className='text-blue-600' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M5 13l4 4L19 7' /></svg></span>30 jours d’accès complet</li>
+                <li className="flex items-center gap-2"><span className="inline-block w-4 h-4"><svg xmlns='http://www.w3.org/2000/svg' className='text-blue-600' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M5 13l4 4L19 7' /></svg></span>Sans carte bancaire</li>
+                <li className="flex items-center gap-2"><span className="inline-block w-4 h-4"><svg xmlns='http://www.w3.org/2000/svg' className='text-blue-600' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M5 13l4 4L19 7' /></svg></span>Sans engagement</li>
+              </ul>
+              {/* Logos clients et avis certifiés */}
+              <div className="flex flex-col items-center gap-4 w-full">
+                <div className="flex flex-col items-center">
+                  <img src="/images/image-de-marque.webp" alt="Logo Image de Marque" className="h-16 w-auto mb-2 rounded shadow-md bg-white p-2" />
+                  <div className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded shadow text-xs max-w-[180px]">
+                    <span className="italic">“Grâce à Payment Flow, nous avons récupéré 98% de nos créances en 2 mois !”</span>
+                    <br />— Julie, Dir. admin. Image de Marque
+                  </div>
+                </div>
+                <div className="flex flex-col items-center">
+                  <img src="/images/ouestelio.png" alt="Logo Ouestelio" className="h-16 w-auto mb-2 rounded shadow-md bg-white p-2" />
+                  <div className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded shadow text-xs max-w-[180px]">
+                    <span className="italic">“La relance automatique a transformé notre trésorerie, c’est bluffant.”</span>
+                    <br />— Marc, Gérant Ouestelio
+                  </div>
+                </div>
+              </div>
+              <button
+                className="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg shadow transition-all text-base w-fit mb-4"
+                onClick={() => navigate('/signup') }
+              >
+                Commencer mon essai gratuit
+              </button>
+              {/* Pagination Swiper mobile - Slide 3 */}
+              <div className="flex justify-center mt-6">
+                <div />
+              </div>
+              {/* Pagination Swiper mobile - Slide 3 */}
+              <div className="flex justify-center mt-6">
+                <div className="swiper-pagination" />
+              </div>
+            </div>
+          </SwiperSlide>
+        </Swiper>
+
+      </div>
+
+    </div>
+  </div>
+</div>
 </motion.div>
 
 
