@@ -223,11 +223,11 @@ export default function AppHeader({ user }: AppHeaderProps) {
                         Blog
                       </button>
                       <button
-                        onClick={() => navigate("/help")}
+                        onClick={() => navigate("/pricing")}
                         className="group flex rounded-md items-center w-full px-3 py-2 text-sm text-gray-900 hover:bg-blue-50 transition-colors gap-2"
                       >
-                        <AnimatedResourceIcon type="guides" />
-                        Guides
+                        <FileText className="mr-3 h-5 w-5 text-blue-600" />
+                        Tarifs
                       </button>
                     </div>
                   </div>
@@ -383,12 +383,13 @@ export default function AppHeader({ user }: AppHeaderProps) {
                     </div>
                   )}
                 </div>
-                <a
-                  href="/help"
+                <Link
+                  to="/pricing"
                   className="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md"
+                  onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  Guides
-                </a>
+                  Tarifs
+                </Link>
                 <button
                   onClick={() => setShowContactModal(true)}
                   className="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md"
@@ -411,12 +412,14 @@ export default function AppHeader({ user }: AppHeaderProps) {
                 <Link
                   to="/login"
                   className="block w-full text-left px-3 py-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-md"
+                  onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Connexion
                 </Link>
                 <Link
                   to="/signup"
                   className="block w-full text-left px-3 py-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-md"
+                  onClick={() => setIsMobileMenuOpen(false)}
                 >
                   S'inscrire
                 </Link>
