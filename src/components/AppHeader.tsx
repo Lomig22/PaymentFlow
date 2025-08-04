@@ -209,7 +209,7 @@ export default function AppHeader({ user }: AppHeaderProps) {
                   <div className="w-48 origin-top-left bg-white border border-gray-200 divide-y divide-gray-100 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                     <div className="p-1">
                       <button
-                        onClick={() => handleNavToSection("testimonials")}
+                        onClick={() => navigate("/temoignages")}
                         className="group flex rounded-md items-center w-full px-3 py-2 text-sm text-gray-900 hover:bg-blue-50 transition-colors gap-2"
                       >
                         <AnimatedResourceIcon type="testimonials" />
