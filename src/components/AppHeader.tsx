@@ -216,18 +216,18 @@ export default function AppHeader({ user }: AppHeaderProps) {
                         Témoignages
                       </button>
                       <button
+                        onClick={() => navigate("/help")}
+                        className="group flex rounded-md items-center w-full px-3 py-2 text-sm text-gray-900 hover:bg-blue-50 transition-colors gap-2"
+                      >
+                        <AnimatedResourceIcon type="guides" />
+                        Guide
+                      </button>
+                      <button
                         onClick={() => navigate("/blog")}
                         className="group flex rounded-md items-center w-full px-3 py-2 text-sm text-gray-900 hover:bg-blue-50 transition-colors gap-2"
                       >
                         <AnimatedResourceIcon type="blog" />
                         Blog
-                      </button>
-                      <button
-                        onClick={() => navigate("/pricing")}
-                        className="group flex rounded-md items-center w-full px-3 py-2 text-sm text-gray-900 hover:bg-blue-50 transition-colors gap-2"
-                      >
-                        <FileText className="mr-3 h-5 w-5 text-blue-600" />
-                        Tarifs
                       </button>
                     </div>
                   </div>
