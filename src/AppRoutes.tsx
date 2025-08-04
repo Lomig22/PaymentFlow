@@ -28,6 +28,7 @@ import ReceivableForm from "./components/receivables/ReceivableForm";
 import Settings from "./components/settings/Settings";
 import ReminderList from "./components/reminders/ReminderList";
 import HelpAndSupport from "./pages/HelpAndSupport";
+import SuccessStoriesPage from "./pages/SuccessStoriesPage";
 import AbonnementSuccess from "./pages/success";
 import SubscribePage from "./pages/SubscribePage";
 import Success from "./components/settings/paymentSuccess";
@@ -65,6 +66,7 @@ export default function AppRoutes({ user, onMFASuccess }: AppRoutesProps) {
           }
         />
         <Route path="/help" element={<HelpAndSupport />} />
+        <Route path="/temoignages" element={<SuccessStoriesPage />} />
         <Route path="/subscribe" element={<SubscribePage />} />
         <Route
           path="/reporting-recouvrement"

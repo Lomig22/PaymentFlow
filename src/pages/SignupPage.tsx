@@ -38,6 +38,8 @@ export default function SignupPage() {
   const [phone, setPhone] = useState("");
   const [company, setCompany] = useState("");
   const [selectedPlan, setSelectedPlan] = useState("basic");
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
+  const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
 
   useEffect(() => {
     const savedPlan = localStorage.getItem("selectedPlan");
@@ -86,6 +88,10 @@ export default function SignupPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     // if (!validateForm()) return;
+    if (!privacyAccepted) {
+      setMessage({ type: "error", text: "Vous devez accepter la politique de confidentialité." });
+      return;
+    }
 
     setLoading(true);
     setMessage(null);
@@ -317,7 +323,7 @@ export default function SignupPage() {
                     htmlFor="phone"
                     className="block text-sm font-medium text-gray-700"
                   >
-                    Numéro de téléphone
+                    Numéro de téléphone <span style={{ color: '#dc2626', fontSize: 14 }} aria-label="obligatoire">*</span>
                   </label>
                   <div className="mt-1 relative">
                     <input
@@ -328,7 +334,7 @@ export default function SignupPage() {
                       className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-md 
             shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 
             focus:border-blue-500 sm:text-sm"
-                      placeholder="+33000000000"
+                      placeholder="+33 0 00 00 00 00"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                     />
@@ -341,7 +347,7 @@ export default function SignupPage() {
                     htmlFor="company"
                     className="block text-sm font-medium text-gray-700"
                   >
-                    Nom de l'entreprise
+                    Nom de l'entreprise <span style={{ color: '#dc2626', fontSize: 14 }} aria-label="obligatoire">*</span>
                   </label>
                   <div className="mt-1 relative">
                     <input
@@ -366,7 +372,7 @@ export default function SignupPage() {
                     htmlFor="email"
                     className="block text-sm font-medium text-gray-700"
                   >
-                    Adresse email
+                    Adresse email <span style={{ color: '#dc2626', fontSize: 14 }} aria-label="obligatoire">*</span>
                   </label>
                   <div className="mt-1 relative">
                     <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
@@ -387,7 +393,13 @@ export default function SignupPage() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => setStep(2)}
+                  onClick={() => {
+                    if (!company.trim() || !phone.trim() || !email.trim()) {
+                      setMessage({ type: "error", text: "Veuillez remplir tous les champs obligatoires : nom de l'entreprise, numéro de téléphone et adresse email." });
+                      return;
+                    }
+                    setStep(2);
+                  }}
                   className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm 
           text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none 
           focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
@@ -405,7 +417,7 @@ export default function SignupPage() {
                   htmlFor="password"
                   className="block text-sm font-medium text-gray-700"
                 >
-                  Mot de passe
+                  Mot de passe <span style={{ color: '#dc2626', fontSize: 14 }} aria-label="obligatoire">*</span>
                 </label>
                 <div className="mt-1 relative">
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
@@ -443,12 +455,13 @@ export default function SignupPage() {
                 </div>
               </div>
 
+
               <div>
                 <label
                   htmlFor="confirm-password"
                   className="block text-sm font-medium text-gray-700"
                 >
-                  Confirmer le mot de passe
+                  Confirmer le mot de passe <span style={{ color: '#dc2626', fontSize: 14 }} aria-label="obligatoire">*</span>
                 </label>
                 <div className="mt-1 relative">
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
@@ -517,6 +530,22 @@ export default function SignupPage() {
                 >
                   Mot de passe oublié?
                 </Link>
+
+                {/* Politique de confidentialité juste après le mot de passe */}
+              <div style={{ display: 'flex', alignItems: 'center', margin: '8px 0' }}>
+                <input
+                  id="privacy"
+                  type="checkbox"
+                  checked={privacyAccepted}
+                  onChange={e => setPrivacyAccepted(e.target.checked)}
+                  style={{ marginRight: 8, width: 18, height: 18 }}
+                  required
+                />
+                <label htmlFor="privacy" style={{ fontSize: 15, color: '#444', fontWeight: 400 }}>
+                  J'accepte la <span style={{ color: '#2563eb', textDecoration: 'none', cursor: 'pointer', fontSize: 15 }} onClick={() => setShowPrivacyPolicy(true)}>politique de confidentialité</span>
+                </label>
+              </div>
+              
               </div>
               {showPasswordRequirements && (
                 <div className="p-4 bg-gray-50 rounded-md">
@@ -565,6 +594,50 @@ export default function SignupPage() {
           )}
         </form>
       </div>
-    </div>
+    {/* Modale politique de confidentialité */}
+    {showPrivacyPolicy && (
+      <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto relative">
+          <button
+            onClick={() => setShowPrivacyPolicy(false)}
+            className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+          >
+            ×
+          </button>
+          <h2 className="text-xl font-bold mb-4 text-gray-800">Politique de confidentialité</h2>
+          <div className="text-sm text-gray-600 space-y-3" style={{ whiteSpace: 'pre-line' }}>
+            <strong>1. Responsable du traitement</strong>
+            <p>La société Payment Flow, immatriculée sous le numéro [SIRET à compléter], dont le siège social est situé à [adresse à compléter], est responsable du traitement des données personnelles collectées via ce formulaire d'inscription.</p>
+            <strong>2. Données collectées</strong>
+            <p>Lorsque vous créez un compte, nous collectons les données suivantes :<br />- Nom et prénom<br />- Adresse e-mail<br />- Numéro de téléphone (si fourni)<br />- Nom de votre entreprise (le cas échéant)<br />- Mot de passe (crypté)</p>
+            <strong>3. Finalité du traitement</strong>
+            <p>Les données personnelles collectées via ce formulaire sont utilisées uniquement pour :<br />- Créer et gérer votre compte utilisateur<br />- Vous recontacter si nécessaire<br />- Vous proposer une démonstration ou un rendez-vous, si cela est mentionné dans votre message</p>
+            <strong>4. Base légale du traitement</strong>
+            <p>Le traitement de vos données repose sur votre consentement explicite, exprimé lorsque vous soumettez le formulaire.</p>
+            <strong>5. Durée de conservation</strong>
+            <p>Vos données sont conservées pendant 12 mois à compter de la dernière interaction, sauf demande de suppression de votre part avant ce délai.</p>
+            <strong>6. Destinataires des données</strong>
+            <p>Vos données personnelles sont uniquement accessibles par :<br />- L’équipe interne de Payment Flow<br />- Nos prestataires techniques (hébergement, CRM), soumis à des clauses de confidentialité strictes<br />Aucune donnée n’est transférée ou vendue à des tiers à des fins commerciales.</p>
+            <strong>7. Hébergement des données</strong>
+            <p>Les données sont hébergées au sein de l’Union Européenne, via nos partenaires techniques conformes au RGPD.</p>
+            <strong>8. Vos droits</strong>
+            <ul className="list-disc ml-5">
+              <li>Droit d’accès à vos données</li>
+              <li>Droit de rectification</li>
+              <li>Droit à l’effacement (droit à l’oubli)</li>
+              <li>Droit à la limitation du traitement</li>
+              <li>Droit d’opposition</li>
+              <li>Droit à la portabilité</li>
+            </ul>
+            <p>Pour exercer vos droits, contactez-nous à l’adresse : <a href="mailto:contact@paymentflow.fr" className="text-blue-600 underline">contact@paymentflow.fr</a>.</p>
+            <strong>9. Réclamations</strong>
+            <p>Si vous estimez que vos droits ne sont pas respectés, vous pouvez adresser une réclamation à la CNIL (Commission Nationale de l’Informatique et des Libertés) : <a href="https://www.cnil.fr" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">www.cnil.fr</a>.</p>
+            <strong>10. Modification de la politique</strong>
+            <p>Payment Flow se réserve le droit de modifier la présente Politique de Confidentialité. Toute modification importante vous sera notifiée via le site.</p>
+          </div>
+        </div>
+      </div>
+    )}
+  </div>
   );
 }

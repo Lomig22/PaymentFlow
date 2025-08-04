@@ -110,7 +110,7 @@ const BlogGarage: React.FC<BlogSectorProps> = ({ setShowContact, setDefaultSubje
        {/* Main Pricing Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-2 pt-4">
   <button
-    onClick={() => navigate('/blog')}
+    onClick={() => navigate('/temoignages')}
     className="flex items-center gap-2 text-xl font-medium text-blue-600 hover:text-blue-800 transition-colors"
   >
     <ArrowLeft className="w-4 h-4" />
