@@ -1,16 +1,39 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { Users } from "lucide-react";
-import { Dialog, Transition } from '@headlessui/react'
+import { Dialog, Transition } from "@headlessui/react";
 import { Fragment } from "react";
 import ClientDetailModal from "../clients/ClientDetailModal";
 
 const OverdueInvoices = () => {
-  const [topDebtors, setTopDebtors] = useState([]);
+  const [topDebtors, setTopDebtors] = useState<{ id: string; name: string; code: string; amount: number }[]>([]);
   const [selectedDebtor, setSelectedDebtor] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
   const [clientDetails, setClientDetails] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
+
+  // Handler pour chaque débiteur
+  const handleDebtorClick = async (clientId: string) => {
+    console.log('Client id cliqué:', clientId);
+    console.log('Recherche du client par id:', clientId);
+    const { data, error } = await supabase
+      .from("clients")
+      .select("*")
+      .eq("id", clientId)
+      .single();
+
+    if (error) {
+      console.error('Erreur Supabase:', error);
+    }
+    if (data) {
+      console.log('Client trouvé pour la modale:', data);
+      setClientDetails(data);
+      setModalOpen(true);
+    } else {
+      console.warn('Aucun client trouvé pour cet id:', clientId);
+    }
+  };
+
   const [loading, setLoading] = useState<boolean>(true);
   const openModal = (debtor) => {
     setSelectedDebtor(debtor);
@@ -52,7 +75,8 @@ const OverdueInvoices = () => {
           `
           amount,
           paid_amount,
-          client:clients(company_name, client_code)
+          client_id,
+          clients(id, company_name, client_code)
         `
         )
         .in("owner_id", allOwnerIds);
@@ -62,18 +86,25 @@ const OverdueInvoices = () => {
         return;
       }
 
-      const aggregated = {};
+      const aggregated: Record<string, { id: string; name: string; code: string; amount: number }> = {};
 
       for (const rec of data) {
-        const key = rec.client?.client_code;
+        // Log structure for debugging
+        console.log('Receivable record:', rec);
+        // rec.clients est l'objet joint, rec.client_id est le champ FK
+        // rec.clients est l'objet joint (doit être un objet, pas un tableau)
+        const client = rec.clients;
+        if (!client || !client.id) continue;
+        const key = client.client_code;
         if (!key) continue;
 
         const due = rec.amount - rec.paid_amount;
 
         if (!aggregated[key]) {
           aggregated[key] = {
-            name: rec.client.company_name,
-            code: rec.client.client_code,
+            id: client.id, // id unique du client
+            name: client.company_name,
+            code: client.client_code,
             amount: due,
           };
         } else {
@@ -86,27 +117,12 @@ const OverdueInvoices = () => {
         .sort((a, b) => b.amount - a.amount)
         .slice(0, 6);
 
-      setTopDebtors(sorted);
+      setTopDebtors(sorted as { id: string; name: string; code: string; amount: number }[]);
       setLoading(false);
     };
 
     fetchOverdues();
   }, []);
-
-  const handleDebtorClick = async (clientCode) => {
-    const { data, error } = await supabase
-      .from("clients")
-      .select("*")
-      .eq("client_code", clientCode)
-      .single();
-
-    if (!error && data) {
-      console.log("Client récupéré pour la modale:", data); // DEBUG
-      setClientDetails(data);
-      setModalOpen(true);
-    }
-  };
-
 
   return (
     <div className="rounded-2xl p-6 max-h-[350px] overflow-y-auto">
@@ -132,9 +148,12 @@ const OverdueInvoices = () => {
       ) : (
         <ul className="divide-y divide-gray-200">
           {topDebtors.map((debtor, i) => (
-            <li key={i}>
+            <li key={debtor.id}>
               <button
-                onClick={() => handleDebtorClick(debtor.code)}
+                onClick={() => {
+                  console.log('Client id cliqué:', debtor.id);
+                  handleDebtorClick(debtor.id);
+                }}
                 className="flex items-center justify-between w-full px-2 py-3 rounded-md hover:bg-blue-50 transition group"
               >
                 <div className="text-sm font-semibold text-gray-800 group-hover:text-blue-600">
