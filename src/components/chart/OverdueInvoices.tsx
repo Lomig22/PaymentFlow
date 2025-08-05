@@ -14,6 +14,7 @@ const OverdueInvoices = () => {
 
   // Handler pour chaque débiteur
   const handleDebtorClick = async (clientId: string) => {
+  try {
     console.log('Client id cliqué:', clientId);
     console.log('Recherche du client par id:', clientId);
     const { data, error } = await supabase
@@ -24,6 +25,9 @@ const OverdueInvoices = () => {
 
     if (error) {
       console.error('Erreur Supabase:', error);
+      setClientDetails(null);
+      setModalOpen(true);
+      return;
     }
     if (data) {
       console.log('Client trouvé pour la modale:', data);
@@ -31,8 +35,15 @@ const OverdueInvoices = () => {
       setModalOpen(true);
     } else {
       console.warn('Aucun client trouvé pour cet id:', clientId);
+      setClientDetails(null);
+      setModalOpen(true);
     }
-  };
+  } catch (err) {
+    console.error('Exception lors du chargement du client:', err);
+    setClientDetails(null);
+    setModalOpen(true);
+  }
+};
 
   const [loading, setLoading] = useState<boolean>(true);
   const openModal = (debtor) => {
@@ -172,11 +183,26 @@ const OverdueInvoices = () => {
           ))}
         </ul>
       )}
-      <ClientDetailModal
-        client={clientDetails}
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-      />
+      {modalOpen && (
+        clientDetails && clientDetails.id ? (
+          <ClientDetailModal
+            client={clientDetails}
+            isOpen={modalOpen}
+            onClose={() => setModalOpen(false)}
+          />
+        ) : (
+          <Dialog open={modalOpen} onClose={() => setModalOpen(false)} className="fixed inset-0 z-50">
+            <div className="min-h-screen flex items-center justify-center px-4">
+              <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" aria-hidden="true" />
+              <div className="relative z-50 bg-white rounded-2xl shadow-2xl max-w-lg w-full p-8">
+                <h2 className="text-xl font-bold text-red-600 mb-4">Erreur lors du chargement du client</h2>
+                <p className="text-gray-700 mb-6">Impossible d'afficher les détails du client. Veuillez réessayer ou contacter le support.</p>
+                <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-md shadow transition-colors" onClick={() => setModalOpen(false)}>Fermer</button>
+              </div>
+            </div>
+          </Dialog>
+        )
+      )}
 
       {/* Modal */}
       <Transition appear show={isOpen} as={Fragment}>
