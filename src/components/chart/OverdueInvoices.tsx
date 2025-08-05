@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { Users } from "lucide-react";
-import { Dialog, Transition } from "@headlessui/react";
+import { Dialog, Transition } from '@headlessui/react'
 import { Fragment } from "react";
 import ClientDetailModal from "../clients/ClientDetailModal";
 

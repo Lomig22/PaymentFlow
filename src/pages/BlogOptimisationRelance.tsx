@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Helmet } from "react-helmet-async";
+import { motion } from "framer-motion";
 import { FaUserCog, FaPhoneAlt, FaClock, FaShareAlt, FaHandshake, FaCheckCircle, FaChevronDown, FaBullseye, FaEnvelopeOpenText, FaChartLine } from "react-icons/fa";
 import { Link } from "react-router-dom";
 
-const accentColor = "#ff7043"; // orange accent
-const navy = "#0a1833"; // dark blue
+const accentColor = "#2563eb"; // bleu Payment Flow
+const navy = "#1e293b"; // bleu foncé Payment Flow (ex: text-blue-900)
 
 const sections = [
   {
@@ -102,8 +103,48 @@ const sections = [
 ];
 
 export default function BlogOptimisationRelance() {
+  const [activeSection, setActiveSection] = useState(sections[0].id);
+  const sectionRefs = useRef<(HTMLElement | null)[]>([]);
+  // Progression de lecture (0-100)
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    const handleProgress = () => {
+      // Trouver la zone de scroll principale (après le header)
+      const main = document.querySelector('main');
+      if (!main) return setProgress(0);
+      const rect = main.getBoundingClientRect();
+      const windowHeight = window.innerHeight;
+      const total = main.scrollHeight - windowHeight;
+      const scrolled = window.scrollY - rect.top + window.scrollY;
+      let percent = total > 0 ? (scrolled / total) * 100 : 0;
+      percent = Math.max(0, Math.min(100, percent));
+      setProgress(percent);
+    };
+    window.addEventListener('scroll', handleProgress, { passive: true });
+    handleProgress();
+    return () => window.removeEventListener('scroll', handleProgress);
+  }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const offsets = sectionRefs.current.map(ref => ref ? ref.getBoundingClientRect().top : Infinity);
+      const visibleIdx = offsets.findIndex(top => top > 40);
+      if (visibleIdx === -1) {
+        setActiveSection(sections[sections.length - 1].id);
+      } else if (visibleIdx === 0) {
+        setActiveSection(sections[0].id);
+      } else {
+        setActiveSection(sections[visibleIdx - 1].id);
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
-    <div style={{ background: navy, minHeight: "100vh", color: "#fff", fontFamily: 'Inter, Arial, sans-serif' }}>
+    <div style={{ background: '#f8fafc', minHeight: "100vh", color: navy, fontFamily: 'Inter, Arial, sans-serif' }}>
       <Helmet>
         <title>Les 5 erreurs à éviter quand on relance ses clients | Blog Payment Flow</title>
         <meta name="description" content="Optimisez la relance de facture impayée (1ère et 2ème relance), découvrez les bonnes pratiques pour le recouvrement des créances client, la rédaction de lettre de relance, l’email recouvrement, le suivi des encours client et l’utilisation d’un logiciel recouvrement performant. Conseils pratiques pour PME et TPE pour réduire le risque d’impayé et accélérer les paiements." />
@@ -112,20 +153,14 @@ export default function BlogOptimisationRelance() {
       {/* Sticky menu */}
       <header className="sticky top-0 z-50 bg-white shadow" style={{ borderBottom: `2px solid ${accentColor}` }}>
         <nav className="flex items-center justify-between px-4 py-2" style={{ maxWidth: 1100, margin: '0 auto' }}>
-          <div className="flex items-center gap-2">
-            <FaChartLine color={accentColor} size={28} />
-            <span className="font-bold text-lg text-blue-900 tracking-tight" style={{ letterSpacing: 0.5 }}>Payment Flow</span>
-          </div>
+          <div />
           <div className="flex gap-4 items-center">
-            {sections.map(s => (
-              <a key={s.id} href={`#${s.id}`} className="text-blue-900 font-medium hover:underline hover:text-orange-500 transition-colors text-sm hidden md:inline" style={{ letterSpacing: 0.1 }}>{s.emoji} {s.title.split(':')[0]}</a>
-            ))}
-            <a href="/contact" className="ml-4 px-4 py-2 rounded bg-orange-500 hover:bg-orange-600 text-white font-semibold shadow transition-colors text-sm">Demander une démo</a>
+            {/* La barre verticale de progression sera en dehors du header, voir plus bas */}
           </div>
         </nav>
       </header>
       {/* Header image & intro */}
-      <section className="w-full flex flex-col items-center justify-center" style={{ background: '#fff', color: navy, padding: '2.5rem 1rem 1.5rem', borderBottom: `1px solid #eee` }}>
+      <section className="w-full flex flex-col items-center justify-center" style={{ background: '#fff', color: navy, padding: '2.5rem 1rem 1.5rem', borderBottom: `1px solid #e5e7eb` }}>
         <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=900&q=80" alt="Facture B2B paiement digital" className="rounded-lg shadow mb-6" style={{ maxWidth: 680, width: '100%', height: 220, objectFit: 'cover', border: `2px solid ${accentColor}` }} />
         <h1 className="text-3xl md:text-4xl font-bold mb-2 text-center" style={{ color: navy }}>Les 5 erreurs à éviter quand on relance ses clients</h1>
         <div className="flex gap-4 text-gray-500 text-sm mb-3 items-center justify-center">
@@ -138,33 +173,65 @@ export default function BlogOptimisationRelance() {
           <span role="img" aria-label="objectif">🎯</span> <strong>L’objectif : être payé plus vite, sans perdre de temps ni altérer la relation commerciale.</strong> Voici les <strong>5 erreurs les plus fréquentes à éviter</strong> pour améliorer votre recouvrement.
         </div>
       </section>
-      {/* Sections */}
-      <main className="max-w-3xl mx-auto px-2 md:px-0 py-6">
-        {sections.map((s, i) => (
-          <section key={s.id} id={s.id} className="mb-12 bg-white rounded-xl shadow p-6 md:p-8 text-blue-900" style={{ borderLeft: `6px solid ${accentColor}` }}>
-            <div className="flex items-center mb-2">
-              <span className="text-2xl mr-2">{s.emoji}</span>
-              {s.icon}
-              <h2 className="text-xl md:text-2xl font-bold inline-block align-middle" style={{ color: navy }}>{s.title}</h2>
-            </div>
-            <div className="text-base md:text-lg leading-relaxed">
-              {s.description}
-            </div>
+      {/* Barre de progression de lecture sticky */}
+      <div className="sticky top-0 z-30 w-full bg-transparent" style={{ height: 6 }}>
+        <div style={{ width: `${progress}%`, height: 6, background: accentColor, transition: 'width 0.2s', borderRadius: 3 }} />
+      </div>
+      {/* Barre latérale de progression (desktop) */}
+      <div className="relative flex w-full max-w-7xl mx-auto">
+        <aside className="hidden md:flex flex-col items-center mr-8 mt-12 sticky top-28 h-fit" style={{ minWidth: 70 }}>
+          {sections.map((s, idx) => (
+            <a
+              key={s.id}
+              href={`#${s.id}`}
+              className={`flex flex-col items-center group mb-6 transition-all duration-300 ${activeSection === s.id ? 'scale-110' : 'opacity-60 hover:opacity-100'}`}
+              style={{ color: activeSection === s.id ? accentColor : navy }}
+            >
+              <span className={`text-3xl mb-1 transition-all duration-300 ${activeSection === s.id ? 'drop-shadow-lg' : ''}`}>{s.emoji}</span>
+              <span className="text-xs font-semibold text-center w-16 leading-tight group-hover:underline">
+                {s.title.split(':')[0]}
+              </span>
+              {idx < sections.length - 1 && <span className="w-1 h-6 bg-gray-200 block mx-auto my-1 rounded-full"></span>}
+            </a>
+          ))}
+        </aside>
+        {/* Sections avec animation */}
+        <main className="flex-1 max-w-3xl px-2 md:px-0 py-6">
+          {sections.map((s, i) => (
+            <motion.section
+              key={s.id}
+              id={s.id}
+              ref={el => sectionRefs.current[i] = el}
+              className="mb-12 bg-white rounded-xl shadow p-6 md:p-8 text-blue-900"
+              style={{ borderLeft: `6px solid ${accentColor}` }}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: activeSection === s.id ? 1 : 0.5, y: activeSection === s.id ? 0 : 30 }}
+              transition={{ duration: 0.5, type: 'spring', bounce: 0.2 }}
+            >
+              <div className="flex items-center mb-2">
+                <span className="text-2xl mr-2">{s.emoji}</span>
+                {s.icon}
+                <h2 className="text-xl md:text-2xl font-bold inline-block align-middle" style={{ color: navy }}>{s.title}</h2>
+              </div>
+              <div className="text-base md:text-lg leading-relaxed">
+                {s.description}
+              </div>
+            </motion.section>
+          ))}
+          {/* Bloc final Payment Flow */}
+          <section className="mb-8 bg-white rounded-xl shadow p-6 md:p-8 text-blue-900 text-center" style={{ borderLeft: `6px solid ${accentColor}` }}>
+            <h2 className="text-2xl font-bold mb-4 flex items-center justify-center gap-2"><FaCheckCircle color={accentColor} /> Payment Flow, votre allié pour relancer intelligemment</h2>
+            <ul className="list-disc pl-6 text-left mb-4">
+              <li>✅ <strong>Classer vos clients</strong> et appliquer des scénarios de relance adaptés</li>
+              <li>✅ <strong>Automatiser les relances</strong> à chaque étape (prévenance, relance simple, mise en demeure…)</li>
+              <li>✅ <strong>Partager les informations clés</strong> avec vos équipes (compta, commerce, service client)</li>
+              <li>✅ <strong>Suivre les résultats en temps réel</strong> depuis un tableau de bord clair</li>
+            </ul>
+            <div className="text-xl font-semibold mb-2">💬 Vous voulez arrêter de courir après vos paiements ?</div>
+            <a href="https://www.paymentflow.fr/signup" className="inline-block px-6 py-3 rounded bg-orange-500 hover:bg-orange-600 text-white font-bold shadow transition-colors text-lg">Testez Payment Flow dès maintenant</a>
           </section>
-        ))}
-        {/* Bloc final Payment Flow */}
-        <section className="mb-8 bg-blue-900 rounded-xl shadow p-6 md:p-8 text-white text-center" style={{ borderLeft: `6px solid ${accentColor}` }}>
-          <h2 className="text-2xl font-bold mb-4 flex items-center justify-center gap-2"><FaCheckCircle color="#fff" /> Payment Flow, votre allié pour relancer intelligemment</h2>
-          <ul className="list-disc pl-6 text-left mb-4">
-            <li>✅ <strong>Classer vos clients</strong> et appliquer des scénarios de relance adaptés</li>
-            <li>✅ <strong>Automatiser les relances</strong> à chaque étape (prévenance, relance simple, mise en demeure…)</li>
-            <li>✅ <strong>Partager les informations clés</strong> avec vos équipes (compta, commerce, service client)</li>
-            <li>✅ <strong>Suivre les résultats en temps réel</strong> depuis un tableau de bord clair</li>
-          </ul>
-          <div className="text-xl font-semibold mb-2">💬 Vous voulez arrêter de courir après vos paiements ?</div>
-          <a href="https://www.paymentflow.fr/signup" className="inline-block px-6 py-3 rounded bg-orange-500 hover:bg-orange-600 text-white font-bold shadow transition-colors text-lg">Testez Payment Flow dès maintenant</a>
-        </section>
-      </main>
+        </main>
+      </div>
     </div>
   );
 }

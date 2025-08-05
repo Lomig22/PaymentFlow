@@ -13,6 +13,8 @@ interface AppHeaderProps {
 }
 
 export default function AppHeader({ user }: AppHeaderProps) {
+  const [defaultSubject, setDefaultSubject] = useState<string>("");
+  const [hideOnScroll, setHideOnScroll] = useState(false);
   const mobileFeaturesMenuRef = useRef<HTMLDivElement>(null);
   const mobileResourcesMenuRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -59,6 +61,28 @@ export default function AppHeader({ user }: AppHeaderProps) {
 
   useEffect(() => {
     isMobileMenuOpenRef.current = isMobileMenuOpen;
+  }, [isMobileMenuOpen]);
+
+  // Ferme le menu mobile automatiquement au scroll sur mobile + animation header
+  useEffect(() => {
+    if (typeof window === 'undefined' || window.innerWidth >= 768) return;
+    let lastScrollY = window.scrollY;
+    const handleScroll = () => {
+      // Ferme le menu mobile si ouvert
+      if (isMobileMenuOpen) setIsMobileMenuOpen(false);
+      // Animation header : cache si on descend, montre si on remonte ou en haut
+      const currentY = window.scrollY;
+      if (currentY > 10 && currentY > lastScrollY) {
+        setHideOnScroll(true);
+      } else {
+        setHideOnScroll(false);
+      }
+      lastScrollY = currentY;
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
   }, [isMobileMenuOpen]);
 
   // Add ESC key handler
@@ -113,7 +137,7 @@ export default function AppHeader({ user }: AppHeaderProps) {
   };
 
   return (
-    <header className="bg-white shadow-sm sticky top-0 z-50">
+    <header className={`bg-white shadow-sm sticky top-0 z-50 transition-all ${hideOnScroll ? '-translate-y-full' : 'translate-y-0'}`} style={{ willChange: 'transform', transition: 'transform 0.7s cubic-bezier(0.4,0,0.2,1)' }}>
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Logo Link */}
         <Link to="/" className="flex items-center space-x-2">
@@ -360,7 +384,7 @@ export default function AppHeader({ user }: AppHeaderProps) {
                   {isResourcesMenuOpen && (
                     <div className="absolute left-0 w-48 mt-2 bg-white border border-gray-200 rounded-md shadow-lg z-50">
                       <button
-                        onClick={() => { scrollToSection("testimonials"); setIsResourcesMenuOpen(false); setIsMobileMenuOpen(false); }}
+                        onClick={() => { navigate('/temoignages'); setIsResourcesMenuOpen(false); setIsMobileMenuOpen(false); }}
                         className="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md flex items-center gap-2 group"
                       >
                         <AnimatedResourceIcon type="testimonials" />
@@ -431,7 +455,7 @@ export default function AppHeader({ user }: AppHeaderProps) {
 
       {/* Calendly Button - Adjusted for mobile */}
       {showContactModal && (
-        <ContactModal onClose={() => setShowContactModal(false)} />
+        <ContactModal onClose={() => setShowContactModal(false)} defaultSubject={defaultSubject} />
       )}
     </header>
   );
