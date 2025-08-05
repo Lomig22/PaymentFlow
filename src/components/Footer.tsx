@@ -149,7 +149,7 @@ const Footer = () => {
               </li>
               <li>
                 <button
-                  onClick={() => handleNavToSection("testimonials")}
+                  onClick={() => navigate('/temoignages')}
                   className="text-gray-500 hover:text-gray-700"
                 >
                   Témoignages

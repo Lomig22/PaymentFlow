@@ -71,8 +71,9 @@ const ContactModal = ({ onClose, defaultSubject }: ContactModalProps) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="relative w-full max-w-xl bg-white rounded-2xl shadow-lg p-6 max-h-[95vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-start justify-center p-4">
+  {/* Sur mobile, ajoute une marge en haut pour éviter le header sticky */}
+      <div className="relative w-full max-w-xl bg-white rounded-2xl shadow-lg p-6 max-h-[95vh] overflow-y-auto mt-6">
         {/* Fermer */}
         <button
           onClick={onClose}

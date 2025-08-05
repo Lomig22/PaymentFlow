@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
-import { Lock, Mail, Eye, EyeOff } from "lucide-react";
+import { Lock, Mail, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 
 const validatePassword = (password: string) => {
@@ -261,6 +261,16 @@ export default function SignupPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-xl">
+        {/* Bouton retour accueil */}
+        {step === 1 && (
+          <button
+            onClick={() => navigate('/')}
+            className="flex items-center gap-2 text-xl font-medium text-blue-600 hover:text-blue-800 transition-colors mb-6"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Retour
+          </button>
+        )}
         <div className="text-center">
           <h2 className="text-3xl font-bold text-gray-900">
             Créer votre compte
@@ -299,7 +309,7 @@ export default function SignupPage() {
                     htmlFor="name"
                     className="block text-sm font-medium text-gray-700"
                   >
-                    Nom complet
+                    Nom complet <span style={{ color: '#dc2626', fontSize: 14 }} aria-label="obligatoire">*</span>
                   </label>
                   <div className="mt-1 relative">
                     <input
@@ -347,7 +357,7 @@ export default function SignupPage() {
                     htmlFor="company"
                     className="block text-sm font-medium text-gray-700"
                   >
-                    Nom de l'entreprise <span style={{ color: '#dc2626', fontSize: 14 }} aria-label="obligatoire">*</span>
+                    Nom de l'entreprise 
                   </label>
                   <div className="mt-1 relative">
                     <input

@@ -79,10 +79,44 @@ const Stars = ({ count }: { count: number }) => (
   </div>
 );
 
-const BlogGarage: React.FC<BlogSectorProps> = ({ setShowContact, setDefaultSubject }) => {
+const BlogGarage: React.FC<BlogSectorProps> = (props) => {
+  // Progression de lecture (0-100)
+  const [progress, setProgress] = React.useState(0);
+  React.useEffect(() => {
+    const handleScroll = () => {
+      const main = document.querySelector('.blog-page-container');
+      if (!main) return setProgress(0);
+      const rect = main.getBoundingClientRect();
+      const windowHeight = window.innerHeight;
+      const total = main.scrollHeight - windowHeight;
+      const scrolled = window.scrollY - rect.top + window.scrollY;
+      let percent = total > 0 ? (scrolled / total) * 100 : 0;
+      percent = Math.max(0, Math.min(100, percent));
+      setProgress(percent);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Gestion fallback pour l'ouverture de la modale contact
+  const [showContact, setShowContact] = React.useState(false);
+  const [defaultSubject, setDefaultSubject] = React.useState<string | undefined>(undefined);
   const navigate = useNavigate();
   const pageUrl = "https://www.payment-flow.fr/blog-garage";
   const pageTitle = "Garage : Optimisez vos relances clients et réduisez votre DSO | Payment Flow";
+  // Utilise les props si fournis (mode parent), sinon fallback local
+  const handleContactClick = () => {
+    if (typeof props.setShowContact === 'function') {
+      props.setShowContact();
+      if (typeof props.setDefaultSubject === 'function') props.setDefaultSubject('audit');
+    } else {
+      setShowContact(true);
+      setDefaultSubject('audit');
+    }
+  };
+
+  // ... le reste du composant sans redéclaration de navigate/pageUrl/pageTitle
 
   // SEO keywords for natural insertion
   const keywords = [
@@ -124,47 +158,73 @@ const BlogGarage: React.FC<BlogSectorProps> = ({ setShowContact, setDefaultSubje
         <link rel="canonical" href={pageUrl} />
       </Helmet>
 
+      {/* Barre de progression sticky lecture */}
+      <div style={{position: 'sticky', top: 0, zIndex: 30, background: 'white'}}>
+        <div style={{width: '100%', height: 6, background: '#e5e7eb'}}>
+          <div
+            style={{
+              width: `${progress}%`,
+              height: 6,
+              background: '#2563eb',
+              transition: 'width 0.2s',
+              borderRadius: 3
+            }}
+          />
+        </div>
+      </div>
+
       {/* Boutons de partage en haut */}
       <ShareButtons url={pageUrl} title={pageTitle} />
 
-      <h1 className="text-3xl font-bold mb-6">Garage : Comment diviser par deux vos retards de paiement ?</h1>
+      <div className="flex justify-center w-full">
+        <div className="mt-4 mb-12 max-w-3xl w-full px-4">
+          <h1 className="text-3xl font-bold mb-6">Garage : Comment diviser par deux vos retards de paiement ?</h1>
 
-      {/* Bloc structuré Contexte/Problématique/Solution/Résultats/Citation */}
-      <div className="mb-10 p-6 bg-white rounded-xl shadow-md">
-        <h2 className="text-xl font-semibold mb-2">Garage AutoPro+ : 50% de temps gagné sur la relance client</h2>
-        <div className="mb-2 text-sm text-gray-500">Entreprise : Garage AutoPro+</div>
-        <div className="flex items-center mb-2">
-          {[...Array(5)].map((_, i) => (
-            <span key={i} className="text-yellow-400 text-lg">★</span>
-          ))}
-        </div>
-        <p className="mb-2"><strong>Contexte :</strong> Garage AutoPro+, spécialiste de la réparation automobile à Nantes, faisait face à des retards de paiement récurrents et à une gestion chronophage des relances clients. L’équipe administrative passait plus de 8 heures par semaine à relancer les clients, avec un taux d’impayés de 5%.</p>
-        <p className="mb-2"><strong>Problématique :</strong> Malgré une bonne satisfaction client, le garage voyait sa trésorerie fragilisée par les retards de paiement et l’absence d’automatisation des relances. L’équipe voulait moderniser son suivi et se concentrer sur le service client plutôt que sur l’administratif.</p>
-        <p className="mb-2"><strong>Solution :</strong> En 2024, Garage AutoPro+ a choisi Payment Flow pour digitaliser l’ensemble du processus de relance :</p>
-        <ul className="list-disc pl-5 mb-2">
-          <li>Relances automatiques par email et SMS personnalisés</li>
-          <li>Encaissement en ligne via Stripe</li>
-          <li>Tableau de bord interactif pour suivre les règlements en temps réel</li>
-          <li>Scoring automatique des clients selon leur comportement de paiement</li>
-          <li><span
-  className="text-blue-700 font-bold text-2xl cursor-pointer hover:underline"
-  onClick={() => {
-    if (typeof setShowContact === 'function') setShowContact(true);
-    if (typeof setDefaultSubject === 'function') setDefaultSubject('audit');
-  }}
->
-  Contactez-nous pour un audit personnalisé !
-</span></li>
-        </ul>
-        <div className="mb-2 font-semibold">Résultats :</div>
-        <ul className="list-disc pl-5 mb-2">
-          <li><strong>Temps de relance divisé par 2</strong> : 4h/semaine seulement</li>
-          <li><strong>DSO réduit de 35%</strong></li>
-          <li><strong>Taux d’impayés passé de 5% à 0,5%</strong></li>
-          <li>Clients plus satisfaits grâce à la clarté des relances</li>
-        </ul>
-        <blockquote className="italic text-blue-700 mt-4">« Grâce à Payment Flow, la gestion des relances est devenue un vrai atout business. Nous avons retrouvé du temps pour nos clients et sécurisé notre trésorerie. »</blockquote>
-      </div>
+          <img
+            src="https://assets-global.website-files.com/5e9aa66fd3886c5ea1bfaefe/62e2b1f8e6b0e5c1c0c9e0c0_growth-graph.svg"
+            alt="Graphique de croissance"
+            className="rounded-lg shadow mb-6"
+            style={{ maxWidth: 680, width: '100%', height: 220, objectFit: 'cover', border: '2px solid #2563eb' }}
+          />
+
+          {/* Bloc structuré Contexte/Problématique/Solution/Résultats/Citation */}
+          <div className="mb-10 p-6 bg-white rounded-xl shadow-md">
+            <h2 className="text-xl font-semibold mb-2">Garage AutoPro+ : 50% de temps gagné sur la relance client</h2>
+            <div className="mb-2 text-sm text-gray-500">Entreprise : Garage AutoPro+</div>
+            <div className="flex items-center mb-2">
+              {[...Array(5)].map((_, i) => (
+                <span key={i} className="text-yellow-400 text-lg">★</span>
+              ))}
+            </div>
+            <p className="mb-2"><strong>Contexte :</strong> Garage AutoPro+, spécialiste de la réparation automobile à Nantes, faisait face à des retards de paiement récurrents et à une gestion chronophage des relances clients. L’équipe administrative passait plus de 8 heures par semaine à relancer les clients, avec un taux d’impayés de 5%.</p>
+            <p className="mb-2"><strong>Problématique :</strong> Malgré une bonne satisfaction client, le garage voyait sa trésorerie fragilisée par les retards de paiement et l’absence d’automatisation des relances. L’équipe voulait moderniser son suivi et se concentrer sur le service client plutôt que sur l’administratif.</p>
+            <p className="mb-2"><strong>Solution :</strong> En 2024, Garage AutoPro+ a choisi Payment Flow pour digitaliser l’ensemble du processus de relance :</p>
+            <ul className="list-disc pl-5 mb-2">
+              <li>Relances automatiques par email et SMS personnalisés</li>
+              <li>Encaissement en ligne via Stripe</li>
+              <li>Tableau de bord interactif pour suivre les règlements en temps réel</li>
+              <li>Scoring automatique des clients selon leur comportement de paiement</li>
+              <li>
+                <span
+                  className="text-blue-700 font-bold text-2xl cursor-pointer hover:underline"
+                  onClick={() => {
+                    if (typeof setShowContact === 'function') setShowContact(true);
+                    if (typeof setDefaultSubject === 'function') setDefaultSubject('audit');
+                  }}
+                >
+                  Contactez-nous pour un audit personnalisé !
+                </span>
+              </li>
+            </ul>
+            <div className="mb-2 font-semibold">Résultats :</div>
+            <ul className="list-disc pl-5 mb-2">
+              <li><strong>Temps de relance divisé par 2</strong> : 4h/semaine seulement</li>
+              <li><strong>DSO réduit de 35%</strong></li>
+              <li><strong>Taux d’impayés passé de 5% à 0,5%</strong></li>
+              <li>Clients plus satisfaits grâce à la clarté des relances</li>
+            </ul>
+            <blockquote className="italic text-blue-700 mt-4">« Grâce à Payment Flow, la gestion des relances est devenue un vrai atout business. Nous avons retrouvé du temps pour nos clients et sécurisé notre trésorerie. »</blockquote>
+          </div>
 
       {/* Témoignage client */}
       <TestimonialBox
@@ -251,6 +311,8 @@ const BlogGarage: React.FC<BlogSectorProps> = ({ setShowContact, setDefaultSubje
 
       {/* Boutons de partage en bas */}
       <ShareButtons url={pageUrl} title={pageTitle} />
+    </div>
+    </div>
     </div>
   );
 };
