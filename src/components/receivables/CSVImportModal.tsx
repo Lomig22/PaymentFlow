@@ -659,11 +659,15 @@ export default function CSVImportModal({
                   ? row[clientCodeIndex]
                   : Math.floor(Math.random() * (100000 - 150000) + 100000),
               email: email,
-
               needs_reminder: true,
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),
               owner_id: "", // Sera rempli lors de l'import
+              pre_reminder_enable: false,
+              reminder_enable_1: false,
+              reminder_enable_2: false,
+              reminder_enable_3: false,
+              reminder_enable_final: false,
             };
             // Ajouter au map des nouveaux clients
             newClientsMap[tempId] = newClient;
@@ -1033,7 +1037,7 @@ const planLimits = {
 };
 
 const userPlan = subscription.plan;
-const maxOverDues = Number(planLimits[userPlan]) ?? 0;
+const maxOverDues = Number(planLimits[userPlan as keyof typeof planLimits]) ?? 0;
 console.log(typeof updatedTotalAmount, updatedTotalAmount);
 console.log(typeof maxOverDues, maxOverDues);
 if (updatedTotalAmount >= maxOverDues) {
@@ -1294,9 +1298,10 @@ if (updatedTotalAmount >= maxOverDues) {
                       ligne du CSV.
                     </p>
                     <p className="text-blue-700 text-sm mt-2">
-                      <strong>Note:</strong> Si un client n'existe pas dans
-                      votre liste, il sera automatiquement créé lors de
-                      l'import.
+                      <strong>Note :</strong> Si un client n'existe pas dans votre liste, il sera automatiquement créé lors de l'import. Le fichier doit être au format CSV séparé par des virgules (<strong>UTF-8</strong>).
+                    </p>
+                    <p className="text-blue-700 text-sm mt-2">
+                      <strong>Attention</strong> : Si le code client n'est pas unique, celui-ci ne doit pas être importé.
                     </p>
                   </div>
                 </div>

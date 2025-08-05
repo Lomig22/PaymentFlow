@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { ArrowDownCircle, CheckCircle, XCircle, Building2, Hammer, Car, Stethoscope, Truck, User, Briefcase, Rocket } from "lucide-react";
 
 const sectors = [
@@ -27,7 +27,7 @@ export default function CrmIntro({ onScrollToDemo }: { onScrollToDemo: () => voi
   const [sectorIdx, setSectorIdx] = useState(0);
 
   // Animation: cycle phrases every 3s
-  useState(() => {
+  useEffect(() => {
     const interval = setInterval(() => {
       setSectorIdx((i) => (i + 1) % sectorPhrases.length);
     }, 3000);

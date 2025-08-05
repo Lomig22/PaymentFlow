@@ -931,11 +931,11 @@ console.log("DATA: ", data)
 			<option
   key={field.field}
   value={field.field}
-  disabled={
+  disabled={!!(
     field.label && Object.entries(mapping)
       .filter(([key, value]) => Boolean(value) && key !== String(header))
       .some(([_, value]) => value === field.field)
-  }
+  )}
 >
   {field.label}
   {field.required ? ' *' : ''}

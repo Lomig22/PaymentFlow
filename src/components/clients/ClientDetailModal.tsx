@@ -1,6 +1,8 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Dialog } from "@headlessui/react";
+import ManualReminderModal from "../receivables/ManualReminderModal";
+import { sendManualReminder } from "../../lib/reminderService";
 import { motion } from "framer-motion";
 import {
   X,
@@ -17,17 +19,29 @@ import {
   FileText,
 } from "lucide-react";
 
-const ClientDetailModal = ({ client, isOpen, onClose }) => {
+interface ClientDetailModalProps {
+  client: any;
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+const ClientDetailModal: React.FC<ClientDetailModalProps> = ({ client, isOpen, onClose }) => {
   const navigate = useNavigate();
   if (!client) return null;
 
-  const formatDate = (dateString) =>
+  const formatDate = (dateString: string) =>
     new Date(dateString).toLocaleString("fr-FR", {
       dateStyle: "medium",
       timeStyle: "short",
     });
 
-  const Field = ({ label, value, Icon, isLink = false }) => (
+  interface FieldProps {
+  label: string;
+  value: string;
+  Icon?: React.ElementType;
+  isLink?: boolean;
+}
+const Field: React.FC<FieldProps> = ({ label, value, Icon, isLink = false }) => (
     <div className="flex items-start gap-3">
       {Icon && <Icon className="w-5 h-5 text-blue-500 mt-1" />}
       <div>
@@ -48,7 +62,11 @@ const ClientDetailModal = ({ client, isOpen, onClose }) => {
     </div>
   );
 
-  const Section = ({ title, children }) => (
+  interface SectionProps {
+  title: string;
+  children: React.ReactNode;
+}
+const Section: React.FC<SectionProps> = ({ title, children }) => (
     <div className="mb-8">
       <h2 className="text-xl font-semibold text-gray-800 border-b pb-2 mb-4">
         {title}
@@ -59,7 +77,12 @@ const ClientDetailModal = ({ client, isOpen, onClose }) => {
     </div>
   );
 
-  const ReminderBadge = ({ label, enabled, delay }) => (
+  interface ReminderBadgeProps {
+  label: string;
+  enabled: boolean;
+  delay?: { m?: number };
+}
+const ReminderBadge: React.FC<ReminderBadgeProps> = ({ label, enabled, delay }) => (
     <div className="flex items-center gap-4">
       <span className="w-32 text-sm text-gray-600">{label}</span>
       <span
@@ -74,6 +97,18 @@ const ClientDetailModal = ({ client, isOpen, onClose }) => {
       )}
     </div>
   );
+
+  const [showReminderModal, setShowReminderModal] = React.useState(false);
+  const [sending, setSending] = React.useState(false);
+
+  const handleSendReminder = async (subject: string, content: string, signature: string) => {
+    if (!client || !client.id) return false;
+    setSending(true);
+    // You may want to adapt this to fetch the correct receivableId for the client
+    const success = await sendManualReminder(client.id, subject, content);
+    setSending(false);
+    return success;
+  };
 
   return (
     <Dialog open={isOpen} onClose={onClose} className="fixed inset-0 z-50">
@@ -207,27 +242,36 @@ const ClientDetailModal = ({ client, isOpen, onClose }) => {
   />
 </Section>
 <div className="w-full flex flex-col items-center mt-6">
-  <button
-    className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-md shadow transition-colors text-lg"
-    onClick={() => {
-      navigate(`/receivables/new?client_name=${encodeURIComponent(client.company_name || '')}&client_email=${encodeURIComponent(client.email || '')}`);
-    }}
-  >
-    <Mail className="w-5 h-5" aria-label="Mail" />
-    Relancer
-  </button>
-  {(!client.company_name || !client.email) && (
-    <div className="mt-2 text-sm text-red-600 text-center">
-      Attention : informations client incomplètes.<br />
-      { !client.company_name && 'Nom de l’entreprise manquant. '}
-      { !client.email && 'Email manquant.'}
-    </div>
-  )}
-</div>
+            <button
+              className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-md shadow transition-colors text-lg"
+              onClick={() => setShowReminderModal(true)}
+              type="button"
+            >
+              <Mail className="w-5 h-5" aria-label="Mail" />
+              Relancer
+            </button>
+            {(!client.company_name || !client.email) && (
+              <div className="mt-2 text-sm text-red-600 text-center">
+                Attention : informations client incomplètes.<br />
+                { !client.company_name && 'Nom de l’entreprise manquant. '}
+                { !client.email && 'Email manquant.'}
+              </div>
+            )}
+          </div>
+          {showReminderModal && (
+            <ManualReminderModal
+              isOpen={showReminderModal}
+              onClose={() => setShowReminderModal(false)}
+              client={client}
+              onSendReminder={handleSendReminder}
+              loading={sending}
+            />
+          )}
         </motion.div>
       </div>
     </Dialog>
   );
 };
+
 
 export default ClientDetailModal;
