@@ -64,6 +64,7 @@ type SortColumnConfig = {
 };
 
 function ReceivablesList() {
+  const [sendError, setSendError] = useState(false);
   const { checkAbonnement } = useAbonnement();
   const [receivables, setReceivables] = useState<
     (Receivable & { client: Client })[]
@@ -344,7 +345,7 @@ const [sortConfig, setSortConfig] = useState<{
             .eq("id", selectedReceivable.id);
           //alert(newStatus);
           // Mettre à jour le statut avant l’envoi
-          selectedReceivable.status = newStatus;
+          selectedReceivable.status = newStatus as any;
           // Récupérer le contenu et le niveau
 
           const result = await getReminderTemplate(
@@ -726,7 +727,7 @@ const [sortConfig, setSortConfig] = useState<{
     } = await supabase.auth.getUser();
 
     await saveNotification({
-      owner_id: user?.id,
+      owner_id: user?.id ?? "",
       need_mail_notification: true,
       is_read: false,
       type: "info",
@@ -760,7 +761,7 @@ const [sortConfig, setSortConfig] = useState<{
         sort: "asc",
       };
     }
-    setSortConfig(newConfig);
+    setSortConfig(newConfig as any);
     try {
       localStorage.setItem(RECEIVABLES_SORT_KEY, JSON.stringify(newConfig));
     } catch {}
@@ -830,7 +831,7 @@ const [sortConfig, setSortConfig] = useState<{
     return 0;
   };
 
-  const handleAutomaticReminderToggle = async (receivable) => {
+  const handleAutomaticReminderToggle = async (receivable: any) => {
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -847,7 +848,7 @@ const [sortConfig, setSortConfig] = useState<{
         .eq("id", receivable.id);
       if (error) throw error;
       await saveNotification({
-        owner_id: user?.id,
+        owner_id: user?.id ?? "",
         need_mail_notification: true,
         is_read: false,
         type: "info",
@@ -911,7 +912,7 @@ const [sortConfig, setSortConfig] = useState<{
     const handleClickOutside = (event: MouseEvent) => {
       if (
         filterRef.current &&
-        !filterRef.current.contains(event.target as Node)
+        !(filterRef.current as any).contains(event.target as Node)
       ) {
         setShowFilters(false);
       }
@@ -1139,7 +1140,7 @@ const [sortConfig, setSortConfig] = useState<{
   }, [receivables]);
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
+    const handleClickOutside = (event: MouseEvent) => {
       const dropdown = dropdownRefs.current[openDropdownId];
 
       if (dropdown && !dropdown.contains(event.target)) {
@@ -1766,10 +1767,14 @@ const [sortConfig, setSortConfig] = useState<{
 
         {showForm && (
           <ReceivableForm
-            onClose={() => setShowForm(false)}
+            onClose={() => {
+  console.log('setShowForm(false) appelé');
+  setShowForm(false);
+}}
             onReceivableAdded={(receivable) => {
               setReceivables([receivable, ...receivables]);
               setShowForm(false);
+              navigate('/receivables');
             }}
           />
         )}
@@ -1828,7 +1833,7 @@ const [sortConfig, setSortConfig] = useState<{
                   onClick={() => {
                     setShowConfirmReminder(false);
                     setSelectedReceivable(null);
-                    fetchReceivables;
+            fetchReceivables();
                   }}
                   className="text-gray-400 hover:text-gray-500"
                 >
@@ -1916,6 +1921,11 @@ const [sortConfig, setSortConfig] = useState<{
                 </div>
               </form>
 
+      {sendError && (
+        <div className="mt-4 text-red-600 text-sm font-medium">
+          Une erreur est survenue lors de l'envoi de la relance. Veuillez réessayer.
+        </div>
+      )}
               <div className="flex justify-end space-x-4 mt-6">
                 <button
                   onClick={() => {
@@ -1929,8 +1939,17 @@ const [sortConfig, setSortConfig] = useState<{
                   Annuler
                 </button>
                 <button
-                  onClick={() => {
-                    handleSendReminder();
+          onClick={async () => {
+            setSendError(false);
+            setSendSuccess(false);
+            const result = await handleSendReminder();
+            if (result) {
+              setSendSuccess(true);
+              setShowConfirmReminder(false);
+              setSelectedReceivable(null);
+            } else {
+              setSendError(true);
+            }
                     fetchReceivables();
                   }}
                   disabled={sending}
@@ -1942,6 +1961,20 @@ const [sortConfig, setSortConfig] = useState<{
             </div>
           </div>
         )}
+{sendSuccess && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 flex flex-col items-center">
+      <CheckIcon className="h-12 w-12 text-green-500 mb-4" />
+      <h3 className="text-lg font-medium text-gray-900 mb-2">Relance envoyée avec succès !</h3>
+      <button
+        onClick={() => setSendSuccess(false)}
+        className="mt-4 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md"
+      >
+        Fermer
+      </button>
+    </div>
+  </div>
+) }
 
         {showDeleteConfirm && receivableToDelete && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

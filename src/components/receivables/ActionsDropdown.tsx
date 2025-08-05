@@ -74,7 +74,7 @@ export function ActionsDropdown({
 									}}
 									className="flex items-center w-full px-4 py-2 text-sm text-yellow-600 hover:bg-yellow-100"
 								>
-									<Mail className="w-4 h-4 mr-2" /> Envoyer une relance
+									<Mail className="w-4 h-4 mr-2" /> Relancer (personnaliser l'email) // Ouvre la popup de personnalisation
 								</button>
 								{!receivable.client?.reminder_template_1 &&
 									receivable.client?.needs_reminder && (
