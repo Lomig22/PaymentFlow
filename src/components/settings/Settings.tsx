@@ -98,7 +98,7 @@ const sections = [
   {
     id: "reminders",
     name: "Paramètres d’envoi de relances",
-    icon: Bell,
+    icon: Mail,
     subTabs: [
       {
         id: "sender",

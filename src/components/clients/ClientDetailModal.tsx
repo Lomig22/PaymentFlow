@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Dialog } from "@headlessui/react";
+// import { Dialog } from "@headlessui/react"; // Supprimé car non disponible
 import ManualReminderModal from "../receivables/ManualReminderModal";
 import { sendManualReminder } from "../../lib/reminderService";
 import { motion } from "framer-motion";
@@ -110,25 +110,29 @@ const ReminderBadge: React.FC<ReminderBadgeProps> = ({ label, enabled, delay }) 
     return success;
   };
 
+  if (!isOpen) return null;
   return (
-    <Dialog open={isOpen} onClose={onClose} className="fixed inset-0 z-50">
+    <div className="fixed inset-0 z-50">
       <div className="min-h-screen flex items-center justify-center px-4">
         <div
           className="fixed inset-0 bg-black/30 backdrop-blur-sm"
           aria-hidden="true"
+          onClick={onClose}
         />
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.95 }}
-          transition={{ duration: 0.3 }}
-          className="relative z-50 bg-white rounded-2xl shadow-2xl max-w-4xl w-full p-8 overflow-y-auto max-h-[90vh]"
-        >
-          <div className="flex items-center justify-between mb-6">
-            <Dialog.Title className="flex items-center gap-3 text-2xl font-semibold text-gray-800">
-              <FileText className="w-6 h-6 text-blue-600" />
-              Détails du client
-            </Dialog.Title>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.3 }}
+            className="relative z-50 bg-white rounded-2xl shadow-2xl max-w-4xl w-full p-8 overflow-y-auto max-h-[90vh]"
+            role="dialog"
+            aria-modal="true"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3 text-2xl font-semibold text-gray-800">
+                <FileText className="w-6 h-6 text-blue-600" />
+                Détails du client
+              </div>
 
             <button
               onClick={onClose}
@@ -244,7 +248,11 @@ const ReminderBadge: React.FC<ReminderBadgeProps> = ({ label, enabled, delay }) 
 <div className="w-full flex flex-col items-center mt-6">
             <button
               className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-md shadow transition-colors text-lg"
-              onClick={() => setShowReminderModal(true)}
+              onClick={() => {
+  navigate('/receivables', {
+    state: { openReminderForClient: client.id }
+  });
+}}
               type="button"
             >
               <Mail className="w-5 h-5" aria-label="Mail" />
@@ -269,9 +277,8 @@ const ReminderBadge: React.FC<ReminderBadgeProps> = ({ label, enabled, delay }) 
           )}
         </motion.div>
       </div>
-    </Dialog>
+    </div>
   );
 };
-
 
 export default ClientDetailModal;
