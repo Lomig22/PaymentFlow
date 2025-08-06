@@ -42,7 +42,7 @@ import {
 } from "../../lib/reminderService";
 import CSVImportModal, { CSVMapping } from "./CSVImportModal";
 import ReminderHistory from "./ReminderHistory";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { dateCompare, numberCompare, stringCompare } from "../../lib/comparers";
 import SortableColHead from "../Common/SortableColHead";
 import { dateDiff } from "../../lib/dateDiff";
@@ -64,6 +64,7 @@ type SortColumnConfig = {
 };
 
 function ReceivablesList() {
+  const location = useLocation();
   const [sendError, setSendError] = useState(false);
   const { checkAbonnement } = useAbonnement();
   const [receivables, setReceivables] = useState<
@@ -83,7 +84,7 @@ function ReceivablesList() {
   const [sendSuccess, setSendSuccess] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const RECEIVABLES_SORT_KEY = 'receivables_sort_config';
-const [sortConfig, setSortConfig] = useState<{
+  const [sortConfig, setSortConfig] = useState<{
     key: "client";
     sort: "asc" | "desc";
   } | null>(() => {
@@ -94,13 +95,37 @@ const [sortConfig, setSortConfig] = useState<{
       return null;
     }
   });
+  // ... autres hooks d'état ici
+
+  const [hasConsumedReminderNavigation, setHasConsumedReminderNavigation] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (
+      location.state?.openReminderForClient &&
+      receivables.length > 0 &&
+      !hasConsumedReminderNavigation
+    ) {
+      const receivable = receivables.find(
+        r => r.client.id === location.state.openReminderForClient
+      );
+      if (receivable) {
+        setHasConsumedReminderNavigation(true); // Consomme le flag
+        setSelectedReceivable(receivable);
+        setShowConfirmReminder(true);
+        // Vide l'état React Router pour éviter toute réouverture
+        navigate("", { replace: true, state: null });
+      }
+    }
+    // eslint-disable-next-line
+  }, [location.state, receivables, hasConsumedReminderNavigation]);
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [receivableToDelete, setReceivableToDelete] = useState<
     (Receivable & { client: Client }) | null
   >(null);
   const [deleting, setDeleting] = useState(false);
-  const [tooltipVisible, setTooltipVisible] = useState<string | null>(null);
+  const [tooltipVisible, setTooltipVisible] = useState<string | null>(null); // déjà correct, rien à changer ici
   const [showReminderHistory, setShowReminderHistory] = useState(false);
   const [reminderHistroy, setReminderHistory] = useState<Reminder[]>([]);
   const [showEditForm, setShowEditForm] = useState(false);
@@ -711,8 +736,6 @@ const [sortConfig, setSortConfig] = useState<{
         setSelectedClient(null);
       }
     };
-  const navigate = useNavigate();
-
   const sendToSignatureSetting = () => {
     // alert("send")
     navigate("/settings", {
@@ -831,7 +854,7 @@ const [sortConfig, setSortConfig] = useState<{
     return 0;
   };
 
-  const handleAutomaticReminderToggle = async (receivable: any) => {
+  const handleAutomaticReminderToggle = async (receivable: Receivable) => {
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -886,8 +909,8 @@ const [sortConfig, setSortConfig] = useState<{
       );
     })
     .sort(applySorting);
-  const dropdownRefs = useRef({});
-  const [openDropdownId, setOpenDropdownId] = useState(null);
+  const dropdownRefs = useRef<Record<string, HTMLDivElement | HTMLSpanElement | null>>({});
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   useEffect(() => {
     const handleMouseMove = (event: MouseEvent) => {
@@ -897,7 +920,7 @@ const [sortConfig, setSortConfig] = useState<{
 
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
-  const buttonRefs = useRef({});
+  const buttonRefs = useRef<Record<string, HTMLDivElement | HTMLSpanElement | null>>({});
   const tableRefs = useRef<HTMLTableElement | null>(null);
   const [reminder1AlreadySend, setReminder1AlreadySend] = useState(false);
   const [reminder2AlreadySend, setReminder2AlreadySend] = useState(false);
@@ -1123,7 +1146,7 @@ const [sortConfig, setSortConfig] = useState<{
 
   useEffect(() => {
     const updateAllReminderStates = async () => {
-      const titles: Record<string, string> = {};
+      const titles: { [key: string]: any } = {}; // Ajout d'une signature d'index pour accès dynamique
 
       for (const receivable of receivables) {
         await fetchReminderStatus(receivable.id);
@@ -1141,9 +1164,9 @@ const [sortConfig, setSortConfig] = useState<{
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      const dropdown = dropdownRefs.current[openDropdownId];
+      const dropdown = openDropdownId !== null ? dropdownRefs.current[openDropdownId] : null;
 
-      if (dropdown && !dropdown.contains(event.target)) {
+      if (dropdown && !dropdown.contains(event.target as Node)) {
         // Donne un court délai pour laisser les onClick internes s'exécuter
         setTimeout(() => {
           setOpenDropdownId(null);
@@ -1151,7 +1174,7 @@ const [sortConfig, setSortConfig] = useState<{
       }
     };
 
-    const handleEscape = (event) => {
+    const handleEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setSelectedIds([]);
         setSelectedAll(false);
@@ -1168,7 +1191,7 @@ const [sortConfig, setSortConfig] = useState<{
     };
   }, [openDropdownId]);
 
-  const resolveStatus = (receivable) => {
+  const resolveStatus = (receivable: Receivable & { client: Client }) => {
     const { status, client } = receivable;
 
     const statusLevels = [
@@ -1200,7 +1223,7 @@ const [sortConfig, setSortConfig] = useState<{
     return status;
   };
 
-  function getReminderIssues(receivable) {
+  function getReminderIssues(receivable: Receivable & { client: Client }) {
     const now = new Date();
     const issues: string[] = [];
 
@@ -1446,7 +1469,7 @@ const [sortConfig, setSortConfig] = useState<{
                       return (
                         <button
                           key={col.key}
-                          onClick={() => handleSortOnClick(col.key)}
+                          onClick={() => handleSortOnClick(col.key as keyof CSVMapping | "Delay in Days")}
                           className={`
                           relative flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg
                           backdrop-blur-sm
@@ -1929,6 +1952,8 @@ const [sortConfig, setSortConfig] = useState<{
               <div className="flex justify-end space-x-4 mt-6">
                 <button
                   onClick={() => {
+                    // Nettoyage supplémentaire de l'état de navigation lors de la fermeture manuelle de la popup
+                    window.history.replaceState({}, document.title, window.location.pathname);
                     setShowConfirmReminder(false);
                     setSelectedReceivable(null);
                     fetchReceivables();
@@ -1942,15 +1967,11 @@ const [sortConfig, setSortConfig] = useState<{
           onClick={async () => {
             setSendError(false);
             setSendSuccess(false);
-            const result = await handleSendReminder();
-            if (result) {
-              setSendSuccess(true);
-              setShowConfirmReminder(false);
-              setSelectedReceivable(null);
-            } else {
-              setSendError(true);
-            }
-                    fetchReceivables();
+            await handleSendReminder();
+            setSendSuccess(true);
+            setShowConfirmReminder(false);
+            setSelectedReceivable(null);
+            fetchReceivables();
                   }}
                   disabled={sending}
                   className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md disabled:opacity-50"

@@ -248,7 +248,13 @@ const ReminderProfileSettings = () => {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded">
+  <span className="text-blue-800 font-semibold block mb-1">Note :</span>
+  <span className="text-blue-700 text-sm">
+    Le délai est l'écart entre chaque relance, et non le temps écoulé depuis l'échéance de la facture.
+  </span>
+</div>
+<form onSubmit={handleSubmit} className="space-y-4">
         {[1, 2, 3].map((n) => (
           <Disclosure key={n}>
             {({ open }) => (
