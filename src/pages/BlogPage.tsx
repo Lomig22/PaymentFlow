@@ -20,7 +20,7 @@ const BlogPage: React.FC<BlogPageProps> = () => {
       <div className="blog-page-container" style={{ maxWidth: 900, margin: '0 auto', padding: '2rem 1rem' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-2 pt-4">
           <button
-            onClick={() => navigate('/temoignages')}
+            onClick={() => navigate('/')}
             className="flex items-center gap-2 text-xl font-medium text-blue-600 hover:text-blue-800 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -38,7 +38,7 @@ const BlogPage: React.FC<BlogPageProps> = () => {
       {/* Article long format : Optimisation des relances */}
       <div className="mb-10 p-6 bg-blue-900 rounded-xl shadow-md flex flex-col md:flex-row items-center gap-6 text-white">
         <img
-  src="/images/blog-optimisation-relance.jpg"
+  src="/images/blog-optimisation-relance.png"
   alt="Optimisation des relances - illustration"
   className="rounded-lg shadow-md border-2 border-blue-700 bg-white p-2"
   style={{ width: '120px', height: 'auto', maxWidth: '100%' }}

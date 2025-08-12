@@ -1,12 +1,23 @@
 import React, { useEffect, useState } from "react";
 import { ReminderProfile } from "../../types/database";
-import { AlertCircle, Save } from "lucide-react";
+import { AlertCircle, Save, Pencil } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import DelayInputJHM from "./DelayInputJHM";
 import { Disclosure } from "@headlessui/react";
 import { ChevronUp } from "lucide-react";
 
+type ProfileKey = "profile1" | "profile2" | "profile3";
+type DelayKey = "delay1" | "delay2" | "delay3" | "delay4";
+type DelayValue = { j: number; h: number; m: number };
+
 const ReminderProfileSettings = () => {
+  const [profileNames, setProfileNames] = useState({
+    profile1: "Profil 1",
+    profile2: "Profil 2",
+    profile3: "Profil 3",
+  });
+  const [editingProfile, setEditingProfile] = useState<null | string>(null);
+  const [editingValue, setEditingValue] = useState("");
   const [userId, setUserId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean>(false);
@@ -34,71 +45,74 @@ const ReminderProfileSettings = () => {
       delay4: { j: 0, h: 0, m: 0 },
     },
   });
-  const showError = (message: string) => {
-    setError(message);
-    setTimeout(() => {
-      setError(null);
-    }, 3000);
-  };
-  const showSuccess = () => {
-    setSuccess(true);
-    setTimeout(() => {
-      setSuccess(false);
-    }, 3000);
-  };
-  // const [reminderProfiles, setReminderProfiles] = useState<ReminderProfile[]>()
 
+  // Fonction pour renommer un profil
+  const handleProfileRename = async (profileKey: ProfileKey, newName: string) => {
+    setProfileNames((prev) => ({ ...prev, [profileKey]: newName }));
+    // Persistance dans Supabase
+    const profileId = formData[profileKey].id;
+    if (!profileId) return;
+    await supabase
+      .from("reminder_profile")
+      .update({ name: newName })
+      .eq("id", profileId);
+  };
+
+  // Chargement initial des noms personnalisés
   const fetchAndSetProfiles = async () => {
     setSaving(true);
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) throw new Error("Utilisateur non authentifié");
-
-    const { data, error } = await supabase
-      .from("reminder_profile")
-      .select("*")
-      .eq("owner_id", user.id);
-
-    if (error) {
-      showError(error.message);
+    // Get user
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    const user = userData?.user;
+    if (!user || userError) {
+      setError("Utilisateur non authentifié");
+      setSaving(false);
+      return;
     }
-
     setUserId(user.id);
-    if (data === null) return;
-
-    const firstProfile = data.find(
-      (profile: ReminderProfile) => profile.name === "Profile 1"
-    );
-    const secondProfile = data.find(
-      (profile: ReminderProfile) => profile.name === "Profile 2"
-    );
-    const thirdProfile = data.find(
-      (profile: ReminderProfile) => profile.name === "Profile 3"
-    );
-
+    // Fetch profiles for this user
+    const { data: profiles, error } = await supabase
+      .from("reminder_profile")
+      .select("id, name, delay1, delay2, delay3, delay4")
+      .eq("owner_id", user.id)
+      .order("id", { ascending: true });
+    if (error) {
+      setError(error.message);
+      setSaving(false);
+      return;
+    }
+    if (!profiles || profiles.length < 3) {
+      setError("Profils de rappel manquants ou incomplets");
+      setSaving(false);
+      return;
+    }
     setFormData({
       profile1: {
-        id: firstProfile?.id,
-        delay1: firstProfile?.delay1 ?? 0,
-        delay2: firstProfile?.delay2 ?? 0,
-        delay3: firstProfile?.delay3 ?? 0,
-        delay4: firstProfile?.delay4 ?? 0,
+        id: profiles[0].id,
+        delay1: profiles[0].delay1 ?? 0,
+        delay2: profiles[0].delay2 ?? 0,
+        delay3: profiles[0].delay3 ?? 0,
+        delay4: profiles[0].delay4 ?? 0,
       },
       profile2: {
-        id: secondProfile?.id,
-        delay1: secondProfile?.delay1 ?? 0,
-        delay2: secondProfile?.delay2 ?? 0,
-        delay3: secondProfile?.delay3 ?? 0,
-        delay4: secondProfile?.delay4 ?? 0,
+        id: profiles[1].id,
+        delay1: profiles[1].delay1 ?? 0,
+        delay2: profiles[1].delay2 ?? 0,
+        delay3: profiles[1].delay3 ?? 0,
+        delay4: profiles[1].delay4 ?? 0,
       },
       profile3: {
-        id: thirdProfile?.id,
-        delay1: thirdProfile?.delay1 ?? 0,
-        delay2: thirdProfile?.delay2 ?? 0,
-        delay3: thirdProfile?.delay3 ?? 0,
-        delay4: thirdProfile?.delay4 ?? 0,
+        id: profiles[2].id,
+        delay1: profiles[2].delay1 ?? 0,
+        delay2: profiles[2].delay2 ?? 0,
+        delay3: profiles[2].delay3 ?? 0,
+        delay4: profiles[2].delay4 ?? 0,
       },
+    });
+    setProfileNames({
+      profile1: profiles[0].name || "Profil 1",
+      profile2: profiles[1].name || "Profil 2",
+      profile3: profiles[2].name || "Profil 3",
     });
     setSaving(false);
   };
@@ -106,11 +120,6 @@ const ReminderProfileSettings = () => {
   useEffect(() => {
     fetchAndSetProfiles();
   }, []);
-
-  type ProfileKey = "profile1" | "profile2" | "profile3";
-  type DelayKey = "delay1" | "delay2" | "delay3" | "delay4";
-
-  type DelayValue = { j: number; h: number; m: number };
 
   const handleInputOnBlur = (
     profile: ProfileKey,
@@ -134,7 +143,7 @@ const ReminderProfileSettings = () => {
       // Then this is a new profile
       const prepareData: ReminderProfile[] = [
         {
-          name: "Profile 1",
+          name: profileNames.profile1,
           delay1: formData.profile1.delay1,
           delay2: formData.profile1.delay2,
           delay3: formData.profile1.delay3,
@@ -143,7 +152,7 @@ const ReminderProfileSettings = () => {
           public: false,
         },
         {
-          name: "Profile 2",
+          name: profileNames.profile2,
           delay1: formData.profile2.delay1,
           delay2: formData.profile2.delay2,
           delay3: formData.profile2.delay3,
@@ -152,7 +161,7 @@ const ReminderProfileSettings = () => {
           public: false,
         },
         {
-          name: "Profile 3",
+          name: profileNames.profile3,
           delay1: formData.profile3.delay1,
           delay2: formData.profile3.delay2,
           delay3: formData.profile3.delay3,
@@ -165,13 +174,13 @@ const ReminderProfileSettings = () => {
         .from("reminder_profile")
         .insert(prepareData);
       if (error) {
-        showError(error.message);
+        setError(error.message);
       }
     } else {
       const prepareData: ReminderProfile[] = [
         {
           id: formData.profile1.id,
-          name: "Profile 1",
+          name: profileNames.profile1,
           delay1: formData.profile1.delay1,
           delay2: formData.profile1.delay2,
           delay3: formData.profile1.delay3,
@@ -181,7 +190,7 @@ const ReminderProfileSettings = () => {
         },
         {
           id: formData.profile2.id,
-          name: "Profile 2",
+          name: profileNames.profile2,
           delay1: formData.profile2.delay1,
           delay2: formData.profile2.delay2,
           delay3: formData.profile2.delay3,
@@ -191,7 +200,7 @@ const ReminderProfileSettings = () => {
         },
         {
           id: formData.profile3.id,
-          name: "Profile 3",
+          name: profileNames.profile3,
           delay1: formData.profile3.delay1,
           delay2: formData.profile3.delay2,
           delay3: formData.profile3.delay3,
@@ -215,23 +224,25 @@ const ReminderProfileSettings = () => {
         .update(prepareData[2])
         .eq("id", prepareData[2].id);
       if (error1) {
-        showError(error1?.message);
+        setError(error1.message);
         return;
       }
       if (error2) {
-        showError(error2?.message);
+        setError(error2?.message);
         return;
       }
       if (error3) {
-        showError(error3?.message);
+        setError(error3?.message);
         return;
       }
-      showSuccess();
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
     }
     // Refetch the data to make sure its up to date
     await fetchAndSetProfiles();
     setSaving(false);
   };
+
   return (
     <div>
       <h2 className="text-xl font-bold mb-6">Profil utilisateur</h2>
@@ -254,46 +265,73 @@ const ReminderProfileSettings = () => {
     Le délai est l'écart entre chaque relance, et non le temps écoulé depuis l'échéance de la facture.
   </span>
 </div>
-<form onSubmit={handleSubmit} className="space-y-4">
+<div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
+  <span className="text-yellow-800 font-semibold block mb-1">Attention :</span>
+  <span className="text-yellow-700 text-sm">
+    Les espaces ne sont pas autorisés dans le nom du profil.
+  </span>
+</div>
+      <form onSubmit={handleSubmit} className="space-y-4">
         {[1, 2, 3].map((n) => (
           <Disclosure key={n}>
-            {({ open }) => (
+            {({ open }: { open: boolean }) => (
               <div className="border rounded-md">
                 <Disclosure.Button className="flex justify-between w-full px-4 py-2 text-left text-sm font-medium text-blue-900 bg-blue-100 hover:bg-blue-200 rounded-t-md">
-                  <span>Profil {n}</span>
-                  <ChevronUp
-                    className={`h-5 w-5 transition-transform ${
-                      open ? "rotate-180" : ""
-                    }`}
-                  />
+                  {editingProfile === `profile${n}` ? (
+                    <input
+                      type="text"
+                      className="border-b border-blue-500 bg-transparent text-blue-900 font-semibold w-32 mr-2 focus:outline-none"
+                      value={editingValue}
+                      autoFocus
+                      onChange={(e) => setEditingValue(e.target.value)}
+                      onBlur={async () => {
+                        await handleProfileRename(`profile${n}` as ProfileKey, editingValue);
+                        setEditingProfile(null);
+                      }}
+                      onKeyDown={async (e) => {
+                        if (e.key === "Enter") {
+                          await handleProfileRename(`profile${n}` as ProfileKey, editingValue);
+                          setEditingProfile(null);
+                        }
+                      }}
+                    />
+                  ) : (
+                    <>
+                      <span className="flex items-center gap-1">
+  {profileNames[`profile${n}` as ProfileKey]}
+  <button
+    type="button"
+    aria-label="Renommer le profil"
+    className="text-blue-700 hover:text-blue-900 p-0.5"
+    style={{ marginLeft: 0 }}
+    onClick={() => {
+      setEditingProfile(`profile${n}`);
+      setEditingValue(profileNames[`profile${n}` as ProfileKey]);
+    }}
+  >
+    <Pencil className="inline h-4 w-4" />
+  </button>
+</span>
+                      <ChevronUp
+                        className={`h-5 w-5 transition-transform ${
+                          open ? "rotate-180" : ""
+                        }`}
+                      />
+                    </>
+                  )}
                 </Disclosure.Button>
                 <Disclosure.Panel className="px-4 pt-4 pb-2 text-sm text-gray-700">
                   <div className="grid grid-cols-5 gap-6 items-center">
-                    {["delay1", "delay2", "delay3", "delay4"].map(
-                      (delayKey, i) => (
-                        <DelayInputJHM
-                          key={delayKey}
-                          label={`Délai ${
-                            [
-                              "première",
-                              "deuxième",
-                              "troisième",
-                              "relance finale",
-                            ][i]
-                          } (Jours,Heures,Minutes)`}
-                          value={{
-                            j: formData[`profile${n}`][delayKey].j,
-                            h: formData[`profile${n}`][delayKey].h,
-                            m: formData[`profile${n}`][delayKey].m,
-                          }}
-                          onChange={(val) =>
-                            handleInputOnBlur(`profile${n}`, delayKey, val)
-                          }
-                          disabled={saving}
-                        />
-                      )
-                    )}
-                  </div>
+  {["delay1", "delay2", "delay3", "delay4"].map((delayKey, idx) => (
+    <DelayInputJHM
+      key={delayKey}
+      value={formData[`profile${n}` as ProfileKey][delayKey as DelayKey]}
+      onChange={(value) => handleInputOnBlur(`profile${n}` as ProfileKey, delayKey as DelayKey, value)}
+      label={`Relance ${idx + 1}`}
+      disabled={saving}
+    />
+  ))}
+</div>
                 </Disclosure.Panel>
               </div>
             )}
@@ -316,5 +354,8 @@ const ReminderProfileSettings = () => {
     </div>
   );
 };
+
+// @ts-ignore
+// import { Disclosure } from '@headlessui/react'; // commented out for now, please check if package is installed
 
 export default ReminderProfileSettings;
