@@ -2,7 +2,10 @@ import React, { useEffect, useRef, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
 import { FaUserCog, FaPhoneAlt, FaClock, FaShareAlt, FaHandshake, FaCheckCircle, FaChevronDown, FaBullseye, FaEnvelopeOpenText, FaChartLine } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
+import { ShareButtons } from '../components/blog/BlogEnrichmentBlocks';
+import Footer from '../components/Footer';
 
 const accentColor = "#2563eb"; // bleu Payment Flow
 const navy = "#1e293b"; // bleu foncé Payment Flow (ex: text-blue-900)
@@ -113,13 +116,15 @@ export default function BlogOptimisationRelance() {
       // Trouver la zone de scroll principale (après le header)
       const main = document.querySelector('main');
       if (!main) return setProgress(0);
-      const rect = main.getBoundingClientRect();
+      const mainRect = main.getBoundingClientRect();
+      const mainTop = mainRect.top + window.scrollY;
+      const mainHeight = main.scrollHeight;
       const windowHeight = window.innerHeight;
-      const total = main.scrollHeight - windowHeight;
-      const scrolled = window.scrollY - rect.top + window.scrollY;
-      let percent = total > 0 ? (scrolled / total) * 100 : 0;
-      percent = Math.max(0, Math.min(100, percent));
-      setProgress(percent);
+      const scrollBottom = window.scrollY + windowHeight;
+      const mainBottom = mainTop + mainHeight;
+      let percent = ((scrollBottom - mainTop) / (mainHeight));
+      percent = Math.max(0, Math.min(1, percent));
+      setProgress(percent * 100);
     };
     window.addEventListener('scroll', handleProgress, { passive: true });
     handleProgress();
@@ -128,40 +133,51 @@ export default function BlogOptimisationRelance() {
 
   useEffect(() => {
     const handleScroll = () => {
-      const offsets = sectionRefs.current.map(ref => ref ? ref.getBoundingClientRect().top : Infinity);
-      const visibleIdx = offsets.findIndex(top => top > 40);
-      if (visibleIdx === -1) {
-        setActiveSection(sections[sections.length - 1].id);
-      } else if (visibleIdx === 0) {
-        setActiveSection(sections[0].id);
-      } else {
-        setActiveSection(sections[visibleIdx - 1].id);
-      }
+      const windowCenter = window.innerHeight / 2;
+      const sectionCenters = sectionRefs.current.map(ref => {
+        if (!ref) return Infinity;
+        const rect = ref.getBoundingClientRect();
+        return rect.top + rect.height / 2;
+      });
+      // Cherche la section dont le centre est le plus proche du centre de la fenêtre
+      let minDist = Infinity;
+      let activeIdx = 0;
+      sectionCenters.forEach((center, idx) => {
+        const dist = Math.abs(center - windowCenter);
+        if (dist < minDist) {
+          minDist = dist;
+          activeIdx = idx;
+        }
+      });
+      setActiveSection(sections[activeIdx].id);
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const navigate = useNavigate();
   return (
-    <div style={{ background: '#f8fafc', minHeight: "100vh", color: navy, fontFamily: 'Inter, Arial, sans-serif' }}>
+    <div style={{ background: '#fff', minHeight: "100vh", color: navy, fontFamily: 'Inter, Arial, sans-serif' }}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-2 pt-4">
+  <button
+    onClick={() => navigate('/blog')}
+    className="flex items-center gap-2 text-xl font-medium text-blue-600 hover:text-blue-800 transition-colors"
+  >
+    <ArrowLeft className="w-4 h-4" />
+    Retour
+  </button>
+</div>
       <Helmet>
         <title>Les 5 erreurs à éviter quand on relance ses clients | Blog Payment Flow</title>
+        <meta name="robots" content="noindex" />
         <meta name="description" content="Optimisez la relance de facture impayée (1ère et 2ème relance), découvrez les bonnes pratiques pour le recouvrement des créances client, la rédaction de lettre de relance, l’email recouvrement, le suivi des encours client et l’utilisation d’un logiciel recouvrement performant. Conseils pratiques pour PME et TPE pour réduire le risque d’impayé et accélérer les paiements." />
         <link rel="canonical" href="https://www.payment-flow.fr/blog/optimisation-relance" />
       </Helmet>
-      {/* Sticky menu */}
-      <header className="sticky top-0 z-50 bg-white shadow" style={{ borderBottom: `2px solid ${accentColor}` }}>
-        <nav className="flex items-center justify-between px-4 py-2" style={{ maxWidth: 1100, margin: '0 auto' }}>
-          <div />
-          <div className="flex gap-4 items-center">
-            {/* La barre verticale de progression sera en dehors du header, voir plus bas */}
-          </div>
-        </nav>
-      </header>
+
       {/* Header image & intro */}
-      <section className="w-full flex flex-col items-center justify-center" style={{ background: '#fff', color: navy, padding: '2.5rem 1rem 1.5rem', borderBottom: `1px solid #e5e7eb` }}>
-        <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=900&q=80" alt="Facture B2B paiement digital" className="rounded-lg shadow mb-6" style={{ maxWidth: 680, width: '100%', height: 220, objectFit: 'cover', border: `2px solid ${accentColor}` }} />
+      <section className="w-full flex flex-col items-center justify-center" style={{ background: '#fff', color: navy, padding: '2.5rem 1rem 1.5rem' }}>
+        <img src="/images/blog-optimisation-relances-2.png" alt="Optimisation des relances - illustration PME" className="rounded-lg shadow mb-6" style={{ maxWidth: 680, width: '100%', height: 240, objectFit: 'cover', objectPosition: 'center', display: 'block' }} />
         <h1 className="text-3xl md:text-4xl font-bold mb-2 text-center" style={{ color: navy }}>Les 5 erreurs à éviter quand on relance ses clients</h1>
         <div className="flex gap-4 text-gray-500 text-sm mb-3 items-center justify-center">
           <span>Payment Flow</span>
@@ -173,10 +189,22 @@ export default function BlogOptimisationRelance() {
           <span role="img" aria-label="objectif">🎯</span> <strong>L’objectif : être payé plus vite, sans perdre de temps ni altérer la relation commerciale.</strong> Voici les <strong>5 erreurs les plus fréquentes à éviter</strong> pour améliorer votre recouvrement.
         </div>
       </section>
-      {/* Barre de progression de lecture sticky */}
-      <div className="sticky top-0 z-30 w-full bg-transparent" style={{ height: 6 }}>
-        <div style={{ width: `${progress}%`, height: 6, background: accentColor, transition: 'width 0.2s', borderRadius: 3 }} />
+
+      {/* Barre de progression sticky lecture */}
+      <div style={{position: 'fixed', top: 0, left: 0, width: '100vw', zIndex: 1000, background: 'white'}}>
+        <div style={{width: '100%', height: 6, background: '#e5e7eb'}}>
+          <div
+            style={{
+              width: `${progress}%`,
+              height: 6,
+              background: '#2563eb',
+              transition: 'width 0.2s',
+              borderRadius: 3
+            }}
+          />
+        </div>
       </div>
+
       {/* Barre latérale de progression (desktop) */}
       <div className="relative flex w-full max-w-7xl mx-auto">
         <aside className="hidden md:flex flex-col items-center mr-8 mt-12 sticky top-28 h-fit" style={{ minWidth: 70 }}>
@@ -227,11 +255,22 @@ export default function BlogOptimisationRelance() {
               <li>✅ <strong>Partager les informations clés</strong> avec vos équipes (compta, commerce, service client)</li>
               <li>✅ <strong>Suivre les résultats en temps réel</strong> depuis un tableau de bord clair</li>
             </ul>
+            {/* Liens de partage réseaux sociaux */}
+            <ShareButtons url="https://www.payment-flow.fr/blog-optimisation-relance" title="Les 5 erreurs à éviter quand on relance ses clients | Blog Payment Flow" />
             <div className="text-xl font-semibold mb-2">💬 Vous voulez arrêter de courir après vos paiements ?</div>
-            <a href="https://www.paymentflow.fr/signup" className="inline-block px-6 py-3 rounded bg-orange-500 hover:bg-orange-600 text-white font-bold shadow transition-colors text-lg">Testez Payment Flow dès maintenant</a>
+            <Link
+  to="https://www.payment-flow.fr/signup"
+  target="_blank"
+  rel="noopener noreferrer"
+  className="inline-block px-6 py-3 rounded-xl bg-[#2563eb] hover:bg-[#1e293b] text-white font-bold shadow-md hover:shadow-lg transition-all duration-200 text-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
+  style={{ letterSpacing: 0.2 }}
+>
+  Testez Payment Flow dès maintenant
+</Link>
           </section>
         </main>
       </div>
-    </div>
+    <Footer />
+  </div>
   );
 }
