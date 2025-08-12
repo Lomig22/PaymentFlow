@@ -9,33 +9,19 @@ import {
 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 
-import { Receivable, Client } from '../../types/database';
-import React from 'react';
-
-interface ActionsDropdownProps {
-  receivable: Receivable & { client: Client };
-  setShowEditForm: (show: boolean) => void;
-  setSelectedReceivable: (receivable: Receivable & { client: Client }) => void;
-  setShowConfirmReminder: (show: boolean) => void;
-  setSelectedClient: (client: Client) => void;
-  setShowSettings: (show: boolean) => void;
-  setShowReminderHistory: (show: boolean) => void;
-  handleDeleteClick: (receivable: Receivable & { client: Client }) => void;
-}
-
 export function ActionsDropdown({
-  receivable,
-  setShowEditForm,
-  setSelectedReceivable,
-  setShowConfirmReminder,
-  setSelectedClient,
-  setShowSettings,
-  setShowReminderHistory,
-  handleDeleteClick,
-}: ActionsDropdownProps) {
+	receivable,
+	setShowEditForm,
+	setSelectedReceivable,
+	setShowConfirmReminder,
+	setSelectedClient,
+	setShowSettings,
+	setShowReminderHistory,
+	handleDeleteClick,
+}) {
 	const [open, setOpen] = useState(false);
 	const [openUpwards, setOpenUpwards] = useState(false);
-	const buttonRef = React.useRef<HTMLButtonElement>(null);
+	const buttonRef = useRef(null);
 
 	useEffect(() => {
 		if (open && buttonRef.current) {

@@ -440,7 +440,7 @@ export default function ReminderSettingsModal({
       4: `Cher client,\n\nCeci est notre dernière relance concernant la facture {invoice_number} d'un montant de {amount}.\n\nSans règlement immédiat, nous transmettrons le dossier à notre service contentieux.`,
       5: `Cher client,\n\n nous n'avons pas encore reçu le paiement de la facture n° {invoice_number}, soit {amount}. Nous vous informons que vous disposez de {days_left} jours avant la date limite.\n\nMerci de régulariser la situation dans les plus brefs délais.`,
     };
-    return examples[step as keyof typeof examples] || "";
+    return examples[step] || "";
   };
 
   //Bouton Play/Pause
