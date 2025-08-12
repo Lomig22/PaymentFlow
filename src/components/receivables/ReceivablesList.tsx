@@ -913,13 +913,13 @@ function ReceivablesList() {
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   useEffect(() => {
-    if (!openDropdownId) return;
     const handleMouseMove = (event: MouseEvent) => {
       setMousePosition({ x: event.clientX, y: event.clientY });
     };
     window.addEventListener("mousemove", handleMouseMove);
+
     return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, [openDropdownId]);
+  }, []);
   const buttonRefs = useRef<Record<string, HTMLDivElement | HTMLSpanElement | null>>({});
   const tableRefs = useRef<HTMLTableElement | null>(null);
   const [reminder1AlreadySend, setReminder1AlreadySend] = useState(false);
@@ -932,7 +932,6 @@ function ReceivablesList() {
   const filterRef = useRef(null);
 
   useEffect(() => {
-    if (!showFilters) return;
     const handleClickOutside = (event: MouseEvent) => {
       if (
         filterRef.current &&
@@ -941,11 +940,12 @@ function ReceivablesList() {
         setShowFilters(false);
       }
     };
+
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [showFilters]);
+  }, []);
   /* 
   useLayoutEffect(() => {
     if (

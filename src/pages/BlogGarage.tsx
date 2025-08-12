@@ -157,8 +157,9 @@ const BlogGarage: React.FC<BlogSectorProps> = (props) => {
         <meta name="robots" content="index, follow" />
         <link rel="canonical" href={pageUrl} />
       </Helmet>
+
       {/* Barre de progression sticky lecture */}
-      <div style={{position: 'fixed', top: 0, left: 0, width: '100vw', zIndex: 1000, background: 'white'}}>
+      <div style={{position: 'sticky', top: 0, zIndex: 30, background: 'white'}}>
         <div style={{width: '100%', height: 6, background: '#e5e7eb'}}>
           <div
             style={{
@@ -172,21 +173,6 @@ const BlogGarage: React.FC<BlogSectorProps> = (props) => {
         </div>
       </div>
 
-       {/* Barre de progression sticky lecture */}
-       <div style={{position: 'fixed', top: 0, left: 0, width: '100vw', zIndex: 1000, background: 'white'}}>
-         <div style={{width: '100%', height: 6, background: '#e5e7eb'}}>
-           <div
-             style={{
-               width: `${progress}%`,
-               height: 6,
-               background: '#2563eb',
-               transition: 'width 0.2s',
-               borderRadius: 3
-            }}
-          />
-        </div>
-      </div>
-
       {/* Boutons de partage en haut */}
       <ShareButtons url={pageUrl} title={pageTitle} />
 
@@ -194,6 +180,12 @@ const BlogGarage: React.FC<BlogSectorProps> = (props) => {
         <div className="mt-4 mb-12 max-w-3xl w-full px-4">
           <h1 className="text-3xl font-bold mb-6">Garage : Comment diviser par deux vos retards de paiement ?</h1>
 
+          <img
+            src="https://assets-global.website-files.com/5e9aa66fd3886c5ea1bfaefe/62e2b1f8e6b0e5c1c0c9e0c0_growth-graph.svg"
+            alt="Graphique de croissance"
+            className="rounded-lg shadow mb-6"
+            style={{ maxWidth: 680, width: '100%', height: 220, objectFit: 'cover', border: '2px solid #2563eb' }}
+          />
 
           {/* Bloc structuré Contexte/Problématique/Solution/Résultats/Citation */}
           <div className="mb-10 p-6 bg-white rounded-xl shadow-md">

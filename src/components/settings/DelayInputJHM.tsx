@@ -30,7 +30,7 @@ const DelayInputJHM: React.FC<DelayInputJHMProps> = ({
 
 	return (
 		<div>
-			<label className='text-sm block mb-1'>{label} <span className='text-xs text-gray-500'>(Jours, Heures, Minutes)</span></label>
+			<label className='text-sm block mb-1'>{label}</label>
 			<div className='flex gap-2'>
 				<input
 					type='number'
