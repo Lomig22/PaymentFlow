@@ -100,48 +100,56 @@ export default function Layout() {
       } = await supabase.auth.getUser();
 
       if (authError || !user) return;
-      const { data: pending, error: fetchError } = await supabase
-        .from("pending_profiles")
-        .select("*")
-        .ilike("email", user.email);
+      if (user?.email) {
+        const { data: pending, error: fetchError } = await supabase
+          .from("pending_profiles")
+          .select("*")
+          .eq("email", user.email);
 
-      if (pending?.length === 0 || !pending) {
-        await supabase.auth.signOut();
-        navigate("/signup");
-      }
-      const { data: existingProfile } = await supabase
-        .from("profiles")
-        .select("*")
-        .ilike("email", user.email)
-        .single();
+        // Correction : ne redirige vers /signup que si le profil N'EXISTE PAS dans 'profiles'
+        const { data: existingProfile } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("email", user.email)
+          .single();
 
-      if (!existingProfile?.subscribe) {
-        if (!fetchError && pending) {
-          const { error: upsertError } = await supabase
-            .from("profiles")
-            .upsert([
-              {
-                id: user.id,
-                email: user.email,
-                name: pending[0].name,
-                phone: pending[0].phone,
-                company: pending[0].company,
-                subscribe: true,
-              },
-            ]);
+        if ((pending?.length === 0 || !pending) && !existingProfile) {
+          await supabase.auth.signOut();
+          navigate("/signup");
+          return;
+        }
 
-          if (upsertError) {
-            console.error(
-              "Erreur lors de l’upsert dans pending_profiles:",
-              upsertError
-            );
+        if (user?.email) {
+          // On ne crée le profil que s'il n'existe pas déjà
+          if (!existingProfile?.subscribe) {
+            if (!fetchError && pending) {
+              const { error: upsertError } = await supabase
+                .from("profiles")
+                .upsert([
+                  {
+                    id: user.id,
+                    email: user.email,
+                    name: pending[0].name,
+                    phone: pending[0].phone,
+                    company: pending[0].company,
+                    subscribe: true,
+                  },
+                ]);
+
+              if (upsertError) {
+                console.error(
+                  "Erreur lors de l’upsert dans pending_profiles:",
+                  upsertError
+                );
+              }
+            } else if (fetchError) {
+              console.error(
+                "Erreur lors de la récupération de pending_profiles:",
+                fetchError
+              );
+              //navigate("/signup")
+            }
           }
-        } else if (fetchError) {
-          console.error(
-            "Erreur lors de la récupération de pending_profiles:",
-            fetchError
-          );
-          //navigate("/signup")
         }
       }
     };
@@ -154,7 +162,7 @@ export default function Layout() {
         console.log("⏳ Vérification de la session utilisateur...");
 
         // Fonction pour limiter getSession à 3 secondes max
-        const timeout = (delay) =>
+        const timeout = (delay: number) =>
           new Promise((_, reject) =>
             setTimeout(() => reject(new Error("⏱ Timeout getSession")), delay)
           );
@@ -163,10 +171,11 @@ export default function Layout() {
 
         // 1. Tenter d'obtenir la session Supabase avec timeout
         try {
-          const { data, error } = await Promise.race([
+          const result = await Promise.race([
             supabase.auth.getSession(),
             timeout(3000),
           ]);
+          const { data, error } = (result as { data: any; error: any }) || {};
 
           if (error) {
             console.warn("❌ Erreur Supabase getSession:", error.message);
@@ -178,68 +187,86 @@ export default function Layout() {
             );
           }
         } catch (err) {
-          console.warn("⏱ Timeout ou erreur lors de getSession :", err.message);
+          if (err instanceof Error) {
+            console.warn("⏱ Timeout ou erreur lors de getSession :", err.message);
+          } else {
+            console.warn("⏱ Timeout ou erreur lors de getSession :", err);
+          }
         }
 
         // 2. Si pas de session, tenter depuis localStorage
         if (!user && localStorage.getItem("paymentflow-auth")) {
           console.log("📦 Tentative de récupération via localStorage...");
           try {
-            const stored = JSON.parse(localStorage.getItem("paymentflow-auth"));
-            const token = stored?.access_token;
-            const userData = stored?.user;
-
-            if (token && userData) {
-              user = userData;
-              console.log(
-                "✅ Session locale trouvée pour :",
-                user.identities?.[0]?.identity_id
-              );
-
-              // Réinitialiser une session Supabase
-              await supabase.auth.setSession({
-                access_token: token,
-                refresh_token: stored?.refresh_token,
-              });
+            const raw = localStorage.getItem("paymentflow-auth");
+            let stored = null;
+            try {
+              stored = JSON.parse(raw || "{}");
+            } catch (parseErr) {
+              console.error("❌ Erreur parsing localStorage:", parseErr);
+            }
+            if (!stored) {
+              console.warn("❌ Rien à parser dans localStorage");
+            } else {
+              const token = stored?.access_token;
+              const refreshToken = stored?.refresh_token;
+              const userData = stored?.user;
+              if (token && refreshToken && userData) {
+                // Tenter de restaurer la session Supabase
+                const { data, error } = await supabase.auth.setSession({
+                  access_token: token,
+                  refresh_token: refreshToken,
+                });
+                if (error) {
+                  console.warn("❌ Erreur lors de supabase.auth.setSession:", error.message);
+                } else if (data?.session?.user) {
+                  user = data.session.user;
+                  console.log("✅ Session restaurée via Supabase pour l'utilisateur :", user.id);
+                } else {
+                  console.warn("⚠️ setSession n'a pas retourné d'utilisateur.");
+                }
+              } else {
+                console.warn("❌ Token, refresh_token ou user manquant dans localStorage.");
+              }
             }
           } catch (e) {
-            console.error("❌ Erreur parsing localStorage:", e);
+            console.error("❌ Erreur lors de la récupération locale:", e);
           }
         }
 
         // 3. Si aucune session valide → redirection
         if (!user) {
           console.warn("🔒 Aucune session valide. Redirection vers /login");
-          navigate("/login");
+          // Évite la boucle si déjà sur /login ou /signup
+          if (window.location.pathname !== "/login" && window.location.pathname !== "/signup") {
+            navigate("/login");
+          }
           return;
         }
 
-        // 4. Vérifier l'abonnement utilisateur
-        const { data: subscriptions, error: subError } = await supabase
-          .from("subscriptions")
-          .select("id")
-          .eq("user_id", user.identities?.[0]?.identity_id || user.id); // fallback sur user.id au cas où
+        // 4. Vérifier l'existence du profil utilisateur
+        console.log("Recherche profil pour user.id =", user.id);
+        const { data: profiles, error: profileError } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", user.id);
 
-        if (subError) {
+        if (profileError) {
           console.error(
-            "❌ Erreur lors de la récupération des abonnements :",
-            subError
+            "❌ Erreur lors de la récupération du profil :",
+            profileError
           );
           await supabase.auth.signOut();
           return;
         }
 
-        if (!subscriptions || subscriptions.length === 0) {
-          console.log(
-            "📭 Aucun abonnement trouvé, redirection ou appel à handleSubscribe()"
-          );
-          try {
-            await handleSubscribe();
-          } catch (error) {
-            console.error("Erreur lors de la souscription :", error);
-          }
+        if (!profiles || profiles.length === 0) {
+          console.warn("Aucun profil trouvé pour cet utilisateur :", user.id);
+          // Ici, tu peux rediriger ou afficher un message d'erreur
+          navigate("/signup");
+          return;
         } else {
-          console.log("🎉 Abonnement actif détecté !");
+          console.log("✅ Profil utilisateur trouvé :", profiles[0]);
         }
       } catch (e) {
         console.error("🔥 Erreur globale dans verifySubscription :", e);
