@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet";
 import { motion, useInView } from "framer-motion";
 import { CheckCircle, TrendingUp } from "lucide-react";
 import { supabase } from "../lib/supabase";
@@ -283,6 +284,12 @@ const PricingPage = ({ setShowContact, setDefaultSubject }: Props) => {
       variants={staggerContainer}
       className="min-h-screen bg-gradient-to-b from-gray-50 to-white"
     >
+      <Helmet>
+  <title>Tarifs | Payment Flow</title>
+  <meta name="description" content="Découvrez nos offres et tarifs flexibles pour la gestion de vos paiements professionnels. Sans engagement, essai gratuit 30 jours." />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://www.payment-flow.fr/tarifs" />
+</Helmet>
       {/* Main Pricing Content */}
       <main>
       {isPricingPage && (
