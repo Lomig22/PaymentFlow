@@ -137,7 +137,9 @@ export default function AppHeader({ user }: AppHeaderProps) {
   };
 
   return (
-    <header className={`bg-white shadow-sm sticky top-0 z-50 transition-all ${hideOnScroll ? '-translate-y-full' : 'translate-y-0'}`} style={{ willChange: 'transform', transition: 'transform 0.7s cubic-bezier(0.4,0,0.2,1)' }}>
+    <>
+      <div className={showContactModal ? "app-blur" : ""}>
+        <header className={`bg-white shadow-sm sticky top-0 z-50 transition-all ${hideOnScroll ? '-translate-y-full' : 'translate-y-0'}`} style={{ willChange: 'transform', transition: 'transform 0.7s cubic-bezier(0.4,0,0.2,1)' }}>
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Logo Link */}
         <Link to="/" className="flex items-center space-x-2">
@@ -454,9 +456,11 @@ export default function AppHeader({ user }: AppHeaderProps) {
       )}
 
       {/* Calendly Button - Adjusted for mobile */}
+      </header>
+      </div>
       {showContactModal && (
         <ContactModal onClose={() => setShowContactModal(false)} defaultSubject={defaultSubject} />
       )}
-    </header>
+    </>
   );
 }
