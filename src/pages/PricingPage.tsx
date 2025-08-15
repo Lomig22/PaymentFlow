@@ -232,7 +232,15 @@ const PricingPage = ({ setShowContact, setDefaultSubject }: Props) => {
     localStorage.setItem("selectedPlan", plan);
     localStorage.setItem("selectedInterval", interval);
 
-    const token = import.meta.env.VITE_TOKEN_STRIPE;
+     // Récupère le token d'accès utilisateur Supabase
+    const { data: { session: stripeSession } } = await supabase.auth.getSession();
+    const accessToken = stripeSession?.access_token;
+
+    if (!accessToken) {
+      setMessage("Utilisateur non authentifié. Veuillez vous connecter.");
+      navigate("/signup");
+      return;
+    }
 
     if(isSettingsPage){
       localStorage.setItem("navigateAfterPayment", JSON.stringify({
@@ -255,7 +263,7 @@ const PricingPage = ({ setShowContact, setDefaultSubject }: Props) => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${accessToken}`,
           },
           body: JSON.stringify(payload),
         }
