@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from "react";
+import ContactModal from "./ContactModal";
 import { Helmet } from 'react-helmet-async';
 // Assurez-vous d'avoir installé react-icons : npm install react-icons
 import { FaStar } from 'react-icons/fa';
@@ -6,14 +7,15 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 
 interface BlogPageProps {
-  setShowContact?: () => void;
-  setDefaultSubject?: () => void;
+  setShowContact: React.Dispatch<React.SetStateAction<boolean>>;
+  setDefaultSubject: React.Dispatch<React.SetStateAction<string>>;
 }
 
 import Footer from "../components/Footer";
 import { Link } from "react-router-dom";
 
-const BlogPage: React.FC<BlogPageProps> = () => {
+const BlogPage: React.FC<BlogPageProps> = ({ setShowContact, setDefaultSubject }) => {
+  const [showContactModal, setShowContactModal] = useState(false);
   const navigate = useNavigate();
   return (
     <>
@@ -55,10 +57,21 @@ const BlogPage: React.FC<BlogPageProps> = () => {
       <div style={{ textAlign: 'center', marginTop: 48, color: '#888' }}>
         <p>
           <strong>Vous souhaitez diviser par 4 le temps de relance, réduire votre DSO et améliorer votre cash flow&nbsp;?</strong><br />
-          <a href="/contact" style={{ color: '#1d4ed8', fontWeight: 600 }}>Contactez-nous pour un audit personnalisé&nbsp;!</a>
+          <span
+            onClick={() => setShowContactModal(true)}
+            style={{ color: '#1d4ed8', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
+            role="button"
+            tabIndex={0}
+            onKeyPress={e => { if (e.key === 'Enter' || e.key === ' ') setShowContactModal(true); }}
+          >
+            Contactez-nous pour un audit personnalisé&nbsp;!
+          </span>
         </p>
       </div>
     </div>
+    {showContactModal && (
+      <ContactModal onClose={() => setShowContactModal(false)} defaultSubject="audit" />
+    )}
     <Footer />
   </>
 );
