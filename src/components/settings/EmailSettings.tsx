@@ -38,6 +38,7 @@ const DEFAULT_FORM_DATA = {
   smtp_port: 587,
   smtp_encryption: "tls",
   email_signature: "",
+  sender_display_name: "",
 };
 
 export default function EmailSettings() {
@@ -147,6 +148,7 @@ export default function EmailSettings() {
           smtp_port: data.smtp_port || 587,
           smtp_encryption: data.smtp_encryption || "TLS",
           email_signature: data.email_signature || "",
+          sender_display_name: data.sender_display_name || "",
         });
       }
     } catch (error) {
@@ -174,6 +176,7 @@ export default function EmailSettings() {
       smtp_port: 587,
       smtp_encryption: "tls",
       email_signature: formData.email_signature || "",
+      sender_display_name: formData.sender_display_name || "",
     });
   };
 
@@ -196,6 +199,7 @@ export default function EmailSettings() {
         {
           user_id: userId,
           ...formData,
+          sender_display_name: formData.sender_display_name,
           updated_at: new Date().toISOString(),
         },
         {
@@ -356,6 +360,20 @@ export default function EmailSettings() {
               Utilisez votre adresse Gmail
             </p>
           )}
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Nom d'expéditeur affiché
+            <span className="ml-1 text-xs text-gray-400">(visible par vos destinataires)</span>
+          </label>
+          <input
+            disabled={isDisabled}
+            type="text"
+            placeholder="Ex: Société Dupont, Alice Dupont, ..."
+            value={formData.sender_display_name}
+            onChange={(e) => setFormData({ ...formData, sender_display_name: e.target.value })}
+            className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
         </div>
 
         <div>

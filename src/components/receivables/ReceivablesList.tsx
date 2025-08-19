@@ -52,6 +52,18 @@ import { getReminderStatus } from "../../lib/function";
 import { isBefore } from "date-fns";
 import ReceivableStatusBadge from "./receivableStatusBadge";
 import Tooltip from "../Common/Tooltip";
+
+// Fonction utilitaire pour vérifier si des relances sont activées pour un client
+function remindersEnabled(client: any): boolean {
+  return (
+    client.pre_reminder_enable ||
+    client.reminder_enable_1 ||
+    client.reminder_enable_2 ||
+    client.reminder_enable_3 ||
+    client.reminder_enable_final
+  );
+}
+
 import PlaySvg from "../../components/images/play-svgrepo-com.svg";
 import PauseSvg from "../../components/images/pause-svgrepo-com.svg";
 import { motion, AnimatePresence } from "framer-motion";
@@ -1585,49 +1597,54 @@ function ReceivablesList() {
                           </span>
                         </Tooltip>
 
-                        <span
-                          className="w-6 h-6 flex items-center justify-center cursor-pointer relative z-0"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (!handleClick()) return;
-                            handleAutomaticReminderToggle(receivable);
-                          }}
-                        >
-                          {!receivable.automatic_reminder ? (
-                            <Tooltip
-                              label="Activer les relances"
-                              theme="orange"
-                            >
-                              <motion.img
-                                src={PlaySvg}
-                                alt="Play"
-                                className="w-5 h-5"
-                                initial={{ scale: 1 }}
-                                animate={{ rotate: 360, scale: 1.2 }}
-                                transition={{
-                                  type: "spring",
-                                  stiffness: 300,
-                                  damping: 20,
-                                }}
-                              />
-                            </Tooltip>
-                          ) : (
-                            <Tooltip label="Mettre en pause" theme="green">
-                              <motion.img
-                                src={PauseSvg}
-                                alt="Pause"
-                                className="w-5 h-5"
-                                initial={{ scale: 1 }}
-                                animate={{ scale: 1.2 }}
-                                transition={{
-                                  type: "spring",
-                                  stiffness: 300,
-                                  damping: 20,
-                                }}
-                              />
-                            </Tooltip>
-                          )}
-                        </span>
+                        
+<span
+  className={`w-6 h-6 flex items-center justify-center relative z-0 ${!remindersEnabled(receivable.client) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+  onClick={e => {
+    e.stopPropagation();
+    if (!remindersEnabled(receivable.client)) return;
+    if (!handleClick()) return;
+    handleAutomaticReminderToggle(receivable);
+  }}
+  aria-disabled={!remindersEnabled(receivable.client)}
+>
+  {!receivable.automatic_reminder ? (
+    <Tooltip
+      label={remindersEnabled(receivable.client) ? 'Activer les relances' : "Aucune relance n'est activée pour ce client"}
+      theme="orange"
+    >
+      <motion.img
+        src={PlaySvg}
+        alt="Play"
+        className="w-5 h-5"
+        initial={{ scale: 1 }}
+        animate={{ rotate: 360, scale: 1.2 }}
+        transition={{
+          type: 'spring',
+          stiffness: 300,
+          damping: 20,
+        }}
+        style={!remindersEnabled ? { pointerEvents: 'none' } : {}}
+      />
+    </Tooltip>
+  ) : (
+    <Tooltip label="Mettre en pause" theme="green">
+      <motion.img
+        src={PauseSvg}
+        alt="Pause"
+        className="w-5 h-5"
+        initial={{ scale: 1 }}
+        animate={{ scale: 1.2 }}
+        transition={{
+          type: 'spring',
+          stiffness: 300,
+          damping: 20,
+        }}
+      />
+    </Tooltip>
+  )}
+</span>
+
 
                         {getReminderIssues(receivable) && (
                           <Tooltip label={getReminderIssues(receivable) }>

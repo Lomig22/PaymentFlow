@@ -3,15 +3,20 @@ import { ReminderProfile } from "../../types/database";
 import { AlertCircle, Save, Pencil } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import DelayInputJHM from "./DelayInputJHM";
-import { Disclosure } from "@headlessui/react";
+import { Disclosure } from "@headlessui/react"; // v2.2.7 supports Disclosure as named import
 import { ChevronUp } from "lucide-react";
 
 type ProfileKey = "profile1" | "profile2" | "profile3";
 type DelayKey = "delay1" | "delay2" | "delay3" | "delay4";
 type DelayValue = { j: number; h: number; m: number };
 
-const ReminderProfileSettings = () => {
-  const [profileNames, setProfileNames] = useState({
+type ReminderProfileSettingsProps = {
+  onDirtyChange?: (dirty: boolean) => void;
+};
+
+const ReminderProfileSettings: React.FC<ReminderProfileSettingsProps> = ({ onDirtyChange }) => {
+  const [dirty, setDirty] = useState(false);
+const [profileNames, setProfileNames] = useState({
     profile1: "Profil 1",
     profile2: "Profil 2",
     profile3: "Profil 3",
@@ -21,34 +26,72 @@ const ReminderProfileSettings = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean>(false);
+
+  // Whenever dirty changes, notify parent
+  useEffect(() => {
+    if (onDirtyChange) onDirtyChange(dirty);
+  }, [dirty, onDirtyChange]);
   const [saving, setSaving] = useState(false);
-  const [formData, setFormData] = useState({
-    profile1: {
-      id: undefined,
-      delay1: { j: 0, h: 0, m: 0 },
-      delay2: { j: 0, h: 0, m: 0 },
-      delay3: { j: 0, h: 0, m: 0 },
-      delay4: { j: 0, h: 0, m: 0 },
-    },
-    profile2: {
-      id: undefined,
-      delay1: { j: 0, h: 0, m: 0 },
-      delay2: { j: 0, h: 0, m: 0 },
-      delay3: { j: 0, h: 0, m: 0 },
-      delay4: { j: 0, h: 0, m: 0 },
-    },
-    profile3: {
-      id: undefined,
-      delay1: { j: 0, h: 0, m: 0 },
-      delay2: { j: 0, h: 0, m: 0 },
-      delay3: { j: 0, h: 0, m: 0 },
-      delay4: { j: 0, h: 0, m: 0 },
-    },
-  });
+  type ReminderProfileForm = {
+  id?: string;
+  delay1: DelayValue;
+  delay2: DelayValue;
+  delay3: DelayValue;
+  delay4: DelayValue;
+  email_template_1?: string;
+  email_template_2?: string;
+  email_template_3?: string;
+  email_template_4?: string;
+};
+
+const [formData, setFormData] = useState<{
+  profile1: ReminderProfileForm;
+  profile2: ReminderProfileForm;
+  profile3: ReminderProfileForm;
+}>({
+  profile1: {
+    id: undefined,
+    delay1: { j: 0, h: 0, m: 0 },
+    delay2: { j: 0, h: 0, m: 0 },
+    delay3: { j: 0, h: 0, m: 0 },
+    delay4: { j: 0, h: 0, m: 0 },
+    email_template_1: '',
+    email_template_2: '',
+    email_template_3: '',
+    email_template_4: '',
+  },
+  profile2: {
+    id: undefined,
+    delay1: { j: 0, h: 0, m: 0 },
+    delay2: { j: 0, h: 0, m: 0 },
+    delay3: { j: 0, h: 0, m: 0 },
+    delay4: { j: 0, h: 0, m: 0 },
+    email_template_1: '',
+    email_template_2: '',
+    email_template_3: '',
+    email_template_4: '',
+  },
+  profile3: {
+    id: undefined,
+    delay1: { j: 0, h: 0, m: 0 },
+    delay2: { j: 0, h: 0, m: 0 },
+    delay3: { j: 0, h: 0, m: 0 },
+    delay4: { j: 0, h: 0, m: 0 },
+    email_template_1: '',
+    email_template_2: '',
+    email_template_3: '',
+    email_template_4: '',
+  }
+});
 
   // Fonction pour renommer un profil
+  const markDirty = () => {
+    if (!dirty) setDirty(true);
+  };
+
   const handleProfileRename = async (profileKey: ProfileKey, newName: string) => {
     setProfileNames((prev) => ({ ...prev, [profileKey]: newName }));
+    markDirty();
     // Persistance dans Supabase
     const profileId = formData[profileKey].id;
     if (!profileId) return;
@@ -73,7 +116,7 @@ const ReminderProfileSettings = () => {
     // Fetch profiles for this user
     const { data: profiles, error } = await supabase
       .from("reminder_profile")
-      .select("id, name, delay1, delay2, delay3, delay4")
+      .select("id, name, delay1, delay2, delay3, delay4, email_template_1, email_template_2, email_template_3, email_template_4")
       .eq("owner_id", user.id)
       .order("id", { ascending: true });
     if (error) {
@@ -93,6 +136,10 @@ const ReminderProfileSettings = () => {
         delay2: profiles[0].delay2 ?? 0,
         delay3: profiles[0].delay3 ?? 0,
         delay4: profiles[0].delay4 ?? 0,
+        email_template_1: profiles[0].email_template_1 || '',
+        email_template_2: profiles[0].email_template_2 || '',
+        email_template_3: profiles[0].email_template_3 || '',
+        email_template_4: profiles[0].email_template_4 || '',
       },
       profile2: {
         id: profiles[1].id,
@@ -100,6 +147,10 @@ const ReminderProfileSettings = () => {
         delay2: profiles[1].delay2 ?? 0,
         delay3: profiles[1].delay3 ?? 0,
         delay4: profiles[1].delay4 ?? 0,
+        email_template_1: profiles[1].email_template_1 || '',
+        email_template_2: profiles[1].email_template_2 || '',
+        email_template_3: profiles[1].email_template_3 || '',
+        email_template_4: profiles[1].email_template_4 || '',
       },
       profile3: {
         id: profiles[2].id,
@@ -107,6 +158,10 @@ const ReminderProfileSettings = () => {
         delay2: profiles[2].delay2 ?? 0,
         delay3: profiles[2].delay3 ?? 0,
         delay4: profiles[2].delay4 ?? 0,
+        email_template_1: profiles[2].email_template_1 || '',
+        email_template_2: profiles[2].email_template_2 || '',
+        email_template_3: profiles[2].email_template_3 || '',
+        email_template_4: profiles[2].email_template_4 || '',
       },
     });
     setProfileNames({
@@ -133,6 +188,29 @@ const ReminderProfileSettings = () => {
         [delay]: value,
       },
     }));
+    markDirty();
+  };
+
+  const handleDelayChange = (profileKey: ProfileKey, delayKey: DelayKey, value: DelayValue) => {
+    setFormData((prev) => ({
+      ...prev,
+      [profileKey]: {
+        ...prev[profileKey],
+        [delayKey]: value,
+      },
+    }));
+    markDirty();
+  };
+
+  const handleTemplateChange = (profileKey: ProfileKey, templateKey: keyof ReminderProfileForm, value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      [profileKey]: {
+        ...prev[profileKey],
+        [templateKey]: value,
+      },
+    }));
+    markDirty();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -140,7 +218,6 @@ const ReminderProfileSettings = () => {
     setSaving(true);
     if (userId === null) return;
     if (formData.profile1.id === undefined) {
-      // Then this is a new profile
       const prepareData: ReminderProfile[] = [
         {
           name: profileNames.profile1,
@@ -150,6 +227,10 @@ const ReminderProfileSettings = () => {
           delay4: formData.profile1.delay4,
           owner_id: userId,
           public: false,
+          email_template_1: formData.profile1.email_template_1,
+          email_template_2: formData.profile1.email_template_2,
+          email_template_3: formData.profile1.email_template_3,
+          email_template_4: formData.profile1.email_template_4,
         },
         {
           name: profileNames.profile2,
@@ -159,6 +240,10 @@ const ReminderProfileSettings = () => {
           delay4: formData.profile2.delay4,
           owner_id: userId,
           public: false,
+          email_template_1: formData.profile2.email_template_1,
+          email_template_2: formData.profile2.email_template_2,
+          email_template_3: formData.profile2.email_template_3,
+          email_template_4: formData.profile2.email_template_4,
         },
         {
           name: profileNames.profile3,
@@ -168,6 +253,10 @@ const ReminderProfileSettings = () => {
           delay4: formData.profile3.delay4,
           owner_id: userId,
           public: false,
+          email_template_1: formData.profile3.email_template_1,
+          email_template_2: formData.profile3.email_template_2,
+          email_template_3: formData.profile3.email_template_3,
+          email_template_4: formData.profile3.email_template_4,
         },
       ];
       const { error } = await supabase
@@ -187,6 +276,10 @@ const ReminderProfileSettings = () => {
           delay4: formData.profile1.delay4,
           owner_id: userId,
           public: false,
+          email_template_1: formData.profile1.email_template_1,
+          email_template_2: formData.profile1.email_template_2,
+          email_template_3: formData.profile1.email_template_3,
+          email_template_4: formData.profile1.email_template_4,
         },
         {
           id: formData.profile2.id,
@@ -197,6 +290,10 @@ const ReminderProfileSettings = () => {
           delay4: formData.profile2.delay4,
           owner_id: userId,
           public: false,
+          email_template_1: formData.profile2.email_template_1,
+          email_template_2: formData.profile2.email_template_2,
+          email_template_3: formData.profile2.email_template_3,
+          email_template_4: formData.profile2.email_template_4,
         },
         {
           id: formData.profile3.id,
@@ -207,6 +304,10 @@ const ReminderProfileSettings = () => {
           delay4: formData.profile3.delay4,
           owner_id: userId,
           public: false,
+          email_template_1: formData.profile3.email_template_1,
+          email_template_2: formData.profile3.email_template_2,
+          email_template_3: formData.profile3.email_template_3,
+          email_template_4: formData.profile3.email_template_4,
         },
       ];
       const { error: error1 } = await supabase
@@ -236,9 +337,10 @@ const ReminderProfileSettings = () => {
         return;
       }
       setSuccess(true);
+      setDirty(false); // Reset dirty after save
+      if (onDirtyChange) onDirtyChange(false);
       setTimeout(() => setSuccess(false), 3000);
     }
-    // Refetch the data to make sure its up to date
     await fetchAndSetProfiles();
     setSaving(false);
   };
@@ -260,17 +362,17 @@ const ReminderProfileSettings = () => {
       )}
 
       <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded">
-  <span className="text-blue-800 font-semibold block mb-1">Note :</span>
-  <span className="text-blue-700 text-sm">
-    Le délai est l'écart entre chaque relance, et non le temps écoulé depuis l'échéance de la facture.
-  </span>
-</div>
-<div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
-  <span className="text-yellow-800 font-semibold block mb-1">Attention :</span>
-  <span className="text-yellow-700 text-sm">
-    Les espaces ne sont pas autorisés dans le nom du profil.
-  </span>
-</div>
+        <span className="text-blue-800 font-semibold block mb-1">Note :</span>
+        <span className="text-blue-700 text-sm">
+          Le délai est l'écart entre chaque relance, et non le temps écoulé depuis l'échéance de la facture.
+        </span>
+      </div>
+      <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
+        <span className="text-yellow-800 font-semibold block mb-1">Attention :</span>
+        <span className="text-yellow-700 text-sm">
+          Les espaces ne sont pas autorisés dans le nom du profil.
+        </span>
+      </div>
       <form onSubmit={handleSubmit} className="space-y-4">
         {[1, 2, 3].map((n) => (
           <Disclosure key={n}>
@@ -298,20 +400,20 @@ const ReminderProfileSettings = () => {
                   ) : (
                     <>
                       <span className="flex items-center gap-1">
-  {profileNames[`profile${n}` as ProfileKey]}
-  <button
-    type="button"
-    aria-label="Renommer le profil"
-    className="text-blue-700 hover:text-blue-900 p-0.5"
-    style={{ marginLeft: 0 }}
-    onClick={() => {
-      setEditingProfile(`profile${n}`);
-      setEditingValue(profileNames[`profile${n}` as ProfileKey]);
-    }}
-  >
-    <Pencil className="inline h-4 w-4" />
-  </button>
-</span>
+                        {profileNames[`profile${n}` as ProfileKey]}
+                        <button
+                          type="button"
+                          aria-label="Renommer le profil"
+                          className="text-blue-700 hover:text-blue-900 p-0.5"
+                          style={{ marginLeft: 0 }}
+                          onClick={() => {
+                            setEditingProfile(`profile${n}`);
+                            setEditingValue(profileNames[`profile${n}` as ProfileKey]);
+                          }}
+                        >
+                          <Pencil className="inline h-4 w-4" />
+                        </button>
+                      </span>
                       <ChevronUp
                         className={`h-5 w-5 transition-transform ${
                           open ? "rotate-180" : ""
@@ -322,22 +424,43 @@ const ReminderProfileSettings = () => {
                 </Disclosure.Button>
                 <Disclosure.Panel className="px-4 pt-4 pb-2 text-sm text-gray-700">
                   <div className="grid grid-cols-5 gap-6 items-center">
-  {["delay1", "delay2", "delay3", "delay4"].map((delayKey, idx) => (
-    <DelayInputJHM
-      key={delayKey}
-      value={formData[`profile${n}` as ProfileKey][delayKey as DelayKey]}
-      onChange={(value) => handleInputOnBlur(`profile${n}` as ProfileKey, delayKey as DelayKey, value)}
-      label={`Relance ${idx + 1}`}
-      disabled={saving}
-    />
-  ))}
-</div>
+                    {["delay1", "delay2", "delay3", "delay4"].map((delayKey, idx) => (
+                      <DelayInputJHM
+                        key={delayKey}
+                        value={formData[`profile${n}` as ProfileKey][delayKey as DelayKey]}
+                        onChange={(value) => handleInputOnBlur(`profile${n}` as ProfileKey, delayKey as DelayKey, value)}
+                        label={`Relance ${idx + 1}`}
+                        disabled={saving}
+                      />
+                    ))}
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-3 mt-6">
+                    {[1, 2, 3, 4].map((templateIdx) => (
+                      <div key={templateIdx}>
+                        <label className="block text-xs font-semibold text-blue-900 mb-1">
+                          Modèle d'email pour la relance {templateIdx}
+                        </label>
+                        <textarea
+                          className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          rows={3}
+                          value={(formData[`profile${n}` as ProfileKey] as any)[`email_template_${templateIdx}`] || ''}
+                          onChange={(e) => handleTemplateChange(
+                            `profile${n}` as ProfileKey,
+                            `email_template_${templateIdx}`,
+                            e.target.value
+                          )}
+                          placeholder={`Saisissez ici le texte de l'email pour la relance ${templateIdx}`}
+                          disabled={saving}
+                        />
+                      </div>
+                    ))}
+                  </div>
                 </Disclosure.Panel>
               </div>
             )}
           </Disclosure>
         ))}
-
         <div className="flex justify-end pt-4">
           <button
             type="submit"

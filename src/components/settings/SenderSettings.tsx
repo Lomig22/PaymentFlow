@@ -17,8 +17,17 @@ import { useAbonnement } from "../context/AbonnementContext";
 import { useLocation, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 
-export default function SignatureSettings() {
+type SignatureSettingsProps = {
+  onDirtyChange?: (dirty: boolean) => void;
+};
+
+export default function SignatureSettings({ onDirtyChange }: SignatureSettingsProps) {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  // Notifie le parent (Settings) quand l'état dirty change
+  useEffect(() => {
+    if (onDirtyChange) onDirtyChange(hasUnsavedChanges);
+  }, [hasUnsavedChanges, onDirtyChange]);
   const [showUnsavedWarning, setShowUnsavedWarning] = useState(false);
   const [pendingNavigation, setPendingNavigation] = useState<string | null>(null);
   const location = useLocation();
@@ -426,11 +435,10 @@ export default function SignatureSettings() {
 
   const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value as typeof signatureTemplate;
-    console.log(value);
-
     setSignatureTemplate(value);
     setSelectedTheme(value);
     setCustomOpen(value === "custom");
+    markUnsaved();
   };
 
   const handleToggle = () => {
@@ -527,6 +535,7 @@ export default function SignatureSettings() {
                           const allowed = onClick(e as any);
                           if (!allowed) return;
                           setFont(e.target.value);
+                          markUnsaved();
                         }}
                       >
                         <option>Arial</option>
@@ -547,6 +556,7 @@ export default function SignatureSettings() {
                           const allowed = onClick(e as any);
                           if (!allowed) return;
                           setTextColor(e.target.value);
+                          markUnsaved();
                         }}
                       />
                     </div>
@@ -561,6 +571,7 @@ export default function SignatureSettings() {
                           const allowed = onClick(e as any);
                           if (!allowed) return;
                           setBgColor(e.target.value);
+                          markUnsaved();
                         }}
                       />
                     </div>
@@ -578,7 +589,7 @@ export default function SignatureSettings() {
               type="file"
               accept="image/*"
               className="hidden"
-              onChange={async (e) => {
+              onChange={(e) => {
                 e.stopPropagation();
                 const allowed = onClick(e as any);
                 if (!allowed) return;
@@ -592,6 +603,7 @@ export default function SignatureSettings() {
                   const reader = new FileReader();
                   reader.onload = (ev) => {
                     setRawSignatureImg(ev.target?.result as string);
+                    markUnsaved();
                   };
                   reader.readAsDataURL(file);
                 }
