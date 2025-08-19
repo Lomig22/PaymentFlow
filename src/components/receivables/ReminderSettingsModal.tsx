@@ -17,12 +17,14 @@ interface ReminderSettingsModalProps {
   onClose: () => void;
   reminderProfiles: ReminderProfile[];
   receivable: Receivable;
+  open: boolean;
 }
 
 export default function ReminderSettingsModal({
   client,
   onClose,
   receivable,
+  reminderProfiles,
 }: ReminderSettingsModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -31,6 +33,47 @@ export default function ReminderSettingsModal({
   const [automaticReminder, setAutomaticReminder] = useState<boolean>(
     receivable.automatic_reminder ?? false
   );
+
+  // Récupérer le profil de rappel associé au client
+  const reminderProfile = reminderProfiles.find(
+    (p) => p.id === client.reminder_profile
+  );
+
+  // État local pour les templates d'email
+  const [emailTemplates, setEmailTemplates] = useState({
+    email_template_1: reminderProfile?.email_template_1 || "",
+    email_template_2: reminderProfile?.email_template_2 || "",
+    email_template_3: reminderProfile?.email_template_3 || "",
+    email_template_4: reminderProfile?.email_template_4 || "",
+  });
+
+  // Synchroniser l'état local si le profil change ou à chaque ouverture de la modale
+  useEffect(() => {
+    if (reminderProfile && !!open) {
+      setEmailTemplates({
+        email_template_1: reminderProfile.email_template_1 || "",
+        email_template_2: reminderProfile.email_template_2 || "",
+        email_template_3: reminderProfile.email_template_3 || "",
+        email_template_4: reminderProfile.email_template_4 || "",
+      });
+    }
+  }, [reminderProfile, open]);
+
+  const handleTemplateChange = (key: keyof typeof emailTemplates, value: string) => {
+    setEmailTemplates((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleSaveTemplates = async () => {
+    if (!reminderProfile?.id) return;
+    setLoading(true);
+    const { error } = await supabase
+      .from("reminder_profile")
+      .update(emailTemplates)
+      .eq("id", reminderProfile.id);
+    setLoading(false);
+    if (error) setError(error.message);
+    else setSuccess(true);
+  };
 
   // Valeurs par défaut des délais (si non fournis)
   const delay1 = client.reminder_delay_1 || { j: 1, h: 0, m: 0 };
@@ -50,6 +93,7 @@ export default function ReminderSettingsModal({
   const pre_reminder_date =
     client.pre_reminder_date ?? new Date().toISOString();
 
+
   // Initialisation du formData
   const [formData, setFormData] = useState({
     reminder_delay_1: delay1,
@@ -57,10 +101,10 @@ export default function ReminderSettingsModal({
     reminder_delay_3: delay3,
     reminder_delay_final: delayFinal,
 
-    reminder_template_1: client.reminder_template_1 || "",
-    reminder_template_2: client.reminder_template_2 || "",
-    reminder_template_3: client.reminder_template_3 || "",
-    reminder_template_final: client.reminder_template_final || "",
+    reminder_template_1: reminderProfile?.email_template_1 || client.reminder_template_1 || "",
+    reminder_template_2: reminderProfile?.email_template_2 || client.reminder_template_2 || "",
+    reminder_template_3: reminderProfile?.email_template_3 || client.reminder_template_3 || "",
+    reminder_template_final: reminderProfile?.email_template_4 || client.reminder_template_final || "",
 
     reminder_enable_1: client.reminder_profile
       ? true
@@ -461,7 +505,7 @@ export default function ReminderSettingsModal({
         .eq("id", receivable.id);
       if (error) throw error;
       await saveNotification({
-        owner_id: user?.id,
+        owner_id: user?.id ?? null,
         need_mail_notification: true,
         is_read: false,
         type: "info",
@@ -476,15 +520,15 @@ export default function ReminderSettingsModal({
       console.error("Erreur lors de la mise à jour des paramètres:", error);
       if (user?.id) {
         await saveNotification({
-          owner_id: user?.id,
+          owner_id: user?.id ?? null,
           is_read: false,
           need_mail_notification: true,
           type: "erreur",
           message: "Mise à jour des paramètres de relance automatique échouée",
-          details: `${error}`,
+          details: typeof error?.message === 'string' ? error.message : error ? String(error) : null,
         });
       }
-      showError(error.message || "Impossible de mettre à jour les paramètres");
+      showError(error?.message ?? "Impossible de mettre à jour les paramètres");
     } finally {
       setLoading(false);
     }
@@ -494,19 +538,21 @@ export default function ReminderSettingsModal({
   dueDate.setHours(0, 0, 0, 0);
 
   return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 z-50 overflow-y-scroll">
-      <div className="min-h-screen py-8 px-4 flex items-center justify-center">
-        <div className="relative bg-white rounded-lg shadow-xl p-8 w-full max-w-2xl mx-auto">
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-          >
-            <X className="h-6 w-6" />
-          </button>
+    <div className="fixed inset-0 z-50">
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" aria-hidden="true" onClick={onClose} />
+        <div className="relative z-50 bg-white rounded-2xl shadow-2xl max-w-4xl w-full p-8 overflow-y-auto max-h-[90vh]">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3 text-2xl font-semibold text-gray-800">
+              <span>Paramètres de relance</span>
+            </div>
+            <button onClick={onClose} className="p-2 rounded hover:bg-gray-100">
+              <X className="w-6 h-6" />
+            </button>
+          </div>
 
-          <h2 className="text-2xl font-bold mb-2">Paramètres de relance</h2>
+          <form onSubmit={handleSubmit} className="space-y-6">
 
-          <div className="flex justify-between">
             <p className="text-gray-600 mb-6">Client : {client.company_name}</p>
             <div
               title="Stop sending automatic reminders"
@@ -524,7 +570,7 @@ export default function ReminderSettingsModal({
                 />
               )}
             </div>
-          </div>
+          </form>
           {!client.reminder_profile && (
             <div className="bg-blue-50 p-4 rounded-md">
               <p className="text-blue-800 font-medium mb-2">Information:</p>
@@ -534,7 +580,7 @@ export default function ReminderSettingsModal({
               </p>
             </div>
           )}
-        <ReminderInfo client={client} reminderProfileName={reminderProfileName}/>
+          <ReminderInfo client={client} reminderProfileName={reminderProfileName}/>
           {/*            {hasPastDateEnable && (
             <div className=" mb-4 p-4 border border-yellow-400 bg-yellow-100 text-yellow-800 rounded">
               Certaines dates de relance sont antérieures à la date actuelle
@@ -741,7 +787,7 @@ export default function ReminderSettingsModal({
                         }
                       />
                       {reminderFinalAlreadySend && (
-                        <span className="absolutetop -0 right-0 text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
+                        <span className="absolute top-0 right-0 text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
                           Déjà envoyée
                         </span>
                       )}
@@ -796,7 +842,7 @@ export default function ReminderSettingsModal({
                 <div className="relative">
                   <textarea
                     rows={4}
-                    value={formData.reminder_template_1}
+                    value={formData.reminder_template_1 ?? ""}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
@@ -829,7 +875,7 @@ export default function ReminderSettingsModal({
                 <div className="relative">
                   <textarea
                     rows={4}
-                    value={formData.reminder_template_2}
+                    value={formData.reminder_template_2 ?? ""}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
@@ -862,7 +908,7 @@ export default function ReminderSettingsModal({
                 <div className="relative">
                   <textarea
                     rows={4}
-                    value={formData.reminder_template_3}
+                    value={formData.reminder_template_3 ?? ""}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
@@ -895,7 +941,7 @@ export default function ReminderSettingsModal({
                 <div className="relative">
                   <textarea
                     rows={4}
-                    value={formData.reminder_template_final}
+                    value={formData.reminder_template_final ?? ""}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
@@ -904,7 +950,7 @@ export default function ReminderSettingsModal({
                     }
                     className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Utilisez {company}, {amount}, {invoice_number}, {due_date}, {days_late} comme variables"
-                  />
+                  ></textarea>
                   <button
                     type="button"
                     onClick={() =>
@@ -921,14 +967,6 @@ export default function ReminderSettingsModal({
               </div>
             )}
             <div className="flex justify-between space-x-4">
-              {/* <button
-								type='button'
-								// onClick={onClose}
-								disabled={loading}
-								className='px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors'
-							> */}
-
-              {/* </button> */}
               <div className="w-full flex justify-end space-x-4 mt-4">
                 <button
                   type="button"

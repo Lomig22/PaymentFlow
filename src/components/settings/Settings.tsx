@@ -27,6 +27,7 @@ import NotificationSettings from "./NotificationSettings";
 //import ReminderFrequencySettings from './ReminderFrequencySettings';
 
 import ReminderProfileSettings from "./ReminderProfileSettings";
+import UnsavedChangesModal from "./UnsavedChangesModal"; // Modal pour changements non enregistrés
 import ProfileSettings from "./ProfileSettings";
 import SignatureSettings from "./SenderSettings";
 import { useLocation } from "react-router-dom";
@@ -64,18 +65,36 @@ const sections = [
     ],
   },
   {
-    id: "members",
-    name: "Gestion des membres",
-    icon: Users, 
+    id: "reminders",
+    name: "Paramètres d’envoi de relances",
+    icon: Mail,
     subTabs: [
       {
-        id: "list",
-        name: "Liste des membres",
-        component: MemberList,
+        id: "sender",
+        name: "Personnaliser la signature",
+        component: SignatureSettings,
       },
+      {
+        id: "profile_rename",
+        name: "Configuration des profils",
+        component: ReminderProfileSettings,
+      },
+      // { id: 'auto_notifications', name: 'Activer/désactiver les notifications automatiques', component: AutoNotificationSettings },
     ],
-  }
-  ,
+  },
+  {
+    id: "notifications",
+    name: "Notifications",
+    icon: Bell,
+    subTabs: [
+      {
+        id: "email_sms",
+        name: "Notifications email / SMS",
+        component: NotificationSettings,
+      },
+      //  { id: 'reminder_freq', name: 'Fréquence des rappels', component: ReminderFrequencySettings },
+    ],
+  },
   {
     id: "billing",
     name: "Paramètres de facturation",
@@ -96,43 +115,48 @@ const sections = [
     ],
   },
   {
-    id: "reminders",
-    name: "Paramètres d’envoi de relances",
-    icon: Mail,
+    id: "members",
+    name: "Gestion des membres",
+    icon: Users, 
     subTabs: [
       {
-        id: "sender",
-        name: "Personnaliser la signature",
-        component: SignatureSettings,
+        id: "list",
+        name: "Liste des membres",
+        component: MemberList,
       },
-      {
-        id: "profile_rename",
-        name: "Configuration des profils",
-        component: ReminderProfileSettings,
-      },
-      // { id: 'auto_notifications', name: 'Activer/désactiver les notifications automatiques', component: AutoNotificationSettings },
     ],
-  },
-  ,
- {
-    id: "notifications",
-    name: "Notifications",
-    icon: Bell,
-    subTabs: [
-      {
-        id: "email_sms",
-        name: "Notifications email / SMS",
-        component: NotificationSettings,
-      },
-      //  { id: 'reminder_freq', name: 'Fréquence des rappels', component: ReminderFrequencySettings },
-    ],
-  },
+  }
 ];
 type SettingsProps = {
   initialSectionId?: string;
   initialSubTabId?: string;
 };
 export default function Settings() {
+  // --- Ajout pour la gestion des changements non enregistrés ---
+  const [unsavedChanges, setUnsavedChanges] = useState(false);
+  const [showUnsavedModal, setShowUnsavedModal] = useState(false);
+  const [pendingSectionId, setPendingSectionId] = useState<string|null>(null);
+  const [pendingSubTabId, setPendingSubTabId] = useState<string|null>(null);
+
+  // Callback pour détecter des changements dans ReminderProfileSettings
+  const handleReminderProfileDirty = (dirty: boolean) => {
+    setUnsavedChanges(dirty);
+  };
+  // Callback pour forcer la sauvegarde ou quitter
+  const handleLeaveReminderSettings = () => {
+    setShowUnsavedModal(false);
+    setUnsavedChanges(false);
+    if (pendingSectionId) setActiveSectionId(pendingSectionId);
+    if (pendingSubTabId) setActiveSubTabId(pendingSubTabId);
+    setPendingSectionId(null);
+    setPendingSubTabId(null);
+  };
+  const handleStayReminderSettings = () => {
+    setShowUnsavedModal(false);
+    setPendingSectionId(null);
+    setPendingSubTabId(null);
+  };
+
 	const location = useLocation();
 	const initialSectionId = location.state?.initialSectionId;
 	const initialSubTabId = location.state?.initialSubTabId
@@ -172,6 +196,13 @@ export default function Settings() {
                 <button
                   key={section?.id}
                   onClick={() => {
+                    // Si on quitte "Paramètres d’envoi de relances" avec des changements non enregistrés
+                    if (activeSectionId === "reminders" && unsavedChanges && section?.id !== "reminders") {
+                      setShowUnsavedModal(true);
+                      setPendingSectionId(section?.id ?? null);
+                      setPendingSubTabId(section?.subTabs[0]?.id ?? null);
+                      return;
+                    }
                     setActiveSectionId(section?.id);
                     setActiveSubTabId(section?.subTabs[0].id);
                   }}
@@ -181,7 +212,7 @@ export default function Settings() {
                       : "text-gray-600 hover:bg-gray-100"
                   }`}
                 >
-                  <Icon className="h-5 w-5 mr-3" />
+                  {Icon ? <Icon className="h-5 w-5 mr-3" /> : null}
                   {section?.name}
                 </button>
               );
@@ -196,7 +227,16 @@ export default function Settings() {
             {activeSection?.subTabs.map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveSubTabId(tab.id)}
+                onClick={() => {
+                  // Si on quitte un sous-menu de "Paramètres d’envoi de relances" avec des changements non enregistrés
+                  if (activeSectionId === "reminders" && unsavedChanges && tab.id !== activeSubTabId) {
+                    setShowUnsavedModal(true);
+                    setPendingSectionId(activeSectionId);
+                    setPendingSubTabId(tab.id);
+                    return;
+                  }
+                  setActiveSubTabId(tab.id);
+                }}
                 className={`pb-2 border-b-2 text-sm ${
                   activeSubTabId === tab.id
                     ? "border-blue-600 text-blue-600 font-semibold"
@@ -214,8 +254,21 @@ export default function Settings() {
               <ActiveComponent />
             </Elements>
           ) : (
-            <ActiveComponent />
+            // Injection du callback dans ReminderProfileSettings et SignatureSettings
+            activeSectionId === "reminders" && activeSubTabId === "profile_rename" ? (
+              <ReminderProfileSettings onDirtyChange={handleReminderProfileDirty} />
+            ) : activeSectionId === "reminders" && activeSubTabId === "sender" ? (
+              <SignatureSettings onDirtyChange={handleReminderProfileDirty} />
+            ) : (
+              <ActiveComponent />
+            )
           )}
+          {/* Modal pour changements non enregistrés */}
+          <UnsavedChangesModal
+            open={showUnsavedModal}
+            onStay={handleStayReminderSettings}
+            onLeave={handleLeaveReminderSettings}
+          />
         </div>
       </div>
     </div>

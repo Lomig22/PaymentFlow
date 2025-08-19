@@ -77,6 +77,12 @@ export interface ReminderProfile {
 	delay4: { j: number; h: number; m: number }; // Délai sous forme d'objet avec jours, heures, minutes
 	owner_id: string;
 	public: boolean;
+
+	// Templates d'email personnalisables pour chaque relance
+	email_template_1?: string;
+	email_template_2?: string;
+	email_template_3?: string;
+	email_template_4?: string;
 	created_at?: string;
 	updated_at?: string;
   }
