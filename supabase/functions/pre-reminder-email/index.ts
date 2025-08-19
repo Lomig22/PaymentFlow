@@ -2,8 +2,8 @@
 // https://deno.land/manual/getting_started/setup_your_environment
 // This enables autocomplete, go to definition, etc.
 
-import { createClient } from 'jsr:@supabase/supabase-js@2';
-import nodemailer from 'npm:nodemailer@6.10.0';
+import { createClient } from '@supabase/supabase-js';
+import nodemailer from 'nodemailer';
 
 const formatEmailTemplateWrapper = (
 	content: string,
@@ -166,8 +166,18 @@ const sendDueEmails = async (
 			''
 		);
 
+		// Récupère le nom d'expéditeur personnalisé pour ce client (sendDueEmails)
+		const { data: emailSettings, error: emailSettingsError } = await supabaseClient
+			.from('email_settings')
+			.select('sender_display_name')
+			.eq('user_id', clientMap.get(receivable.client_id)?.user_id)
+			.maybeSingle();
+		let senderName = emailSettings?.sender_display_name;
+		if (!senderName) {
+			senderName = clientMap.get(receivable.client_id)?.company_name || ((clientMap.get(receivable.client_id)?.first_name || '') + ' ' + (clientMap.get(receivable.client_id)?.last_name || '')) || 'Payment Flow';
+		}
 		await transporter.sendMail({
-			from: Deno.env.get('EMAIL_USER') ?? '', // sender address
+			from: `${senderName} <${process.env.EMAIL_USER ?? ''}>`, // sender address
 			to: receivable.email, // list of receivers
 			subject: `Email de pré relance - ${receivable.invoice_number}`, // Subject line
 			text: content, // plain text body
@@ -241,7 +251,7 @@ const sendFirstReminders = async (
 		);
 
 		await transporter.sendMail({
-			from: Deno.env.get('EMAIL_USER') ?? '', // sender address
+			from: process.env.EMAIL_USER ?? '', // sender address
 			to: receivable.email, // list of receivers
 			subject: `Relance facture ${receivable.invoice_number}`, // Subject line
 			text: content, // plain text body
@@ -317,7 +327,7 @@ const secondReminders = async (
 		);
 
 		await transporter.sendMail({
-			from: Deno.env.get('EMAIL_USER') ?? '', // sender address
+			from: process.env.EMAIL_USER ?? '', // sender address
 			to: receivable.email, // list of receivers
 			subject: `Relance facture ${receivable.invoice_number}`, // Subject line
 			text: content, // plain text body
@@ -392,7 +402,7 @@ const thirdReminders = async (
 		);
 
 		await transporter.sendMail({
-			from: Deno.env.get('EMAIL_USER') ?? '', // sender address
+			from: process.env.EMAIL_USER ?? '', // sender address
 			to: receivable.email, // list of receivers
 			subject: `Relance facture ${receivable.invoice_number}`, // Subject line
 			text: content, // plain text body
@@ -468,7 +478,7 @@ const finalReminders = async (
 		);
 
 		await transporter.sendMail({
-			from: Deno.env.get('EMAIL_USER') ?? '', // sender address
+			from: process.env.EMAIL_USER ?? '', // sender address
 			to: receivable.email, // list of receivers
 			subject: `Relance facture ${receivable.invoice_number}`, // Subject line
 			text: content, // plain text body
@@ -493,10 +503,10 @@ const finalReminders = async (
 };
 
 const setupMailTransporter = () => {
-	const host = Deno.env.get('EMAIL_HOST');
-	const port = Deno.env.get('EMAIL_PORT');
-	const user = Deno.env.get('EMAIL_USER');
-	const pass = Deno.env.get('EMAIL_PASS');
+	const host = process.env.EMAIL_HOST;
+	const port = process.env.EMAIL_PORT;
+	const user = process.env.EMAIL_USER;
+	const pass = process.env.EMAIL_PASS;
 
 	if (
 		host === undefined ||
@@ -520,14 +530,17 @@ const setupMailTransporter = () => {
 	});
 };
 
-Deno.serve(async (req) => {
+// Deno compatibility: replaced by Node.js equivalent or removed
+//serve(async (req) => {
 	// Go through the database receivables and fetch all records that are near the due date, let's say 1 day before
 	// Send an email to the user with the reminder
 	// Update the record with a reminder_sent_at timestamp
 	try {
 		const supabaseClient = createClient(
-			Deno.env.get('SUPABASE_URL') ?? '',
-			Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+			// Deno compatibility: replaced by Node.js equivalent or removed
+//env.get('SUPABASE_URL') ?? '',
+			// Deno compatibility: replaced by Node.js equivalent or removed
+//env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 		);
 
 		const transporter = setupMailTransporter();
