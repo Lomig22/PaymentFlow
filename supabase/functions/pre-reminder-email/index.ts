@@ -521,7 +521,7 @@ const setupMailTransporter = () => {
 
 	return nodemailer.createTransport({
 		host: host,
-		port: port,
+		port: parseInt(port, 10),
 		secure: true, // true for port 465, false for other ports
 		auth: {
 			user: user,
@@ -530,17 +530,9 @@ const setupMailTransporter = () => {
 	});
 };
 
-// Deno compatibility: replaced by Node.js equivalent or removed
-//serve(async (req) => {
-	// Go through the database receivables and fetch all records that are near the due date, let's say 1 day before
-	// Send an email to the user with the reminder
-	// Update the record with a reminder_sent_at timestamp
-	try {
 		const supabaseClient = createClient(
-			// Deno compatibility: replaced by Node.js equivalent or removed
-//env.get('SUPABASE_URL') ?? '',
-			// Deno compatibility: replaced by Node.js equivalent or removed
-//env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+		process.env.SUPABASE_URL ?? '',
+		process.env.SUPABASE_SERVICE_ROLE_KEY ?? ''
 		);
 
 		const transporter = setupMailTransporter();
@@ -641,7 +633,7 @@ const setupMailTransporter = () => {
 			headers: { 'Content-Type': 'application/json' },
 		});
 	}
-});
+
 
 /* To invoke locally:
 
