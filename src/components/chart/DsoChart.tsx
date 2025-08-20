@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { registerLocale } from "react-datepicker";
-import fr from "date-fns/locale/fr";
+import { fr } from "date-fns/locale/fr";
 import { supabase } from "../../lib/supabase";
 import { Clock } from "lucide-react";
 import { YearPicker } from "../../components/ui/year-picker";
@@ -173,7 +173,7 @@ const DsoChart = () => {
           <div className="bg-yellow-100 p-3 rounded-lg">
             <Clock className="h-6 w-6 text-yellow-600" />
           </div>
-          <h3 className="text-[20px] font-bold text-black mb-4 mt-4">DSO</h3>
+          <h2 className="text-[20px] font-bold text-black mb-4 mt-4">DSO</h2>
           <div
             className={`inline-flex items-center gap-1 ${colorClass}`}
             title={`Différence entre les deux derniers mois visibles : ${Math.abs(

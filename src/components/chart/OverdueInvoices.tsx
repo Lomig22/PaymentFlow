@@ -7,9 +7,11 @@ import ClientDetailModal from "../clients/ClientDetailModal";
 
 const OverdueInvoices = () => {
   const [topDebtors, setTopDebtors] = useState<{ id: string; name: string; code: string; amount: number }[]>([]);
-  const [selectedDebtor, setSelectedDebtor] = useState(null);
+  type Debtor = { id: string; name: string; code: string; amount: number } | null;
+const [selectedDebtor, setSelectedDebtor] = useState<Debtor>(null);
   const [isOpen, setIsOpen] = useState(false);
-  const [clientDetails, setClientDetails] = useState(null);
+  type ClientDetails = { id?: string; [key: string]: any } | null;
+const [clientDetails, setClientDetails] = useState<ClientDetails>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
   // Handler pour chaque débiteur
@@ -141,9 +143,9 @@ const OverdueInvoices = () => {
         <div className="bg-blue-100 p-3 rounded-lg">
           <Users className="h-6 w-6 text-blue-600" />
         </div>
-        <h3 className="text-[20px] font-bold text-black mb-4 mt-4">
+        <h2 className="text-[20px] font-bold text-black mb-4 mt-4">
           Principaux débiteurs
-        </h3>
+        </h2>
       </div>
 
       {loading ? (

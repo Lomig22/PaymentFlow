@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 
 const RemindersCard = () => {
-  const [receivables, setReceivables] = useState([]);
+  type Receivable = { amount: number; paid_amount: number };
+const [receivables, setReceivables] = useState<Receivable[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalAmount, setTotalAmount] = useState(0);
 
@@ -65,7 +66,7 @@ const RemindersCard = () => {
     <>
     <div className="bg-blue-50 rounded-xl p-6 shadow-md w-full h-full flex flex-col">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-[20px] font-bold text-black mb-4 mt-4">Relances</h3>
+        <h2 className="text-[20px] font-bold text-black mb-4 mt-4">Relances</h2>
         {/* Optionnel : icône flèche ou bouton */}
         {/* <button className="text-blue-600 hover:text-blue-800 transition">
       &rarr;

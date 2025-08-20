@@ -296,7 +296,7 @@ export default function Dashboard() {
       (today.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24)
     );
 
-    if (daysLate <= 0) return null;
+    if (typeof daysLate !== 'number' || daysLate <= 0) return null;
 
     const delays = [
       { days: receivable.client.reminder_delay_1 || 15, step: "first" },
@@ -554,6 +554,7 @@ export default function Dashboard() {
           <Helmet>
   <title>Tableau de bord</title>
 </Helmet>
+<h1 className="text-3xl font-bold text-gray-900">Tableau de bord</h1>
 <p className="mt-2 text-gray-600">
   Vue d'ensemble de vos relances clients
 </p>
