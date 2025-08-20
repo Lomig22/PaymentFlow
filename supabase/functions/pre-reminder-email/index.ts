@@ -502,7 +502,8 @@ const finalReminders = async (
 	}
 };
 
-const setupMailTransporter = () => {
+// Ajout d'un export pour la fonction principale si manquant
+export const setupMailTransporter = () => {
 	const host = process.env.EMAIL_HOST;
 	const port = process.env.EMAIL_PORT;
 	const user = process.env.EMAIL_USER;

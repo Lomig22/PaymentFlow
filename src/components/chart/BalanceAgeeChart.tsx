@@ -100,7 +100,12 @@ export default function BalanceAgeeChart() {
     
   }, [referenceDate]);
 
-  function CustomYAxisTick({ x, y, payload }) {
+  interface CustomYAxisTickProps {
+  x: number;
+  y: number;
+  payload: { value: number };
+}
+function CustomYAxisTick({ x, y, payload }: CustomYAxisTickProps) {
     const value = payload.value;
     let displayValue = "";
     let unit = "";
@@ -146,9 +151,9 @@ export default function BalanceAgeeChart() {
             <div className="bg-red-100 p-3 rounded-lg">
               <AlertCircle className="h-6 w-6 text-red-600" />
             </div>
-            <h3 className="text-[20px] font-bold text-black mb-4 mt-4">
+            <h2 className="text-[20px] font-bold text-black mb-4 mt-4">
               Balance âgée (retards)
-            </h3>
+            </h2>
           </div>
           <div className="flex items-center gap-2">
             <label className="text-sm text-gray-600">Date de référence:</label>

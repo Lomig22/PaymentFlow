@@ -166,9 +166,9 @@ export default function DashboardLayout() {
             <div className="bg-blue-100 p-3 rounded-lg">
               <Activity className="h-6 w-6 text-blue-600" />
             </div>
-            <h3 className="text-[20px] font-bold text-black mb-4 mt-4">
+            <h2 className="text-[20px] font-bold text-black mb-4 mt-4">
               Activité récente
-            </h3>
+            </h2>
 
             <div className={`inline-flex items-center gap-1 ${colorClass}`}>
               <span className="font-semibold">{arrow}</span>
@@ -227,7 +227,7 @@ export default function DashboardLayout() {
                   <YAxis
                     stroke="#374151"
                     tick={{ fontSize: 13, fontWeight: 500 }}
-                    tickFormatter={formatEuro}
+                    tickFormatter={(v: number | undefined) => typeof v === 'number' ? formatEuro(v) : ''}
                   />
                   <Tooltip
                     content={({ active, payload, label }) => {
