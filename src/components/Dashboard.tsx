@@ -52,7 +52,21 @@ interface DashboardStats {
     legal: number;
   };
 }
+
+// Add NotificationType interface
+interface NotificationType {
+  id: string;
+  type: string;
+  message: string;
+  created_at: string;
+  is_read: boolean;
+  details?: string;
+}
+
+interface NotificationList extends Array<NotificationType> {}
+
 import { motion } from "framer-motion";
+import { Helmet } from "react-helmet";
 import DsoChart from "./chart/DsoChart";
 import RemindersCard from "./chart/RemindersCard";
 import OverdueInvoices from "./chart/OverdueInvoices";
@@ -78,7 +92,7 @@ export default function Dashboard() {
   });
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const dropdownRef = useRef(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -112,7 +126,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const COLORS = ["#8884d8", "#82ca9d", "#ffc658", "#ff8042", "#00C49F"];
   const [reminderChartOptions, setReminderChartOptions] = useState({});
-  const [reminderChartSeries, setReminderChartSeries] = useState([]);
+  const [reminderChartSeries, setReminderChartSeries] = useState<number[]>([]);
   const generalStatsData = [
     {
       name: "Total Clients",
@@ -292,7 +306,8 @@ export default function Dashboard() {
     ];
 
     for (let i = delays.length - 1; i >= 0; i--) {
-      if (daysLate >= delays[i].days) {
+      const delayDays = typeof delays[i].days === 'number' ? delays[i].days : 0;
+      if (daysLate >= delayDays) {
         return delays[i].step;
       }
     }
@@ -300,9 +315,9 @@ export default function Dashboard() {
     return null;
   };
 
-  const [openDetails, setOpenDetails] = useState(new Set());
+  const [openDetails, setOpenDetails] = useState<Set<string>>(new Set());
 
-  const toggleDetails = (id) => {
+  const toggleDetails = (id: string) => {
     const newSet = new Set(openDetails);
     if (newSet.has(id)) {
       newSet.delete(id);
@@ -336,7 +351,7 @@ export default function Dashboard() {
     );
   };
 
-  const deleteNotification = async (id) => {
+  const deleteNotification = async (id: string) => {
     const { error } = await supabase
       .from("notifications")
       .delete()
@@ -464,7 +479,7 @@ export default function Dashboard() {
     }
   };
 
-  const [notifications, setNotifications] = useState([]);
+  const [notifications, setNotifications] = useState<NotificationType[]>([]);
   const [filter, setFilter] = useState("all"); // 'all', 'read', 'unread'
   const [visibleCount, setVisibleCount] = useState(5);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -506,7 +521,7 @@ export default function Dashboard() {
     "Avoirs non associés": "#D5B3FF",
   };
 
-  const CustomTooltip = ({ active, payload }) => {
+  const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: any[] }) => {
     if (active && payload && payload.length) {
       return (
         <div
@@ -536,10 +551,12 @@ export default function Dashboard() {
     <>
       <div className="p-6">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Tableau de bord</h1>
-          <p className="mt-2 text-gray-600">
-            Vue d'ensemble de vos relances clients
-          </p>
+          <Helmet>
+  <title>Tableau de bord</title>
+</Helmet>
+<p className="mt-2 text-gray-600">
+  Vue d'ensemble de vos relances clients
+</p>
         </div>
 
         <div
