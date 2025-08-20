@@ -245,7 +245,9 @@ if (updatedTotalAmount >= maxOverDues) {
 
 
       // Déterminer l'email à utiliser (nouveau champ prioritaire, sinon select)
-    const emailToUse = newEmail.trim() || selectedEmail.trim();
+    const emailToUse = isNewClient
+      ? newClientData.email.trim()
+      : (newEmail.trim() || selectedEmail.trim());
     if (!emailToUse) {
       showError("Veuillez renseigner une adresse email.");
       setLoading(false);
