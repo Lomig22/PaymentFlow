@@ -380,7 +380,7 @@ const staggerContainer = {
             {/* Left Column - Text Content */}
             <div className="text-center md:text-left">
               <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-2">
-  Logiciel de recouvrement :
+  Logiciel de relance :
 </h1>
 <h2 className="text-4xl sm:text-5xl font-bold text-blue-600 mb-6">
   Automatisez vos relances clients
