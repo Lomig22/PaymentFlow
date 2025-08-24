@@ -405,6 +405,27 @@ const staggerContainer = {
                   Essayer gratuitement
                 </button>
               </Link>
+              {/* Social Proof: 5 stars + text */}
+              <div className="mt-6" />
+              <div className="flex flex-col items-start mt-4">
+  <div className="flex flex-row gap-1">
+    {[...Array(5)].map((_, i) => (
+      <svg
+        key={i}
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 20 20"
+        fill="#FFD700"
+        className="w-6 h-6"
+        aria-label="star"
+      >
+        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.97a1 1 0 00.95.69h4.175c.969 0 1.371 1.24.588 1.81l-3.38 2.455a1 1 0 00-.364 1.118l1.286 3.97c.3.921-.755 1.688-1.54 1.118l-3.38-2.455a1 1 0 00-1.175 0l-3.38 2.455c-.785.57-1.84-.197-1.54-1.118l1.286-3.97a1 1 0 00-.364-1.118L2.05 9.397c-.783-.57-.38-1.81.588-1.81h4.175a1 1 0 00.95-.69l1.286-3.97z" />
+      </svg>
+    ))}
+  </div>
+  <div className="text-xs text-gray-500 mt-1 text-left">
+    Noté&nbsp;<span className="font-semibold" style={{ color: '#2563eb' }}>4,93/5</span>&nbsp;sur Capterra, Trustpilot, GetApp, Appvizer & Google
+  </div>
+</div>
             </div>
             {/* Right Column - Image */}
             <div>
