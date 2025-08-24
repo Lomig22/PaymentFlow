@@ -98,6 +98,38 @@ const Footer = () => {
     }
   };
 
+  // --- Détection extensions/suspicious scripts ---
+  const [extensionAlert, setExtensionAlert] = useState<string|null>(null);
+  useEffect(() => {
+    // Liste de patterns connus pour scripts d'extensions courantes (adblock, capture, etc)
+    const suspiciousPatterns = [
+      'chrome-extension://',
+      'adblock',
+      'web-capture',
+      'cookie-banner',
+      'Switch-',
+      'polyfill.js',
+      'feature.js',
+      'lib/web-capture-bootstrap.js',
+    ];
+    // Liste tous les scripts présents
+    const scripts = Array.from(document.getElementsByTagName('script'));
+    const found = scripts.find(script => {
+      const src = script.src || '';
+      return suspiciousPatterns.some(pattern => src.includes(pattern));
+    });
+    if (found) {
+      setExtensionAlert('Attention : Des extensions ou scripts tiers sont détectés sur cette page. Cela peut entraîner des bugs ou une surconsommation mémoire. Essayez de désactiver vos extensions ou d\'utiliser la navigation privée.');
+    }
+  }, []);
+
+  // --- Reset cache/localStorage ---
+  const handleResetCache = () => {
+    localStorage.clear();
+    sessionStorage.clear();
+    window.location.reload();
+  };
+
   return (
     <motion.footer
       className="bg-gray-50 border-t border-gray-200 py-12"
@@ -230,7 +262,20 @@ const Footer = () => {
           className="pt-8 border-t border-gray-200 text-center text-sm text-gray-500"
           variants={fadeInLeft}
         >
-          <p> 2024 PaymentFlow. Tous droits réservés.</p>
+          <p>2024 PaymentFlow. Tous droits réservés.</p>
+          {/* Bouton reset cache/localStorage */}
+          <button
+            className="mt-4 px-3 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200 transition"
+            onClick={handleResetCache}
+          >
+            Réinitialiser le cache / localStorage
+          </button>
+          {/* Alerte extensions/suspicious scripts */}
+          {extensionAlert && (
+            <div className="mt-4 p-3 bg-yellow-100 text-yellow-800 rounded border border-yellow-300">
+              {extensionAlert}
+            </div>
+          )}
         </motion.div>
       </div>
     </motion.footer>
