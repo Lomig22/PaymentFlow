@@ -82,15 +82,8 @@ function StorylaneDemoEmbed() {
 }
 
 export default function LandingPage({ onGetStarted }: LandingPageProps) {
-  /* SEO Helmet */
-  const helmetBlock = (
-    <Helmet>
-      <title>Logiciel de recouvrement | Payment Flow</title>
-      <meta name="description" content="Solution SaaS de relance client automatisée : améliorez votre trésorerie, réduisez votre DSO et optimisez votre relation client avec Payment Flow." />
-      <meta name="robots" content="index, follow" />
-      <link rel="canonical" href="https://www.payment-flow.fr/" />
-    </Helmet>
-  );
+  // ... (autres hooks et logique)
+
   // ...
   // Fonction pour ouvrir le popup Calendly de façon robuste
   const openCalendlyPopup = () => {
@@ -362,6 +355,12 @@ const staggerContainer = {
 
   return (
     <>
+      <Helmet>
+        <title>Logiciel de recouvrement | Payment Flow</title>
+        <meta name="description" content="Solution SaaS de relance client automatisée : améliorez votre trésorerie, réduisez votre DSO et optimisez votre relation client avec Payment Flow." />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href="https://www.payment-flow.fr/" />
+      </Helmet>
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
         {/* Header */}
         {/* Hero Section */}
