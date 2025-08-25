@@ -261,20 +261,18 @@ export async function sendManualReminder(
 		const finalContent = defaultEmailContent
 
 		// Générer un identifiant unique pour le tracking
-import { v4 as uuidv4 } from 'uuid';
-const emailTrackingId = uuidv4();
-// Toujours fournir une adresse email valide (jamais null) à sendEmail
-const toEmail = receivable.email ?? receivable.client.email ?? '';
-if (!toEmail) throw new Error('Aucune adresse email disponible pour la relance');
-const emailSent = await sendEmail(
-  emailSettings,
-  toEmail,
-  finalSubject,
-  finalContent,
-  receivable.invoice_pdf_url
-  // Ajout du pixel de tracking via le contenu HTML déjà fait dans sendEmail
-);
-if (emailSent) {
+		const emailTrackingId = uuidv4();
+		// Toujours fournir une adresse email valide (jamais null) à sendEmail
+		const toEmail = receivable.email ?? receivable.client.email ?? '';
+		if (!toEmail) throw new Error('Aucune adresse email disponible pour la relance');
+		const emailSent = await sendEmail(
+		  emailSettings,
+		  toEmail,
+		  finalSubject,
+		  finalContent,
+		  receivable.invoice_pdf_url
+		);
+		if (emailSent) {
 			// Enregistrer la relance
 			const client = receivable.client;
 
