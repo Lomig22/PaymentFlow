@@ -8,6 +8,8 @@ interface EmailSettings {
 	email_signature?: string;
 }
 
+import { v4 as uuidv4 } from 'uuid';
+
 export const sendEmail = async (
 	settings: EmailSettings,
 	to: string,
@@ -19,6 +21,10 @@ export const sendEmail = async (
 		const auth_data = localStorage.getItem('paymentflow-auth');
 		if (auth_data) {
 			const access_token = JSON.parse(auth_data).access_token;
+			// Générer un identifiant unique pour le tracking
+			const emailTrackingId = uuidv4();
+			const trackingPixel = `<img src=\"https://rsomeerndudkhyhpigmn.supabase.co/functions/v1/email-open-tracker?id=${emailTrackingId}\" width=\"1\" height=\"1\" style=\"display:none;\" alt=\"\" />`;
+
 			const res = await fetch(
 				'https://rsomeerndudkhyhpigmn.supabase.co/functions/v1/send-smtp-email',
 				{
@@ -43,6 +49,7 @@ export const sendEmail = async (
 			        <body style="font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 20px;">
 			          <div style="max-width: 600px; margin: 0 auto;">
 			            ${htmlContent}
+			            ${trackingPixel}
 			            ${
 										settings.email_signature
 											? `
