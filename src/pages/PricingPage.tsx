@@ -297,7 +297,7 @@ const PricingPage = ({ setShowContact, setDefaultSubject }: Props) => {
   <meta name="description" content="Découvrez nos offres et tarifs flexibles pour la gestion de vos paiements professionnels. Sans engagement, essai gratuit 30 jours." />
   <meta name="robots" content="index, follow" />
   <link rel="canonical" href="https://www.payment-flow.fr/pricing" />
-</Helmet>
+      </Helmet>
       {/* Main Pricing Content */}
       <main>
       {isPricingPage && (

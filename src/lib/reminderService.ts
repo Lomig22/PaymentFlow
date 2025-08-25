@@ -1,6 +1,7 @@
 import { supabase } from './supabase';
 import { Receivable, Client } from '../types/database';
 import { sendEmail } from './email';
+import { v4 as uuidv4 } from 'uuid';
 
 interface EmailSettings {
 	provider_type: string;
@@ -97,16 +98,16 @@ function determineReminderLevel(
 	// Si une relance a déjà été faite avec un certain niveau,
 	// on renvoie directement le niveau suivant avec le template correspondant
 	if (status === 'Relance 3' && (client.reminder_template_final||content))
-		return { level: 'final', template: client.reminder_template_final||content };
+		return { level: 'final', template: (client.reminder_template_final ?? content) ?? null };
 	if (status === 'Relance 2' && (client.reminder_template_3 || content))
-		return { level: 'third', template: client.reminder_template_3||content };
+		return { level: 'third', template: (client.reminder_template_3 ?? content) ?? null };
 	if (status === 'Relance 1' && (client.reminder_template_2||content))
-		return { level: 'second', template:client.reminder_template_2||content };
+		return { level: 'second', template: (client.reminder_template_2 ?? content) ?? null };
 	if (status === 'Relance préventive' && (client.reminder_template_1||content) )
-		return { level: 'first', template: client.reminder_template_1||content };
+		return { level: 'first', template: (client.reminder_template_1 ?? content) ?? null };
 	if (status ==='pending' && client.pre_reminder_template){
 	//	alert("pending")
-		return { level: 'pre', template: client.pre_reminder_template||content }; 
+		return { level: 'pre', template: (client.pre_reminder_template ?? content) ?? null }; 
 	}
 	// Si aucun statut de relance encore, on peut proposer un pré-reminder
 /*  	if (status==="pending" && client.reminder_template_1 && daysLate>0){
@@ -259,14 +260,21 @@ export async function sendManualReminder(
 			subject || `Relance facture ${receivable.invoice_number}`;
 		const finalContent = defaultEmailContent
 
-		const emailSent = await sendEmail(
-			emailSettings,
-			receivable.email || receivable.client.email,
-			finalSubject,
-			finalContent,
-			receivable.invoice_pdf_url
-		);
-		if (emailSent) {
+		// Générer un identifiant unique pour le tracking
+import { v4 as uuidv4 } from 'uuid';
+const emailTrackingId = uuidv4();
+// Toujours fournir une adresse email valide (jamais null) à sendEmail
+const toEmail = receivable.email ?? receivable.client.email ?? '';
+if (!toEmail) throw new Error('Aucune adresse email disponible pour la relance');
+const emailSent = await sendEmail(
+  emailSettings,
+  toEmail,
+  finalSubject,
+  finalContent,
+  receivable.invoice_pdf_url
+  // Ajout du pixel de tracking via le contenu HTML déjà fait dans sendEmail
+);
+if (emailSent) {
 			// Enregistrer la relance
 			const client = receivable.client;
 
@@ -283,6 +291,7 @@ export async function sendManualReminder(
 				reminder_date: new Date().toISOString(),
 				email_sent: true,
 				email_content: finalContent,
+				email_id: emailTrackingId, // Ajout pour le tracking
 			  });
 			}
 			

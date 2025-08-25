@@ -89,13 +89,14 @@ export interface ReminderProfile {
   
 
 export interface Reminder {
-	id: string;
-	receivable_id: string;
-	reminder_date: string;
-	reminder_type: 'first' | 'second' | 'third' | 'final' | 'legal';
-	email_sent: boolean;
-	email_content?: string;
-	created_at: string;
+  email_id?: string;
+  id: string;
+  receivable_id: string;
+  reminder_date: string;
+  reminder_type: 'first' | 'second' | 'third' | 'final' | 'legal';
+  email_sent: boolean;
+  email_content?: string;
+  created_at: string;
 }
 
 export interface UnknownClient {

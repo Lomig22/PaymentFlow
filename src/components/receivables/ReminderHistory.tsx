@@ -1,7 +1,8 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import { Reminder } from '../../types/database';
 import { X } from 'lucide-react';
 import { decodeReminderStatus } from '../../lib/decodeReminderStatus';
+import { supabase } from '../../lib/supabase';
 
 type ReminderHistoryProps = {
 	receivableId: string;
@@ -19,6 +20,36 @@ const ReminderHistory = ({
 			(reminder) => reminder.receivable_id === receivableId
 		);
 	}, [reminders, receivableId]);
+
+	const [openStatus, setOpenStatus] = useState<Record<string, boolean | null>>({});
+
+	useEffect(() => {
+		const fetchOpenStatus = async () => {
+			const status: Record<string, boolean | null> = {};
+			for (const reminder of filteredReminders) {
+				const emailId = reminder.email_id;
+				if (!emailId) {
+					status[reminder.id] = null; // Non suivi
+					continue;
+				}
+				// Vérifie dans la table email_opens si une ouverture existe
+				const { data, error } = await supabase
+					.from('email_opens')
+					.select('id')
+					.eq('email_id', emailId)
+					.limit(1)
+					.maybeSingle();
+				if (error) {
+					status[reminder.id] = null;
+				} else {
+					status[reminder.id] = !!data;
+				}
+			}
+			setOpenStatus(status);
+		};
+		if (filteredReminders.length > 0) fetchOpenStatus();
+	}, [filteredReminders]);
+
 	return (
 		<div className='fixed inset-0 bg-gray-600 bg-opacity-50 z-50 overflow-y-scroll'>
 			<div className='min-h-screen py-8 px-4 flex items-center justify-center'>
@@ -40,6 +71,9 @@ const ReminderHistory = ({
 									<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 										type de Relance
 									</th>
+									<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+										Ouverture Email
+									</th>
 								</tr>
 							</thead>
 							<tbody className='bg-white divide-y divide-gray-200'>
@@ -51,12 +85,15 @@ const ReminderHistory = ({
 										<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
 											{decodeReminderStatus(record.reminder_type)}
 										</td>
+										<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
+											{openStatus[record.id] === undefined ? '...' : openStatus[record.id] === null ? 'Non suivi' : openStatus[record.id] ? 'Ouvert' : 'Non ouvert'}
+										</td>
 									</tr>
 								))}
 								{filteredReminders.length === 0 && (
 									<tr>
 										<td
-											colSpan={13}
+											colSpan={3}
 											className='px-6 py-4 text-center text-gray-500'
 										>
 											Aucune relance trouvée
