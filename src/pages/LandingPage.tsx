@@ -356,39 +356,11 @@ const staggerContainer = {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       <Helmet>
-  {/* Google Analytics */}
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-WWHHYD4YZP"></script>
-  <script>{`
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-WWHHYD4YZP');
-  `}</script>
-  <meta charSet="UTF-8" />
-  <meta name="description" content="Automatisez et optimisez vos relances clients avec PaymentFlow : la solution SaaS pour accélérer vos encaissements, simplifier le suivi et améliorer la trésorerie de votre entreprise." />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Logiciel de recouvrement | Payment Flow</title>
-  {/* Favicons */}
-  <link rel="icon" href="/favicon.ico" sizes="any" />
-  <link rel="icon" href="/icon.svg" type="image/svg+xml" />
-  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-  {/* Styles externes Calendly */}
-  <link href="https://calendly.com/assets/external/widget.css" rel="stylesheet" />
-  {/* Error handling and configuration (optionnel) */}
-  <script>{`
-    window.addEventListener('error', function(event) {
-      console.error('Global error:', event.error);
-      console.error('Message:', event.message);
-      console.error('Source:', event.filename);
-      console.error('Line:', event.lineno);
-      console.error('Column:', event.colno);
-    });
-    window.addEventListener('unhandledrejection', function(event) {
-      console.error('Unhandled promise rejection:', event.reason);
-    });
-    window.chtlConfig = { chatbotId: "4596411993" };
-  `}</script>
-</Helmet>
+        <title>Logiciel de recouvrement | Payment Flow</title>
+        <meta name="description" content="Solution SaaS de relance client automatisée : améliorez votre trésorerie, réduisez votre DSO et optimisez votre relation client avec Payment Flow." />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href="https://www.payment-flow.fr/" />
+      </Helmet>
       <main>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
             <motion.div
