@@ -1,6 +1,18 @@
 import { useState } from "react";
 
-const ReminderInfo = ({ client, reminderProfileName }) => {
+interface ReminderInfoProps {
+  client: {
+    reminder_profile?: any;
+    reminder_delay_1?: { j?: number; h?: number; m?: number };
+    reminder_delay_2?: { j?: number; h?: number; m?: number };
+    reminder_delay_3?: { j?: number; h?: number; m?: number };
+    reminder_delay_final?: { j?: number; h?: number; m?: number };
+    // ajoute d'autres propriétés si besoin
+  };
+  reminderProfileName: string;
+}
+
+const ReminderInfo = ({ client, reminderProfileName }: ReminderInfoProps) => {
   const [showDetails, setShowDetails] = useState(false);
 
   return (

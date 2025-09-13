@@ -256,7 +256,7 @@ export default function ReceivableEditForm({
           if (payment_notifications === true) {
             const emailSent = sendEmail(
               emailSettings,
-              user.email,
+              user.email ?? "",
               "Paiement d'une créance",
               "La créance de " +
                 data.client.company_name +
@@ -462,7 +462,7 @@ export default function ReceivableEditForm({
                 required
                 value={formData.status}
                 onChange={(e) => {
-                  const newStatus = e.target.value;
+                  const newStatus = e.target.value as typeof formData.status;
                   setFormData((prev) => ({
                     ...prev,
                     status: newStatus,

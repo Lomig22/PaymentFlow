@@ -109,6 +109,18 @@ function ReceivablesList() {
   });
   // ... autres hooks d'état ici
 
+  // Helper pour savoir si un profil de relance est prêt (profil pré-enregistré)
+  function canPlayDirect(receivable: Receivable & { client: Client }) {
+    const client = receivable.client;
+    // Profil de relance enregistré + date pièce + date d'échéance présentes
+    return (
+      !!client?.reminder_profile &&
+      !!receivable.document_date &&
+      !!receivable.due_date
+    );
+  }
+
+
   const [hasConsumedReminderNavigation, setHasConsumedReminderNavigation] = useState(false);
   const navigate = useNavigate();
 
@@ -1273,6 +1285,7 @@ function ReceivablesList() {
       issues.push("une ou plusieurs dates de relance sont dépassées");
     } */
 
+    // Si un profil de relance existe et que la date pièce + échéance sont présentes, ne bloque pas
     if (
       !client.reminder_enable_1 &&
       !client.reminder_enable_2 &&
@@ -1280,6 +1293,9 @@ function ReceivablesList() {
       !client.reminder_enable_final &&
       !client.pre_reminder_enable
     ) {
+      if (client.reminder_profile && receivable.document_date && receivable.due_date) {
+        return ""; // Pas de blocage
+      }
       return "Aucune relance n'est activée!";
     }
 /*     if (!receivable.automatic_reminder && issues.length === 0) {
@@ -1608,41 +1624,57 @@ function ReceivablesList() {
   }}
   aria-disabled={!remindersEnabled(receivable.client)}
 >
-  {!receivable.automatic_reminder ? (
-    <Tooltip
-      label={remindersEnabled(receivable.client) ? 'Activer les relances' : "Aucune relance n'est activée pour ce client"}
-      theme="orange"
-    >
-      <motion.img
-        src={PlaySvg}
-        alt="Play"
-        className="w-5 h-5"
-        initial={{ scale: 1 }}
-        animate={{ rotate: 360, scale: 1.2 }}
-        transition={{
-          type: 'spring',
-          stiffness: 300,
-          damping: 20,
-        }}
-        style={!remindersEnabled ? { pointerEvents: 'none' } : {}}
-      />
-    </Tooltip>
-  ) : (
-    <Tooltip label="Mettre en pause" theme="green">
-      <motion.img
-        src={PauseSvg}
-        alt="Pause"
-        className="w-5 h-5"
-        initial={{ scale: 1 }}
-        animate={{ scale: 1.2 }}
-        transition={{
-          type: 'spring',
-          stiffness: 300,
-          damping: 20,
-        }}
-      />
-    </Tooltip>
-  )}
+  <AnimatePresence mode="wait" initial={false}>
+    {!receivable.automatic_reminder ? (
+      <Tooltip
+        label={remindersEnabled(receivable.client) ? 'Activer les relances' : "Aucune relance n'est activée pour ce client"}
+        theme="orange"
+        key="play"
+      >
+        <button
+          type="button"
+          className={`flex items-center justify-center rounded-full w-8 h-8 transition focus:outline-none ${remindersEnabled(receivable.client) ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-gray-300 text-gray-400 cursor-not-allowed'}`}
+          disabled={!remindersEnabled(receivable.client)}
+          aria-label="Activer les relances"
+          style={{ fontSize: '1.2rem' }}
+        >
+          <motion.span
+            key="play-icon"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.09 }}
+            style={{ fontWeight: 'bold', fontFamily: 'inherit', fontSize: '1.3rem', marginLeft: '2px' }}
+          >
+            ▶
+          </motion.span>
+        </button>
+      </Tooltip>
+    ) : (
+      <Tooltip label="Mettre en pause" theme="green" key="pause">
+        <button
+          type="button"
+          className="flex items-center justify-center rounded-full w-8 h-8 bg-orange-500 hover:bg-orange-600 text-white transition focus:outline-none"
+          aria-label="Mettre en pause"
+          style={{ fontSize: '1.2rem' }}
+        >
+          <motion.span
+            key="pause-icon"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.09 }}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '1.3rem', width: '1.3rem' }}
+          >
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="4" y="3" width="3" height="12" rx="1.2" fill="currentColor" />
+              <rect x="11" y="3" width="3" height="12" rx="1.2" fill="currentColor" />
+            </svg>
+          </motion.span>
+        </button>
+      </Tooltip>
+    )}
+  </AnimatePresence>
 </span>
 
 
@@ -1777,20 +1809,20 @@ function ReceivablesList() {
                       {receivable.notes || "-"}
                     </td>
                     <td className="px-4 py-3">
-                      {receivable.invoice_pdf_url ? (
-                        <a
-                          href={receivable.invoice_pdf_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          title="Voir la facture"
-                          className="text-blue-600 hover:text-blue-800"
-                        >
-                          <File className="w-5 h-5" />
-                        </a>
-                      ) : (
-                        "-"
-                      )}
-                    </td>
+  {receivable.invoice_pdf_url ? (
+    <a
+      href={receivable.invoice_pdf_url}
+      target="_blank"
+      rel="noopener noreferrer"
+      title="Voir la facture"
+      className="text-blue-600 hover:text-blue-800"
+    >
+      <File className="w-5 h-5" />
+    </a>
+  ) : (
+    "-"
+  )}
+</td>
                   </tr>
                 ))}
                 {filteredReceivables.length === 0 && (
@@ -1841,6 +1873,7 @@ function ReceivablesList() {
 
         {showSettings && selectedClient && selectedReceivable && (
           <ReminderSettingsModal
+            open={showSettings}
             client={selectedClient}
             onClose={() => {
               setShowSettings(false);

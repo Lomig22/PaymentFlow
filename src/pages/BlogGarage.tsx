@@ -15,46 +15,59 @@ import {
   VideoEmbed
 } from '../components/blog/BlogEnrichmentBlocks';
 import { ArrowLeft } from 'lucide-react';
+import ContactModal from "./ContactModal";
 
 interface BlogSectorProps {
   setShowContact?: () => void;
   setDefaultSubject?: () => void;
 }
 
-const blogPost = {
-  title: "Garage AutoPro+ : 50% de temps gagné sur la relance client",
-  company: "Garage AutoPro+",
-  stars: 5,
-  context: (
-    <>
-      <p><strong>Contexte :</strong> Garage AutoPro+, spécialiste de la réparation automobile à Nantes, faisait face à des retards de paiement récurrents et à une gestion chronophage des relances clients. L’équipe administrative passait plus de 8 heures par semaine à relancer les clients, avec un taux d’impayés de 5%.</p>
-    </>
-  ),
-  problem: (
-    <>
-      <p><strong>Problématique :</strong> Malgré une bonne satisfaction client, le garage voyait sa trésorerie fragilisée par les retards de paiement et l’absence d’automatisation des relances. L’équipe voulait moderniser son suivi et se concentrer sur le service client plutôt que sur l’administratif.</p>
-    </>
-  ),
-  solution: (
-    <>
-      <p><strong>Solution :</strong> En 2024, Garage AutoPro+ a choisi Payment Flow pour digitaliser l’ensemble du processus de relance :</p>
-      <ul>
-        <li>Relances automatiques par email et SMS personnalisés</li>
-        <li>Encaissement en ligne via Stripe</li>
-        <li>Tableau de bord interactif pour suivre les règlements en temps réel</li>
-        <li>Scoring automatique des clients selon leur comportement de paiement</li>
-        <li><span
-  className="text-blue-700 font-bold text-2xl cursor-pointer hover:underline"
-  onClick={() => {
-    if (typeof setShowContact === 'function') setShowContact(true);
-    if (typeof setDefaultSubject === 'function') setDefaultSubject('audit');
-  }}
->
-  Contactez-nous pour un audit personnalisé !
-</span></li>
-      </ul>
-    </>
-  ),
+const BlogGarage: React.FC = () => {
+  const [showContact, setShowContact] = React.useState(false);
+  const [defaultSubject, setDefaultSubject] = React.useState<string | undefined>(undefined);
+  const navigate = useNavigate();
+  const pageUrl = "https://www.payment-flow.fr/blog-garage";
+  const pageTitle = "Garage : Optimisez vos relances clients et réduisez votre DSO | Payment Flow";
+  const [progress, setProgress] = React.useState(0);
+
+  const blogPost = {
+    title: "Garage AutoPro+ : 50% de temps gagné sur la relance client",
+    company: "Garage AutoPro+",
+    stars: 5,
+    context: (
+      <>
+        <p><strong>Contexte :</strong> Garage AutoPro+, spécialiste de la réparation automobile à Nantes, faisait face à des retards de paiement récurrents et à une gestion chronophage des relances clients. L’équipe administrative passait plus de 8 heures par semaine à relancer les clients, avec un taux d’impayés de 5%.</p>
+      </>
+    ),
+    problem: (
+      <>
+        <p><strong>Problématique :</strong> Malgré une bonne satisfaction client, le garage voyait sa trésorerie fragilisée par les retards de paiement et l’absence d’automatisation des relances. L’équipe voulait moderniser son suivi et se concentrer sur le service client plutôt que sur l’administratif.</p>
+      </>
+    ),
+    solution: (
+      <>
+        <p><strong>Solution :</strong> En 2024, Garage AutoPro+ a choisi Payment Flow pour digitaliser l’ensemble du processus de relance :</p>
+        <ul>
+          <li>Relances automatiques par email et SMS personnalisés</li>
+          <li>Encaissement en ligne via Stripe</li>
+          <li>Tableau de bord interactif pour suivre les règlements en temps réel</li>
+          <li>Scoring automatique des clients selon leur comportement de paiement</li>
+          <li><span
+    className="text-blue-700 font-bold text-2xl cursor-pointer hover:underline"
+    onClick={() => {
+      setShowContact(true);
+      setDefaultSubject('audit');
+    }}
+  >
+    Contactez-nous pour un audit personnalisé !
+  </span></li>
+        </ul>
+        {/* Modale de contact */}
+        {showContact && (
+          <ContactModal onClose={() => setShowContact(false)} defaultSubject={defaultSubject} />
+        )}
+      </>
+    ),
   results: (
     <>
       <p><strong>Résultats :</strong></p>
@@ -99,22 +112,18 @@ const BlogGarage: React.FC<BlogSectorProps> = (props) => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Gestion fallback pour l'ouverture de la modale contact
-  const [showContact, setShowContact] = React.useState(false);
-  const [defaultSubject, setDefaultSubject] = React.useState<string | undefined>(undefined);
-  const navigate = useNavigate();
-  const pageUrl = "https://www.payment-flow.fr/blog-garage";
-  const pageTitle = "Garage : Optimisez vos relances clients et réduisez votre DSO | Payment Flow";
-  // Utilise les props si fournis (mode parent), sinon fallback local
-  const handleContactClick = () => {
-    if (typeof props.setShowContact === 'function') {
-      props.setShowContact();
-      if (typeof props.setDefaultSubject === 'function') props.setDefaultSubject('audit');
-    } else {
-      setShowContact(true);
-      setDefaultSubject('audit');
-    }
-  };
+
+  return (
+    <div>
+      <h1>{blogPost.title}</h1>
+      <h2>{blogPost.company}</h2>
+      <div>{blogPost.context}</div>
+      <div>{blogPost.problem}</div>
+      <div>{blogPost.solution}</div>
+      <div>{blogPost.results}</div>
+    </div>
+  );
+}
 
   // ... le reste du composant sans redéclaration de navigate/pageUrl/pageTitle
 

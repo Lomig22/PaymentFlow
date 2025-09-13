@@ -7,7 +7,12 @@ import Swal from "sweetalert2";
 
 function MemberList() {
   const { checkAbonnement } = useAbonnement();
-  const [members, setMembers] = useState([]);
+  type Member = {
+  id: string;
+  invited_email: string;
+  created_at: string;
+};
+const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState("");
   const [inviting, setInviting] = useState(false);
@@ -37,7 +42,7 @@ function MemberList() {
       setSuccess(null);
     }, 3000);
   };
-  const handleDeleteConfirmation = async (id) => {
+  const handleDeleteConfirmation = async (id: string) => {
     // Confirmation avant la suppression
     const result = await Swal.fire({
       title: "Es-tu sûr ?",
@@ -76,8 +81,8 @@ function MemberList() {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      setUserId(user?.id);
-      setUserEmail(user?.email);
+      setUserId(user?.id ?? "");
+      setUserEmail(user?.email ?? "");
     };
     fetchUserInfo();
   }, []);
@@ -97,7 +102,7 @@ function MemberList() {
 
     setLoading(false);
   };
-  const handleDelete = async (id) => {
+  const handleDelete = async (id: string) => {
     const { error } = await supabase
       .from("invited_users")
       .delete()
@@ -114,11 +119,11 @@ function MemberList() {
     if (userId) fetchMembers();
   }, [userId]);
 
-  const isValidEmail = (email) => {
+  const isValidEmail = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
 
-  const handleInvite = async (e) => {
+  const handleInvite = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     e.stopPropagation();
     const allowed = handleClick();
@@ -153,7 +158,7 @@ function MemberList() {
       company: 10,
     };
   
-    const userPlan = subscription.plan;
+    const userPlan: keyof typeof planLimits = (subscription?.plan as keyof typeof planLimits) || "free";
     const maxInvites = planLimits[userPlan] ?? 0;
   
     // 3. Compter les utilisateurs déjà invités
@@ -181,7 +186,7 @@ function MemberList() {
       .eq("invited_email", email)
       .eq("invited_by", userId);
   
-    if (existing.length > 0) {
+    if (existing && existing.length > 0) {
       showError("Cet email a déjà été invité.");
       setInviting(false);
       return;

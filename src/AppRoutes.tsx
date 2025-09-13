@@ -87,7 +87,7 @@ export default function AppRoutes({ user, onMFASuccess }: AppRoutesProps) {
           element={!user ? <LoginPage /> : <Navigate to="/" replace />}
         />
         <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/pricing" element={<PricingPage />} />
+        <Route path="/pricing" element={<PricingPage setShowContact={() => {}} setDefaultSubject={() => {}} />} />
         <Route path="/privacy" element={<PrivacyPolicyPage />} />
         <Route path="/mentions-legales" element={<LegalNoticePage />} />
         <Route path="/conditions-utilisation" element={<TermsOfUsePage />} />

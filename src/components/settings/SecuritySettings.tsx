@@ -13,6 +13,17 @@ export function SecuritySettings() {
     </div>
   );
 }
+// Définition locale du type Factor incluant totp
+export type Factor = {
+  id: string;
+  factor_type: string;
+  status: string;
+  totp?: {
+    qr_code?: string;
+    secret?: string;
+  };
+};
+
 export function MfaSettings() {
   const [factorId, setFactorId] = useState<string | null>(null);
   const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
@@ -30,7 +41,7 @@ export function MfaSettings() {
         return;
       }
   
-      const totpFactor = data?.all?.find((f) => f.factor_type === "totp");
+      const totpFactor = (data?.all?.find((f) => f.factor_type === "totp") as Factor | undefined);
   
       if (totpFactor) {
         setFactorId(totpFactor.id);

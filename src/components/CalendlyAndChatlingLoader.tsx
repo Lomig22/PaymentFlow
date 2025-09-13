@@ -1,8 +1,15 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
+import { User } from "@supabase/supabase-js";
+
+declare global {
+  interface Window {
+    chtlConfig?: any;
+  }
+}
 
 export default function CalendlyAndChatlingLoader() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     const {

@@ -298,15 +298,25 @@ export default function Dashboard() {
 
     if (typeof daysLate !== 'number' || daysLate <= 0) return null;
 
+    const toDays = (delay: number | { j?: number; h?: number; m?: number } | undefined, fallback: number) => {
+      if (typeof delay === "number") return delay;
+      if (typeof delay === "object" && delay !== null)
+        return (delay.j || 0) * 24 * 60 + (delay.h || 0) * 60 + (delay.m || 0);
+      return fallback;
+    };
     const delays = [
-      { days: receivable.client.reminder_delay_1 || 15, step: "first" },
-      { days: receivable.client.reminder_delay_2 || 30, step: "second" },
-      { days: receivable.client.reminder_delay_3 || 45, step: "third" },
-      { days: receivable.client.reminder_delay_final || 60, step: "final" },
+      { days: toDays(receivable.client.reminder_delay_1, 15), step: "first" },
+      { days: toDays(receivable.client.reminder_delay_2, 30), step: "second" },
+      { days: toDays(receivable.client.reminder_delay_3, 45), step: "third" },
+      { days: toDays(receivable.client.reminder_delay_final, 60), step: "final" },
     ];
 
     for (let i = delays.length - 1; i >= 0; i--) {
-      const delayDays = typeof delays[i].days === 'number' ? delays[i].days : 0;
+      const delayDays = typeof delays[i].days === 'number'
+        ? delays[i].days
+        : typeof delays[i].days === 'object' && delays[i].days !== null
+          ? Number((delays[i].days as { j?: number; h?: number; m?: number }).j || 0) * 24 * 60 + Number((delays[i].days as { j?: number; h?: number; m?: number }).h || 0) * 60 + Number((delays[i].days as { j?: number; h?: number; m?: number }).m || 0)
+          : 0;
       if (daysLate >= delayDays) {
         return delays[i].step;
       }
