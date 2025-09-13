@@ -1,7 +1,18 @@
 import React from "react";
 
 // Fonction pour calculer le vrai statut en fonction des relances activées
-const resolveStatus = (receivable) => {
+type Receivable = {
+  status: string;
+  client?: {
+    reminder_enable_final?: boolean;
+    reminder_enable_3?: boolean;
+    reminder_enable_2?: boolean;
+    reminder_enable_1?: boolean;
+    pre_reminder_enable?: boolean;
+  };
+};
+
+const resolveStatus = (receivable: Receivable) => {
   const { status, client } = receivable;
 
   const statusLevels = [
@@ -30,7 +41,7 @@ const resolveStatus = (receivable) => {
 };
 
 // Fonction pour retourner la classe CSS en fonction du statut
-const getStatusStyle = (status) => {
+const getStatusStyle = (status: string) => {
   if (status === "paid") return "bg-green-100 text-green-800";
   if (status === "late") return "bg-red-100 text-red-800";
   if (["reminded", "Relance 1", "Relance 2", "Relance 3", "Relance finale", "Relance préventive"].includes(status)) {
@@ -41,7 +52,7 @@ const getStatusStyle = (status) => {
 };
 
 // Fonction pour retourner le label à afficher
-const getStatusLabel = (status) => {
+const getStatusLabel = (status: string) => {
   const labels = {
     paid: "Payé",
     late: "En retard",
@@ -54,11 +65,15 @@ const getStatusLabel = (status) => {
     "Relance finale": "Relance finale",
     "Relance préventive": "Pré-relancé",
   };
-  return labels[status] || status;
+  return Object.prototype.hasOwnProperty.call(labels, status) ? labels[status as keyof typeof labels] : status;
 };
 
 // ✅ Composant principal
-const ReceivableStatusBadge = ({ receivable }) => {
+interface ReceivableStatusBadgeProps {
+  receivable: Receivable;
+}
+
+const ReceivableStatusBadge = ({ receivable }: ReceivableStatusBadgeProps) => {
   const realStatus = resolveStatus(receivable);
   return (
     <span

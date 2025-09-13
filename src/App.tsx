@@ -4,6 +4,19 @@ import { User } from "@supabase/supabase-js";
 import AuthMFA from "./components/AuthMFA";
 import AppRoutes from "./AppRoutes";
 
+function clearAllStorageAndCookies() {
+  // Nettoyage localStorage
+  try { localStorage.clear(); } catch (e) {}
+  // Nettoyage sessionStorage
+  try { sessionStorage.clear(); } catch (e) {}
+  // Nettoyage cookies (basique)
+  if (typeof document !== 'undefined') {
+    document.cookie.split(';').forEach(function(c) {
+      document.cookie = c.trim().split('=')[0] + '=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/';
+    });
+  }
+}
+
 export default function AppWithMFA() {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -20,6 +33,8 @@ export default function AppWithMFA() {
         const session = await checkAuth();
         const currentUser = session?.user ?? null;
         setUser(currentUser);
+        // Si l'utilisateur n'est plus connecté, on nettoie tout
+        if (!currentUser) clearAllStorageAndCookies();
       } catch (error) {
         console.error("Erreur d'authentification :", error);
       } finally {

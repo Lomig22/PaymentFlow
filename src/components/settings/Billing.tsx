@@ -80,7 +80,7 @@ export function BillingInfoSettings() {
     } = await supabase.auth.getUser();
   
     if (userError) {
-      showError('Erreur lors de la récupération de l’utilisateur :', userError);
+      showError('Erreur lors de la récupération de l’utilisateur : ' + (userError?.message || userError));
       return;
     }
     const { error } = await supabase
@@ -267,6 +267,9 @@ export function SubscriptionSettings() {
       alert("Une erreur est survenue. Veuillez réessayer.");
     }
   };
+  const [showContact, setShowContact] = useState(false);
+  const [defaultSubject, setDefaultSubject] = useState<string>("");
+
   return (
     <div className="space-y-4 max-w-full">
       {/* {plan === "free" && (
@@ -276,7 +279,7 @@ export function SubscriptionSettings() {
       )} */}
 
       <h2 className="text-lg font-semibold">Choix de l’abonnement</h2>
-      <PricingPage />
+      <PricingPage setShowContact={setShowContact} setDefaultSubject={setDefaultSubject} />
       {/* {["basic", "pro", "entreprise"].map((p) => (
         <div key={p} className="flex items-center space-x-2">
           <input

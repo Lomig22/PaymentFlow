@@ -1,6 +1,10 @@
 import React, { useState } from "react";
 
- const ThemeCustomizer = ({ theme }) => {
+ interface ThemeCustomizerProps {
+  theme: string;
+}
+
+const ThemeCustomizer = ({ theme }: ThemeCustomizerProps) => {
   const [font, setFont] = useState("Arial");
   const [textColor, setTextColor] = useState("#000000");
   const [bgColor, setBgColor] = useState("#ffffff");

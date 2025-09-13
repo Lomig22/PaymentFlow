@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { X, CheckIcon } from "lucide-react";
 import { motion } from "framer-motion";
-import { Dialog } from "@headlessui/react";
+import { Dialog, Transition } from "@headlessui/react";
 
 interface ManualReminderModalProps {
   isOpen: boolean;

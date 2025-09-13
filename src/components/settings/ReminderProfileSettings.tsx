@@ -202,7 +202,8 @@ const [formData, setFormData] = useState<{
     markDirty();
   };
 
-  const handleTemplateChange = (profileKey: ProfileKey, templateKey: keyof ReminderProfileForm, value: string) => {
+  type TemplateKey = `email_template_${1|2|3|4}`;
+const handleTemplateChange = (profileKey: ProfileKey, templateKey: TemplateKey, value: string) => {
     setFormData((prev) => ({
       ...prev,
       [profileKey]: {
@@ -447,7 +448,7 @@ const [formData, setFormData] = useState<{
                           value={(formData[`profile${n}` as ProfileKey] as any)[`email_template_${templateIdx}`] || ''}
                           onChange={(e) => handleTemplateChange(
                             `profile${n}` as ProfileKey,
-                            `email_template_${templateIdx}`,
+                            `email_template_${templateIdx}` as TemplateKey,
                             e.target.value
                           )}
                           placeholder={`Saisissez ici le texte de l'email pour la relance ${templateIdx}`}

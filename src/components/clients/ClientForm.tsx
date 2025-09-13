@@ -87,6 +87,15 @@ export default function ClientForm({
   const isValidEmail = (email: string) => {
     return email === "" || /^[^@]*@[^@]*$/.test(email);
   };
+
+  // Handle change for reminder_profile select
+  const handleProfileChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setFormData({
+      ...formData,
+      reminder_profile: e.target.value || "",
+    });
+  };
+
   //suppresion créance
   const handleNeedReminders = async () => {
     confirmAlert({
@@ -138,21 +147,18 @@ export default function ClientForm({
       }
 
       if (mode === "create") {
-        if (formData.reminder_profile === "") {
-          formData.reminder_profile = null;
-        }
+        const dbFormData = {
+          ...formData,
+          reminder_profile: formData.reminder_profile === "" ? null : formData.reminder_profile,
+          reminder_delay_1: { j: 1, h: 0, m: 0 },
+          reminder_delay_2: { j: 1, h: 0, m: 0 },
+          reminder_delay_3: { j: 1, h: 0, m: 0 },
+          reminder_delay_final: { j: 1, h: 0, m: 0 },
+          owner_id: user.id,
+        };
         const { data, error } = await supabase
           .from("clients")
-          .insert([
-            {
-              ...formData,
-              reminder_delay_1: { j: 1, h: 0, m: 0 },
-              reminder_delay_2: { j: 1, h: 0, m: 0 },
-              reminder_delay_3: { j: 1, h: 0, m: 0 },
-              reminder_delay_final: { j: 1, h: 0, m: 0 },
-              owner_id: user.id,
-            },
-          ])
+          .insert([dbFormData])
           .select()
           .single();
 
@@ -196,10 +202,10 @@ export default function ClientForm({
           .single();
         /*   setFormData({
 				...formData,
-				reminder_profile: reminder_profile? reminder_profile : null
+				reminder_profile: reminder_profile? reminder_profile : ""
 			  }); */
         if (formData.reminder_profile === "") {
-          formData.reminder_profile = null;
+          formData.reminder_profile = "";
         }
 
         const { data, error } = await supabase
@@ -330,22 +336,6 @@ export default function ClientForm({
     setReminderProfiles(data || []);
   };
 
-  useEffect(() => {
-    fetchReminderProfiles();
-  }, []);
-  const handleProfileChange = (profileId: string) => {
-    const selectedProfile = reminderProfiles.find(
-      (profile) => profile.id === profileId
-    );
-    setFormData({
-      ...formData,
-      reminder_profile: profileId === "" ? null : profileId,
-      reminder_delay_1: selectedProfile?.delay1 || { j: 1, h: 0, m: 0 },
-      reminder_delay_2: selectedProfile?.delay2 || { j: 1, h: 0, m: 0 },
-      reminder_delay_3: selectedProfile?.delay3 || { j: 1, h: 0, m: 0 },
-      reminder_delay_final: selectedProfile?.delay4 || { j: 1, h: 0, m: 0 },
-    });
-  };
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 z-50 overflow-y-scroll">
       <div className="min-h-screen py-8 px-4 flex items-center justify-center">
@@ -556,7 +546,7 @@ export default function ClientForm({
               </label>
               <select
                 value={formData.reminder_profile}
-                onChange={(e) => handleProfileChange(e.target.value)}
+                onChange={handleProfileChange}
                 className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option key={null} value="">

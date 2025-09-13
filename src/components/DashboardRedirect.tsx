@@ -20,7 +20,7 @@ export default function DashboardRedirect() {
       if (mfaEnabled) {
         navigate("/mfa");
       } else {
-        navigate(`/dashboard/${encodeURIComponent(userData.user.email)}`);
+        navigate(`/dashboard/${encodeURIComponent(userData.user.email || "")}`);
       }
     };
 

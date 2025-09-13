@@ -88,9 +88,10 @@ export default function ResetPassword() {
         window.location.href = "/";
       }, 3000);
     } catch (error) {
+      const err = error as Error;
       setMessage({
         type: "error",
-        text: error.message,
+        text: err.message,
       });
     } finally {
       setLoading(false);

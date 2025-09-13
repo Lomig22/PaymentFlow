@@ -5,7 +5,7 @@ function InviteUserForm() {
   const [sending, setSending] = useState(false);
   const [message, setMessage] = useState('');
 
-  const handleInvite = async (e) => {
+  const handleInvite = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSending(true);
     setMessage('');

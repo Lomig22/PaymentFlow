@@ -48,7 +48,7 @@ const [clientDetails, setClientDetails] = useState<ClientDetails>(null);
 };
 
   const [loading, setLoading] = useState<boolean>(true);
-  const openModal = (debtor) => {
+  const openModal = (debtor: { id: string; name: string; code: string; amount: number }) => {
     setSelectedDebtor(debtor);
     setIsOpen(true);
   };
@@ -106,7 +106,8 @@ const [clientDetails, setClientDetails] = useState<ClientDetails>(null);
         console.log('Receivable record:', rec);
         // rec.clients est l'objet joint, rec.client_id est le champ FK
         // rec.clients est l'objet joint (doit être un objet, pas un tableau)
-        const client = rec.clients;
+        const clientArr = rec.clients as { id: string; company_name: string; client_code: string }[];
+const client = Array.isArray(clientArr) ? clientArr[0] : clientArr;
         if (!client || !client.id) continue;
         const key = client.client_code;
         if (!key) continue;
