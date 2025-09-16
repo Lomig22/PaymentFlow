@@ -11,30 +11,31 @@ declare global {
 export default function CalendlyAndChatlingLoader() {
   const [user, setUser] = useState<User | null>(null);
 
+  // 1) S'abonner une seule fois aux changements d'auth, et se désabonner au démontage
   useEffect(() => {
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       const currentUser = session?.user ?? null;
       setUser(currentUser);
     });
-    const CHATLING_SCRIPT_ID = "chatling-embed-script";
+    return () => {
+      subscription?.unsubscribe();
+    };
+  }, []);
 
-    let observer: MutationObserver | null = null;
+  // 2) Gérer le chargement / suppression de Chatling selon l'état utilisateur
+  useEffect(() => {
+    const CHATLING_SCRIPT_ID = "chatling-embed-script";
+    let t1: number | null = null;
+    let t2: number | null = null;
 
     const removeChatlingElements = () => {
-      // Supprime le script
       const script = document.getElementById(CHATLING_SCRIPT_ID);
       if (script) script.remove();
-
-      // Supprime la config globale
       delete window.chtlConfig;
-
-      // Supprime les iframes
       const iframe = document.querySelector("iframe[src*='chatling']");
       if (iframe) iframe.remove();
-
-      // Supprime les boutons flottants Chatling
       const chatlingButtonContainer = Array.from(
         document.querySelectorAll("div")
       ).find(
@@ -46,7 +47,6 @@ export default function CalendlyAndChatlingLoader() {
     };
 
     if (!user) {
-      // Ajouter le script si non connecté
       if (!document.getElementById(CHATLING_SCRIPT_ID)) {
         const script = document.createElement("script");
         script.src = "https://chatling.ai/js/embed.js";
@@ -54,28 +54,20 @@ export default function CalendlyAndChatlingLoader() {
         script.id = CHATLING_SCRIPT_ID;
         script.setAttribute("data-id", "4596411993");
         document.body.appendChild(script);
-
         window.chtlConfig = { chatbotId: "4596411993" };
       }
     } else {
+      // En mode connecté, on supprime Chatling si présent
       removeChatlingElements();
-
-      // Observer si quelque chose est injecté après coup
-      observer = new MutationObserver(() => {
-        const iframe = document.querySelector("iframe[src*='chatling']");
-        const chatIcon = document.getElementById("chtl-open-chat-icon");
-
-        if (iframe || chatIcon) {
-          removeChatlingElements();
-          if (observer) observer.disconnect();
-        }
-      });
-
-      observer.observe(document.body, { childList: true, subtree: true });
+      // Au lieu d'un MutationObserver permanent (coûteux),
+      // on effectue 2 nettoyages différés pour capturer d'éventuelles ré-injections tardives
+      t1 = window.setTimeout(removeChatlingElements, 500);
+      t2 = window.setTimeout(removeChatlingElements, 2000);
     }
 
     return () => {
-      if (observer) observer.disconnect();
+      if (t1) clearTimeout(t1);
+      if (t2) clearTimeout(t2);
     };
   }, [user]);
 

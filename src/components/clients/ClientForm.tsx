@@ -146,14 +146,33 @@ export default function ClientForm({
         throw new Error("Utilisateur non authentifié");
       }
 
+      // If a reminder profile is selected, fetch it to apply its values
+      let selectedProfile: ReminderProfile | null = null;
+      if (formData.reminder_profile && formData.reminder_profile !== "") {
+        const { data: rp, error: rpError } = await supabase
+          .from("reminder_profile")
+          .select("*")
+          .eq("id", formData.reminder_profile)
+          .single();
+        if (!rpError && rp) {
+          selectedProfile = rp as ReminderProfile;
+        }
+      }
+
       if (mode === "create") {
-        const dbFormData = {
+        const dbFormData: any = {
           ...formData,
           reminder_profile: formData.reminder_profile === "" ? null : formData.reminder_profile,
-          reminder_delay_1: { j: 1, h: 0, m: 0 },
-          reminder_delay_2: { j: 1, h: 0, m: 0 },
-          reminder_delay_3: { j: 1, h: 0, m: 0 },
-          reminder_delay_final: { j: 1, h: 0, m: 0 },
+          // Apply profile delays if present, else defaults
+          reminder_delay_1: selectedProfile?.delay1 ?? { j: 1, h: 0, m: 0 },
+          reminder_delay_2: selectedProfile?.delay2 ?? { j: 1, h: 0, m: 0 },
+          reminder_delay_3: selectedProfile?.delay3 ?? { j: 1, h: 0, m: 0 },
+          reminder_delay_final: selectedProfile?.delay4 ?? { j: 1, h: 0, m: 0 },
+          // Apply templates if present
+          ...(selectedProfile?.email_template_1 ? { reminder_template_1: selectedProfile.email_template_1 } : {}),
+          ...(selectedProfile?.email_template_2 ? { reminder_template_2: selectedProfile.email_template_2 } : {}),
+          ...(selectedProfile?.email_template_3 ? { reminder_template_3: selectedProfile.email_template_3 } : {}),
+          ...(selectedProfile?.email_template_4 ? { reminder_template_final: selectedProfile.email_template_4 } : {}),
           owner_id: user.id,
         };
         const { data, error } = await supabase
@@ -208,9 +227,22 @@ export default function ClientForm({
           formData.reminder_profile = "";
         }
 
+        // Build update payload and apply selected profile values if any
+        const updatePayload: any = { ...formData };
+        if (selectedProfile) {
+          updatePayload.reminder_delay_1 = selectedProfile.delay1;
+          updatePayload.reminder_delay_2 = selectedProfile.delay2;
+          updatePayload.reminder_delay_3 = selectedProfile.delay3;
+          updatePayload.reminder_delay_final = selectedProfile.delay4;
+          if (selectedProfile.email_template_1) updatePayload.reminder_template_1 = selectedProfile.email_template_1;
+          if (selectedProfile.email_template_2) updatePayload.reminder_template_2 = selectedProfile.email_template_2;
+          if (selectedProfile.email_template_3) updatePayload.reminder_template_3 = selectedProfile.email_template_3;
+          if (selectedProfile.email_template_4) updatePayload.reminder_template_final = selectedProfile.email_template_4;
+        }
+
         const { data, error } = await supabase
           .from("clients")
-          .update(formData)
+          .update(updatePayload)
           .eq("id", client?.id)
           .select()
           .single();
@@ -302,9 +334,11 @@ export default function ClientForm({
     }
   };
 
-  const [reminderProfiles, setReminderProfiles] = useState<ReminderProfile[]>(
-    []
-  );
+  const [reminderProfiles, setReminderProfiles] = useState<ReminderProfile[]>([]);
+
+  useEffect(() => {
+    fetchReminderProfiles();
+  }, []);
 
   const fetchReminderProfiles = async () => {
     const {
@@ -323,7 +357,8 @@ export default function ClientForm({
     const { data, error } = await supabase
       .from("reminder_profile")
       .select()
-      .eq("owner_id", user.id);
+      .eq("owner_id", user.id)
+      .eq("public", false);
 
     if (error) {
       console.error(
@@ -541,9 +576,19 @@ export default function ClientForm({
               />
             </div>
             <div className="col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Profil de rappel
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Profil de rappel
+                </label>
+                <a
+                  href="/reminder-profiles"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-blue-600 hover:text-blue-700 underline"
+                >
+                  Gérer les profils
+                </a>
+              </div>
               <select
                 value={formData.reminder_profile}
                 onChange={handleProfileChange}
@@ -558,6 +603,10 @@ export default function ClientForm({
                   </option>
                 ))}
               </select>
+              <p className="text-xs text-gray-500 mt-1">
+                Si vous sélectionnez un profil, ses délais et messages seront appliqués automatiquement à ce client.
+                Si vous laissez "Ne pas utiliser de profil", vous paramétrerez la relance comme d'habitude.
+              </p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">

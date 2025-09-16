@@ -3,7 +3,7 @@ import {
 	Edit,
 	Mail,
 	Info,
-	Clock,
+	UserCog,
 	Trash2,
 	ListRestart,
 } from 'lucide-react';
@@ -108,7 +108,7 @@ export function ActionsDropdown({
 							}}
 							className="flex items-center w-full px-4 py-2 text-sm text-gray-600 hover:bg-gray-100"
 						>
-							<Clock className="w-4 h-4 mr-2" /> Paramètres de relance
+							<UserCog className="w-4 h-4 mr-2" /> Paramètres de relance
 						</button>
 						<button
 							onClick={() => {

@@ -1,5 +1,9 @@
 // Reload automatique si un chunk JS ne se charge pas (ex: après déploiement)
-if (typeof window !== "undefined") {
+declare global {
+  interface Window { __pfErrorListenerAdded?: boolean }
+}
+if (typeof window !== "undefined" && !window.__pfErrorListenerAdded) {
+  window.__pfErrorListenerAdded = true;
   window.addEventListener("error", (event: any) => {
     if (event?.message && event.message.includes("Loading chunk")) {
       window.location.reload();

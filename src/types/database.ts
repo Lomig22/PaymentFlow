@@ -93,7 +93,7 @@ export interface Reminder {
   id: string;
   receivable_id: string;
   reminder_date: string;
-  reminder_type: 'first' | 'second' | 'third' | 'final' | 'legal';
+  reminder_type: 'first' | 'second' | 'third' | 'final' | 'legal' | 'pre';
   email_sent: boolean;
   email_content?: string;
   created_at: string;

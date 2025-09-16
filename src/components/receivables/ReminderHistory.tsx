@@ -24,6 +24,7 @@ const ReminderHistory = ({
 	const [openStatus, setOpenStatus] = useState<Record<string, boolean | null>>({});
 
 	useEffect(() => {
+		let cancelled = false;
 		const fetchOpenStatus = async () => {
 			const status: Record<string, boolean | null> = {};
 			for (const reminder of filteredReminders) {
@@ -32,22 +33,25 @@ const ReminderHistory = ({
 					status[reminder.id] = null; // Non suivi
 					continue;
 				}
-				// Vérifie dans la table email_opens si une ouverture existe
 				const { data, error } = await supabase
 					.from('email_opens')
 					.select('id')
 					.eq('email_id', emailId)
 					.limit(1)
 					.maybeSingle();
+				if (cancelled) return;
 				if (error) {
 					status[reminder.id] = null;
 				} else {
 					status[reminder.id] = !!data;
 				}
 			}
-			setOpenStatus(status);
+			if (!cancelled) setOpenStatus(status);
 		};
 		if (filteredReminders.length > 0) fetchOpenStatus();
+		return () => {
+			cancelled = true;
+		};
 	}, [filteredReminders]);
 
 	return (

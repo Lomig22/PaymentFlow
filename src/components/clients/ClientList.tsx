@@ -156,15 +156,16 @@ function ClientList({
       return () => clearTimeout(timer);
     }
   }, [importSuccess]);
-  const dropdownRefs = useRef({});
-  const filterRef = useRef(null);
-  const [openDropdownId, setOpenDropdownId] = useState(null);
+  const dropdownRefs = useRef<Record<string, HTMLElement | null>>({});
+  const filterRef = useRef<HTMLDivElement | null>(null);
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!openDropdownId) return;
       const dropdown = dropdownRefs.current[openDropdownId];
 
-      if (dropdown && !dropdown.contains(event.target)) {
+      if (dropdown && !dropdown.contains(event.target as Node)) {
         // Donne un court délai pour laisser les onClick internes s'exécuter
         setTimeout(() => {
           setOpenDropdownId(null);
@@ -172,7 +173,7 @@ function ClientList({
       }
     };
 
-    const handleEscape = (event) => {
+    const handleEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setSelectedClientIds([]);
 
@@ -201,10 +202,8 @@ function ClientList({
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        filterRef.current &&
-        !filterRef.current.contains(event.target as Node)
-      ) {
+      const refEl = filterRef.current;
+      if (refEl && !refEl.contains(event.target as Node)) {
         setShowFilters(false);
       }
     };
@@ -215,20 +214,17 @@ function ClientList({
     };
   }, []);
 
-  const buttonRefs = useRef({});
+  const buttonRefs = useRef<Record<string, HTMLElement | null>>({});
   const tableRefs = useRef<HTMLTableElement | null>(null);
 
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
 
   useLayoutEffect(() => {
-    if (
-      openDropdownId &&
-      buttonRefs.current[openDropdownId] &&
-      dropdownRefs.current[openDropdownId]
-    ) {
-      const buttonRect =
-        buttonRefs.current[openDropdownId]!.getBoundingClientRect();
-      const dropdown = dropdownRefs.current[openDropdownId];
+    const btnEl = openDropdownId ? buttonRefs.current[openDropdownId] : null;
+    const dropEl = openDropdownId ? dropdownRefs.current[openDropdownId] : null;
+    if (openDropdownId && btnEl && dropEl) {
+      const buttonRect = btnEl.getBoundingClientRect();
+      const dropdown = dropEl;
       const table = tableRefs.current;
 
       if (!dropdown) return;
@@ -250,7 +246,7 @@ function ClientList({
     }
   }, [openDropdownId]);
 
-  const columnFilters = [
+  const columnFilters: { key: keyof CSVMapping; label: string }[] = [
     { key: "needs_reminder", label: "Relance" },
     { key: "company_name", label: "Entreprise" },
     { key: "client_code", label: "Code Client" },
@@ -389,11 +385,8 @@ function ClientList({
       // Par exemple, filtrer les clients supprimés de la liste affichée
       console.log("Clients supprimés:", data);
     } catch (error) {
-      Swal.fire(
-        "Erreur",
-        `Une erreur est survenue : ${error.message}`,
-        "error"
-      );
+      const message = error instanceof Error ? error.message : String(error);
+      Swal.fire("Erreur", `Une erreur est survenue : ${message}` , "error");
     }
     setSelectedClientIds([]);
     //setSelectedAll(false);

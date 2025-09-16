@@ -9,6 +9,7 @@ import {
   X,
   Home,
   HelpCircle,
+  UserCog,
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { AuthSessionMissingError } from "@supabase/supabase-js";
@@ -66,6 +67,7 @@ export default function Layout() {
     { name: "Tableau de bord", href: "/dashboard", icon: Home },
     { name: "Clients", href: "/clients", icon: Users },
     { name: "Créances", href: "/receivables", icon: FileText },
+    { name: "Profils de relance", href: "/reminder-profiles", icon: UserCog },
     { name: "Paramètres", href: "/settings", icon: Settings },
   ];
   //  console.log("Current path:", JSON.stringify(location.pathname));
@@ -429,7 +431,7 @@ export default function Layout() {
             </a>
           </header>
 
-          <div className="pl-20 group-hover:pl-64 transition-all duration-200">
+          <div className={`transition-all duration-200 ${isExpanded ? 'pl-64' : 'pl-24'}`}>
             <main>
               <Outlet />
             </main>

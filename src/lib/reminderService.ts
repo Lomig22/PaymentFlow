@@ -235,7 +235,10 @@ export async function sendManualReminder(
 		// ✅ Générer le contenu personnalisé ou utiliser le template par défaut
 		console.log("content: ",content)
 
-		const defaultEmailContent = formatTemplate(content || template, {
+		// Garantir une string pour le template d'email
+		const emailBodyTemplate = (content ?? template ?? "");
+		if (!emailBodyTemplate) return false;
+		const defaultEmailContent = formatTemplate(emailBodyTemplate, {
 			company: receivable.client.company_name,
 			amount: receivable.amount,
 			invoice_number: receivable.invoice_number,
@@ -270,7 +273,8 @@ export async function sendManualReminder(
 		  toEmail,
 		  finalSubject,
 		  finalContent,
-		  receivable.invoice_pdf_url
+		  receivable.invoice_pdf_url,
+		  emailTrackingId
 		);
 		if (emailSent) {
 			// Enregistrer la relance
@@ -280,7 +284,7 @@ export async function sendManualReminder(
 			  client.reminder_enable_1 ||
 			  client.reminder_enable_2 ||
 			  client.reminder_enable_3 ||
-			  client.reminder_enable_finale ||
+			  client.reminder_enable_final ||
 			  client.pre_reminder_enable
 			) {
 			  await supabase.from('reminders').insert({
@@ -416,12 +420,16 @@ export async function sendOneReminder(receivableId: string): Promise<boolean> {
 			days_left: Math.max(0, -1 * daysLate),
 		});
 
+		// Générer et propager un emailTrackingId pour le pixel d'ouverture
+		const autoEmailTrackingId = uuidv4();
+
 		const emailSent = await sendEmail(
 			emailSettings,
 			receivable.client.email,
 			`Relance facture ${receivable.invoice_number}`,
 			emailContent,
-			receivable.invoice_pdf_url
+			receivable.invoice_pdf_url,
+			autoEmailTrackingId
 		);
 
 		if (emailSent) {
@@ -431,6 +439,7 @@ export async function sendOneReminder(receivableId: string): Promise<boolean> {
 				reminder_date: new Date().toISOString(),
 				email_sent: true,
 				email_content: emailContent,
+				email_id: autoEmailTrackingId,
 			});
 
 			await supabase

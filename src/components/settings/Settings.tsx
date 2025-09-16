@@ -26,7 +26,6 @@ import ZapierSettings from './ZapierSettings'; */
 import NotificationSettings from "./NotificationSettings";
 //import ReminderFrequencySettings from './ReminderFrequencySettings';
 
-import ReminderProfileSettings from "./ReminderProfileSettings";
 import UnsavedChangesModal from "./UnsavedChangesModal"; // Modal pour changements non enregistrés
 import ProfileSettings from "./ProfileSettings";
 import SignatureSettings from "./SenderSettings";
@@ -73,11 +72,6 @@ const sections = [
         id: "sender",
         name: "Personnaliser la signature",
         component: SignatureSettings,
-      },
-      {
-        id: "profile_rename",
-        name: "Configuration des profils",
-        component: ReminderProfileSettings,
       },
       // { id: 'auto_notifications', name: 'Activer/désactiver les notifications automatiques', component: AutoNotificationSettings },
     ],
@@ -255,9 +249,7 @@ export default function Settings() {
             </Elements>
           ) : (
             // Injection du callback dans ReminderProfileSettings et SignatureSettings
-            activeSectionId === "reminders" && activeSubTabId === "profile_rename" ? (
-              <ReminderProfileSettings onDirtyChange={handleReminderProfileDirty} />
-            ) : activeSectionId === "reminders" && activeSubTabId === "sender" ? (
+            activeSectionId === "reminders" && activeSubTabId === "sender" ? (
               <SignatureSettings onDirtyChange={handleReminderProfileDirty} />
             ) : (
               <ActiveComponent />
