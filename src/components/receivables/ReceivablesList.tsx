@@ -94,6 +94,8 @@ function ReceivablesList() {
   const [showImportModal, setShowImportModal] = useState(false);
   const [importSuccess, setImportSuccess] = useState<string | null>(null);
   const [sendSuccess, setSendSuccess] = useState(false);
+  const sendSuccessTimeoutRef = useRef<number | null>(null);
+  const errorTimeoutRef = useRef<number | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const RECEIVABLES_SORT_KEY = 'receivables_sort_config';
   const [sortConfig, setSortConfig] = useState<{
@@ -112,19 +114,15 @@ function ReceivablesList() {
   // Helper pour savoir si un profil de relance est prêt (profil pré-enregistré)
   function canPlayDirect(receivable: Receivable & { client: Client }) {
     const client = receivable.client;
-    // Profil de relance enregistré + date pièce + date d'échéance présentes
-    return (
-      !!client?.reminder_profile &&
-      !!receivable.document_date &&
-      !!receivable.due_date
-    );
+    // Profil de relance enregistré + date d'échéance présente (date pièce non obligatoire)
+    return !!client?.reminder_profile && !!receivable.due_date;
   }
-
 
   const [hasConsumedReminderNavigation, setHasConsumedReminderNavigation] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
+    let cancelled = false;
     if (
       location.state?.openReminderForClient &&
       receivables.length > 0 &&
@@ -134,6 +132,7 @@ function ReceivablesList() {
         r => r.client.id === location.state.openReminderForClient
       );
       if (receivable) {
+        if (cancelled) return;
         setHasConsumedReminderNavigation(true); // Consomme le flag
         setSelectedReceivable(receivable);
         setShowConfirmReminder(true);
@@ -141,6 +140,9 @@ function ReceivablesList() {
         navigate("", { replace: true, state: null });
       }
     }
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line
   }, [location.state, receivables, hasConsumedReminderNavigation]);
 
@@ -166,12 +168,28 @@ function ReceivablesList() {
     return true;
   };
 
+  // Nettoyer le timeout si le composant est démonté avant la fin
+  useEffect(() => {
+    return () => {
+      if (sendSuccessTimeoutRef.current) {
+        clearTimeout(sendSuccessTimeoutRef.current);
+      }
+      if (errorTimeoutRef.current) {
+        clearTimeout(errorTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const [showConfirmSendReminder, setShowConfirmReminder] = useState(false);
   const [sending, setSending] = useState(false);
   const showError = (message: string) => {
     setError(message);
-    setTimeout(() => {
+    if (errorTimeoutRef.current) {
+      clearTimeout(errorTimeoutRef.current);
+    }
+    errorTimeoutRef.current = window.setTimeout(() => {
       setError(null);
+      errorTimeoutRef.current = null;
     }, 3000);
   };
   const [content, setContent] = useState<string>("");
@@ -307,6 +325,7 @@ function ReceivablesList() {
   }, [importSuccess]);
   //récupération du template actuelle:
   useEffect(() => {
+    let cancelled = false;
     const enableClientDelays = async () => {
       const { data: clientData, error } = await supabase
         .from("clients")
@@ -325,11 +344,12 @@ function ReceivablesList() {
 
     if (showConfirmSendReminder === true) {
       if (selectedReceivable?.client?.reminder_profile) {
-        //    alert('selectedRecevable?.client?.reminder_profile: ',selectedReceivable?.client?.reminder_profile)
+        //    alert('selectedRecevable?.client?.reminder_profile: ',selectedRecevable?.client?.reminder_profile)
         enableClientDelays();
       }
       const fetchData = async () => {
         if (!selectedReceivable) {
+          if (cancelled) return;
           setContent("");
           setSubject("");
           setSignature("");
@@ -347,8 +367,10 @@ function ReceivablesList() {
 
         // Récupérer la signature
         const emailSettings = await getEmailSettings(user.id);
-        if (emailSettings?.email_signature) {
-          setSignature(emailSettings.email_signature);
+        if (!cancelled) {
+          if (emailSettings?.email_signature) {
+            setSignature(emailSettings.email_signature);
+          }
         }
 
         const isLastStatus = (status: string) => {
@@ -401,7 +423,7 @@ function ReceivablesList() {
             selectedReceivable.id,
             newStatus
           );
-          if (result) {
+          if (!cancelled && result) {
             const subjectLine = `Relance facture ${selectedReceivable.invoice_number}`;
             setSubject(subjectLine);
             setContent(result.template); // ou formatté si le template est déjà rempli
@@ -411,6 +433,9 @@ function ReceivablesList() {
 
       fetchData();
     }
+    return () => {
+      cancelled = true;
+    };
   }, [selectedReceivable, showConfirmSendReminder]);
 
   // Fonction pour vérifier si un client a des créances impayées
@@ -697,8 +722,12 @@ function ReceivablesList() {
             }
           }
           // Masquer le message après 3 secondes
-          setTimeout(() => {
+          if (sendSuccessTimeoutRef.current) {
+            clearTimeout(sendSuccessTimeoutRef.current);
+          }
+          sendSuccessTimeoutRef.current = window.setTimeout(() => {
             setSendSuccess(false);
+            sendSuccessTimeoutRef.current = null;
           }, 3000);
           await fetchReceivables();
         } else {
@@ -1169,21 +1198,25 @@ function ReceivablesList() {
   // Effet principal
 
   useEffect(() => {
+    let cancelled = false;
     const updateAllReminderStates = async () => {
-      const titles: { [key: string]: any } = {}; // Ajout d'une signature d'index pour accès dynamique
-
+      const titles: { [key: string]: any } = {};
       for (const receivable of receivables) {
+        if (cancelled) return;
         await fetchReminderStatus(receivable.id);
+        if (cancelled) return;
         const result = detectIssues(receivable);
         titles[receivable.id] = result;
       }
-
-      setReminderTitles(titles);
+      if (!cancelled) setReminderTitles(titles);
     };
 
     if (receivables.length > 0) {
       updateAllReminderStates();
     }
+    return () => {
+      cancelled = true;
+    };
   }, [receivables]);
 
   useEffect(() => {
@@ -1269,6 +1302,7 @@ function ReceivablesList() {
     if (client.reminder_enable_final && !client.reminder_template_final)
       issues.push("la relance finale est activée sans template");
 
+    /*
     const datesToCheck = [
       client.pre_reminder_enable && client.pre_reminder_date,
       client.reminder_enable_1 && client.reminder_date_1,
@@ -1280,29 +1314,30 @@ function ReceivablesList() {
     const hasPastDate = datesToCheck.some(
       (date) => date && isBefore(new Date(date), now)
     );
-
-    /*     if (hasPastDate) {
+    if (hasPastDate) {
       issues.push("une ou plusieurs dates de relance sont dépassées");
-    } */
-
-    // Si un profil de relance existe et que la date pièce + échéance sont présentes, ne bloque pas
-    if (
-      !client.reminder_enable_1 &&
-      !client.reminder_enable_2 &&
-      !client.reminder_enable_3 &&
-      !client.reminder_enable_final &&
-      !client.pre_reminder_enable
-    ) {
-      if (client.reminder_profile && receivable.document_date && receivable.due_date) {
-        return ""; // Pas de blocage
-      }
-      return "Aucune relance n'est activée!";
     }
+    */
+
+// Si un profil de relance existe et que l'échéance est présente, ne bloque pas (date pièce non obligatoire)
+if (
+  !client.reminder_enable_1 &&
+  !client.reminder_enable_2 &&
+  !client.reminder_enable_3 &&
+  !client.reminder_enable_final &&
+  !client.pre_reminder_enable
+) {
+  if (client.reminder_profile && receivable.due_date) {
+    return ""; // Pas de blocage
+  }
+  return "Aucune relance n'est activée!";
+}
+
 /*     if (!receivable.automatic_reminder && issues.length === 0) {
       return "Relance en pause";
     } */
 
-    return issues.join(", ");
+return issues.join(", ");
   }
 
   if (loading) {

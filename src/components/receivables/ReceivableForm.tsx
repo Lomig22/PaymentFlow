@@ -147,6 +147,7 @@ export default function ReceivableForm({
       }
 
       let clientId = formData.client_id;
+      let clientHasReminderProfile = false;
 
       // Upload the PDF file
       let invoicePath = "";
@@ -186,6 +187,15 @@ export default function ReceivableForm({
           .from("clients")
           .update({ needs_reminder: true })
           .eq("id", clientId);
+        // Vérifier si le client possède un profil de relance
+        const { data: c, error: cErr } = await supabase
+          .from("clients")
+          .select("reminder_profile")
+          .eq("id", clientId)
+          .single();
+        if (!cErr && c) {
+          clientHasReminderProfile = !!c.reminder_profile;
+        }
       }
 
       // Vérifier si la date d'échéance est dépassée
@@ -275,29 +285,29 @@ if (updatedTotalAmount >= maxOverDues) {
     }
 
     // Ajouter la nouvelle créance
-    const { data, error } = await supabase
-      .from("receivables")
-      .insert([
-        {
-          ...formData,
-          email: emailToUse,
-          client_id: clientId,
-          amount: parseFloat(formData.amount),
-          paid_amount: formData.paid_amount
-            ? parseFloat(formData.paid_amount)
-            : null,
-          document_date: formData.document_date || null,
-          installment_number: formData.installment_number || null,
-          status: isOverdue ? "late" : "pending",
-          owner_id: user.id,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          invoice_pdf_url: invoicePath ? invoicePath : undefined,
-          automatic_reminder:false,
-        },
-      ])
-      .select("*, client:clients(*)")
-      .single();
+      const { data, error } = await supabase
+        .from("receivables")
+        .insert([
+          {
+            ...formData,
+            email: emailToUse,
+            client_id: clientId,
+            amount: parseFloat(formData.amount),
+            paid_amount: formData.paid_amount
+              ? parseFloat(formData.paid_amount)
+              : null,
+            document_date: formData.document_date || null,
+            installment_number: formData.installment_number || null,
+            status: isOverdue ? "late" : "pending",
+            owner_id: user.id,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            invoice_pdf_url: invoicePath ? invoicePath : undefined,
+            automatic_reminder: clientHasReminderProfile ? true : false,
+          },
+        ])
+        .select("*, client:clients(*)")
+        .single();
 
       if (error) throw error;
 

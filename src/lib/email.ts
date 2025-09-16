@@ -9,24 +9,26 @@ interface EmailSettings {
 }
 
 import { v4 as uuidv4 } from 'uuid';
+const supabaseUrl: string = import.meta.env.VITE_SUPABASE_URL;
 
 export const sendEmail = async (
 	settings: EmailSettings,
 	to: string,
 	subject: string,
 	htmlContent: string,
-	invoice_pdf_url?: string
+	invoice_pdf_url?: string,
+	emailId?: string
 ): Promise<boolean> => {
 	try {
 		const auth_data = localStorage.getItem('paymentflow-auth');
 		if (auth_data) {
 			const access_token = JSON.parse(auth_data).access_token;
-			// Générer un identifiant unique pour le tracking
-			const emailTrackingId = uuidv4();
-			const trackingPixel = `<img src=\"https://rsomeerndudkhyhpigmn.supabase.co/functions/v1/email-open-tracker?id=${emailTrackingId}\" width=\"1\" height=\"1\" style=\"display:none;\" alt=\"\" />`;
+			// Utiliser l'ID de tracking fourni si présent, sinon en générer un
+			const emailTrackingId = emailId || uuidv4();
+			const trackingPixel = `<img src="${supabaseUrl}/functions/v1/email-open-tracker?id=${emailTrackingId}" width="1" height="1" style="display:none;" alt="" />`;
 
 			const res = await fetch(
-				'https://rsomeerndudkhyhpigmn.supabase.co/functions/v1/send-smtp-email',
+				`${supabaseUrl}/functions/v1/send-smtp-email`,
 				{
 					method: 'POST',
 					headers: {

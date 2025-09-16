@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "../../lib/supabase";
 import { saveNotification } from "../../lib/notification";
 import { Client, Receivable, ReminderProfile } from "../../types/database";
@@ -29,6 +29,8 @@ export default function ReminderSettingsModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const errorTimeoutRef = useRef<number | null>(null);
+  const closeTimeoutRef = useRef<number | null>(null);
   const [showReminders, setShowReminders] = useState(true);
   const [automaticReminder, setAutomaticReminder] = useState<boolean>(
     receivable.automatic_reminder ?? false
@@ -62,6 +64,14 @@ export default function ReminderSettingsModal({
   const handleTemplateChange = (key: keyof typeof emailTemplates, value: string) => {
     setEmailTemplates((prev) => ({ ...prev, [key]: value }));
   };
+
+  // Nettoyage global des timeouts à la fermeture du composant
+  useEffect(() => {
+    return () => {
+      if (errorTimeoutRef.current) clearTimeout(errorTimeoutRef.current);
+      if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
+    };
+  }, []);
 
   const handleSaveTemplates = async () => {
     if (!reminderProfile?.id) return;
@@ -134,8 +144,12 @@ export default function ReminderSettingsModal({
 
   const showError = (message: string) => {
     setError(message);
-    setTimeout(() => {
+    if (errorTimeoutRef.current) {
+      clearTimeout(errorTimeoutRef.current);
+    }
+    errorTimeoutRef.current = window.setTimeout(() => {
       setError(null);
+      errorTimeoutRef.current = null;
     }, 3000);
   };
 
@@ -182,6 +196,7 @@ export default function ReminderSettingsModal({
     const [reminderProfileName,setReminderProfileName]=useState('')
   const [preAlreadySend, setPreAlreadySend] = useState(false);
   useEffect(() => {
+    let cancelled = false;
     const checkReminders = async () => {
       const now = startOfMinute(new Date()); // tronque à la minute près
 
@@ -206,6 +221,7 @@ export default function ReminderSettingsModal({
       const reminder_2_already_send = await alreadySend("second");
       const reminder_3_already_send = await alreadySend("third");
       const reminder_final_already_send = await alreadySend("final");
+      if (cancelled) return;
       setPreAlreadySend(pre_already_send);
       setReminder1AlreadySend(reminder_1_already_send);
       setReminder2AlreadySend(reminder_2_already_send);
@@ -240,12 +256,17 @@ export default function ReminderSettingsModal({
         pre_reminder_enable && pre_already_send === false && preReminderDate,
       ].some((date) => date && isBefore(startOfMinute(new Date(date)), now));
 
+      if (cancelled) return;
       setHasPastDateEnable(isTherePastDate);
     };
 
     checkReminders();
+    return () => {
+      cancelled = true;
+    };
   }, [formData, receivable.id]);
   useEffect(() => {
+    let cancelled = false;
     const fetchReminderProfileName = async () => {
       const {
         data: { user },
@@ -268,10 +289,13 @@ export default function ReminderSettingsModal({
         return;
       }
   
-      setReminderProfileName(reminderProfile.name);
+      if (!cancelled) setReminderProfileName(reminderProfile.name);
     };
   
     fetchReminderProfileName();
+    return () => {
+      cancelled = true;
+    };
   }, [client.id]);
   
   const handleSubmit = async (e: React.FormEvent) => {
@@ -463,8 +487,12 @@ export default function ReminderSettingsModal({
 
       setSuccess(true);
       // Attendre un peu avant de fermer pour montrer le message de succès
-      setTimeout(() => {
+      if (closeTimeoutRef.current) {
+        clearTimeout(closeTimeoutRef.current);
+      }
+      closeTimeoutRef.current = window.setTimeout(() => {
         onClose();
+        closeTimeoutRef.current = null;
       }, 1500);
     } catch (error) {
       console.error("Erreur lors de la mise à jour des paramètres:", error);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "../../lib/supabase";
 import { Client, Receivable } from "../../types/database";
 import { X, Upload, FileUp } from "lucide-react";
@@ -21,6 +21,8 @@ export default function ReceivableEditForm({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const errorTimeoutRef = useRef<number | null>(null);
+  const successTimeoutRef = useRef<number | null>(null);
   const [clientEmails] = useState<string[]>(
     receivable.client.email.split(",") || []
   );
@@ -41,17 +43,25 @@ export default function ReceivableEditForm({
   });
   const showError = (message: string) => {
     setError(message);
-    setTimeout(() => {
+    if (errorTimeoutRef.current) {
+      clearTimeout(errorTimeoutRef.current);
+    }
+    errorTimeoutRef.current = window.setTimeout(() => {
       setError(null);
+      errorTimeoutRef.current = null;
     }, 3000);
   };
   const showSuccess = (message: string) => {
     console.log("MEssage:", message);
 
     setSuccess(message);
-    setTimeout(() => {
+    if (successTimeoutRef.current) {
+      clearTimeout(successTimeoutRef.current);
+    }
+    successTimeoutRef.current = window.setTimeout(() => {
       setSuccess(null);
       setLoading(false);
+      successTimeoutRef.current = null;
     }, 3000);
   };
 
@@ -74,6 +84,14 @@ export default function ReceivableEditForm({
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = "unset";
+    };
+  }, []);
+
+  // Nettoyage global des timeouts à la fermeture du composant
+  useEffect(() => {
+    return () => {
+      if (errorTimeoutRef.current) clearTimeout(errorTimeoutRef.current);
+      if (successTimeoutRef.current) clearTimeout(successTimeoutRef.current);
     };
   }, []);
 

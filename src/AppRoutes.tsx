@@ -26,6 +26,7 @@ import ClientPage from "./components/clients/ClientPage";
 import ReceivablesList from "./components/receivables/ReceivablesList";
 import ReceivableForm from "./components/receivables/ReceivableForm";
 import Settings from "./components/settings/Settings";
+import ReminderProfilesPage from "./components/ReminderProfilesPage";
 import ReminderList from "./components/reminders/ReminderList";
 import HelpAndSupport from "./pages/HelpAndSupport";
 import SuccessStoriesPage from "./pages/SuccessStoriesPage";
@@ -123,7 +124,8 @@ export default function AppRoutes({ user, onMFASuccess }: AppRoutesProps) {
           <Route path="clients" element={<ClientPage />} />
           <Route path="receivables" element={<ReceivablesList />} />
           <Route path="receivables/new" element={<ReceivableForm onClose={() => {}} onReceivableAdded={() => {}} />} />
-          <Route path="settings" element={<Settings />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/reminder-profiles" element={<ReminderProfilesPage />} />
           <Route path="reminders" element={<ReminderList />} />
           <Route path="success" element={<Success />} />
         </Route>
