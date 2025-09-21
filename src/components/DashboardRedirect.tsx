@@ -17,10 +17,11 @@ export default function DashboardRedirect() {
 
       const mfaEnabled = userData.user.user_metadata?.mfa_enabled;
 
+      const search = typeof window !== 'undefined' ? window.location.search : '';
       if (mfaEnabled) {
-        navigate("/mfa");
+        navigate(`/mfa${search}`);
       } else {
-        navigate(`/dashboard/${encodeURIComponent(userData.user.email || "")}`);
+        navigate(`/dashboard/${encodeURIComponent(userData.user.email || "")}${search}`);
       }
     };
 

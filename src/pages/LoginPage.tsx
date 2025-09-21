@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { supabase } from "../lib/supabase";
 import { Lock, Mail, Eye, EyeOff, ArrowLeft } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
@@ -13,6 +13,7 @@ export default function LoginPage() {
   } | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const [showTotpPrompt, setShowTotpPrompt] = useState(false);
   const [totpCode, setTotpCode] = useState("");
   const [mfaChallenge, setMfaChallenge] = useState<string | null>(null);
@@ -66,7 +67,9 @@ export default function LoginPage() {
       if (!data.user.email) {
         throw new Error("Email utilisateur introuvable. Veuillez réessayer.");
       }
-      navigate(`/dashboard/${encodeURIComponent(data.user.email)}`);
+      const qs = new URLSearchParams(location.search);
+      const suffix = qs.get("onboarding") === "1" ? "?onboarding=1" : "";
+      navigate(`/dashboard/${encodeURIComponent(data.user.email)}${suffix}`);
     } catch (error: any) {
       setMessage({
         type: "error",
@@ -82,10 +85,14 @@ export default function LoginPage() {
     setMessage(null);
 
     try {
+      const qs = new URLSearchParams(location.search);
+      const hasOnboarding = qs.get("onboarding") === "1";
+      const redirectBase = "https://lomig.onirtech.com/dashboard/";
+      const redirectTo = hasOnboarding ? `${redirectBase}?onboarding=1` : redirectBase;
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: "https://lomig.onirtech.com/dashboard/",
+          redirectTo,
         },
       });
 
