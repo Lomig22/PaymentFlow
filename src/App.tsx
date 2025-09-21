@@ -4,17 +4,15 @@ import { User } from "@supabase/supabase-js";
 import AuthMFA from "./components/AuthMFA";
 import AppRoutes from "./AppRoutes";
 
-function clearAllStorageAndCookies() {
-  // Nettoyage localStorage
-  try { localStorage.clear(); } catch (e) {}
-  // Nettoyage sessionStorage
-  try { sessionStorage.clear(); } catch (e) {}
-  // Nettoyage cookies (basique)
-  if (typeof document !== 'undefined') {
-    document.cookie.split(';').forEach(function(c) {
-      document.cookie = c.trim().split('=')[0] + '=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/';
-    });
-  }
+function clearSupabaseAuthOnly() {
+  try {
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+    const host = new URL(supabaseUrl).host;
+    // Supprimer uniquement les clés d'auth Supabase locales
+    localStorage.removeItem(`paymentflow-auth:${host}`);
+    localStorage.removeItem("paymentflow-auth"); // rétrocompatibilité éventuelle
+    // Ne pas toucher aux clés d'onboarding (onboarding_*), ni aux autres données
+  } catch {}
 }
 
 export default function AppWithMFA() {
@@ -33,8 +31,8 @@ export default function AppWithMFA() {
         const session = await checkAuth();
         const currentUser = session?.user ?? null;
         setUser(currentUser);
-        // Si l'utilisateur n'est plus connecté, on nettoie tout
-        if (!currentUser) clearAllStorageAndCookies();
+        // Si l'utilisateur n'est plus connecté, ne nettoyer que l'auth Supabase
+        if (!currentUser) clearSupabaseAuthOnly();
       } catch (error) {
         console.error("Erreur d'authentification :", error);
       } finally {
