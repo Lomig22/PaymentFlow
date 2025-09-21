@@ -52,6 +52,7 @@ export default function AppRoutes({ user, onMFASuccess }: AppRoutesProps) {
   const search = typeof window !== 'undefined' ? window.location.search : '';
   const qs = new URLSearchParams(search);
   const onboardingSuffix = qs.get("onboarding") === "1" ? "?onboarding=1" : "";
+  const hash = typeof window !== 'undefined' ? window.location.hash : '';
 
   return (
     <Router>
@@ -65,7 +66,7 @@ export default function AppRoutes({ user, onMFASuccess }: AppRoutesProps) {
             !user ? (
               <LandingPage onGetStarted={() => {}} />
             ) : (
-              <Navigate to={`/dashboard${onboardingSuffix}`} replace />
+              <Navigate to={{ pathname: "/dashboard", search: onboardingSuffix, hash }} replace />
             )
           }
         />
@@ -88,7 +89,7 @@ export default function AppRoutes({ user, onMFASuccess }: AppRoutesProps) {
         />
         <Route
           path="/login"
-          element={!user ? <LoginPage /> : <Navigate to={`/dashboard${onboardingSuffix}`} replace />}
+          element={!user ? <LoginPage /> : <Navigate to={{ pathname: "/dashboard", search: onboardingSuffix, hash }} replace />}
         />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/pricing" element={<PricingPage setShowContact={() => {}} setDefaultSubject={() => {}} />} />
@@ -136,7 +137,7 @@ export default function AppRoutes({ user, onMFASuccess }: AppRoutesProps) {
         {/* Redirection par défaut */}
         <Route
           path="*"
-          element={<Navigate to={user ? `/dashboard${onboardingSuffix}` : `/`} replace />}
+          element={<Navigate to={user ? { pathname: "/dashboard", search: onboardingSuffix, hash } : { pathname: "/" }} replace />}
         />
       </Routes>
     </Router>

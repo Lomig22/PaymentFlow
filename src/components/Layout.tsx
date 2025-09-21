@@ -45,7 +45,6 @@ export default function Layout() {
         if (uid) {
           localStorage.setItem(`onboarding_dismissed_${uid}`, "1");
           localStorage.setItem(`onboarding_seen_${uid}`, "1");
-          localStorage.setItem("onboarding_seen", "1"); // rétrocompat
         }
       } catch {}
 
@@ -84,10 +83,11 @@ export default function Layout() {
         try {
           // Marque localement pour ne plus ré-afficher
           localStorage.setItem(`onboarding_dismissed_${uid}`, "1");
-          // On marque aussi comme "vu" côté local pour plus de robustesse
-          localStorage.setItem(`onboarding_seen_${uid}`, "1");
-          // rétrocompatibilité
-          localStorage.setItem("onboarding_seen", "1");
+        } catch {}
+
+        // Nettoyage du drapeau différé une fois traité (si présent)
+        try {
+          localStorage.removeItem('onboarding_deferred');
         } catch {}
 
         // Nettoyage de l'URL pour ne pas relancer l'onboarding au refresh
@@ -193,8 +193,6 @@ export default function Layout() {
         } catch {}
         try {
           localStorage.setItem(`onboarding_seen_${uid}`, "1");
-          // rétrocompatibilité
-          localStorage.setItem("onboarding_seen", "1");
         } catch {}
       }
     } catch {}
@@ -223,8 +221,6 @@ export default function Layout() {
         if (uid) {
           localStorage.setItem(`onboarding_seen_${uid}`, "1");
         }
-        // rétrocompatibilité
-        localStorage.setItem("onboarding_seen", "1");
       } catch {}
       setSpotlightOpen(false);
     }
@@ -393,7 +389,15 @@ export default function Layout() {
         // Détecter le déclencheur via URL ?onboarding=1
         const search = (typeof window !== 'undefined' ? window.location.search : location.search) || '';
         const urlParams = new URLSearchParams(search);
-        const hasQueryTrigger = urlParams.get('onboarding') === '1';
+        // Supabase passe souvent les tokens et le type (signup) dans le hash (#...)
+        const hash = (typeof window !== 'undefined' ? window.location.hash : '') || '';
+        const hashParams = new URLSearchParams(hash.startsWith('#') ? hash.substring(1) : hash);
+        const isSignupFlow = (hashParams.get('type') === 'signup') || (urlParams.get('type') === 'signup');
+        let hasDeferredTrigger = false;
+        try {
+          hasDeferredTrigger = localStorage.getItem('onboarding_deferred') === '1';
+        } catch {}
+        const hasQueryTrigger = urlParams.get('onboarding') === '1' || isSignupFlow || hasDeferredTrigger;
 
         if (!profiles || profiles.length === 0) {
           console.warn("Aucun profil trouvé pour cet utilisateur :", userId, "— création d'un profil minimal");
@@ -412,7 +416,7 @@ export default function Layout() {
           }
         } else {
           console.log("✅ Profil utilisateur trouvé :", profiles[0]);
-          // Déclenchement onboarding si non vu
+          // Déclenchement onboarding si non vu (clé par utilisateur uniquement)
           const dbSeen = !!(profiles && profiles[0] && (profiles[0] as any).onboarding_seen === true);
           let localSeen = false;
           try {
@@ -420,11 +424,11 @@ export default function Layout() {
             const localKeyDismissed = `onboarding_dismissed_${userId}`;
             localSeen =
               localStorage.getItem(localKeySeen) === "1" ||
-              localStorage.getItem(localKeyDismissed) === "1" ||
-              localStorage.getItem("onboarding_seen") === "1"; // rétrocompatibilité
+              localStorage.getItem(localKeyDismissed) === "1";
           } catch {}
-          // Ouvrir uniquement si le paramètre onboarding=1 est présent dans l'URL
-          if (!dbSeen && !localSeen && hasQueryTrigger) {
+          // Si déclencheur présent (query/hash/différé), ignorer les indicateurs locaux
+          // et n'ouvrir qu'une seule fois tant que la DB n'est pas marquée vue.
+          if (hasQueryTrigger && !dbSeen) {
             setOnboardingOpen(true);
           }
         }
