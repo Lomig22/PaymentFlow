@@ -1,5 +1,29 @@
 import React, { useState } from "react";
 import { supabase } from "../../lib/supabase";
+import OnboardingLayout from "./OnboardingLayout";
+import OnboardingStep from "./OnboardingStep";
+import {
+  User as UserIcon,
+  Briefcase,
+  Users,
+  Building2,
+  Wrench,
+  Factory,
+  ShoppingCart,
+  Shield,
+  Calculator,
+  Target,
+  BarChart3,
+  CreditCard,
+  Search,
+  Linkedin,
+  Mail,
+  Megaphone,
+  MoreHorizontal,
+  Phone as PhoneIcon,
+  Stethoscope,
+} from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 
 export type SurveyWizardData = {
   role?: string;
@@ -128,184 +152,172 @@ export default function OnboardingSurveyWizard({ onDone }: OnboardingSurveyWizar
     }
   };
 
+  // Build rich options with icons
+  const ROLE_OPTIONS = [
+    { label: "Dirigeant / CEO", value: "Dirigeant / CEO", icon: UserIcon },
+    { label: "DAF / Finance", value: "DAF / Finance", icon: Briefcase },
+    { label: "Comptable", value: "Comptable", icon: Calculator as any },
+    { label: "Recouvrement / Credit manager", value: "Recouvrement / Credit manager", icon: Shield },
+    { label: "Commercial", value: "Commercial", icon: Users },
+    { label: "Autre", value: "Autre", icon: MoreHorizontal },
+  ];
+
+  const DEPARTMENT_OPTIONS = [
+    { label: "Direction", value: "Direction", icon: UserIcon },
+    { label: "Finance", value: "Finance", icon: Briefcase },
+    { label: "Comptabilité", value: "Comptabilité", icon: Calculator as any },
+    { label: "Recouvrement", value: "Recouvrement", icon: Shield },
+    { label: "Commerce", value: "Commerce", icon: ShoppingCart },
+    { label: "Autre", value: "Autre", icon: MoreHorizontal },
+  ];
+
+  const COMPANY_SIZE_OPTIONS = COMPANY_SIZES.map((s) => ({
+    label: s,
+    value: s,
+    icon: Users,
+  }));
+
+  const INDUSTRY_OPTIONS = [
+    { label: "Garage / Automobile", value: "Garage / Automobile", icon: Wrench },
+    { label: "Industrie", value: "Industrie", icon: Factory },
+    { label: "Services", value: "Services", icon: Briefcase },
+    { label: "Commerce", value: "Commerce", icon: ShoppingCart },
+    { label: "BTP", value: "BTP", icon: Building2 },
+    { label: "Santé", value: "Santé", icon: Stethoscope as any },
+    { label: "Autre", value: "Autre", icon: MoreHorizontal },
+  ];
+
+  const GOAL_OPTIONS = [
+    { label: "Automatiser les relances", value: "Automatiser les relances", icon: Target },
+    { label: "Réduire le DSO / retards", value: "Réduire le DSO / retards", icon: BarChart3 },
+    { label: "Centraliser les paiements", value: "Centraliser les paiements", icon: CreditCard },
+    { label: "Améliorer la communication", value: "Améliorer la communication", icon: Megaphone },
+    { label: "Suivre la performance", value: "Suivre la performance", icon: BarChart3 },
+    { label: "Autre", value: "Autre", icon: MoreHorizontal },
+  ];
+
+  const REFERRER_OPTIONS = [
+    { label: "Google", value: "Google", icon: Search },
+    { label: "LinkedIn", value: "LinkedIn", icon: Linkedin },
+    { label: "Bouche-à-oreille", value: "Bouche-à-oreille", icon: Users },
+    { label: "Email", value: "Email", icon: Mail },
+    { label: "Publicité", value: "Publicité", icon: Megaphone },
+    { label: "Autre", value: "Autre", icon: MoreHorizontal },
+  ];
+
   return (
-    <div className="mt-4">
+    <OnboardingLayout
+      step={step}
+      total={3}
+      canNext={canNext()}
+      saving={saving}
+      onPrev={prev}
+      onNext={next}
+      onFinish={saveAll}
+    >
       {error && (
         <div className="mb-4 p-2 rounded bg-red-50 text-red-700 text-sm">{error}</div>
       )}
 
-      {/* Indicator */}
-      <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
-        <span>Étape {step + 1} / 3</span>
-      </div>
-
-      {step === 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-fade-in">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Votre rôle</label>
-            <select
-              value={data.role}
-              onChange={(e) => setData((d) => ({ ...d, role: e.target.value }))}
-              className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Sélectionner…</option>
-              {ROLES.map((r) => (
-                <option key={r} value={r}>{r}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Département</label>
-            <select
-              value={data.department}
-              onChange={(e) => setData((d) => ({ ...d, department: e.target.value }))}
-              className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Sélectionner…</option>
-              {DEPARTMENTS.map((r) => (
-                <option key={r} value={r}>{r}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-      )}
-
-      {step === 1 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-fade-in">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Taille de l'entreprise</label>
-            <select
-              value={data.company_size}
-              onChange={(e) => setData((d) => ({ ...d, company_size: e.target.value }))}
-              className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Sélectionner…</option>
-              {COMPANY_SIZES.map((r) => (
-                <option key={r} value={r}>{r}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Secteur d'activité</label>
-            <select
-              value={data.industry}
-              onChange={(e) => setData((d) => ({ ...d, industry: e.target.value }))}
-              className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Sélectionner…</option>
-              {INDUSTRIES.map((r) => (
-                <option key={r} value={r}>{r}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-      )}
-
-      {step === 2 && (
-        <div className="grid grid-cols-1 gap-4 animate-fade-in">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Objectifs principaux</label>
-            <div className="flex flex-wrap gap-2">
-              {GOALS.map((g) => {
-                const active = data.goals?.includes(g);
-                return (
-                  <button
-                    type="button"
-                    key={g}
-                    onClick={() => toggleGoal(g)}
-                    className={`px-3 py-1.5 rounded-full text-sm border ${
-                      active ? "bg-blue-600 text-white border-blue-600" : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
-                    }`}
-                  >
-                    {g}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Comment nous avez-vous trouvé ?</label>
-              <select
-                value={data.referrer}
-                onChange={(e) => setData((d) => ({ ...d, referrer: e.target.value }))}
-                className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Sélectionner…</option>
-                {REFERRERS.map((r) => (
-                  <option key={r} value={r}>{r}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Outils actuels (optionnel)</label>
-              <input
-                type="text"
-                value={data.current_tools}
-                onChange={(e) => setData((d) => ({ ...d, current_tools: e.target.value }))}
-                placeholder="Ex: Excel, logiciel comptable, ERP…"
-                className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Téléphone (optionnel)</label>
-              <input
-                type="tel"
-                value={data.phone}
-                onChange={(e) => setData((d) => ({ ...d, phone: e.target.value }))}
-                className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="06…"
-              />
-            </div>
-            <label className="mt-7 flex items-center gap-2 text-xs text-gray-600">
-              <input
-                type="checkbox"
-                checked={!!data.consent_contact}
-                onChange={(e) => setData((d) => ({ ...d, consent_contact: e.target.checked }))}
-              />
-              J'accepte d'être recontacté(e) pour optimiser mon onboarding
-            </label>
-          </div>
-        </div>
-      )}
-
-      {/* Footer */}
-      <div className="mt-6 sm:mt-8 flex items-center justify-between">
-        <button
-          type="button"
-          onClick={prev}
-          disabled={step === 0}
-          className="px-3 py-2 text-sm rounded-md border border-gray-300 text-gray-700 disabled:opacity-50 hover:bg-gray-50"
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={step}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.2 }}
         >
-          Précédent
-        </button>
-        {step < 2 ? (
-          <button
-            type="button"
-            onClick={next}
-            disabled={!canNext()}
-            className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
-          >
-            Suivant
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={saveAll}
-            disabled={saving}
-            className="px-4 py-2 rounded-md bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
-          >
-            {saving ? "Enregistrement…" : "Terminer"}
-          </button>
-        )}
-      </div>
+          {step === 0 && (
+            <div className="grid grid-cols-1 gap-6">
+              <OnboardingStep
+                title="Votre rôle"
+                options={ROLE_OPTIONS}
+                selected={data.role || ""}
+                onSelect={(value) => setData((d) => ({ ...d, role: value }))}
+              />
+              <OnboardingStep
+                title="Département"
+                options={DEPARTMENT_OPTIONS}
+                selected={data.department || ""}
+                onSelect={(value) => setData((d) => ({ ...d, department: value }))}
+              />
+            </div>
+          )}
 
-      <style>{`
-        .animate-fade-in { animation: fadein .25s ease; }
-        @keyframes fadein { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
-      `}</style>
-    </div>
+          {step === 1 && (
+            <div className="grid grid-cols-1 gap-6">
+              <OnboardingStep
+                title="Taille de l'entreprise"
+                options={COMPANY_SIZE_OPTIONS}
+                selected={data.company_size || ""}
+                onSelect={(value) => setData((d) => ({ ...d, company_size: value }))}
+              />
+              <OnboardingStep
+                title="Secteur d'activité"
+                options={INDUSTRY_OPTIONS}
+                selected={data.industry || ""}
+                onSelect={(value) => setData((d) => ({ ...d, industry: value }))}
+              />
+            </div>
+          )}
+
+          {step === 2 && (
+            <div className="grid grid-cols-1 gap-6">
+              <OnboardingStep
+                title="Objectifs principaux"
+                options={GOAL_OPTIONS}
+                multi
+                selectedList={data.goals || []}
+                onToggle={(value) => toggleGoal(value)}
+              />
+
+              <OnboardingStep
+                title="Comment nous avez-vous trouvé ?"
+                options={REFERRER_OPTIONS}
+                selected={data.referrer || ""}
+                onSelect={(value) => setData((d) => ({ ...d, referrer: value }))}
+              />
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Outils actuels (optionnel)</label>
+                  <div className="relative mt-1">
+                    <input
+                      type="text"
+                      value={data.current_tools}
+                      onChange={(e) => setData((d) => ({ ...d, current_tools: e.target.value }))}
+                      placeholder="Ex: Excel, logiciel comptable, ERP…"
+                      className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Téléphone (optionnel)</label>
+                  <div className="relative mt-1">
+                    <PhoneIcon className="h-4 w-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="tel"
+                      value={data.phone}
+                      onChange={(e) => setData((d) => ({ ...d, phone: e.target.value }))}
+                      className="pl-9 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="06…"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <label className="mt-1 flex items-center gap-2 text-xs text-gray-600">
+                <input
+                  type="checkbox"
+                  checked={!!data.consent_contact}
+                  onChange={(e) => setData((d) => ({ ...d, consent_contact: e.target.checked }))}
+                />
+                J'accepte d'être recontacté(e) pour optimiser mon onboarding
+              </label>
+            </div>
+          )}
+        </motion.div>
+      </AnimatePresence>
+    </OnboardingLayout>
   );
 }
