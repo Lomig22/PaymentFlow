@@ -21,7 +21,7 @@ export function getWelcomeEmailHtml(userEmail: string) {
         <span style="font-size:1.7em;">🚀</span>
       </p>
       <div style="margin:2em 0;">
-        <a href="https://payment-flow.fr/login" style="display:inline-block;padding:14px 32px;background:#2563eb;color:white;border-radius:8px;font-size:1.1em;text-decoration:none;font-weight:700;box-shadow:0 2px 8px #c7d2fe;transition:background 0.2s;">Se connecter à mon espace</a>
+        <a href="https://payment-flow.fr/login?onboarding=1" style="display:inline-block;padding:14px 32px;background:#2563eb;color:white;border-radius:8px;font-size:1.1em;text-decoration:none;font-weight:700;box-shadow:0 2px 8px #c7d2fe;transition:background 0.2s;">Se connecter à mon espace</a>
       </div>
       <div style="margin:1.5em 0 2.5em;">
         <p style="font-size:1.05em;color:#334155;margin:0 0 12px;">

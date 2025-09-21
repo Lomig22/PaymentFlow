@@ -89,6 +89,16 @@ export default function Layout() {
           // rétrocompatibilité
           localStorage.setItem("onboarding_seen", "1");
         } catch {}
+
+        // Nettoyage de l'URL pour ne pas relancer l'onboarding au refresh
+        try {
+          const search = (typeof window !== 'undefined' ? window.location.search : location.search) || '';
+          const urlParams = new URLSearchParams(search);
+          if (urlParams.has('onboarding')) {
+            urlParams.delete('onboarding');
+            navigate({ pathname: location.pathname, search: urlParams.toString() ? `?${urlParams.toString()}` : '' }, { replace: true });
+          }
+        } catch {}
       }
     } catch {}
   };
@@ -380,6 +390,11 @@ export default function Layout() {
           );
         }
 
+        // Détecter le déclencheur via URL ?onboarding=1
+        const search = (typeof window !== 'undefined' ? window.location.search : location.search) || '';
+        const urlParams = new URLSearchParams(search);
+        const hasQueryTrigger = urlParams.get('onboarding') === '1';
+
         if (!profiles || profiles.length === 0) {
           console.warn("Aucun profil trouvé pour cet utilisateur :", userId, "— création d'un profil minimal");
           try {
@@ -391,8 +406,10 @@ export default function Layout() {
           } catch (e) {
             console.error("Échec de création du profil minimal:", e);
           }
-          // Afficher l'onboarding immédiatement pour un nouvel utilisateur
-          setOnboardingOpen(true);
+          // Afficher l'onboarding uniquement si le lien email comporte ?onboarding=1
+          if (hasQueryTrigger) {
+            setOnboardingOpen(true);
+          }
         } else {
           console.log("✅ Profil utilisateur trouvé :", profiles[0]);
           // Déclenchement onboarding si non vu
@@ -406,7 +423,8 @@ export default function Layout() {
               localStorage.getItem(localKeyDismissed) === "1" ||
               localStorage.getItem("onboarding_seen") === "1"; // rétrocompatibilité
           } catch {}
-          if (!dbSeen && !localSeen) {
+          // Ouvrir uniquement si le paramètre onboarding=1 est présent dans l'URL
+          if (!dbSeen && !localSeen && hasQueryTrigger) {
             setOnboardingOpen(true);
           }
         }
