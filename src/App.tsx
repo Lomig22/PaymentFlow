@@ -28,6 +28,18 @@ export default function AppWithMFA() {
   useEffect(() => {
     const initAuth = async () => {
       try {
+        // Capture très tôt le déclencheur d'onboarding depuis l'URL (query ou hash)
+        try {
+          const search = typeof window !== 'undefined' ? window.location.search : '';
+          const hash = typeof window !== 'undefined' ? window.location.hash : '';
+          const qs = new URLSearchParams(search);
+          const hp = new URLSearchParams(hash.startsWith('#') ? hash.substring(1) : hash);
+          const shouldTrigger = qs.get('onboarding') === '1' || hp.get('type') === 'signup' || qs.get('type') === 'signup';
+          if (shouldTrigger) {
+            localStorage.setItem('onboarding_deferred', '1');
+          }
+        } catch {}
+
         const session = await checkAuth();
         const currentUser = session?.user ?? null;
         setUser(currentUser);
