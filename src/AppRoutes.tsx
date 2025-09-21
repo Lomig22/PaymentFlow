@@ -31,7 +31,6 @@ import ReminderList from "./components/reminders/ReminderList";
 import HelpAndSupport from "./pages/HelpAndSupport";
 import SuccessStoriesPage from "./pages/SuccessStoriesPage";
 import AbonnementSuccess from "./pages/success";
-import SubscribePage from "./pages/SubscribePage";
 import Success from "./components/settings/paymentSuccess";
 import AppHeader from "./components/AppHeader";
 import ReportingRecouvrement from "./pages/ReportingRecouvrement";
@@ -68,7 +67,7 @@ export default function AppRoutes({ user, onMFASuccess }: AppRoutesProps) {
         />
         <Route path="/help" element={<HelpAndSupport />} />
         <Route path="/temoignages" element={<SuccessStoriesPage />} />
-        <Route path="/subscribe" element={<SubscribePage />} />
+        {/* /subscribe route removed (SubscribePage absent) */}
         <Route
           path="/reporting-recouvrement"
           element={<ReportingRecouvrement />}

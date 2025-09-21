@@ -277,28 +277,16 @@ export async function sendManualReminder(
 		  emailTrackingId
 		);
 		if (emailSent) {
-			// Enregistrer la relance
-			const client = receivable.client;
-
-			if (
-			  client.reminder_enable_1 ||
-			  client.reminder_enable_2 ||
-			  client.reminder_enable_3 ||
-			  client.reminder_enable_final ||
-			  client.pre_reminder_enable
-			) {
-			  await supabase.from('reminders').insert({
+			// Enregistrer la relance (toujours), afin d'activer le suivi d'ouverture via email_id
+			await supabase.from('reminders').insert({
 				receivable_id: receivableId,
 				reminder_type: level,
 				reminder_date: new Date().toISOString(),
 				email_sent: true,
 				email_content: finalContent,
-				email_id: emailTrackingId, // Ajout pour le tracking
-			  });
-			}
-			
-		//	alert("level:"+level)
-			
+				email_id: emailTrackingId,
+			});
+
 			// Mettre à jour le statut
 			await supabase
 				.from('receivables')

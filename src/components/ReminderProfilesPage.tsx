@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { confirmAlert } from "react-confirm-alert";
 import "react-confirm-alert/src/react-confirm-alert.css";
-import { Plus } from "lucide-react";
+import { Plus, MoreHorizontal, Copy, UserPlus, Pencil, Trash2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function ReminderProfilesPage() {
   const [profiles, setProfiles] = useState<any[]>([]);
@@ -21,10 +22,35 @@ export default function ReminderProfilesPage() {
   });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [errors, setErrors] = useState<any>({});
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const menuRefs = useRef<Record<string, HTMLElement | null>>({});
 
   useEffect(() => {
     fetchProfiles();
   }, []);
+
+  // Fermer le menu 3 points au clic en dehors ou sur Échap
+  useEffect(() => {
+    const handleDocumentClick = (event: MouseEvent) => {
+      if (!openMenuId) return;
+      const current = menuRefs.current[openMenuId];
+      if (current && !current.contains(event.target as Node)) {
+        setOpenMenuId(null);
+      }
+    };
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setOpenMenuId(null);
+      }
+    };
+    document.addEventListener('mousedown', handleDocumentClick);
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('mousedown', handleDocumentClick);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [openMenuId]);
 
   async function fetchProfiles() {
     setLoading(true);
@@ -149,6 +175,39 @@ export default function ReminderProfilesPage() {
     });
   }
 
+  async function handleDuplicate(profile: any) {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const copy = {
+        name: `${profile.name} (copie)`,
+        delay1: profile.delay1,
+        delay2: profile.delay2,
+        delay3: profile.delay3,
+        delay4: profile.delay4,
+        email_template_1: profile.email_template_1 || "",
+        email_template_2: profile.email_template_2 || "",
+        email_template_3: profile.email_template_3 || "",
+        email_template_4: profile.email_template_4 || "",
+        owner_id: user.id,
+        public: false,
+      };
+
+      await supabase.from("reminder_profile").insert(copy);
+      fetchProfiles();
+    } catch (e) {
+      console.error("Erreur duplication profil:", e);
+    }
+  }
+
+  function handleAssign(profile: any) {
+    // Rediriger vers la page clients avec un paramètre pour activer le mode assignation
+    navigate(`/clients?assignProfile=${profile.id}`);
+  }
+
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
@@ -198,7 +257,7 @@ export default function ReminderProfilesPage() {
             <div className="mb-4"></div>
             {showForm && (
               <div className="fixed inset-0 bg-gray-600 bg-opacity-50 z-50 flex items-center justify-center overflow-y-auto">
-                <div className="relative bg-white rounded-lg shadow-xl p-8 w-full max-w-lg mx-auto">
+                <div className="relative bg-white rounded-lg shadow-xl p-5 w-full max-w-lg mx-auto max-h-[85vh] overflow-y-auto text-sm">
                   <button
                     type="button"
                     onClick={() => { setShowForm(false); setEditingId(null); }}
@@ -209,16 +268,17 @@ export default function ReminderProfilesPage() {
                   </button>
                   <form
                     onSubmit={handleSave}
-                    className="flex flex-col gap-4"
+                    className="flex flex-col gap-3"
                   >
-                    <div>
-                      <label className="block text-sm font-medium">Nom du profil</label>
+                    <div className="p-0">
+                      <label className="block text-sm font-medium text-gray-800">Nom du profil</label>
                       <input
                         type="text"
                         name="name"
                         value={form.name}
                         onChange={handleInputChange}
-                        className="mt-2 block w-full border-gray-300 rounded px-3 py-2 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Saisir le nom du profil"
+                        className="mt-2 block w-full rounded-md px-2.5 py-1.5 bg-white border border-transparent text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                         maxLength={50}
                         required
                       />
@@ -226,8 +286,8 @@ export default function ReminderProfilesPage() {
                     {[1, 2, 3, 4].map((num) => {
                       const delay = (form as any)[`delay${num}`] as any;
                       return (
-                        <div key={num} className="flex flex-wrap gap-3 items-end">
-                          <div className="font-semibold">Délais {num}</div>
+                        <div key={num} className="p-0 flex flex-wrap gap-3 items-end">
+                          <div className="text-xs font-semibold text-gray-700">Relance {num}</div>
                           <div>
                             <label className="block text-xs">Jours</label>
                             <input
@@ -240,7 +300,7 @@ export default function ReminderProfilesPage() {
                                   [`delay${num}`]: { ...(f as any)[`delay${num}`], j: +e.target.value },
                                 }))
                               }
-                              className="block w-16 border-gray-300 rounded px-2 py-1 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              className="block w-16 rounded-md px-2 py-1 bg-gray-100 ring-1 ring-inset ring-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
                             />
                           </div>
                           <div>
@@ -256,7 +316,7 @@ export default function ReminderProfilesPage() {
                                   [`delay${num}`]: { ...(f as any)[`delay${num}`], h: +e.target.value },
                                 }))
                               }
-                              className="block w-16 border-gray-300 rounded px-2 py-1 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              className="block w-16 rounded-md px-2 py-1 bg-white ring-1 ring-inset ring-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
                             />
                           </div>
                           <div>
@@ -272,35 +332,36 @@ export default function ReminderProfilesPage() {
                                   [`delay${num}`]: { ...(f as any)[`delay${num}`], m: +e.target.value },
                                 }))
                               }
-                              className="block w-16 border-gray-300 rounded px-2 py-1 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              className="block w-16 rounded-md px-2 py-1 bg-white ring-1 ring-inset ring-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
                             />
                           </div>
                         </div>
                       );
                     })}
                     {[1, 2, 3, 4].map((num) => (
-                      <div key={num + 10}>
-                        <label className="block text-sm font-medium">Corps de l'email {num}</label>
+                      <div key={num + 10} className="p-0">
+                        <label className="block text-sm font-medium text-gray-800 mb-1">Corps de l'email {num}</label>
                         <textarea
                           name={`email_template_${num}`}
                           value={(form as any)[`email_template_${num}`]}
                           onChange={handleInputChange}
-                          className="mt-2 block w-full border-gray-300 rounded px-3 py-2 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          rows={3}
+                          placeholder="Contenu de l’email (placeholders: {company}, {amount}, {invoice_number}, {due_date}, {days_late})"
+                          className="mt-2 block w-full rounded-md px-2.5 py-2 bg-gray-100 ring-1 ring-inset ring-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm font-mono"
+                          rows={4}
                         />
                       </div>
                     ))}
                     <div className="flex gap-2 justify-end">
                       <button
                         type="button"
-                        className="px-4 py-2 rounded bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        className="px-3 py-1.5 rounded bg-gray-100 text-gray-700 hover:bg-gray-200"
                         onClick={() => { setShowForm(false); setEditingId(null); }}
                       >
                         Annuler
                       </button>
                       <button
                         type="submit"
-                        className="px-4 py-2 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700"
+                        className="px-3 py-1.5 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700"
                       >
                         {editingId ? "Enregistrer" : "Créer"}
                       </button>
@@ -311,33 +372,80 @@ export default function ReminderProfilesPage() {
             )}
             <div className="flex flex-wrap items-stretch gap-6 w-full">
               {profiles.map((profile) => (
-                <div key={profile.id} className="bg-white shadow rounded-lg p-4 w-full sm:w-1/2 lg:w-1/3 flex flex-col gap-3">
+                <div
+                  key={profile.id}
+                  className="bg-white shadow rounded-lg p-4 w-full sm:w-1/2 lg:w-1/3 flex flex-col gap-3 relative"
+                >
                   <div>
                     <div className="text-lg font-bold flex items-center gap-2">
                       <span>{profile.name}</span>
                     </div>
                     <div className="text-gray-500 text-sm mt-1">
-                      {Array.from({length: 4}).map((_, i) => (
+                      {Array.from({ length: 4 }).map((_, i) => (
                         <div key={i}>
-                          <span className="font-semibold">Délais {i+1} :</span> {profile[`delay${i+1}`]?.j ?? 0}j {profile[`delay${i+1}`]?.h ?? 0}h {profile[`delay${i+1}`]?.m ?? 0}m<br />
-                          <span className="font-semibold">Email {i+1} :</span> {(profile[`email_template_${i+1}`] || "").slice(0, 40)}{(profile[`email_template_${i+1}`] || "").length > 40 ? "..." : ""}
+                          <span className="font-semibold">Délais {i + 1} :</span> {profile[`delay${i + 1}`]?.j ?? 0}j {profile[`delay${i + 1}`]?.h ?? 0}h {profile[`delay${i + 1}`]?.m ?? 0}m
+                          <br />
+                          <span className="font-semibold">Email {i + 1} :</span> {(profile[`email_template_${i + 1}`] || "").slice(0, 40)}
+                          {(profile[`email_template_${i + 1}`] || "").length > 40 ? "..." : ""}
                         </div>
                       ))}
                     </div>
                   </div>
-                  <div className="flex gap-2 mt-2 md:mt-0">
+
+                  {/* Bouton menu 3 points */}
+                  <div
+                    className="absolute top-2 right-2"
+                    ref={(el) => (menuRefs.current[profile.id] = el)}
+                  >
                     <button
-                      className="px-3 py-1 rounded bg-blue-100 text-blue-700 hover:bg-blue-200 font-medium"
-                      onClick={() => handleEdit(profile)}
+                      className="p-1.5 rounded hover:bg-gray-100"
+                      onClick={() =>
+                        setOpenMenuId((prev) => (prev === profile.id ? null : profile.id))
+                      }
+                      aria-label="Actions profil"
                     >
-                      Éditer
+                      <MoreHorizontal className="h-5 w-5 text-gray-600" />
                     </button>
-                    <button
-                      className="px-3 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200 font-medium"
-                      onClick={() => handleDelete(profile.id)}
-                    >
-                      Supprimer
-                    </button>
+                    {openMenuId === profile.id && (
+                      <div className="absolute right-0 mt-2 w-44 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+                        <button
+                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                          onClick={() => {
+                            setOpenMenuId(null);
+                            handleEdit(profile);
+                          }}
+                        >
+                          <Pencil className="h-4 w-4" /> Éditer
+                        </button>
+                        <button
+                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                          onClick={() => {
+                            setOpenMenuId(null);
+                            handleDuplicate(profile);
+                          }}
+                        >
+                          <Copy className="h-4 w-4" /> Dupliquer
+                        </button>
+                        <button
+                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                          onClick={() => {
+                            setOpenMenuId(null);
+                            handleAssign(profile);
+                          }}
+                        >
+                          <UserPlus className="h-4 w-4" /> Assigner
+                        </button>
+                        <button
+                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50"
+                          onClick={() => {
+                            setOpenMenuId(null);
+                            handleDelete(profile.id);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" /> Supprimer
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}

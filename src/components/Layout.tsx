@@ -116,24 +116,38 @@ export default function Layout() {
           .single();
 
         if ((pending?.length === 0 || !pending) && !existingProfile) {
-          await supabase.auth.signOut();
-          navigate("/signup");
-          return;
+          console.warn(
+            "Aucun pending_profile ni profil existant — création d'un profil minimal"
+          );
+          try {
+            await supabase
+              .from("profiles")
+              .upsert([
+                {
+                  id: user.id,
+                  email: user.email,
+                  subscribe: false,
+                },
+              ]);
+          } catch (e) {
+            console.error("Échec de création du profil minimal:", e);
+          }
         }
 
         if (user?.email) {
           // On ne crée le profil que s'il n'existe pas déjà
           if (!existingProfile?.subscribe) {
-            if (!fetchError && pending) {
+            if (!fetchError && Array.isArray(pending) && pending.length > 0) {
+              const p0 = pending[0];
               const { error: upsertError } = await supabase
                 .from("profiles")
                 .upsert([
                   {
                     id: user.id,
                     email: user.email,
-                    name: pending[0].name,
-                    phone: pending[0].phone,
-                    company: pending[0].company,
+                    name: p0?.name ?? "",
+                    phone: p0?.phone ?? "",
+                    company: p0?.company ?? "",
                     subscribe: true,
                   },
                 ]);
@@ -163,110 +177,71 @@ export default function Layout() {
       try {
         console.log("⏳ Vérification de la session utilisateur...");
 
-        // Fonction pour limiter getSession à 3 secondes max
+        // Fonction pour limiter getUser à 3 secondes max
         const timeout = (delay: number) =>
           new Promise((_, reject) =>
-            setTimeout(() => reject(new Error("⏱ Timeout getSession")), delay)
+            setTimeout(() => reject(new Error("⏱ Timeout getUser")), delay)
           );
 
-        let user = null;
+        let user: null | { id: string; email?: string | null } = null;
 
-        // 1. Tenter d'obtenir la session Supabase avec timeout
+        // 1. Tenter d'obtenir l'utilisateur côté serveur (plus fiable) avec timeout
         try {
           const result = await Promise.race([
-            supabase.auth.getSession(),
+            supabase.auth.getUser(),
             timeout(3000),
           ]);
-          const { data, error } = (result as { data: any; error: any }) || {};
+          const { data, error } = (result as { data?: any; error?: any }) || {};
 
           if (error) {
-            console.warn("❌ Erreur Supabase getSession:", error.message);
-          } else if (data?.session?.user) {
-            user = data.session.user;
-            console.log(
-              "✅ Session récupérée via Supabase pour l'utilisateur :",
-              user.id
-            );
+            console.warn("❌ Erreur Supabase getUser:", error.message);
+          } else if (data?.user) {
+            user = data.user;
+            const uid: string = data.user.id;
+            console.log("✅ Utilisateur vérifié côté serveur:", uid);
           }
         } catch (err) {
           if (err instanceof Error) {
-            console.warn("⏱ Timeout ou erreur lors de getSession :", err.message);
+            console.warn("⏱ Timeout ou erreur lors de getUser :", err.message);
           } else {
-            console.warn("⏱ Timeout ou erreur lors de getSession :", err);
+            console.warn("⏱ Timeout ou erreur lors de getUser :", err);
           }
         }
 
-        // 2. Si pas de session, tenter depuis localStorage
-        if (!user && localStorage.getItem("paymentflow-auth")) {
-          console.log("📦 Tentative de récupération via localStorage...");
-          try {
-            const raw = localStorage.getItem("paymentflow-auth");
-            let stored = null;
-            try {
-              stored = JSON.parse(raw || "{}");
-            } catch (parseErr) {
-              console.error("❌ Erreur parsing localStorage:", parseErr);
-            }
-            if (!stored) {
-              console.warn("❌ Rien à parser dans localStorage");
-            } else {
-              const token = stored?.access_token;
-              const refreshToken = stored?.refresh_token;
-              const userData = stored?.user;
-              if (token && refreshToken && userData) {
-                // Tenter de restaurer la session Supabase
-                const { data, error } = await supabase.auth.setSession({
-                  access_token: token,
-                  refresh_token: refreshToken,
-                });
-                if (error) {
-                  console.warn("❌ Erreur lors de supabase.auth.setSession:", error.message);
-                } else if (data?.session?.user) {
-                  user = data.session.user;
-                  console.log("✅ Session restaurée via Supabase pour l'utilisateur :", user.id);
-                } else {
-                  console.warn("⚠️ setSession n'a pas retourné d'utilisateur.");
-                }
-              } else {
-                console.warn("❌ Token, refresh_token ou user manquant dans localStorage.");
-              }
-            }
-          } catch (e) {
-            console.error("❌ Erreur lors de la récupération locale:", e);
-          }
-        }
-
-        // 3. Si aucune session valide → redirection
+        // 2. Si aucune session valide → ne pas forcer de redirection ici (AppRoutes gère la protection)
         if (!user) {
-          console.warn("🔒 Aucune session valide. Redirection vers /login");
-          // Évite la boucle si déjà sur /login ou /signup
-          if (window.location.pathname !== "/login" && window.location.pathname !== "/signup") {
-            navigate("/login");
-          }
+          console.warn("🔒 Aucune session valide (Layout). On laisse le routeur supérieur gérer.");
           return;
         }
 
-        // 4. Vérifier l'existence du profil utilisateur
-        console.log("Recherche profil pour user.id =", user.id);
+        const userId = user.id as string;
+        const userEmail = (user as any).email ?? null;
+
+        // 3. Vérifier l'existence du profil utilisateur
+        console.log("Recherche profil pour user.id =", userId);
         const { data: profiles, error: profileError } = await supabase
           .from("profiles")
           .select("*")
-          .eq("id", user.id);
+          .eq("id", userId);
 
         if (profileError) {
           console.error(
-            "❌ Erreur lors de la récupération du profil :",
+            "❌ Erreur lors de la récupération du profil (on continue sans déconnexion):",
             profileError
           );
-          await supabase.auth.signOut();
-          return;
         }
 
         if (!profiles || profiles.length === 0) {
-          console.warn("Aucun profil trouvé pour cet utilisateur :", user.id);
-          // Ici, tu peux rediriger ou afficher un message d'erreur
-          navigate("/signup");
-          return;
+          console.warn("Aucun profil trouvé pour cet utilisateur :", userId, "— création d'un profil minimal");
+          try {
+            await supabase
+              .from("profiles")
+              .upsert([
+                { id: userId, email: userEmail, subscribe: false },
+              ]);
+          } catch (e) {
+            console.error("Échec de création du profil minimal:", e);
+          }
         } else {
           console.log("✅ Profil utilisateur trouvé :", profiles[0]);
         }

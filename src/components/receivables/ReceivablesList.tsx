@@ -1650,26 +1650,26 @@ return issues.join(", ");
 
                         
 <span
-  className={`w-6 h-6 flex items-center justify-center relative z-0 ${!remindersEnabled(receivable.client) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+  className={`w-6 h-6 flex items-center justify-center relative z-0 ${!(remindersEnabled(receivable.client) || canPlayDirect(receivable)) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
   onClick={e => {
     e.stopPropagation();
-    if (!remindersEnabled(receivable.client)) return;
+    if (!(remindersEnabled(receivable.client) || canPlayDirect(receivable))) return;
     if (!handleClick()) return;
     handleAutomaticReminderToggle(receivable);
   }}
-  aria-disabled={!remindersEnabled(receivable.client)}
+  aria-disabled={!(remindersEnabled(receivable.client) || canPlayDirect(receivable))}
 >
   <AnimatePresence mode="wait" initial={false}>
     {!receivable.automatic_reminder ? (
       <Tooltip
-        label={remindersEnabled(receivable.client) ? 'Activer les relances' : "Aucune relance n'est activée pour ce client"}
+        label={(remindersEnabled(receivable.client) || canPlayDirect(receivable)) ? 'Activer les relances' : "Aucune relance n'est activée pour ce client"}
         theme="orange"
         key="play"
       >
         <button
           type="button"
-          className={`flex items-center justify-center rounded-full w-8 h-8 transition focus:outline-none ${remindersEnabled(receivable.client) ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-gray-300 text-gray-400 cursor-not-allowed'}`}
-          disabled={!remindersEnabled(receivable.client)}
+          className={`flex items-center justify-center rounded-full w-8 h-8 transition focus:outline-none ${(remindersEnabled(receivable.client) || canPlayDirect(receivable)) ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-gray-300 text-gray-400 cursor-not-allowed'}`}
+          disabled={!(remindersEnabled(receivable.client) || canPlayDirect(receivable))}
           aria-label="Activer les relances"
           style={{ fontSize: '1.2rem' }}
         >

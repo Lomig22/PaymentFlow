@@ -421,6 +421,39 @@ export default function ClientForm({
                 className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
+            <div className="col-span-2">
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Profil de rappel
+                </label>
+                <a
+                  href="/reminder-profiles"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-blue-600 hover:text-blue-700 underline"
+                >
+                  Gérer les profils
+                </a>
+              </div>
+              <select
+                value={formData.reminder_profile}
+                onChange={handleProfileChange}
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option key={null} value="">
+                  Ne pas utiliser de profile
+                </option>
+                {reminderProfiles.map((profile) => (
+                  <option key={profile.id} value={profile.id}>
+                    {profile.name}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                Si vous sélectionnez un profil, ses délais et messages seront appliqués automatiquement à ce client.
+                Si vous laissez "Ne pas utiliser de profil", vous paramétrerez la relance comme d'habitude.
+              </p>
+            </div>
             <div>
               <div className="flex flex-col gap-1 w-full">
                 {emails.map((email, index) => (
@@ -575,39 +608,7 @@ export default function ClientForm({
                 placeholder="https://..."
               />
             </div>
-            <div className="col-span-2">
-              <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Profil de rappel
-                </label>
-                <a
-                  href="/reminder-profiles"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-blue-600 hover:text-blue-700 underline"
-                >
-                  Gérer les profils
-                </a>
-              </div>
-              <select
-                value={formData.reminder_profile}
-                onChange={handleProfileChange}
-                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option key={null} value="">
-                  Ne pas utiliser de profile
-                </option>
-                {reminderProfiles.map((profile) => (
-                  <option key={profile.id} value={profile.id}>
-                    {profile.name}
-                  </option>
-                ))}
-              </select>
-              <p className="text-xs text-gray-500 mt-1">
-                Si vous sélectionnez un profil, ses délais et messages seront appliqués automatiquement à ce client.
-                Si vous laissez "Ne pas utiliser de profil", vous paramétrerez la relance comme d'habitude.
-              </p>
-            </div>
+            {/* Profil de rappel déplacé sous le champ Code Client */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Commentaire
