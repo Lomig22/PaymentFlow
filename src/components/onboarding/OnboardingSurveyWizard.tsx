@@ -104,7 +104,21 @@ export default function OnboardingSurveyWizard({ onDone }: OnboardingSurveyWizar
         .from("profiles")
         .update({ onboarding_survey: data })
         .eq("id", user.id);
-      if (error) throw error;
+      if (error) {
+        const code = (error as any)?.code;
+        const msg = String((error as any)?.message || "");
+        // Fallback si la colonne n'existe pas encore côté DB (migrations non appliquées)
+        if (code === "PGRST204" || msg.includes("onboarding_survey")) {
+          try {
+            localStorage.setItem(`onboarding_survey_${user.id}`, JSON.stringify(data));
+            onDone();
+            return;
+          } catch {
+            // si le localStorage échoue, on laisse remonter l'erreur d'origine
+          }
+        }
+        throw error;
+      }
       onDone();
     } catch (e: any) {
       console.error("Erreur sauvegarde du survey:", e);

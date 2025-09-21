@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, Outlet, useNavigate } from "react-router-dom";
 import {
   TrendingUp,
@@ -15,6 +15,9 @@ import { supabase } from "../lib/supabase";
 import { AuthSessionMissingError } from "@supabase/supabase-js";
 import AbonnementInfo from "../components/settings/AbonnementInfo";
 import useEnsureEmailSettings from "../lib/ensureEmailSettings";
+import OnboardingTour from "./onboarding/OnboardingTour";
+import OnboardingSurveyWizard from "./onboarding/OnboardingSurveyWizard";
+import OnboardingSpotlight, { SpotlightStep } from "./onboarding/OnboardingSpotlight";
 
 export default function Layout() {
   const location = useLocation();
@@ -23,6 +26,10 @@ export default function Layout() {
   const [logoutError, setLogoutError] = useState<string | null>(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  // État onboarding
+  const [onboardingOpen, setOnboardingOpen] = useState(false);
+  const [spotlightOpen, setSpotlightOpen] = useState(false);
+  const [spotlightStep, setSpotlightStep] = useState(0);
 
   useEnsureEmailSettings();
 
@@ -30,6 +37,17 @@ export default function Layout() {
     try {
       setIsLoggingOut(true);
       setLogoutError(null);
+
+      // Marque localement l'onboarding comme vu/dismissed pour éviter un ré-affichage après reconnexion
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        const uid = user?.id as string | undefined;
+        if (uid) {
+          localStorage.setItem(`onboarding_dismissed_${uid}`, "1");
+          localStorage.setItem(`onboarding_seen_${uid}`, "1");
+          localStorage.setItem("onboarding_seen", "1"); // rétrocompat
+        }
+      } catch {}
 
       // Déconnexion de Supabase
       const { error } = await supabase.auth.signOut();
@@ -58,6 +76,23 @@ export default function Layout() {
     }
   };
 
+  const handleOnboardingDismiss = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const uid = user?.id as string | undefined;
+      if (uid) {
+        try {
+          // Marque localement pour ne plus ré-afficher
+          localStorage.setItem(`onboarding_dismissed_${uid}`, "1");
+          // On marque aussi comme "vu" côté local pour plus de robustesse
+          localStorage.setItem(`onboarding_seen_${uid}`, "1");
+          // rétrocompatibilité
+          localStorage.setItem("onboarding_seen", "1");
+        } catch {}
+      }
+    } catch {}
+  };
+
   const closeLogoutModal = () => {
     setShowLogoutConfirm(false);
     setLogoutError(null);
@@ -70,6 +105,120 @@ export default function Layout() {
     { name: "Profils de relance", href: "/reminder-profiles", icon: UserCog },
     { name: "Paramètres", href: "/settings", icon: Settings },
   ];
+  const tourDataByHref: Record<string, string> = {
+    "/dashboard": "nav-dashboard",
+    "/clients": "nav-clients",
+    "/receivables": "nav-receivables",
+    "/reminder-profiles": "nav-profiles",
+    "/settings": "nav-settings",
+  };
+
+  const spotlightSteps = useMemo<SpotlightStep[]>(
+    () => [
+      {
+        target: '[data-tour="nav-settings"]',
+        title: "Configurer l'expéditeur",
+        description:
+          "Renseignez l'adresse d'envoi et personnalisez votre signature pour des emails professionnels.",
+        placement: "right",
+        padding: 8,
+      },
+      {
+        target: '[data-tour="nav-clients"]',
+        title: "Ajouter vos clients",
+        description:
+          "Ajoutez un client ou importez-en plusieurs pour préparer vos relances.",
+        placement: "right",
+        padding: 8,
+      },
+      {
+        target: '[data-tour="nav-receivables"]',
+        title: "Importer vos créances",
+        description:
+          "Importez vos factures en CSV ou créez-en quelques-unes pour tester les relances.",
+        placement: "right",
+        padding: 8,
+      },
+      {
+        target: '[data-tour="nav-profiles"]',
+        title: "Créer un profil de relance",
+        description:
+          "Définissez les délais et modèles d'emails. Vous l'assignerez ensuite à vos clients.",
+        placement: "right",
+        padding: 8,
+      },
+      {
+        target: '[data-tour="nav-clients"]',
+        title: "Assigner le profil",
+        description:
+          "Depuis la liste des clients, assignez votre profil de relance et activez les relances.",
+        placement: "right",
+        padding: 8,
+      },
+      {
+        target: '[data-tour="nav-dashboard"]',
+        title: "Suivre vos performances",
+        description:
+          "Retrouvez vos KPIs clés et l'état des relances dans le tableau de bord.",
+        placement: "right",
+        padding: 8,
+      },
+    ],
+    []
+  );
+
+  const handleSurveySaved = async () => {
+    // Marquer comme vu dès la fin du questionnaire
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      const uid = user?.id as string | undefined;
+      if (uid) {
+        try {
+          await supabase
+            .from("profiles")
+            .update({ onboarding_seen: true })
+            .eq("id", uid);
+        } catch {}
+        try {
+          localStorage.setItem(`onboarding_seen_${uid}`, "1");
+          // rétrocompatibilité
+          localStorage.setItem("onboarding_seen", "1");
+        } catch {}
+      }
+    } catch {}
+
+    setOnboardingOpen(false);
+    setSpotlightStep(0);
+    setSpotlightOpen(true);
+  };
+
+  const handleOnboardingComplete = async () => {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user?.id) {
+        await supabase
+          .from("profiles")
+          .update({ onboarding_seen: true })
+          .eq("id", user.id);
+      }
+    } catch (e) {
+      // ignore si la colonne n'existe pas
+    } finally {
+      try {
+        const uid = (await supabase.auth.getUser()).data.user?.id;
+        if (uid) {
+          localStorage.setItem(`onboarding_seen_${uid}`, "1");
+        }
+        // rétrocompatibilité
+        localStorage.setItem("onboarding_seen", "1");
+      } catch {}
+      setSpotlightOpen(false);
+    }
+  };
   //  console.log("Current path:", JSON.stringify(location.pathname));
   const handleSubscribe = async () => {
     const {
@@ -242,9 +391,48 @@ export default function Layout() {
           } catch (e) {
             console.error("Échec de création du profil minimal:", e);
           }
+          // Afficher l'onboarding immédiatement pour un nouvel utilisateur
+          setOnboardingOpen(true);
         } else {
           console.log("✅ Profil utilisateur trouvé :", profiles[0]);
+          // Déclenchement onboarding si non vu
+          const dbSeen = !!(profiles && profiles[0] && (profiles[0] as any).onboarding_seen === true);
+          let localSeen = false;
+          try {
+            const localKeySeen = `onboarding_seen_${userId}`;
+            const localKeyDismissed = `onboarding_dismissed_${userId}`;
+            localSeen =
+              localStorage.getItem(localKeySeen) === "1" ||
+              localStorage.getItem(localKeyDismissed) === "1" ||
+              localStorage.getItem("onboarding_seen") === "1"; // rétrocompatibilité
+          } catch {}
+          if (!dbSeen && !localSeen) {
+            setOnboardingOpen(true);
+          }
         }
+
+        // 3.b Réplication du questionnaire local vers la base si présent
+        try {
+          const localKeySurvey = `onboarding_survey_${userId}`;
+          const rawSurvey = localStorage.getItem(localKeySurvey);
+          if (rawSurvey) {
+            try {
+              const parsed = JSON.parse(rawSurvey);
+              const { error: surveyErr } = await supabase
+                .from("profiles")
+                .update({ onboarding_survey: parsed })
+                .eq("id", userId);
+              if (!surveyErr) {
+                localStorage.removeItem(localKeySurvey);
+                console.log("✅ Questionnaire d'onboarding répliqué en base");
+              } else {
+                console.warn("⚠️ Échec de réplication du questionnaire:", surveyErr.message);
+              }
+            } catch (parseErr) {
+              console.warn("⚠️ Impossible de parser le questionnaire local:", parseErr);
+            }
+          }
+        } catch {}
       } catch (e) {
         console.error("🔥 Erreur globale dans verifySubscription :", e);
       } finally {
@@ -326,6 +514,7 @@ export default function Layout() {
                   <Link
                     key={item.name}
                     to={item.href}
+                    data-tour={tourDataByHref[item.href]}
                     className={`flex items-center ${
                       !isExpanded && "justify-center"
                     } px-4 py-3 my-2 text-sm font-medium rounded-md transition-all duration-300
@@ -453,6 +642,33 @@ export default function Layout() {
               </div>
             </div>
           )}
+
+          {/* Onboarding wizard (étape enquête) */}
+          <OnboardingTour
+            open={onboardingOpen}
+            step={0}
+            steps={[{ title: "Apprenons à vous connaître", description: "Dites‑nous en plus sur votre rôle et votre entreprise." }]}
+            onClose={() => { handleOnboardingDismiss(); setOnboardingOpen(false); }}
+            onPrev={() => {}}
+            onNext={() => {}}
+            onComplete={() => {}}
+            onAction={() => {}}
+            renderStep={() => (
+              <OnboardingSurveyWizard onDone={handleSurveySaved} />
+            )}
+            hideFooterForStep={() => true}
+          />
+
+          {/* Spotlight interactif */}
+          <OnboardingSpotlight
+            open={spotlightOpen}
+            stepIndex={spotlightStep}
+            onPrev={() => setSpotlightStep((s) => Math.max(0, s - 1))}
+            onNext={() => setSpotlightStep((s) => Math.min(spotlightSteps.length - 1, s + 1))}
+            onClose={() => { handleOnboardingDismiss(); setSpotlightOpen(false); }}
+            onComplete={handleOnboardingComplete}
+            steps={spotlightSteps}
+          />
         </div>
       )}
     </div>
