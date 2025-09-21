@@ -27,8 +27,8 @@ export default function AppWithMFA() {
   // Vérifie l'authentification et récupère l'utilisateur
   useEffect(() => {
     const initAuth = async () => {
-      try {
-        // Capture très tôt le déclencheur d'onboarding depuis l'URL (query ou hash)
+      try {        // Capture très tôt le déclencheur d'onboarding depuis l'URL (query ou hash)
+
         try {
           const search = typeof window !== 'undefined' ? window.location.search : '';
           const hash = typeof window !== 'undefined' ? window.location.hash : '';
@@ -44,7 +44,33 @@ export default function AppWithMFA() {
         const currentUser = session?.user ?? null;
         setUser(currentUser);
         // Si l'utilisateur n'est plus connecté, ne nettoyer que l'auth Supabase
-        if (!currentUser) clearSupabaseAuthOnly();
+        if (!currentUser) {
+          clearSupabaseAuthOnly();
+        } else {
+          // Assurer qu'une ligne d'abonnement existe pour les nouveaux comptes
+          try {
+            const { data: existing, error: checkErr } = await supabase
+              .from('subscriptions')
+              .select('id')
+              .eq('user_id', currentUser.id)
+              .maybeSingle();
+            if (!existing && !checkErr) {
+              await supabase
+                .from('subscriptions')
+                .upsert([
+                  {
+                    user_id: currentUser.id,
+                    status: 'active',
+                    plan: 'free',
+                    email: currentUser.email ?? null,
+                    created_at: new Date().toISOString(),
+                  },
+                ], { onConflict: 'user_id' });
+            }
+          } catch (e) {
+            console.warn('Ensure default subscription failed:', e);
+          }
+        }
       } catch (error) {
         console.error("Erreur d'authentification :", error);
       } finally {
