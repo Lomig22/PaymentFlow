@@ -43,7 +43,7 @@ export default function useAbonnementCheck() {
           // Étape 2 : Vérifier abonnement actif
           const { data: abonnementData, error: abonnementError } = await supabase
             .from("subscriptions")
-            .select("plan, subscription_expiry")
+            .select("plan, status, subscription_expiry")
             .eq("user_id", user.id);
 
           if (abonnementError) {
@@ -55,10 +55,24 @@ export default function useAbonnementCheck() {
           }
 
           if (abonnementData && abonnementData.length > 0) {
+            // 2.a: plan 'free' actif sans expiration -> considérer comme non expiré
+            const hasActiveFree = abonnementData.some(
+              (row: any) => (row.plan === "free" || row.plan === "gratuit") && (row.status ?? "active") === "active"
+            );
+            if (hasActiveFree) {
+              setAbonnement("free");
+              setRawExpiryDate(null);
+              setExpiryDate("illimité");
+              setIsExpired(false);
+              setLoading(false);
+              return;
+            }
+
+            // 2.b: sinon, on regarde la dernière date d'expiration disponible
             const latest = abonnementData
-              .filter((row) => row.subscription_expiry)
+              .filter((row: any) => row.subscription_expiry)
               .sort(
-                (a, b) =>
+                (a: any, b: any) =>
                   new Date(b.subscription_expiry).getTime() -
                   new Date(a.subscription_expiry).getTime()
               )[0];
@@ -69,7 +83,13 @@ export default function useAbonnementCheck() {
 
               setAbonnement(latest.plan || null);
               setRawExpiryDate(expiry);
-              setExpiryDate(format(expiry, "d MMMM yyyy", { locale: fr }));
+              setExpiryDate(
+                new Intl.DateTimeFormat('fr-FR', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                }).format(expiry)
+              );
               setIsExpired(expired);
               setLoading(false);
               return;
@@ -109,6 +129,17 @@ export default function useAbonnementCheck() {
 
 
     fetchAll();
+
+    // Rafraîchir à chaud après connexion/màj session pour éviter le reload manuel
+    const { data: authSub } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "USER_UPDATED") {
+        fetchAll();
+      }
+    });
+
+    return () => {
+      authSub?.subscription?.unsubscribe();
+    };
   }, []);
 
   return {
