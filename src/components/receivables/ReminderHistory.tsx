@@ -25,32 +25,50 @@ const ReminderHistory = ({
 
 	useEffect(() => {
 		let cancelled = false;
+		let interval: number | null = null;
+
 		const fetchOpenStatus = async () => {
 			const status: Record<string, boolean | null> = {};
-			for (const reminder of filteredReminders) {
-				const emailId = reminder.email_id;
-				if (!emailId) {
-					status[reminder.id] = null; // Non suivi
-					continue;
-				}
+			if (filteredReminders.length === 0) {
+				if (!cancelled) setOpenStatus(status);
+				return;
+			}
+
+			// Renseigner par défaut Non suivi lorsqu'il n'y a pas d'email_id
+			const emailIds = filteredReminders
+				.map((r) => r.email_id)
+				.filter((id): id is string => !!id);
+
+			// Pré-remplir Non suivi pour ceux sans email_id
+			for (const r of filteredReminders) {
+				if (!r.email_id) status[r.id] = null;
+			}
+
+			if (emailIds.length > 0) {
 				const { data, error } = await supabase
 					.from('email_opens')
-					.select('id')
-					.eq('email_id', emailId)
-					.limit(1)
-					.maybeSingle();
+					.select('email_id')
+					.in('email_id', emailIds);
 				if (cancelled) return;
-				if (error) {
-					status[reminder.id] = null;
-				} else {
-					status[reminder.id] = !!data;
+				if (!error && data) {
+					const opened = new Set<string>(data.map((d: any) => d.email_id));
+					for (const r of filteredReminders) {
+						if (!r.email_id) continue;
+						status[r.id] = opened.has(r.email_id);
+					}
 				}
 			}
+
 			if (!cancelled) setOpenStatus(status);
 		};
-		if (filteredReminders.length > 0) fetchOpenStatus();
+
+		// Appel initial + polling toutes les 5 secondes
+		fetchOpenStatus();
+		interval = window.setInterval(fetchOpenStatus, 5000);
+
 		return () => {
 			cancelled = true;
+			if (interval) window.clearInterval(interval);
 		};
 	}, [filteredReminders]);
 

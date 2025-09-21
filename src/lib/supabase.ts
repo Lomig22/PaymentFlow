@@ -7,7 +7,15 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true, // Persister la session dans le localStorage
-    storageKey: 'paymentflow-auth', // Clé unique pour notre application
+    // Utiliser une clé spécifique par environnement/projet pour éviter de réutiliser
+    // un jeton obsolète provenant d'un autre domaine/projet (cause fréquente de 403).
+    storageKey: `paymentflow-auth:${(() => {
+      try {
+        return new URL(supabaseUrl).host;
+      } catch {
+        return 'default';
+      }
+    })()}`,
     storage: window.localStorage, // Utiliser le localStorage pour la persistance
     autoRefreshToken: true, // Rafraîchir automatiquement le token
     detectSessionInUrl: true // Détecter la session dans l'URL pour le flow d'auth
@@ -17,9 +25,14 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 // Fonction utilitaire pour vérifier si l'utilisateur est connecté
 export const checkAuth = async () => {
   try {
-    const { data: { session }, error } = await supabase.auth.getSession();
-    if (error) throw error;
-    return session;
+    // Vérifie d'abord côté serveur que le jeton est valide.
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (userError || !userData?.user) {
+      return null;
+    }
+    // Si l'utilisateur est valide côté serveur, on peut retourner la session locale.
+    const { data: { session } } = await supabase.auth.getSession();
+    return session ?? null;
   } catch (error) {
     console.error('Erreur lors de la vérification de la session:', error);
     return null;

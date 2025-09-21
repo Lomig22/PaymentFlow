@@ -44,16 +44,23 @@ export default function LoginPage() {
 
       if (!data.user) throw new Error("Utilisateur non trouvé");
 
-      // Vérifier l’abonnement
+      // Vérifier l’abonnement (crée un abonnement 'free' si absent)
       const { data: subscriptions, error: subError } = await supabase
         .from("subscriptions")
         .select("id")
-        .eq("user_id", data.user.id);
+        .eq("user_id", data.user.id)
+        .limit(1);
 
-      if (subError) throw new Error("Erreur de vérification de l'abonnement");
-      if (!subscriptions || subscriptions.length === 0) {
-        await supabase.auth.signOut();
-        throw new Error("Vous n'avez pas d'abonnement actif.");
+      if (!subError && (!subscriptions || subscriptions.length === 0)) {
+        const { error: insErr } = await supabase.from("subscriptions").insert({
+          user_id: data.user.id,
+          created_at: new Date().toISOString(),
+          status: "active",
+          plan: "free",
+        });
+        if (insErr) {
+          console.warn("Impossible de créer l'abonnement par défaut:", insErr);
+        }
       }
 
       if (!data.user.email) {
@@ -128,6 +135,7 @@ export default function LoginPage() {
                 className="pl-10 w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
                 placeholder="exemple@email.com"
+                autoComplete="username"
               />
             </div>
           </div>
@@ -145,6 +153,7 @@ export default function LoginPage() {
                 className="pl-10 pr-12 w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
                 placeholder="••••••••"
+                autoComplete="current-password"
               />
               <button
                 type="button"

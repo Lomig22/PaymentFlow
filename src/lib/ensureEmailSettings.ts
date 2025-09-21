@@ -3,11 +3,9 @@ import { supabase } from './supabase';
 const useEnsureEmailSettings = () => {
   useEffect(() => {
     const ensureEmailSettings = async () => {
-        const {
-            data: { session },
-          } = await supabase.auth.getSession();
-          const user = session?.user;
-          const userId=user?.id
+        // Vérifie l'utilisateur côté serveur pour éviter d'agir avec une session invalide
+        const { data: userData } = await supabase.auth.getUser();
+        const userId = userData?.user?.id ?? null;
       if (!userId) return;
 
       // Vérifie si une configuration existe déjà
@@ -28,7 +26,7 @@ const useEnsureEmailSettings = () => {
           .from('email_settings')
           .insert({
             user_id: userId,
-            provider_type: 'reset_defaults',
+            provider_type: 'custom',
             smtp_username: 'no-reply@payment-flow.fr',
             smtp_password: 'donthavetosaveit',
             smtp_server: 'my.smtpserver.com',

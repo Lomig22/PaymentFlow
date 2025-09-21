@@ -1,5 +1,6 @@
 import { AlertCircle, Check, Plus, Upload } from "lucide-react";
 import { useState } from "react";
+import { useLocation } from "react-router-dom";
 import ClientList from "./ClientList";
 import UnknownClientList from "../unknownClients/UnknownClientList";
 import { useAbonnement } from "../context/AbonnementContext";
@@ -13,6 +14,9 @@ const ClientPage = () => {
   const [showImportModal, setShowImportModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [importSuccess, setImportSuccess] = useState<string | null>(null);
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const assignProfileId = params.get("assignProfile");
   // const [searchTerm, setSearchTerm] = useState<string>('');
   const handleClick = () => {
     if (!checkAbonnement()) return;
@@ -101,6 +105,7 @@ const ClientPage = () => {
           setError={setError}
           setImportSuccess={setImportSuccess}
           importSuccess={importSuccess}
+          assignProfileId={assignProfileId}
         />
       )}
       {tab === "unknown" && (

@@ -28,6 +28,7 @@ import {
 import Swal from "sweetalert2";
 import { useAbonnement } from "../context/AbonnementContext";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 
 type ClientListProps = {
   showForm: boolean;
@@ -37,6 +38,7 @@ type ClientListProps = {
   setError: (error: string | null) => void;
   setImportSuccess: (message: string | null) => void;
   importSuccess: string | null;
+  assignProfileId?: string | null;
 };
 
 type SortColumnConfig = {
@@ -52,8 +54,10 @@ function ClientList({
   setError,
   importSuccess,
   setImportSuccess,
+  assignProfileId,
 }: ClientListProps) {
   const { checkAbonnement } = useAbonnement();
+  const navigate = useNavigate();
   const [clients, setClients] = useState<
     (Client & { reminderProfile?: ReminderProfile })[]
   >([]);
@@ -85,6 +89,11 @@ function ClientList({
   const [success, setSuccess] = useState<string | null>(null);
   const [selectedClientIds, setSelectedClientIds] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
+  const [reminderProfiles, setReminderProfiles] = useState<ReminderProfile[]>([]);
+  const [profileUpdating, setProfileUpdating] = useState<Record<string, boolean>>({});
+  const assignProfile = (assignProfileId
+    ? reminderProfiles.find((rp) => (rp.id as string) === assignProfileId)
+    : undefined) || null;
 
   const handleClick = () => {
     if (!checkAbonnement()) return;
@@ -148,6 +157,26 @@ function ClientList({
     fetchClients();
   }, []);
 
+  // Charger les profils de rappel de l'utilisateur
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        const { data, error } = await supabase
+          .from('reminder_profile')
+          .select('*')
+          .eq('owner_id', user.id)
+          .eq('public', false)
+          .order('name');
+        if (error) throw error;
+        setReminderProfiles(data || []);
+      } catch (e) {
+        console.error('Erreur lors du chargement des profils de relance:', e);
+      }
+    })();
+  }, []);
+
   useEffect(() => {
     if (importSuccess) {
       const timer = setTimeout(() => {
@@ -164,8 +193,13 @@ function ClientList({
     const handleClickOutside = (event: MouseEvent) => {
       if (!openDropdownId) return;
       const dropdown = dropdownRefs.current[openDropdownId];
+      const trigger = buttonRefs.current[openDropdownId];
 
-      if (dropdown && !dropdown.contains(event.target as Node)) {
+      const target = event.target as Node;
+      const clickedInsideDropdown = dropdown ? dropdown.contains(target) : false;
+      const clickedOnTrigger = trigger ? trigger.contains(target) : false;
+
+      if (!clickedInsideDropdown && !clickedOnTrigger) {
         // Donne un court délai pour laisser les onClick internes s'exécuter
         setTimeout(() => {
           setOpenDropdownId(null);
@@ -253,6 +287,8 @@ function ClientList({
     { key: "address", label: "Adresse" },
     { key: "phone", label: "Téléphone" },
     { key: "postal_code", label: "Code postale" },
+    { key: "created_at", label: "Créé le" },
+    { key: "updated_at", label: "Mis à jour" },
   ];
 
   const getFilterIcon = (key: string) => {
@@ -263,6 +299,10 @@ function ClientList({
         return <User className="h-4 w-4" />;
       case "client_code":
         return <Key className="h-4 w-4" />;
+      case "created_at":
+        return <Calendar className="h-4 w-4" />;
+      case "updated_at":
+        return <Clock className="h-4 w-4" />;
       case "amount":
         return <DollarSign className="h-4 w-4" />;
       case "paid_amount":
@@ -486,6 +526,95 @@ function ClientList({
     return 0;
   };
 
+  // Assignation en masse du profil sélectionné via le mode assignation
+  const handleBulkAssignProfile = async (profile: ReminderProfile) => {
+    if (!profile || selectedClientIds.length === 0) return;
+    try {
+      setError(null);
+      const updatePayload: any = {
+        reminder_profile: profile.id,
+      };
+      if (profile.delay1) updatePayload.reminder_delay_1 = profile.delay1;
+      if (profile.delay2) updatePayload.reminder_delay_2 = profile.delay2;
+      if (profile.delay3) updatePayload.reminder_delay_3 = profile.delay3;
+      if (profile.delay4) updatePayload.reminder_delay_final = profile.delay4;
+      if (profile.email_template_1) updatePayload.reminder_template_1 = profile.email_template_1;
+      if (profile.email_template_2) updatePayload.reminder_template_2 = profile.email_template_2;
+      if (profile.email_template_3) updatePayload.reminder_template_3 = profile.email_template_3;
+      if (profile.email_template_4) updatePayload.reminder_template_final = profile.email_template_4;
+
+      const { error } = await supabase
+        .from('clients')
+        .update(updatePayload)
+        .in('id', selectedClientIds);
+      if (error) throw error;
+
+      // MAJ locale des clients
+      setClients((prev) => prev.map((c) => (
+        selectedClientIds.includes(c.id)
+          ? { ...c, reminderProfile: profile }
+          : c
+      )));
+
+      setSelectedClientIds([]);
+    } catch (e) {
+      console.error('Erreur assignation du profil:', e);
+      showError("Impossible d'assigner le profil");
+    }
+  };
+
+  // Changement inline du profil de rappel pour un client
+  const handleInlineProfileChange = async (
+    clientRow: Client & { reminderProfile?: ReminderProfile },
+    profileId: string
+  ) => {
+    try {
+      setProfileUpdating((prev) => ({ ...prev, [clientRow.id]: true }));
+      // Si aucun profil sélectionné → seulement déréférencer le profil
+      if (!profileId) {
+        const { error } = await supabase
+          .from('clients')
+          .update({ reminder_profile: null })
+          .eq('id', clientRow.id);
+        if (error) throw error;
+        // Mettre à jour l'état local
+        setClients((prev) => prev.map((c) => c.id === clientRow.id ? { ...c, reminderProfile: undefined } : c));
+        return;
+      }
+
+      // Trouver le profil sélectionné
+      const selected = reminderProfiles.find((p) => (p.id as string) === profileId);
+      if (!selected) return;
+
+      // Construire la payload de mise à jour: pointer le profil et appliquer délais/templates si fournis
+      const updatePayload: any = {
+        reminder_profile: profileId,
+      };
+      if (selected.delay1) updatePayload.reminder_delay_1 = selected.delay1;
+      if (selected.delay2) updatePayload.reminder_delay_2 = selected.delay2;
+      if (selected.delay3) updatePayload.reminder_delay_3 = selected.delay3;
+      if (selected.delay4) updatePayload.reminder_delay_final = selected.delay4;
+      if (selected.email_template_1) updatePayload.reminder_template_1 = selected.email_template_1;
+      if (selected.email_template_2) updatePayload.reminder_template_2 = selected.email_template_2;
+      if (selected.email_template_3) updatePayload.reminder_template_3 = selected.email_template_3;
+      if (selected.email_template_4) updatePayload.reminder_template_final = selected.email_template_4;
+
+      const { error } = await supabase
+        .from('clients')
+        .update(updatePayload)
+        .eq('id', clientRow.id);
+      if (error) throw error;
+
+      // Mettre à jour l'état local: changer le nom du profil affiché
+      setClients((prev) => prev.map((c) => c.id === clientRow.id ? { ...c, reminderProfile: selected } : c));
+    } catch (e) {
+      console.error('Erreur lors de la mise à jour du profil de rappel:', e);
+      showError("Impossible de mettre à jour le profil de rappel");
+    } finally {
+      setProfileUpdating((prev) => ({ ...prev, [clientRow.id]: false }));
+    }
+  };
+
   const filteredClients = clients
     .filter((client) => {
       const searchLower = searchTerm.toLowerCase();
@@ -510,6 +639,18 @@ function ClientList({
           className="pl-10 w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         />
       </div>
+      {assignProfile && (
+        <div className="ml-4 mb-3 px-4 py-2 rounded-md border border-blue-200 bg-blue-50 text-sm text-blue-800 flex items-center justify-between w-[99%]">
+          <span>Mode d'assignation actif — Profil: <strong>{assignProfile.name}</strong>. Sélectionnez des clients puis cliquez sur "Assigner".</span>
+          <button
+            type="button"
+            className="text-blue-700 hover:text-blue-900 underline"
+            onClick={() => navigate('/clients')}
+          >
+            Quitter
+          </button>
+        </div>
+      )}
       {selectedClientIds.length > 0 && (
         <motion.div
         initial={{ opacity: 0, y: -5 }}
@@ -534,6 +675,20 @@ function ClientList({
           >
             Supprimer la sélection
           </button>
+          {assignProfile && (
+            <button
+              type="button"
+              onClick={() => handleBulkAssignProfile(assignProfile)}
+              disabled={selectedClientIds.length === 0}
+              className={`ml-2 px-4 py-1.5 rounded-lg text-white font-semibold transition-colors duration-200 ${
+                selectedClientIds.length === 0
+                  ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700"
+              }`}
+            >
+              Assigner le profil "{assignProfile.name}"
+            </button>
+          )}
         </motion.div>
       )}
 
@@ -805,9 +960,6 @@ function ClientList({
                                 setOpenDropdownId(null);
                               }}
                               className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-100"
-                              ref={(el) =>
-                                (dropdownRefs.current[client.id] = el)
-                              }
                             >
                               <Trash2 className="w-4 h-4 mr-2" /> Supprimer
                             </button>
@@ -819,12 +971,23 @@ function ClientList({
 
                   <td
                     className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
-                    style={{ maxWidth: "80px" }}
+                    style={{ maxWidth: "140px" }}
                   >
-                    {!client.reminderProfile?.name ||
-                    client.reminderProfile.name === "Default"
-                      ? "-"
-                      : client.reminderProfile.name}
+                    <div className="flex items-center gap-1">
+                      <select
+                        value={client.reminderProfile?.id ?? ''}
+                        onChange={(e) => handleInlineProfileChange(client as Client & { reminderProfile?: ReminderProfile }, e.target.value)}
+                        className="w-28 px-2 py-1 text-xs border border-gray-300 rounded bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="">Ne pas utiliser de profil</option>
+                        {reminderProfiles.map((rp) => (
+                          <option key={rp.id as string} value={rp.id as string}>{rp.name}</option>
+                        ))}
+                      </select>
+                      {profileUpdating[client.id] && (
+                        <span className="text-xs text-gray-500">Sauvegarde...</span>
+                      )}
+                    </div>
                   </td>
                   <td
                     className="px-6 py-4 whitespace-nowrap"
