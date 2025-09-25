@@ -26,27 +26,57 @@ interface EmailSettings {
   }
 // Fonction pour récupérer les paramètres email de l'utilisateur
 export async function getEmailSettings(userId: string): Promise<EmailSettings | null> {
-	try {
-		const { data, error } = await supabase
-			.from('email_settings')
-			.select('*')
-			.eq('user_id', userId)
-			.maybeSingle();
+  try {
+    const { data, error } = await supabase
+      .from('email_settings')
+      .select('*')
+      .eq('user_id', userId)
+      .maybeSingle();
 
-		if (error) {
-			if (error.code === 'PGRST116') {
-				return null;
-			}
-			throw error;
-		}
-		return data;
-	} catch (error) {
-		console.error(
-			'Erreur lors de la récupération des paramètres email:',
-			error
-		);
-		return null;
-	}
+    if (error) {
+      if (error.code === 'PGRST116') {
+        // No record: fallback to platform defaults (resolved server-side by Edge Function)
+        return {
+          provider_type: 'platform',
+          smtp_username: '',
+          smtp_password: '',
+          smtp_server: '',
+          smtp_port: 0 as unknown as number,
+          smtp_encryption: '',
+          email_signature: undefined,
+        } as EmailSettings;
+      }
+      throw error;
+    }
+    // If user has partial settings, still allow platform fallback by returning 'platform'
+    if (!data) {
+      return {
+        provider_type: 'platform',
+        smtp_username: '',
+        smtp_password: '',
+        smtp_server: '',
+        smtp_port: 0 as unknown as number,
+        smtp_encryption: '',
+        email_signature: undefined,
+      } as EmailSettings;
+    }
+    return data as unknown as EmailSettings;
+  } catch (error) {
+    console.error(
+      'Erreur lors de la récupération des paramètres email:',
+      error
+    );
+    // In case of any error, fallback to platform
+    return {
+      provider_type: 'platform',
+      smtp_username: '',
+      smtp_password: '',
+      smtp_server: '',
+      smtp_port: 0 as unknown as number,
+      smtp_encryption: '',
+      email_signature: undefined,
+    } as EmailSettings;
+  }
 }
 
 // Fonction pour formater le template avec les variables
@@ -278,7 +308,7 @@ export async function sendManualReminder(
 		);
 		if (emailSent) {
 			// Enregistrer la relance (toujours), afin d'activer le suivi d'ouverture via email_id
-			await supabase.from('reminders').insert({
+			const { error: insertReminderError } = await supabase.from('reminders').insert({
 				receivable_id: receivableId,
 				reminder_type: level,
 				reminder_date: new Date().toISOString(),
@@ -286,26 +316,35 @@ export async function sendManualReminder(
 				email_content: finalContent,
 				email_id: emailTrackingId,
 			});
+			if (insertReminderError) {
+				console.error('Insertion reminder avec email_id a échoué:', insertReminderError.message);
+			}
 
 			// Mettre à jour le statut
-			await supabase
-				.from('receivables')
-				.update({
-					status:
-						level === 'first'
-							? 'Relance 1'
-							: level === 'second'
-							? 'Relance 2'
-							: level === 'third'
-							? 'Relance 3'
-							: level === 'final'
-							? 'Relance finale'
-							: level === 'pre'
-							? 'Relance préventive'
-							: 'Relance',
-					updated_at: new Date().toISOString(),
-				})
-				.eq('id', receivableId);
+			{
+				const { error: updateRecError } = await supabase
+					.from('receivables')
+					.update({
+						email_id: emailTrackingId,
+						status:
+							level === 'first'
+								? 'Relance 1'
+								: level === 'second'
+								? 'Relance 2'
+								: level === 'third'
+								? 'Relance 3'
+								: level === 'final'
+								? 'Relance finale'
+								: level === 'pre'
+								? 'Relance préventive'
+								: 'Relance',
+						updated_at: new Date().toISOString(),
+					})
+					.eq('id', receivableId);
+				if (updateRecError) {
+					console.error('Mise à jour receivable.email_id a échoué:', updateRecError.message);
+				}
+			}
 
 			return true;
 		}
@@ -421,7 +460,7 @@ export async function sendOneReminder(receivableId: string): Promise<boolean> {
 		);
 
 		if (emailSent) {
-			await supabase.from('reminders').insert({
+			const { error: insertReminderError } = await supabase.from('reminders').insert({
 				receivable_id: receivableId,
 				reminder_type: level,
 				reminder_date: new Date().toISOString(),
@@ -429,25 +468,34 @@ export async function sendOneReminder(receivableId: string): Promise<boolean> {
 				email_content: emailContent,
 				email_id: autoEmailTrackingId,
 			});
+			if (insertReminderError) {
+				console.error('Insertion reminder auto avec email_id a échoué:', insertReminderError.message);
+			}
 
-			await supabase
-				.from('receivables')
-				.update({
-					status:
-						level === 'first'
-							? 'Relance 1'
-							: level === 'second'
-							? 'Relance 2'
-							: level === 'third'
-							? 'Relance 3'
-							: level === 'final'
-							? 'Relance finale'
-							: level === 'pre'
-							? 'Relance préventive'
-							: 'Relance',
-					updated_at: new Date().toISOString(),
-				})
-				.eq('id', receivableId);
+			{
+				const { error: updateRecError2 } = await supabase
+					.from('receivables')
+					.update({
+						status:
+							level === 'first'
+								? 'Relance 1'
+								: level === 'second'
+								? 'Relance 2'
+								: level === 'third'
+								? 'Relance 3'
+								: level === 'final'
+								? 'Relance finale'
+								: level === 'pre'
+								? 'Relance préventive'
+								: 'Relance',
+						email_id: autoEmailTrackingId,
+						updated_at: new Date().toISOString(),
+					})
+					.eq('id', receivableId);
+				if (updateRecError2) {
+					console.error('Mise à jour receivable.email_id (auto) a échoué:', updateRecError2.message);
+				}
+			}
 
 			return true;
 		}

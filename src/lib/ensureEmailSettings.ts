@@ -26,10 +26,10 @@ const useEnsureEmailSettings = () => {
           .from('email_settings')
           .insert({
             user_id: userId,
-            provider_type: 'custom',
-            smtp_username: 'no-reply@payment-flow.fr',
-            smtp_password: 'donthavetosaveit',
-            smtp_server: 'my.smtpserver.com',
+            provider_type: 'platform',
+            smtp_username: '',
+            smtp_password: '',
+            smtp_server: '',
             smtp_port: 587,
             smtp_encryption: 'tls',
             email_signature: '',

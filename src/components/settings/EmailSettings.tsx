@@ -13,6 +13,17 @@ import { useNavigate } from "react-router-dom";
 import { useAbonnement } from "../context/AbonnementContext";
 
 const PROVIDER_PRESETS = {
+  platform: {
+    // Utilise l'expéditeur par défaut PaymentFlow côté Edge (secrets)
+    smtp_server: "",
+    smtp_port: 587,
+    smtp_encryption: "tls",
+  },
+  infomaniak: {
+    smtp_server: "mail.infomaniak.com",
+    smtp_port: 587,
+    smtp_encryption: "tls",
+  },
   ovh: {
     smtp_server: "ssl0.ovh.net",
     smtp_port: 587,
@@ -31,10 +42,10 @@ const PROVIDER_PRESETS = {
 };
 
 const DEFAULT_FORM_DATA = {
-  provider_type: "reset_defaults",
-  smtp_username: "no-reply@payment-flow.fr",
-  smtp_password: "donthavetosaveit",
-  smtp_server: "my.smtpserver.com",
+  provider_type: "platform",
+  smtp_username: "",
+  smtp_password: "",
+  smtp_server: "",
   smtp_port: 587,
   smtp_encryption: "tls",
   email_signature: "",
@@ -50,6 +61,7 @@ export default function EmailSettings() {
   const [testSuccess, setTestSuccess] = useState(false);
   const [formData, setFormData] = useState(DEFAULT_FORM_DATA);
   const [userId, setUserId] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const { checkAbonnement } = useAbonnement();
   const showError = (message: string) => {
     setError(message);
@@ -70,6 +82,7 @@ export default function EmailSettings() {
         } = await supabase.auth.getUser();
         if (!user) throw new Error("Utilisateur non authentifié");
         setUserId(user.id);
+        setUserEmail(user.email ?? null);
         await loadEmailSettings(user.id);
       } catch (error) {
         console.error("Erreur lors de l'initialisation:", error);
@@ -140,13 +153,44 @@ export default function EmailSettings() {
       if (error) throw error;
 
       if (data) {
+        // Détecte les anciens placeholders pour forcer le mode plateforme à l'affichage
+        const placeholderLike =
+          data.smtp_username === 'no-reply@payment-flow.fr' ||
+          data.smtp_password === 'donthavetosaveit' ||
+          data.smtp_server === 'my.smtpserver.com';
+
+        // Cas où la base a enregistré 'custom' mais sans identifiants ni serveur => afficher comme 'platform'
+        const savedAsCustomLooksPlatform =
+          (data.provider_type === 'custom') &&
+          (!data.smtp_username) && (!data.smtp_password) && (!data.smtp_server);
+
+        const provider_type = data.provider_type || "platform";
+
+        // Détection heuristique des presets courants si la base a 'custom'
+        const server = String(data.smtp_server || '').toLowerCase();
+        const port = Number(data.smtp_port) || 0;
+        const enc  = String(data.smtp_encryption || '').toLowerCase();
+        const looksInfomaniak = server === 'mail.infomaniak.com' && port === 587 && enc === 'tls';
+        const looksOVH = server === 'ssl0.ovh.net' && port === 587 && enc === 'tls';
+        const looksGmail = server === 'smtp.gmail.com' && port === 587 && enc === 'tls';
+
+        let effectiveProvider = (placeholderLike || savedAsCustomLooksPlatform)
+          ? 'platform'
+          : provider_type;
+
+        if (provider_type === 'custom' && !savedAsCustomLooksPlatform) {
+          if (looksInfomaniak) effectiveProvider = 'infomaniak';
+          else if (looksOVH) effectiveProvider = 'ovh';
+          else if (looksGmail) effectiveProvider = 'gmail';
+        }
+
         setFormData({
-          provider_type: data.provider_type || "custom",
-          smtp_username: data.smtp_username || "noreply@payment-flow.fr",
-          smtp_password: data.smtp_password || "donthavetosaveit",
-          smtp_server: data.smtp_server || "my.smtpserver.com",
+          provider_type: effectiveProvider,
+          smtp_username: (placeholderLike || savedAsCustomLooksPlatform) ? "" : (data.smtp_username || ""),
+          smtp_password: (placeholderLike || savedAsCustomLooksPlatform) ? "" : (data.smtp_password || ""),
+          smtp_server: (placeholderLike || savedAsCustomLooksPlatform) ? "" : (data.smtp_server || ""),
           smtp_port: data.smtp_port || 587,
-          smtp_encryption: data.smtp_encryption || "TLS",
+          smtp_encryption: (data.smtp_encryption || "tls").toLowerCase(),
           email_signature: data.email_signature || "",
           sender_display_name: data.sender_display_name || "",
         });
@@ -165,14 +209,18 @@ export default function EmailSettings() {
       smtp_server: preset.smtp_server,
       smtp_port: preset.smtp_port,
       smtp_encryption: preset.smtp_encryption,
+      // En mode plateforme, on n'utilise pas les identifiants saisis
+      smtp_username: provider === 'platform' ? '' : prev.smtp_username,
+      smtp_password: provider === 'platform' ? '' : prev.smtp_password,
     }));
   };
   const handleRestoreDefaults = () => {
+    // Revient à un état "propre" qui force l'utilisateur à saisir des informations réelles
     setFormData({
-      provider_type: "reset_defaults",
-      smtp_username: "no-reply@payment-flow.fr",
-      smtp_password: "donthavetosaveit",
-      smtp_server: "my.smtpserver.com",
+      provider_type: "custom",
+      smtp_username: "",
+      smtp_password: "",
+      smtp_server: "",
       smtp_port: 587,
       smtp_encryption: "tls",
       email_signature: formData.email_signature || "",
@@ -195,10 +243,12 @@ export default function EmailSettings() {
     setSuccess(false);
 
     try {
-      const { error } = await supabase.from("email_settings").upsert(
+      // 1) Tente de persister le provider sélectionné (sera accepté une fois la contrainte mise à jour)
+      let { error } = await supabase.from("email_settings").upsert(
         {
           user_id: userId,
           ...formData,
+          provider_type: formData.provider_type,
           sender_display_name: formData.sender_display_name,
           updated_at: new Date().toISOString(),
         },
@@ -207,7 +257,26 @@ export default function EmailSettings() {
         }
       );
 
-      if (error) throw error;
+      // 2) Si la contrainte actuelle refuse (23514), fallback en 'custom' pour ne pas bloquer l'utilisateur
+      if (error && (error as any).code === '23514') {
+        console.warn('provider_type refusé par la contrainte, fallback -> custom');
+        const retry = await supabase.from("email_settings").upsert(
+          {
+            user_id: userId,
+            ...formData,
+            provider_type: 'custom',
+            sender_display_name: formData.sender_display_name,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "user_id" }
+        );
+        if (retry.error) throw retry.error;
+        // Info UX
+        showError("Votre base n'accepte pas encore ce fournisseur. Sauvegarde effectuée comme 'Personnalisé'.");
+      } else if (error) {
+        throw error;
+      }
+
       setSuccess(true);
       setTimeout(() => {
         setSuccess(false);
@@ -230,9 +299,21 @@ export default function EmailSettings() {
     });
   };
   const handleTestEmail = async () => {
-    if (!formData.smtp_username || !formData.smtp_password) {
-      showError("Veuillez remplir tous les champs obligatoires");
-      return;
+    // Si on est en mode 'platform' (par défaut PaymentFlow), on n'exige pas de credentials côté UI
+    const isPlatform = formData.provider_type === 'platform';
+    if (!isPlatform) {
+      if (!formData.smtp_username) {
+        showError("Veuillez renseigner l'adresse email d'envoi.");
+        return;
+      }
+      if (!formData.smtp_password || formData.smtp_password === "donthavetosaveit") {
+        showError("Veuillez saisir le mot de passe SMTP réel (ou mot de passe d'application).");
+        return;
+      }
+      if (!formData.smtp_server || formData.smtp_server === "my.smtpserver.com") {
+        showError("Veuillez renseigner le serveur SMTP réel (ex: smtp.gmail.com, ssl0.ovh.net).");
+        return;
+      }
     }
 
     setTesting(true);
@@ -242,7 +323,8 @@ export default function EmailSettings() {
     try {
       await sendEmail(
         formData,
-        formData.smtp_username,
+        // Envoi au profil utilisateur si mode plateforme, sinon à l'adresse renseignée
+        (formData.provider_type === 'platform' ? (userEmail || formData.smtp_username) : formData.smtp_username),
         "Test de configuration email PaymentFlow",
         `
           <h1>Test de configuration email</h1>
@@ -279,6 +361,7 @@ export default function EmailSettings() {
       </div>
     );
   }
+  const isPlatformSelected = formData.provider_type === "platform";
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
@@ -333,34 +416,43 @@ export default function EmailSettings() {
             }}
             className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
-            <option value="reset_defaults">Par défaut</option>
+            <option value="platform">Par défaut</option>
+            <option value="infomaniak">Infomaniak</option>
             <option value="gmail">Gmail</option>
             <option value="ovh">OVH</option>
             <option value="custom">Personnalisé</option>
           </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Adresse email
-          </label>
-          <input
-            disabled={isDisabled}
-            type="email"
-            required
-            value={formData.smtp_username}
-            onChange={(e) =>
-              setFormData({ ...formData, smtp_username: e.target.value })
-            }
-            className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-          {formData.provider_type === "gmail" && (
+          {isPlatformSelected && (
             <p className="mt-1 text-sm text-gray-500 flex items-center">
               <HelpCircle className="h-4 w-4 mr-1" />
-              Utilisez votre adresse Gmail
+              Les envois utiliseront l'adresse no-reply@payment-flow.fr (Infomaniak). Aucun identifiant n'est requis.
             </p>
           )}
         </div>
+
+        {formData.provider_type !== "platform" && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Adresse email
+            </label>
+            <input
+              disabled={isDisabled}
+              type="email"
+              required
+              value={formData.smtp_username}
+              onChange={(e) =>
+                setFormData({ ...formData, smtp_username: e.target.value })
+              }
+              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            {formData.provider_type === "gmail" && (
+              <p className="mt-1 text-sm text-gray-500 flex items-center">
+                <HelpCircle className="h-4 w-4 mr-1" />
+                Utilisez votre adresse Gmail
+              </p>
+            )}
+          </div>
+        )}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Nom d'expéditeur affiché
@@ -376,28 +468,30 @@ export default function EmailSettings() {
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Mot de passe
-          </label>
-          <input
-            disabled={isDisabled}
-            type="password"
-            required
-            value={formData.smtp_password}
-            onChange={(e) =>
-              setFormData({ ...formData, smtp_password: e.target.value })
-            }
-            className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-          {formData.provider_type === "gmail" && (
-            <p className="mt-1 text-sm text-gray-500 flex items-center">
-              <HelpCircle className="h-4 w-4 mr-1" />
-              Utilisez un mot de passe d'application généré dans les paramètres
-              de sécurité Google
-            </p>
-          )}
-        </div>
+        {formData.provider_type !== "platform" && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Mot de passe
+            </label>
+            <input
+              disabled={isDisabled}
+              type="password"
+              required
+              value={formData.smtp_password}
+              onChange={(e) =>
+                setFormData({ ...formData, smtp_password: e.target.value })
+              }
+              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            {formData.provider_type === "gmail" && (
+              <p className="mt-1 text-sm text-gray-500 flex items-center">
+                <HelpCircle className="h-4 w-4 mr-1" />
+                Utilisez un mot de passe d'application généré dans les paramètres
+                de sécurité Google
+              </p>
+            )}
+          </div>
+        )}
 
         {(formData.provider_type === "custom" ||
           formData.provider_type === "reset_defaults") && (
@@ -501,7 +595,7 @@ export default function EmailSettings() {
               handleTestEmail();
             }}
             disabled={
-              testing || !formData.smtp_username || !formData.smtp_password
+              testing || (!isPlatformSelected && (!formData.smtp_username || !formData.smtp_password))
             }
             className="flex items-center gap-2 rounded-md bg-green-600 px-4 py-2 text-white font-medium shadow-md
                    hover:bg-green-700 transition-all duration-300 ease-in-out

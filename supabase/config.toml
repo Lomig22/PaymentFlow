@@ -1,0 +1,3 @@
+[functions]
+[functions.email-open-tracker]
+verify_jwt = false

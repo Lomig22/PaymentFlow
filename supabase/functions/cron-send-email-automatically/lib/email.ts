@@ -1,5 +1,5 @@
-import fetch from 'node-fetch'; // Si vous utilisez un environnement Node.js
-// ou l'import natif fetch dans un environnement moderne qui le supporte (par exemple Deno ou Edge Functions)
+// @ts-nocheck
+// Deno Edge runtime: fetch and crypto are globally available
 
 // Cette fonction suppose que vous avez une variable d'environnement `SUPABASE_ACCESS_TOKEN` définie sur votre serveur
 interface EmailSettings {
@@ -12,28 +12,35 @@ interface EmailSettings {
 	email_signature?: string;
 }
 
+const supabaseUrl = Deno.env.get('SUPABASE_URL') || 'https://rsomeerndudkhyhpigmn.supabase.co';
+
 export const sendEmail = async (
   settings: EmailSettings,
   to: string,
   subject: string,
   htmlContent: string,
-  invoice_pdf_url?: string
+  invoice_pdf_url?: string,
+  emailId?: string
 ): Promise<boolean> => {
   try {
     // Récupérer le token d'authentification depuis les variables d'environnement (ou un autre mécanisme d'auth)
-    const access_token = process.env.SUPABASE_SERVICE_ROLE_KEY; // Assurez-vous que cette variable est bien définie dans votre environnement serveur
+    const access_token = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'); // Assurez-vous que cette variable est bien définie dans votre environnement serveur
 
     if (!access_token) {
       throw new Error("Token d'accès non disponible.");
     }
 
+    const emailTrackingId = emailId || crypto.randomUUID();
+    const trackingPixel = `<img src="${supabaseUrl}/functions/v1/email-open-tracker?id=${emailTrackingId}&t=${Date.now()}" width="1" height="1" style="display:none;" alt="" />`;
+
     const res = await fetch(
-      'https://rsomeerndudkhyhpigmn.supabase.co/functions/v1/send-smtp-email',
+      `${supabaseUrl}/functions/v1/send-smtp-email`,
       {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${access_token}`,
+          'apikey': access_token,
         },
         body: JSON.stringify({
           list: [
@@ -51,6 +58,7 @@ export const sendEmail = async (
                   <body style="font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 20px;">
                     <div style="max-width: 600px; margin: 0 auto;">
                       ${htmlContent}
+                      ${trackingPixel}
                       ${
                         settings.email_signature
                           ? `
@@ -83,7 +91,7 @@ export const sendEmail = async (
       ]
     });
 
-    const data = await res.json();
+    const data: any = await res.json();
     const error = data?.failures;
     if (error) {
       console.error('Erreur Supabase Edge Function:', error);
@@ -91,7 +99,7 @@ export const sendEmail = async (
     }
 
     if (!data?.success) {
-      throw new Error(data?.error || "Échec de l'envoi de l'email");
+      throw new Error((data as any)?.error || "Échec de l'envoi de l'email");
     }
 
     return true;

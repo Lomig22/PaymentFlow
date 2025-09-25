@@ -3,6 +3,7 @@ import { Reminder } from '../../types/database';
 import { X } from 'lucide-react';
 import { decodeReminderStatus } from '../../lib/decodeReminderStatus';
 import { supabase } from '../../lib/supabase';
+import EmailOpenTester from './EmailOpenTester';
 
 type ReminderHistoryProps = {
 	receivableId: string;
@@ -22,10 +23,21 @@ const ReminderHistory = ({
 	}, [reminders, receivableId]);
 
 	const [openStatus, setOpenStatus] = useState<Record<string, boolean | null>>({});
+	const [receivableEmailId, setReceivableEmailId] = useState<string | null>(null);
 
 	useEffect(() => {
 		let cancelled = false;
 		let interval: number | null = null;
+
+		// Charger l'email_id au niveau de la créance pour fallback
+		const fetchReceivableEmailId = async () => {
+			const { data } = await supabase
+				.from('receivables')
+				.select('email_id')
+				.eq('id', receivableId)
+				.single();
+			if (!cancelled) setReceivableEmailId(data?.email_id ?? null);
+		};
 
 		const fetchOpenStatus = async () => {
 			const status: Record<string, boolean | null> = {};
@@ -35,13 +47,16 @@ const ReminderHistory = ({
 			}
 
 			// Renseigner par défaut Non suivi lorsqu'il n'y a pas d'email_id
-			const emailIds = filteredReminders
-				.map((r) => r.email_id)
-				.filter((id): id is string => !!id);
+			const emailIdSet = new Set<string>();
+			for (const r of filteredReminders) {
+				if (r.email_id) emailIdSet.add(r.email_id);
+			}
+			if (receivableEmailId) emailIdSet.add(receivableEmailId);
+			const emailIds = Array.from(emailIdSet);
 
 			// Pré-remplir Non suivi pour ceux sans email_id
 			for (const r of filteredReminders) {
-				if (!r.email_id) status[r.id] = null;
+				if (!r.email_id && !receivableEmailId) status[r.id] = null;
 			}
 
 			if (emailIds.length > 0) {
@@ -53,8 +68,9 @@ const ReminderHistory = ({
 				if (!error && data) {
 					const opened = new Set<string>(data.map((d: any) => d.email_id));
 					for (const r of filteredReminders) {
-						if (!r.email_id) continue;
-						status[r.id] = opened.has(r.email_id);
+						const idToCheck = r.email_id || receivableEmailId || null;
+						if (!idToCheck) continue;
+						status[r.id] = opened.has(idToCheck);
 					}
 				}
 			}
@@ -63,14 +79,14 @@ const ReminderHistory = ({
 		};
 
 		// Appel initial + polling toutes les 5 secondes
-		fetchOpenStatus();
+		fetchReceivableEmailId().then(fetchOpenStatus);
 		interval = window.setInterval(fetchOpenStatus, 5000);
 
 		return () => {
 			cancelled = true;
 			if (interval) window.clearInterval(interval);
 		};
-	}, [filteredReminders]);
+	}, [filteredReminders, receivableId]);
 
 	return (
 		<div className='fixed inset-0 bg-gray-600 bg-opacity-50 z-50 overflow-y-scroll'>
@@ -96,6 +112,9 @@ const ReminderHistory = ({
 									<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 										Ouverture Email
 									</th>
+									<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+										Test
+									</th>
 								</tr>
 							</thead>
 							<tbody className='bg-white divide-y divide-gray-200'>
@@ -110,12 +129,21 @@ const ReminderHistory = ({
 										<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
 											{openStatus[record.id] === undefined ? '...' : openStatus[record.id] === null ? 'Non suivi' : openStatus[record.id] ? 'Ouvert' : 'Non ouvert'}
 										</td>
+										<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
+											{record.email_id || receivableEmailId ? (
+												<EmailOpenTester
+													emailId={record.email_id || receivableEmailId!}
+												/>
+											) : (
+												<span className='text-gray-400'>—</span>
+											)}
+										</td>
 									</tr>
 								))}
 								{filteredReminders.length === 0 && (
 									<tr>
 										<td
-											colSpan={3}
+											colSpan={4}
 											className='px-6 py-4 text-center text-gray-500'
 										>
 											Aucune relance trouvée

@@ -1,13 +1,14 @@
-import "dotenv/config";
-import { createClient } from "@supabase/supabase-js";
+// @ts-nocheck
+import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
   determineReminderLevel,
   formatTemplate,
   getEmailSettings,
-} from "./lib/reminderService";
-import { sendEmail } from "./lib/email";
-import { Client } from "./types/database";
-import { log, profile } from "console";
+} from "./lib/reminderService.ts";
+import { sendEmail } from "./lib/email.ts";
+import { Client } from "./types/database.ts";
+// Deno runtime provides console and crypto globally
 // Typages explicites
 type Delay = {
   j?: number; // jours
@@ -26,8 +27,8 @@ type Receivable = {
 };
 
 const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  Deno.env.get("SUPABASE_URL")!,
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
 );
 function convertJHMToMinutes(
   jhm: { j?: number; h?: number; m: number } | undefined
@@ -282,12 +283,14 @@ export async function sendManualReminder(
     });
 
     // Envoyer l'e-mail
+    const emailTrackingId = crypto.randomUUID();
     const emailSent = await sendEmail(
       emailSettings,
       receivable.email || receivable.client.email,
       `Relance facture ${receivable.invoice_number}`,
       emailContent,
-      receivable.invoice_pdf_url
+      receivable.invoice_pdf_url,
+      emailTrackingId
     );
 
     if (emailSent) {
@@ -322,6 +325,7 @@ export async function sendManualReminder(
         reminder_date: new Date().toISOString(),
         email_sent: true,
         email_content: emailContent,
+        email_id: emailTrackingId,
       });
     
       // Mettre à jour le statut de la créance
@@ -340,6 +344,7 @@ export async function sendManualReminder(
               : level === "pre"
               ? "Relance préventive"
               : "Relance",
+          email_id: emailTrackingId,
           updated_at: new Date().toISOString(),
         })
         .eq("id", receivableId);
@@ -415,4 +420,12 @@ async function AutomaticallySendReminders(): Promise<void> {
   }
 }
 
-AutomaticallySendReminders();
+serve(async (_req) => {
+  try {
+    await AutomaticallySendReminders();
+    return new Response("ok", { status: 200 });
+  } catch (e) {
+    console.error("cron-send-email-automatically failed:", e);
+    return new Response("error", { status: 500 });
+  }
+});
