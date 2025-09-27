@@ -6,9 +6,9 @@ import {
   Navigate,
 } from "react-router-dom";
 import DashboardRedirect from "./components/DashboardRedirect";
-import LandingPage from "./pages/LandingPage";
+import LandingPage from "../pages/landing/LandingPage";
 import SignupPage from "./pages/SignupPage";
-import LoginPage from "./pages/LoginPage";
+import LoginPage from "../pages/login";
 import ForgotPassword from "./pages/ForgotPassword";
 import PricingPage from "./pages/PricingPage";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
@@ -20,7 +20,7 @@ import BlogManufacture from "./pages/BlogManufacture";
 import BlogCommunication from "./pages/BlogCommunication";
 import BlogComptableBanque from "./pages/BlogComptableBanque";
 import BlogOptimisationRelance from "./pages/BlogOptimisationRelance";
-import Layout from "./components/Layout";
+import Layout from "../components/Layout";
 import Dashboard from "./components/Dashboard";
 import ClientPage from "./components/clients/ClientPage";
 import ReceivablesList from "./components/receivables/ReceivablesList";
@@ -56,7 +56,7 @@ export default function AppRoutes({ user, onMFASuccess }: AppRoutesProps) {
 
   return (
     <Router>
-      {!user && <AppHeader user={user} onContactClick={() => {}} />}
+      {!user && <AppHeader user={user} onContactClick={() => { }} />}
 
       <Routes>
         {/* Routes publiques */}
@@ -64,7 +64,7 @@ export default function AppRoutes({ user, onMFASuccess }: AppRoutesProps) {
           path="/"
           element={
             !user ? (
-              <LandingPage onGetStarted={() => {}} />
+              <LandingPage onGetStarted={() => { }} />
             ) : (
               <Navigate to={{ pathname: "/dashboard", search: onboardingSuffix, hash }} replace />
             )
@@ -92,14 +92,14 @@ export default function AppRoutes({ user, onMFASuccess }: AppRoutesProps) {
           element={!user ? <LoginPage /> : <Navigate to={{ pathname: "/dashboard", search: onboardingSuffix, hash }} replace />}
         />
         <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/pricing" element={<PricingPage setShowContact={() => {}} setDefaultSubject={() => {}} />} />
+        <Route path="/pricing" element={<PricingPage setShowContact={() => { }} setDefaultSubject={() => { }} />} />
         <Route path="/privacy" element={<PrivacyPolicyPage />} />
         <Route path="/mentions-legales" element={<LegalNoticePage />} />
         <Route path="/conditions-utilisation" element={<TermsOfUsePage />} />
         <Route
           path="/blog"
           element={
-            <BlogPage setShowContact={() => {}} setDefaultSubject={() => {}} />
+            <BlogPage setShowContact={() => { }} setDefaultSubject={() => { }} />
           }
         />
         <Route path="/blog-garage" element={<BlogGarage />} />
@@ -115,7 +115,6 @@ export default function AppRoutes({ user, onMFASuccess }: AppRoutesProps) {
         {/* Routes protégées */}
         <Route
           path="/"
-          element={user ? <Layout /> : <Navigate to="/login" replace />}
         >
           <Route path="dashboard">
             <Route index element={<DashboardRedirect />} />
@@ -123,11 +122,11 @@ export default function AppRoutes({ user, onMFASuccess }: AppRoutesProps) {
           </Route>
           <Route
             path="mfa"
-            element={<AuthMFA onMFASuccess={onMFASuccess || (() => {})} />}
+            element={<AuthMFA onMFASuccess={onMFASuccess || (() => { })} />}
           />
           <Route path="clients" element={<ClientPage />} />
           <Route path="receivables" element={<ReceivablesList />} />
-          <Route path="receivables/new" element={<ReceivableForm onClose={() => {}} onReceivableAdded={() => {}} />} />
+          <Route path="receivables/new" element={<ReceivableForm onClose={() => { }} onReceivableAdded={() => { }} />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/reminder-profiles" element={<ReminderProfilesPage />} />
           <Route path="reminders" element={<ReminderList />} />

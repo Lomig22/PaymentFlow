@@ -395,7 +395,9 @@ export default function ReminderProfilesPage() {
                   {/* Bouton menu 3 points */}
                   <div
                     className="absolute top-2 right-2"
-                    ref={(el) => (menuRefs.current[profile.id] = el)}
+                    ref={(el: HTMLDivElement | null) => {
+                      menuRefs.current[profile.id] = el;
+                    }}
                   >
                     <button
                       className="p-1.5 rounded hover:bg-gray-100"

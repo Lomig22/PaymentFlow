@@ -256,7 +256,7 @@ export default function DashboardLayout() {
                                 </span>{" "}
                                 <span className="text-sm font-semibold text-gray-900 ml-2">
                                   {" "}
-                                  {formatEuro(entry.value)}{" "}
+                                  {entry.value ? formatEuro(Number(entry.value)) : ""}{" "}
                                 </span>{" "}
                               </div>
                             ))}{" "}

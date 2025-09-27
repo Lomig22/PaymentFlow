@@ -224,7 +224,7 @@ export default function ReceivableEditForm({
           throw uploadError;
         }
 
-        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        const supabaseUrl = process.env.NEXT_SUPABASE_URL;
         invoicePath = `${supabaseUrl}/storage/v1/object/public/invoices/${filePath}`;
       }
       const { data, error } = await supabase
@@ -277,10 +277,10 @@ export default function ReceivableEditForm({
               user.email ?? "",
               "Paiement d'une créance",
               "La créance de " +
-                data.client.company_name +
-                ", portant le numéro de facture " +
-                data.invoice_number +
-                ", a été marquée comme payée."
+              data.client.company_name +
+              ", portant le numéro de facture " +
+              data.invoice_number +
+              ", a été marquée comme payée."
             );
 
             if (!emailSent) {
@@ -293,9 +293,9 @@ export default function ReceivableEditForm({
           //Jet notification
         } */
       }
-    //  if (receivable.status === "pending") {
-        await updateClientReminderStatus(receivable.client.id, true);
-    //  }
+      //  if (receivable.status === "pending") {
+      await updateClientReminderStatus(receivable.client.id, true);
+      //  }
       if (data) {
         showSuccess("Mise à jour complète.");
         onReceivableUpdated({

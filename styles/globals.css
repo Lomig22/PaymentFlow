@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.StripeElement {
+    display: block;
+    width: 100%;
+    padding: 12px;
+}
+
+/* Exemple de surcharge du style pour les titres et les boutons */
+.react-confirm-alert-overlay {
+    background-color: rgba(0, 0, 0, 0.5);
+    /* Changer la couleur de fond de l'overlay */
+}
+
+.react-confirm-alert {
+    border-radius: 8px;
+    padding: 20px;
+    background-color: #ffffff;
+}
+
+.react-confirm-alert .react-confirm-alert-title {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+}
+
+.react-confirm-alert .react-confirm-alert-message {
+    font-size: 16px;
+    color: #555;
+}
+
+.react-confirm-alert .react-confirm-alert-button-group {
+    margin-top: 20px;
+}
+
+.react-confirm-alert .react-confirm-alert-button-group button {
+    padding: 10px 20px;
+    margin: 0 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.react-confirm-alert .react-confirm-alert-button-group button:hover {
+    background-color: #0056b3;
+}
+
+.react-confirm-alert .react-confirm-alert-button-group button:disabled {
+    background-color: #ccc;
+}
+
+/* Ajout d'un style spécifique pour le bouton "Non" */
+.react-confirm-alert .react-confirm-alert-button-group button.no-button {
+    background-color: #dc3545;
+    /* Rouge */
+    color: white;
+}
+
+.react-confirm-alert .react-confirm-alert-button-group button.no-button:hover {
+    background-color: #c82333;
+    /* Rouge plus foncé au survol */
+}

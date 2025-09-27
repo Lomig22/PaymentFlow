@@ -179,7 +179,7 @@ export default function CSVImportModal({
 }: CSVImportModalProps) {
   const [file, setFile] = useState<File | null>(null);
   const [data, setData] = useState<any[]>([]);
-  const [planError,setPlanError]=useState<string | null>(null);
+  const [planError, setPlanError] = useState<string | null>(null);
 
   //Shanaka (Start)
   const [csvHeaders, setCsvHeaders] = useState<string[]>([]);
@@ -200,7 +200,7 @@ export default function CSVImportModal({
   const [mapping, setMapping] = useState<Record<string, keyof CSVMapping>>({});
   const [savingSchema, setSavingSchema] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
-  let planMessage="";
+  let planMessage = "";
   // Plus de validation des en-têtes requis
   const expectedHeaders: string[] = [];
   const showError = (message: string) => {
@@ -343,7 +343,7 @@ export default function CSVImportModal({
           setCsvHeaders(cleanedHeaders);
 
           const rows = result.data.slice(1) as string[][];
-    //      console.log("Données parsées: " + rows);
+          //      console.log("Données parsées: " + rows);
 
           setData(rows);
           handleMapping(cleanedHeaders);
@@ -398,7 +398,7 @@ export default function CSVImportModal({
   const getClientId = (clientIdentifier: string): string | null => {
     if (!clientIdentifier) return null;
 
-   // console.log("Client Key:", clientIdentifier);
+    // console.log("Client Key:", clientIdentifier);
     // Si c'est déjà un UUID valide
     if (
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
@@ -622,8 +622,8 @@ export default function CSVImportModal({
             0;
           const paidAmount = paidAmountStr
             ? parseFloat(
-                paidAmountStr.replace(/[^\d.,]/g, "").replace(",", ".")
-              ) || null
+              paidAmountStr.replace(/[^\d.,]/g, "").replace(",", ".")
+            ) || null
             : null;
           const dueDate =
             formatDate(dueDateStr) || new Date().toISOString().split("T")[0];
@@ -818,7 +818,7 @@ export default function CSVImportModal({
       }
 
       // Préparer les créances à importer
-      const receivablesToImport = [];
+      const receivablesToImport: any[] = [];
 
       for (const row of data) {
         try {
@@ -846,8 +846,8 @@ export default function CSVImportModal({
             0;
           const paidAmount = paidAmountStr
             ? parseFloat(
-                paidAmountStr.replace(/[^\d.,]/g, "").replace(",", ".")
-              ) || null
+              paidAmountStr.replace(/[^\d.,]/g, "").replace(",", ".")
+            ) || null
             : null;
           const dueDate =
             formatDate(dueDateStr) || new Date().toISOString().split("T")[0];
@@ -963,7 +963,7 @@ export default function CSVImportModal({
             );
           const existingTotalAmount =
             existing?.reduce((sum, item) => sum + (item.amount || 0), 0) || 0;
-			console.log("Montant totale avant mise à jour: ",existingTotalAmount)
+          console.log("Montant totale avant mise à jour: ", existingTotalAmount)
           if (fetchError) {
             console.error("Erreur de récupération:", fetchError);
             continue;
@@ -1014,37 +1014,37 @@ export default function CSVImportModal({
             "Montant total après update + insert:",
             updatedTotalAmount
           );
-		  //Jet limitation
-		  // 1. Récupérer le plan d’abonnement
-  const { data: subscription, error: subscriptionError } = await supabase
-  .from('subscriptions')
-  .select('plan')
-  .eq('user_id', user.id)
-  .limit(1)
-  .single();
+          //Jet limitation
+          // 1. Récupérer le plan d’abonnement
+          const { data: subscription, error: subscriptionError } = await supabase
+            .from('subscriptions')
+            .select('plan')
+            .eq('user_id', user.id)
+            .limit(1)
+            .single();
 
-if (subscriptionError || !subscription) {
-  showError("Impossible de récupérer le type d'abonnement.");
-  return;
-}
+          if (subscriptionError || !subscription) {
+            showError("Impossible de récupérer le type d'abonnement.");
+            return;
+          }
 
-// 2. Définir les limites selon les plans
-const planLimits = {
-  free: 25000,
-  basic: 50000,
-  pro: 200000,
-  company: Infinity,
-};
+          // 2. Définir les limites selon les plans
+          const planLimits = {
+            free: 25000,
+            basic: 50000,
+            pro: 200000,
+            company: Infinity,
+          };
 
-const userPlan = subscription.plan;
-const maxOverDues = Number(planLimits[userPlan as keyof typeof planLimits]) ?? 0;
-console.log(typeof updatedTotalAmount, updatedTotalAmount);
-console.log(typeof maxOverDues, maxOverDues);
-if (updatedTotalAmount >= maxOverDues) {
-   planMessage = `Limite atteinte : votre plan "${userPlan}" permet de gérer jusqu'à ${maxOverDues} Euro d'encours`;
-  setPlanError(planMessage);         // Pour afficher dans le composant si besoin
-  throw new Error(planMessage);    
-}
+          const userPlan = subscription.plan;
+          const maxOverDues = Number(planLimits[userPlan as keyof typeof planLimits]);
+          console.log(typeof updatedTotalAmount, updatedTotalAmount);
+          console.log(typeof maxOverDues, maxOverDues);
+          if (updatedTotalAmount >= maxOverDues) {
+            planMessage = `Limite atteinte : votre plan "${userPlan}" permet de gérer jusqu'à ${maxOverDues} Euro d'encours`;
+            setPlanError(planMessage);         // Pour afficher dans le composant si besoin
+            throw new Error(planMessage);
+          }
           // INSERT uniquement les nouveaux
           if (toInsert.length > 0) {
             const { error: insertError } = await supabase
@@ -1097,7 +1097,11 @@ if (updatedTotalAmount >= maxOverDues) {
           if (error) throw error;
 
           // 2. On prépare les mises à jour
-          const updates = [];
+          const updates: {
+            id: number,
+            email: string,
+            needs_reminder: boolean,
+          }[] = [];
 
           for (const r of receivablesToImport) {
             const client = existingClients.find((c) => c.id === r.client_id);
@@ -1171,8 +1175,9 @@ if (updatedTotalAmount >= maxOverDues) {
       if (successCount > 0) {
         onImportSuccess(successCount);
       } else {
-   
-			throw new Error((planMessage==="")?"Aucune créance n'a pu être importée!":planMessage)}
+
+        throw new Error((planMessage === "") ? "Aucune créance n'a pu être importée!" : planMessage)
+      }
     } catch (error: any) {
       console.error("Erreur lors de l'import des créances:", error);
       showError(error.message || "Erreur lors de l'import des créances");
@@ -1351,11 +1356,11 @@ if (updatedTotalAmount >= maxOverDues) {
                             disabled={
                               mapping[header]
                                 ? Object.entries(mapping)
-                                    .filter(
-                                      ([key, value]) =>
-                                        Boolean(value) && key !== String(header)
-                                    )
-                                    .some(([_, value]) => value === field.field)
+                                  .filter(
+                                    ([key, value]) =>
+                                      Boolean(value) && key !== String(header)
+                                  )
+                                  .some(([_, value]) => value === field.field)
                                 : false
                             }
                           >
@@ -1499,16 +1504,16 @@ if (updatedTotalAmount >= maxOverDues) {
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                           {receivable.paid_amount
                             ? new Intl.NumberFormat("fr-FR", {
-                                style: "currency",
-                                currency: "EUR",
-                              }).format(receivable.paid_amount)
+                              style: "currency",
+                              currency: "EUR",
+                            }).format(receivable.paid_amount)
                             : "-"}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
                           {receivable.document_date
                             ? new Date(
-                                receivable.document_date
-                              ).toLocaleDateString("fr-FR")
+                              receivable.document_date
+                            ).toLocaleDateString("fr-FR")
                             : "-"}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
@@ -1521,17 +1526,16 @@ if (updatedTotalAmount >= maxOverDues) {
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
                           <span
-                            className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                              receivable.status === "paid"
-                                ? "bg-green-100 text-green-800"
-                                : receivable.status === "late"
+                            className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${receivable.status === "paid"
+                              ? "bg-green-100 text-green-800"
+                              : receivable.status === "late"
                                 ? "bg-red-100 text-red-800"
                                 : receivable.status === "reminded"
-                                ? "bg-yellow-100 text-yellow-800"
-                                : receivable.status === "legal"
-                                ? "bg-purple-100 text-purple-800"
-                                : "bg-gray-100 text-gray-800"
-                            }`}
+                                  ? "bg-yellow-100 text-yellow-800"
+                                  : receivable.status === "legal"
+                                    ? "bg-purple-100 text-purple-800"
+                                    : "bg-gray-100 text-gray-800"
+                              }`}
                           >
                             {receivable.status === "paid" && "Payé"}
                             {receivable.status === "late" && "En retard"}

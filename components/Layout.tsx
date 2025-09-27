@@ -1,5 +1,6 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { Link, useLocation, Outlet, useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState, ReactNode } from "react";
+import Link from "next/link";
+import { useRouter } from "next/router";
 import {
   TrendingUp,
   Users,
@@ -11,17 +12,23 @@ import {
   HelpCircle,
   UserCog,
 } from "lucide-react";
-import { supabase } from "../lib/supabase";
+import { supabase } from "../src/lib/supabase";
 import { AuthSessionMissingError } from "@supabase/supabase-js";
-import AbonnementInfo from "../components/settings/AbonnementInfo";
-import useEnsureEmailSettings from "../lib/ensureEmailSettings";
-import OnboardingTour from "./onboarding/OnboardingTour";
-import OnboardingSurveyWizard from "./onboarding/OnboardingSurveyWizard";
-import OnboardingSpotlight, { SpotlightStep } from "./onboarding/OnboardingSpotlight";
+import AbonnementInfo from "../src/components/settings/AbonnementInfo";
+import useEnsureEmailSettings from "../src/lib/ensureEmailSettings";
+import OnboardingTour from "../src/components/onboarding/OnboardingTour";
+import OnboardingSurveyWizard from "../src/components/onboarding/OnboardingSurveyWizard";
+import OnboardingSpotlight, { SpotlightStep } from "../src/components/onboarding/OnboardingSpotlight";
 
-export default function Layout() {
-  const location = useLocation();
-  const navigate = useNavigate();
+interface LayoutProps {
+  children: ReactNode;
+}
+
+export default function Layout({ children }: LayoutProps) {
+  const router = useRouter();
+  const navigate = (page: string) => {
+    router.push(page);
+  };
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [logoutError, setLogoutError] = useState<string | null>(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -46,7 +53,7 @@ export default function Layout() {
           localStorage.setItem(`onboarding_dismissed_${uid}`, "1");
           localStorage.setItem(`onboarding_seen_${uid}`, "1");
         }
-      } catch {}
+      } catch { }
 
       // Déconnexion de Supabase
       const { error } = await supabase.auth.signOut();
@@ -83,12 +90,12 @@ export default function Layout() {
         try {
           // Marque localement pour ne plus ré-afficher
           localStorage.setItem(`onboarding_dismissed_${uid}`, "1");
-        } catch {}
+        } catch { }
 
         // Nettoyage du drapeau différé une fois traité (si présent)
         try {
           localStorage.removeItem('onboarding_deferred');
-        } catch {}
+        } catch { }
 
         // Nettoyage de l'URL pour ne pas relancer l'onboarding au refresh
         try {
@@ -96,11 +103,11 @@ export default function Layout() {
           const urlParams = new URLSearchParams(search);
           if (urlParams.has('onboarding')) {
             urlParams.delete('onboarding');
-            navigate({ pathname: location.pathname, search: urlParams.toString() ? `?${urlParams.toString()}` : '' }, { replace: true });
+            router.replace({ pathname: router.pathname, query: Object.fromEntries(urlParams) });
           }
-        } catch {}
+        } catch { }
       }
-    } catch {}
+    } catch { }
   };
 
   const closeLogoutModal = () => {
@@ -190,12 +197,12 @@ export default function Layout() {
             .from("profiles")
             .update({ onboarding_seen: true })
             .eq("id", uid);
-        } catch {}
+        } catch { }
         try {
           localStorage.setItem(`onboarding_seen_${uid}`, "1");
-        } catch {}
+        } catch { }
       }
-    } catch {}
+    } catch { }
 
     setOnboardingOpen(false);
     setSpotlightStep(0);
@@ -221,7 +228,7 @@ export default function Layout() {
         if (uid) {
           localStorage.setItem(`onboarding_seen_${uid}`, "1");
         }
-      } catch {}
+      } catch { }
       setSpotlightOpen(false);
     }
   };
@@ -396,7 +403,7 @@ export default function Layout() {
         let hasDeferredTrigger = false;
         try {
           hasDeferredTrigger = localStorage.getItem('onboarding_deferred') === '1';
-        } catch {}
+        } catch { }
         const hasQueryTrigger = urlParams.get('onboarding') === '1' || isSignupFlow || hasDeferredTrigger;
 
         if (!profiles || profiles.length === 0) {
@@ -425,7 +432,7 @@ export default function Layout() {
             localSeen =
               localStorage.getItem(localKeySeen) === "1" ||
               localStorage.getItem(localKeyDismissed) === "1";
-          } catch {}
+          } catch { }
           // Si déclencheur présent (query/hash/différé), ignorer les indicateurs locaux
           // et n'ouvrir qu'une seule fois tant que la DB n'est pas marquée vue.
           if (hasQueryTrigger && !dbSeen) {
@@ -454,7 +461,7 @@ export default function Layout() {
               console.warn("⚠️ Impossible de parser le questionnaire local:", parseErr);
             }
           }
-        } catch {}
+        } catch { }
       } catch (e) {
         console.error("🔥 Erreur globale dans verifySubscription :", e);
       } finally {
@@ -502,9 +509,8 @@ export default function Layout() {
         <div className="min-h-screen bg-gray-100">
           {/* Sidebar */}
           <div
-            className={` fixed inset-y-0 left-0 bg-white shadow-lg transition-all duration-200 z-40  ${
-              isExpanded ? "w-64" : "w-24"
-            }`}
+            className={` fixed inset-y-0 left-0 bg-white shadow-lg transition-all duration-200 z-40  ${isExpanded ? "w-64" : "w-24"
+              }`}
             onMouseEnter={() => setIsExpanded(true)}
             onMouseLeave={() => setIsExpanded(false)}
           >
@@ -512,14 +518,13 @@ export default function Layout() {
 
             <div className="px-4">
               <Link
-                to="/"
+                href="/"
                 className="flex items-center h-16 px-4 border-b border-gray-200"
               >
                 <TrendingUp className="h-8 w-8 text-blue-600 flex-shrink-0" />
                 <span
-                  className={`ml-2 text-xl font-bold text-gray-900 overflow-hidden whitespace-nowrap transition-opacity duration-200 ${
-                    isExpanded ? "opacity-100" : "opacity-0"
-                  }`}
+                  className={`ml-2 text-xl font-bold text-gray-900 overflow-hidden whitespace-nowrap transition-opacity duration-200 ${isExpanded ? "opacity-100" : "opacity-0"
+                    }`}
                 >
                   PaymentFlow
                 </span>
@@ -535,23 +540,20 @@ export default function Layout() {
                 return (
                   <Link
                     key={item.name}
-                    to={item.href}
+                    href={item.href}
                     data-tour={tourDataByHref[item.href]}
-                    className={`flex items-center ${
-                      !isExpanded && "justify-center"
-                    } px-4 py-3 my-2 text-sm font-medium rounded-md transition-all duration-300
-                  ${
-                    isActive
-                      ? "bg-blue-50 text-blue-700"
-                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                  }
+                    className={`flex items-center ${!isExpanded && "justify-center"
+                      } px-4 py-3 my-2 text-sm font-medium rounded-md transition-all duration-300
+                  ${isActive
+                        ? "bg-blue-50 text-blue-700"
+                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                      }
                 `}
                   >
                     <Icon className="h-5 w-5 flex-shrink-0 text-inherit" />
                     <span
-                      className={`ml-3 whitespace-nowrap transition-opacity duration-300 ${
-                        isExpanded ? "block opacity-100" : "hidden"
-                      }`}
+                      className={`ml-3 whitespace-nowrap transition-opacity duration-300 ${isExpanded ? "block opacity-100" : "hidden"
+                        }`}
                     >
                       {item.name}
                     </span>
@@ -562,24 +564,21 @@ export default function Layout() {
 
             {/* Pied du menu */}
             <div
-              className={`absolute bottom-0 w-full left-0 ${
-                isExpanded ? "px-6" : "px-0"
-              }`}
+              className={`absolute bottom-0 w-full left-0 ${isExpanded ? "px-6" : "px-0"
+                }`}
             >
               <div className=" border-gray-200">
                 <Link
-                  to="/help"
+                  href="/help"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={`flex items-center ${
-                    !isExpanded && "justify-center"
-                  }   w-full px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-md transition-all duration-300`}
+                  className={`flex items-center ${!isExpanded && "justify-center"
+                    }   w-full px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-md transition-all duration-300`}
                 >
                   <HelpCircle className="h-5 w-5 flex-shrink-0 text-inherit" />
                   <span
-                    className={`ml-3 whitespace-nowrap transition-opacity duration-300 ${
-                      isExpanded ? "block opacity-100" : "hidden"
-                    }`}
+                    className={`ml-3 whitespace-nowrap transition-opacity duration-300 ${isExpanded ? "block opacity-100" : "hidden"
+                      }`}
                   >
                     Aides et support
                   </span>
@@ -589,15 +588,13 @@ export default function Layout() {
               <div className="border-t border-gray-200">
                 <button
                   onClick={() => setShowLogoutConfirm(true)}
-                  className={`flex items-center  ${
-                    !isExpanded && "justify-center"
-                  } w-full px-4 py-6 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-md transition-all duration-300`}
+                  className={`flex items-center  ${!isExpanded && "justify-center"
+                    } w-full px-4 py-6 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-md transition-all duration-300`}
                 >
                   <LogOut className="h-5 w-5 flex-shrink-0 text-inherit" />
                   <span
-                    className={`ml-3 whitespace-nowrap transition-opacity duration-300 ${
-                      isExpanded ? "block opacity-100" : "hidden"
-                    }`}
+                    className={`ml-3 whitespace-nowrap transition-opacity duration-300 ${isExpanded ? "block opacity-100" : "hidden"
+                      }`}
                   >
                     Déconnexion
                   </span>
@@ -619,7 +616,7 @@ export default function Layout() {
 
           <div className={`transition-all duration-200 ${isExpanded ? 'pl-64' : 'pl-24'}`}>
             <main>
-              <Outlet />
+              {children}
             </main>
           </div>
 
@@ -671,10 +668,10 @@ export default function Layout() {
             step={0}
             steps={[{ title: "Apprenons à vous connaître", description: "Dites‑nous en plus sur votre rôle et votre entreprise." }]}
             onClose={() => { handleOnboardingDismiss(); setOnboardingOpen(false); }}
-            onPrev={() => {}}
-            onNext={() => {}}
-            onComplete={() => {}}
-            onAction={() => {}}
+            onPrev={() => { }}
+            onNext={() => { }}
+            onComplete={() => { }}
+            onAction={() => { }}
             renderStep={() => (
               <OnboardingSurveyWizard onDone={handleSurveySaved} />
             )}

@@ -27,6 +27,8 @@ interface ClientDetailModalProps {
 
 const ClientDetailModal: React.FC<ClientDetailModalProps> = ({ client, isOpen, onClose }) => {
   const navigate = useNavigate();
+  const [showReminderModal, setShowReminderModal] = React.useState(false);
+  const [sending, setSending] = React.useState(false);
   if (!client) return null;
 
   const formatDate = (dateString: string) =>
@@ -36,12 +38,12 @@ const ClientDetailModal: React.FC<ClientDetailModalProps> = ({ client, isOpen, o
     });
 
   interface FieldProps {
-  label: string;
-  value: string;
-  Icon?: React.ElementType;
-  isLink?: boolean;
-}
-const Field: React.FC<FieldProps> = ({ label, value, Icon, isLink = false }) => (
+    label: string;
+    value: string;
+    Icon?: React.ElementType;
+    isLink?: boolean;
+  }
+  const Field: React.FC<FieldProps> = ({ label, value, Icon, isLink = false }) => (
     <div className="flex items-start gap-3">
       {Icon && <Icon className="w-5 h-5 text-blue-500 mt-1" />}
       <div>
@@ -63,10 +65,10 @@ const Field: React.FC<FieldProps> = ({ label, value, Icon, isLink = false }) => 
   );
 
   interface SectionProps {
-  title: string;
-  children: React.ReactNode;
-}
-const Section: React.FC<SectionProps> = ({ title, children }) => (
+    title: string;
+    children: React.ReactNode;
+  }
+  const Section: React.FC<SectionProps> = ({ title, children }) => (
     <div className="mb-8">
       <h2 className="text-xl font-semibold text-gray-800 border-b pb-2 mb-4">
         {title}
@@ -78,17 +80,16 @@ const Section: React.FC<SectionProps> = ({ title, children }) => (
   );
 
   interface ReminderBadgeProps {
-  label: string;
-  enabled: boolean;
-  delay?: { m?: number };
-}
-const ReminderBadge: React.FC<ReminderBadgeProps> = ({ label, enabled, delay }) => (
+    label: string;
+    enabled: boolean;
+    delay?: { m?: number };
+  }
+  const ReminderBadge: React.FC<ReminderBadgeProps> = ({ label, enabled, delay }) => (
     <div className="flex items-center gap-4">
       <span className="w-32 text-sm text-gray-600">{label}</span>
       <span
-        className={`px-2 py-1 rounded-full text-xs font-bold ${
-          enabled ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-        }`}
+        className={`px-2 py-1 rounded-full text-xs font-bold ${enabled ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+          }`}
       >
         {enabled ? "Activé" : "Désactivé"}
       </span>
@@ -98,8 +99,6 @@ const ReminderBadge: React.FC<ReminderBadgeProps> = ({ label, enabled, delay }) 
     </div>
   );
 
-  const [showReminderModal, setShowReminderModal] = React.useState(false);
-  const [sending, setSending] = React.useState(false);
 
   const handleSendReminder = async (subject: string, content: string, signature: string) => {
     if (!client || !client.id) return false;
@@ -119,20 +118,20 @@ const ReminderBadge: React.FC<ReminderBadgeProps> = ({ label, enabled, delay }) 
           aria-hidden="true"
           onClick={onClose}
         />
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.3 }}
-            className="relative z-50 bg-white rounded-2xl shadow-2xl max-w-4xl w-full p-8 overflow-y-auto max-h-[90vh]"
-            role="dialog"
-            aria-modal="true"
-          >
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3 text-2xl font-semibold text-gray-800">
-                <FileText className="w-6 h-6 text-blue-600" />
-                Détails du client
-              </div>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          transition={{ duration: 0.3 }}
+          className="relative z-50 bg-white rounded-2xl shadow-2xl max-w-4xl w-full p-8 overflow-y-auto max-h-[90vh]"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3 text-2xl font-semibold text-gray-800">
+              <FileText className="w-6 h-6 text-blue-600" />
+              Détails du client
+            </div>
 
             <button
               onClick={onClose}
@@ -229,30 +228,30 @@ const ReminderBadge: React.FC<ReminderBadgeProps> = ({ label, enabled, delay }) 
           </Section>
 
           <Section title="Autres">
-  <Field
-    label="Notes"
-    value={client.notes || "Aucune note"}
-    Icon={StickyNote}
-  />
-  <Field
-    label="Créé le"
-    value={formatDate(client.created_at)}
-    Icon={Calendar}
-  />
-  <Field
-    label="Modifié le"
-    value={formatDate(client.updated_at)}
-    Icon={Wrench}
-  />
-</Section>
-<div className="w-full flex flex-col items-center mt-6">
+            <Field
+              label="Notes"
+              value={client.notes || "Aucune note"}
+              Icon={StickyNote}
+            />
+            <Field
+              label="Créé le"
+              value={formatDate(client.created_at)}
+              Icon={Calendar}
+            />
+            <Field
+              label="Modifié le"
+              value={formatDate(client.updated_at)}
+              Icon={Wrench}
+            />
+          </Section>
+          <div className="w-full flex flex-col items-center mt-6">
             <button
               className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-md shadow transition-colors text-lg"
               onClick={() => {
-  navigate('/receivables', {
-    state: { openReminderForClient: client.id }
-  });
-}}
+                navigate('/receivables', {
+                  state: { openReminderForClient: client.id }
+                });
+              }}
               type="button"
             >
               <Mail className="w-5 h-5" aria-label="Mail" />
@@ -261,8 +260,8 @@ const ReminderBadge: React.FC<ReminderBadgeProps> = ({ label, enabled, delay }) 
             {(!client.company_name || !client.email) && (
               <div className="mt-2 text-sm text-red-600 text-center">
                 Attention : informations client incomplètes.<br />
-                { !client.company_name && 'Nom de l’entreprise manquant. '}
-                { !client.email && 'Email manquant.'}
+                {!client.company_name && 'Nom de l’entreprise manquant. '}
+                {!client.email && 'Email manquant.'}
               </div>
             )}
           </div>

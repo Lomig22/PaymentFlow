@@ -10,8 +10,8 @@ interface EmailSettings {
 
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from './supabase';
-const supabaseUrl: string = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey: string = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl: string = process.env.NEXT_SUPABASE_URL ?? "";
+const supabaseAnonKey: string = process.env.NEXT_SUPABASE_ANON_KEY ?? "";
 
 export const sendEmail = async (
 	settings: EmailSettings,
@@ -34,7 +34,7 @@ export const sendEmail = async (
 					const parsed = JSON.parse(raw);
 					access_token = parsed?.currentSession?.access_token || parsed?.access_token || null;
 				}
-			} catch {}
+			} catch { }
 		}
 
 		if (!access_token) {
@@ -71,15 +71,14 @@ export const sendEmail = async (
 			          <div style="max-width: 600px; margin: 0 auto;">
 			            ${htmlContent}
 			            ${trackingPixel}
-			            ${
-								settings.email_signature
+			            ${settings.email_signature
 									? `
 				              <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee;">
 				                ${settings.email_signature}
 				              </div>
 				            `
 									: ''
-							}
+								}
 			          </div>
 			        </body>
 			      </html>
@@ -92,16 +91,16 @@ export const sendEmail = async (
 		);
 		console.log(JSON.stringify({
 			list: [
-			  {
-				settings,
-				to,
-				subject,
-				html: "<html>...</html>",
-				invoice_pdf_url,
-			  }
+				{
+					settings,
+					to,
+					subject,
+					html: "<html>...</html>",
+					invoice_pdf_url,
+				}
 			]
-		  }));
-		  
+		}));
+
 		const data = await res.json();
 		const error = data?.failures;
 		if (error) {

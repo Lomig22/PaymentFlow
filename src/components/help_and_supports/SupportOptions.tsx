@@ -31,7 +31,7 @@ const SupportOptions: React.FC = () => {
   ];
 
   return (
-    <motion.div 
+    <motion.div
       className="bg-white rounded-xl shadow-md overflow-hidden mb-8 border border-gray-100"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -51,24 +51,24 @@ const SupportOptions: React.FC = () => {
                 <h4 className="font-medium text-gray-800">{option.title}</h4>
                 <p className="text-gray-600 text-sm">{option.description}</p>
                 <div className="mt-2 flex justify-between items-center">
-                <button
-  className="text-blue-600 hover:text-blue-800 font-medium text-sm transition-colors focus:outline-none"
-  onClick={() => {
-    if (option.title === "Chat en direct") {
-      if (window.Chatling && typeof window.Chatling.open === "function") {
-        window.Chatling.open();
-      } else {
-        console.warn("Chatling n’est pas encore chargé.");
-      }
-    } else if (option.title === "Support par email") {
-      window.location.href = "mailto:contact@payment-flow.fr";
-    } else if (option.title === "Support téléphonique") {
-      window.location.href = `tel:${option.action}`;
-    }
-  }}
->
-  {option.action}
-</button>
+                  <button
+                    className="text-blue-600 hover:text-blue-800 font-medium text-sm transition-colors focus:outline-none"
+                    onClick={() => {
+                      if (option.title === "Chat en direct") {
+                        if ("Chatling" in window && window.Chatling && typeof window.Chatling === "object" && "open" in window.Chatling && typeof window.Chatling.open === "function") {
+                          window.Chatling.open();
+                        } else {
+                          console.warn("Chatling n’est pas encore chargé.");
+                        }
+                      } else if (option.title === "Support par email") {
+                        window.location.href = "mailto:contact@payment-flow.fr";
+                      } else if (option.title === "Support téléphonique") {
+                        window.location.href = `tel:${option.action}`;
+                      }
+                    }}
+                  >
+                    {option.action}
+                  </button>
 
                   <div className="flex items-center text-xs text-gray-500">
                     <Clock className="h-3 w-3 mr-1" />

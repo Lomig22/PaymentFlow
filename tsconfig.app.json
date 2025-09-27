@@ -2,10 +2,13 @@
   "compilerOptions": {
     "target": "ES2020",
     "useDefineForClassFields": true,
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "lib": [
+      "ES2020",
+      "DOM",
+      "DOM.Iterable"
+    ],
     "module": "ESNext",
     "skipLibCheck": true,
-
     /* Bundler mode */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
@@ -13,7 +16,6 @@
     "moduleDetection": "force",
     "noEmit": true,
     "jsx": "react-jsx",
-
     /* Linting */
     "strict": true,
     "noUnusedLocals": false,
@@ -22,5 +24,11 @@
     "allowJs": true,
     "checkJs": false
   },
-  "include": ["src"]
+  "include": [
+    "src",
+    "pages/landing/LandingPage.tsx",
+    "pages/landing/ContactModal.tsx",
+    "pages/login/index.tsx",
+    "components/Layout.tsx"
+  ]
 }

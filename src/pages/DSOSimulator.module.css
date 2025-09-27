@@ -6,9 +6,11 @@
   outline: none;
   transition: border-color 0.2s;
 }
+
 .input:focus {
   border-color: #3b82f6;
 }
+
 .input-bordered {
   background: #f8fafc;
 }

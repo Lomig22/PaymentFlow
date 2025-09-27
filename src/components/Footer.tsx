@@ -1,5 +1,6 @@
 import { motion, useInView } from "framer-motion";
-import { useNavigate, Link } from "react-router-dom";
+import Link from "next/link";
+import { useRouter } from "next/router";
 import { useRef, useState, useEffect } from "react";
 import {
   BarChart2,
@@ -10,7 +11,7 @@ import {
   CheckCircle,
   ChevronRight,
 } from "lucide-react";
-import ContactModal from "../pages/ContactModal";
+import ContactModal from "../../pages/landing/ContactModal";
 
 // Animation variants (déplacés hors du composant)
 const fadeInScale = {
@@ -44,7 +45,18 @@ const Footer = () => {
     setIsMobileMenuOpen(false);
   };
 
-  const navigate = useNavigate();
+  const router = useRouter();
+
+  const navigate = (path: string) => {
+    router.push(path);
+  }
+
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault(); // prevent default anchor behavior
+    router.push("/pricing"); // navigate
+    window.scrollTo({ top: 0, left: 0, behavior: "smooth" }); // smooth scroll to top
+  };
+
   const calendlyRef = useRef<any>(null);
   const [showContactModal, setShowContactModal] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -99,7 +111,7 @@ const Footer = () => {
   };
 
   // --- Détection extensions/suspicious scripts ---
-  const [extensionAlert, setExtensionAlert] = useState<string|null>(null);
+  const [extensionAlert, setExtensionAlert] = useState<string | null>(null);
   useEffect(() => {
     // Liste de patterns connus pour scripts d'extensions courantes (adblock, capture, etc)
     const suspiciousPatterns = [
@@ -167,15 +179,7 @@ const Footer = () => {
                 </button>
               </li>
               <li>
-                <Link
-                  to="/pricing"
-                  className="text-gray-500 hover:text-gray-700"
-                  onClick={e => {
-                    e.preventDefault();
-                    navigate('/pricing');
-                    window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
-                  }}
-                >
+                <Link href="/pricing" onClick={handleClick} className="text-gray-500 hover:text-gray-700">
                   Tarifs
                 </Link>
               </li>
@@ -203,16 +207,16 @@ const Footer = () => {
               </li>
               <li>
                 <button
-  className="text-gray-500 hover:text-gray-700"
-  onClick={() => navigate('/help')}
->
-  Guides
-</button>
+                  className="text-gray-500 hover:text-gray-700"
+                  onClick={() => navigate('/help')}
+                >
+                  Guides
+                </button>
               </li>
               <li>
                 <button className="text-gray-500 hover:text-gray-700" onClick={() => navigate('/help')}>
-  Support
-</button>
+                  Support
+                </button>
               </li>
             </ul>
           </div>

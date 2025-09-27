@@ -47,7 +47,7 @@ export default function ResetPassword() {
 
     const passwordValidation = validatePassword(password);
     if (!passwordValidation.isValid) {
-      const errors = [];
+      const errors: string[] = [];
       if (!passwordValidation.errors.minLength)
         errors.push("8 caractères minimum");
       if (!passwordValidation.errors.hasUpperCase) errors.push("une majuscule");
@@ -119,11 +119,10 @@ export default function ResetPassword() {
 
           {message && (
             <div
-              className={`p-4 rounded-md mb-6 ${
-                message.type === "success"
+              className={`p-4 rounded-md mb-6 ${message.type === "success"
                   ? "bg-green-50 text-green-700"
                   : "bg-red-50 text-red-700"
-              }`}
+                }`}
             >
               {message.text}
             </div>
@@ -179,7 +178,7 @@ export default function ResetPassword() {
                           : ""
                       }
                     >
-                      • Un caractère spécial (!@#$%^&amp;*(),.?&quot;:{}
+                      • Un caractère spécial (!@#$%^&amp;*(),.?&quot;:{ }
                       |&lt;&gt;)
                     </li>
                   </ul>

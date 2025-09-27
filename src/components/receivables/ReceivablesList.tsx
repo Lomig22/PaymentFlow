@@ -64,10 +64,7 @@ function remindersEnabled(client: any): boolean {
   );
 }
 
-import PlaySvg from "../../components/images/play-svgrepo-com.svg";
-import PauseSvg from "../../components/images/pause-svgrepo-com.svg";
 import { motion, AnimatePresence } from "framer-motion";
-import { log } from "console";
 import { useAbonnement } from "../context/AbonnementContext";
 
 type SortColumnConfig = {
@@ -377,12 +374,12 @@ function ReceivablesList() {
           const lastStatus = selectedReceivable.client?.reminder_enable_final
             ? "Relance finale"
             : selectedReceivable.client?.reminder_enable_3
-            ? "Relance 3"
-            : selectedReceivable.client?.reminder_enable_2
-            ? "Relance 2"
-            : selectedReceivable.client?.reminder_enable_1
-            ? "Relance 1"
-            : "Relance préventive";
+              ? "Relance 3"
+              : selectedReceivable.client?.reminder_enable_2
+                ? "Relance 2"
+                : selectedReceivable.client?.reminder_enable_1
+                  ? "Relance 1"
+                  : "Relance préventive";
           return status === lastStatus;
         };
 
@@ -688,107 +685,107 @@ function ReceivablesList() {
   }
 
   const handleSendReminder = async () =>
-    // receivable: Receivable & { client: Client }
-    {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+  // receivable: Receivable & { client: Client }
+  {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-      if (!user) throw new Error("Utilisateur non authentifié");
-      try {
-        setError(null);
-        if (selectedReceivable == null) return;
-        setSending(true);
+    if (!user) throw new Error("Utilisateur non authentifié");
+    try {
+      setError(null);
+      if (selectedReceivable == null) return;
+      setSending(true);
 
-        const success = await sendManualReminder(
-          selectedReceivable.id,
-          subject?.trim() || undefined,
-          content || undefined
-        );
-        if (success) {
-          setSendSuccess(true);
-          if (user.id) {
-            try {
-              await saveNotification({
-                owner_id: user.id,
-                is_read: false,
-                type: "info",
-                message: "Relance effectuée correctement",
-                need_mail_notification: true,
-                details: `Relance ${selectedReceivable.client.company_name}\nDestinataire : ${selectedReceivable.email}`,
-              });
-            } catch (error: any) {
-              showError(error);
-            }
-          }
-          // Masquer le message après 3 secondes
-          if (sendSuccessTimeoutRef.current) {
-            clearTimeout(sendSuccessTimeoutRef.current);
-          }
-          sendSuccessTimeoutRef.current = window.setTimeout(() => {
-            setSendSuccess(false);
-            sendSuccessTimeoutRef.current = null;
-          }, 3000);
-          await fetchReceivables();
-        } else {
-          if (selectedReceivable.status === "Relance finale") {
+      const success = await sendManualReminder(
+        selectedReceivable.id,
+        subject?.trim() || undefined,
+        content || undefined
+      );
+      if (success) {
+        setSendSuccess(true);
+        if (user.id) {
+          try {
             await saveNotification({
               owner_id: user.id,
               is_read: false,
-              type: "erreur",
-              message: "Relançe manuelle échouée",
+              type: "info",
+              message: "Relance effectuée correctement",
               need_mail_notification: true,
-              details:
-                "client: " +
-                selectedReceivable.client.company_name +
-                "\ndestinataire: " +
-                selectedReceivable.email +
-                "\nerreur: Le status de cette créance est déjà en relance finale",
+              details: `Relance ${selectedReceivable.client.company_name}\nDestinataire : ${selectedReceivable.email}`,
             });
-            showError("Le status de cette créance est déjà en relance finale");
-          } else {
-            await saveNotification({
-              owner_id: user.id,
-              is_read: false,
-              type: "erreur",
-              message: "Relançe manuelle échouée",
-              need_mail_notification: true,
-              details:
-                "client: " +
-                selectedReceivable.client.company_name +
-                "\ndestinataire: " +
-                selectedReceivable.email +
-                "\nerreur: Impossible d'envoyer la relance. Vérifiez les paramètres email, la signature et les templates.",
-            });
-            showError(
-              "Impossible d'envoyer la relance. Vérifiez les paramètres email, la signature et les templates."
-            );
+          } catch (error: any) {
+            showError(error);
           }
         }
-        setSending(false);
-        setShowConfirmReminder(false);
-        setSelectedClient(null);
-      } catch (error: any) {
-        await saveNotification({
-          owner_id: user.id,
-          is_read: false,
-          type: "erreur",
-          need_mail_notification: true,
-          message: "Relançe manuelle échouée",
-          details:
-            "client: " +
-              selectedReceivable?.client.company_name +
+        // Masquer le message après 3 secondes
+        if (sendSuccessTimeoutRef.current) {
+          clearTimeout(sendSuccessTimeoutRef.current);
+        }
+        sendSuccessTimeoutRef.current = window.setTimeout(() => {
+          setSendSuccess(false);
+          sendSuccessTimeoutRef.current = null;
+        }, 3000);
+        await fetchReceivables();
+      } else {
+        if (selectedReceivable.status === "Relance finale") {
+          await saveNotification({
+            owner_id: user.id,
+            is_read: false,
+            type: "erreur",
+            message: "Relançe manuelle échouée",
+            need_mail_notification: true,
+            details:
+              "client: " +
+              selectedReceivable.client.company_name +
               "\ndestinataire: " +
-              selectedReceivable?.email +
-              "\nerreur:" +
-              error.message || "Erreur lors de l'envoi de la relance",
-        });
-        showError(error.message || "Erreur lors de l'envoi de la relance");
-        setSending(false);
-        setShowConfirmReminder(false);
-        setSelectedClient(null);
+              selectedReceivable.email +
+              "\nerreur: Le status de cette créance est déjà en relance finale",
+          });
+          showError("Le status de cette créance est déjà en relance finale");
+        } else {
+          await saveNotification({
+            owner_id: user.id,
+            is_read: false,
+            type: "erreur",
+            message: "Relançe manuelle échouée",
+            need_mail_notification: true,
+            details:
+              "client: " +
+              selectedReceivable.client.company_name +
+              "\ndestinataire: " +
+              selectedReceivable.email +
+              "\nerreur: Impossible d'envoyer la relance. Vérifiez les paramètres email, la signature et les templates.",
+          });
+          showError(
+            "Impossible d'envoyer la relance. Vérifiez les paramètres email, la signature et les templates."
+          );
+        }
       }
-    };
+      setSending(false);
+      setShowConfirmReminder(false);
+      setSelectedClient(null);
+    } catch (error: any) {
+      await saveNotification({
+        owner_id: user.id,
+        is_read: false,
+        type: "erreur",
+        need_mail_notification: true,
+        message: "Relançe manuelle échouée",
+        details:
+          "client: " +
+          selectedReceivable?.client.company_name +
+          "\ndestinataire: " +
+          selectedReceivable?.email +
+          "\nerreur:" +
+          error.message || "Erreur lors de l'envoi de la relance",
+      });
+      showError(error.message || "Erreur lors de l'envoi de la relance");
+      setSending(false);
+      setShowConfirmReminder(false);
+      setSelectedClient(null);
+    }
+  };
   const sendToSignatureSetting = () => {
     // alert("send")
     navigate("/settings", {
@@ -840,7 +837,7 @@ function ReceivablesList() {
     setSortConfig(newConfig as any);
     try {
       localStorage.setItem(RECEIVABLES_SORT_KEY, JSON.stringify(newConfig));
-    } catch {}
+    } catch { }
   };
 
   // Persist sortConfig changes (in case setSortConfig is called elsewhere)
@@ -848,7 +845,7 @@ function ReceivablesList() {
     if (sortConfig) {
       try {
         localStorage.setItem(RECEIVABLES_SORT_KEY, JSON.stringify(sortConfig));
-      } catch {}
+      } catch { }
     }
   }, [sortConfig]);
 
@@ -1319,25 +1316,25 @@ function ReceivablesList() {
     }
     */
 
-// Si un profil de relance existe et que l'échéance est présente, ne bloque pas (date pièce non obligatoire)
-if (
-  !client.reminder_enable_1 &&
-  !client.reminder_enable_2 &&
-  !client.reminder_enable_3 &&
-  !client.reminder_enable_final &&
-  !client.pre_reminder_enable
-) {
-  if (client.reminder_profile && receivable.due_date) {
-    return ""; // Pas de blocage
-  }
-  return "Aucune relance n'est activée!";
-}
+    // Si un profil de relance existe et que l'échéance est présente, ne bloque pas (date pièce non obligatoire)
+    if (
+      !client.reminder_enable_1 &&
+      !client.reminder_enable_2 &&
+      !client.reminder_enable_3 &&
+      !client.reminder_enable_final &&
+      !client.pre_reminder_enable
+    ) {
+      if (client.reminder_profile && receivable.due_date) {
+        return ""; // Pas de blocage
+      }
+      return "Aucune relance n'est activée!";
+    }
 
-/*     if (!receivable.automatic_reminder && issues.length === 0) {
-      return "Relance en pause";
-    } */
+    /*     if (!receivable.automatic_reminder && issues.length === 0) {
+          return "Relance en pause";
+        } */
 
-return issues.join(", ");
+    return issues.join(", ");
   }
 
   if (loading) {
@@ -1476,11 +1473,10 @@ return issues.join(", ");
               }}
               disabled={selectedIds.length === 0}
               className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-white font-medium transition
-        ${
-          selectedIds.length === 0
-            ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-            : "bg-red-500 text-white hover:bg-red-600"
-        }`}
+        ${selectedIds.length === 0
+                  ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                  : "bg-red-500 text-white hover:bg-red-600"
+                }`}
             >
               <Trash2 className="h-4 w-4" />
               Supprimer
@@ -1539,23 +1535,21 @@ return issues.join(", ");
                           border border-opacity-30
                           transition-all duration-300 ease-in-out transform
                           
-                          ${
-                            isActive
+                          ${isActive
                               ? isAsc
                                 ? "bg-blue-500/20 text-blue-800 border-blue-400/50 shadow-md"
                                 : "bg-red-500/20 text-red-800 border-red-400/50 shadow-md"
                               : "bg-gray-100/30 text-gray-700 border-gray-300/50 hover:bg-gray-200/40"
-                          }
+                            }
 
                           hover:scale-[1.02] hover:shadow-lg
                           focus:outline-none focus:ring-2 focus:ring-offset-2
-                          ${
-                            isActive
+                          ${isActive
                               ? isAsc
                                 ? "focus:ring-blue-300"
                                 : "focus:ring-red-300"
                               : "focus:ring-gray-400"
-                          }
+                            }
                         `}
                         >
                           <span className="relative z-10 flex items-center gap-1.5">
@@ -1565,9 +1559,8 @@ return issues.join(", ");
 
                           {isActive && (
                             <ChevronDown
-                              className={`h-4 w-4 transition-transform duration-300 ${
-                                isAsc ? "rotate-180" : ""
-                              }`}
+                              className={`h-4 w-4 transition-transform duration-300 ${isAsc ? "rotate-180" : ""
+                                }`}
                             />
                           )}
                         </button>
@@ -1630,9 +1623,9 @@ return issues.join(", ");
                       <div className="flex gap-2 items-center relative z-0">
                         <Tooltip label="Options supplémentaires">
                           <span
-                            ref={(el) =>
-                              (buttonRefs.current[receivable.id] = el)
-                            }
+                            ref={(el) => {
+                              buttonRefs.current[receivable.id] = el;
+                            }}
                             className="w-6 h-6 flex items-center justify-center cursor-pointer relative z-0"
                             onClick={(e) => {
                               e.stopPropagation();
@@ -1648,73 +1641,73 @@ return issues.join(", ");
                           </span>
                         </Tooltip>
 
-                        
-<span
-  className={`w-6 h-6 flex items-center justify-center relative z-0 ${!(remindersEnabled(receivable.client) || canPlayDirect(receivable)) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-  onClick={e => {
-    e.stopPropagation();
-    if (!(remindersEnabled(receivable.client) || canPlayDirect(receivable))) return;
-    if (!handleClick()) return;
-    handleAutomaticReminderToggle(receivable);
-  }}
-  aria-disabled={!(remindersEnabled(receivable.client) || canPlayDirect(receivable))}
->
-  <AnimatePresence mode="wait" initial={false}>
-    {!receivable.automatic_reminder ? (
-      <Tooltip
-        label={(remindersEnabled(receivable.client) || canPlayDirect(receivable)) ? 'Activer les relances' : "Aucune relance n'est activée pour ce client"}
-        theme="orange"
-        key="play"
-      >
-        <button
-          type="button"
-          className={`flex items-center justify-center rounded-full w-8 h-8 transition focus:outline-none ${(remindersEnabled(receivable.client) || canPlayDirect(receivable)) ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-gray-300 text-gray-400 cursor-not-allowed'}`}
-          disabled={!(remindersEnabled(receivable.client) || canPlayDirect(receivable))}
-          aria-label="Activer les relances"
-          style={{ fontSize: '1.2rem' }}
-        >
-          <motion.span
-            key="play-icon"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.09 }}
-            style={{ fontWeight: 'bold', fontFamily: 'inherit', fontSize: '1.3rem', marginLeft: '2px' }}
-          >
-            ▶
-          </motion.span>
-        </button>
-      </Tooltip>
-    ) : (
-      <Tooltip label="Mettre en pause" theme="green" key="pause">
-        <button
-          type="button"
-          className="flex items-center justify-center rounded-full w-8 h-8 bg-orange-500 hover:bg-orange-600 text-white transition focus:outline-none"
-          aria-label="Mettre en pause"
-          style={{ fontSize: '1.2rem' }}
-        >
-          <motion.span
-            key="pause-icon"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.09 }}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '1.3rem', width: '1.3rem' }}
-          >
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect x="4" y="3" width="3" height="12" rx="1.2" fill="currentColor" />
-              <rect x="11" y="3" width="3" height="12" rx="1.2" fill="currentColor" />
-            </svg>
-          </motion.span>
-        </button>
-      </Tooltip>
-    )}
-  </AnimatePresence>
-</span>
+
+                        <span
+                          className={`w-6 h-6 flex items-center justify-center relative z-0 ${!(remindersEnabled(receivable.client) || canPlayDirect(receivable)) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                          onClick={e => {
+                            e.stopPropagation();
+                            if (!(remindersEnabled(receivable.client) || canPlayDirect(receivable))) return;
+                            if (!handleClick()) return;
+                            handleAutomaticReminderToggle(receivable);
+                          }}
+                          aria-disabled={!(remindersEnabled(receivable.client) || canPlayDirect(receivable))}
+                        >
+                          <AnimatePresence mode="wait" initial={false}>
+                            {!receivable.automatic_reminder ? (
+                              <Tooltip
+                                label={(remindersEnabled(receivable.client) || canPlayDirect(receivable)) ? 'Activer les relances' : "Aucune relance n'est activée pour ce client"}
+                                theme="orange"
+                                key="play"
+                              >
+                                <button
+                                  type="button"
+                                  className={`flex items-center justify-center rounded-full w-8 h-8 transition focus:outline-none ${(remindersEnabled(receivable.client) || canPlayDirect(receivable)) ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-gray-300 text-gray-400 cursor-not-allowed'}`}
+                                  disabled={!(remindersEnabled(receivable.client) || canPlayDirect(receivable))}
+                                  aria-label="Activer les relances"
+                                  style={{ fontSize: '1.2rem' }}
+                                >
+                                  <motion.span
+                                    key="play-icon"
+                                    initial={{ opacity: 0, y: 8 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -8 }}
+                                    transition={{ duration: 0.09 }}
+                                    style={{ fontWeight: 'bold', fontFamily: 'inherit', fontSize: '1.3rem', marginLeft: '2px' }}
+                                  >
+                                    ▶
+                                  </motion.span>
+                                </button>
+                              </Tooltip>
+                            ) : (
+                              <Tooltip label="Mettre en pause" theme="green" key="pause">
+                                <button
+                                  type="button"
+                                  className="flex items-center justify-center rounded-full w-8 h-8 bg-orange-500 hover:bg-orange-600 text-white transition focus:outline-none"
+                                  aria-label="Mettre en pause"
+                                  style={{ fontSize: '1.2rem' }}
+                                >
+                                  <motion.span
+                                    key="pause-icon"
+                                    initial={{ opacity: 0, y: 8 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -8 }}
+                                    transition={{ duration: 0.09 }}
+                                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '1.3rem', width: '1.3rem' }}
+                                  >
+                                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                      <rect x="4" y="3" width="3" height="12" rx="1.2" fill="currentColor" />
+                                      <rect x="11" y="3" width="3" height="12" rx="1.2" fill="currentColor" />
+                                    </svg>
+                                  </motion.span>
+                                </button>
+                              </Tooltip>
+                            )}
+                          </AnimatePresence>
+                        </span>
 
 
                         {getReminderIssues(receivable) && (
-                          <Tooltip label={getReminderIssues(receivable) }>
+                          <Tooltip label={getReminderIssues(receivable)}>
                             <Info className="w-5 h-5 text-yellow-500 relative z-0" />
                           </Tooltip>
                         )}
@@ -1723,9 +1716,9 @@ return issues.join(", ");
                       {/* Dropdown */}
                       {openDropdownId === receivable.id && (
                         <div
-                          ref={(el) =>
-                            (dropdownRefs.current[receivable.id] = el)
-                          }
+                          ref={(el) => {
+                            dropdownRefs.current[receivable.id] = el;
+                          }}
                           className="fixed z-[51] w-48 origin-top-left rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-10 ml-2"
                           style={{
                             top: `${dropdownPosition.top}px`,
@@ -1817,9 +1810,9 @@ return issues.join(", ");
                     <td className="px-4 py-3">
                       {receivable.paid_amount
                         ? new Intl.NumberFormat("fr-FR", {
-                            style: "currency",
-                            currency: "EUR",
-                          }).format(receivable.paid_amount)
+                          style: "currency",
+                          currency: "EUR",
+                        }).format(receivable.paid_amount)
                         : "-"}
                     </td>
                     <td className="px-4 py-3 text-gray-500">
@@ -1844,20 +1837,20 @@ return issues.join(", ");
                       {receivable.notes || "-"}
                     </td>
                     <td className="px-4 py-3">
-  {receivable.invoice_pdf_url ? (
-    <a
-      href={receivable.invoice_pdf_url}
-      target="_blank"
-      rel="noopener noreferrer"
-      title="Voir la facture"
-      className="text-blue-600 hover:text-blue-800"
-    >
-      <File className="w-5 h-5" />
-    </a>
-  ) : (
-    "-"
-  )}
-</td>
+                      {receivable.invoice_pdf_url ? (
+                        <a
+                          href={receivable.invoice_pdf_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title="Voir la facture"
+                          className="text-blue-600 hover:text-blue-800"
+                        >
+                          <File className="w-5 h-5" />
+                        </a>
+                      ) : (
+                        "-"
+                      )}
+                    </td>
                   </tr>
                 ))}
                 {filteredReceivables.length === 0 && (
@@ -1875,9 +1868,9 @@ return issues.join(", ");
         {showForm && (
           <ReceivableForm
             onClose={() => {
-  console.log('setShowForm(false) appelé');
-  setShowForm(false);
-}}
+              console.log('setShowForm(false) appelé');
+              setShowForm(false);
+            }}
             onReceivableAdded={(receivable) => {
               setReceivables([receivable, ...receivables]);
               setShowForm(false);
@@ -1941,7 +1934,7 @@ return issues.join(", ");
                   onClick={() => {
                     setShowConfirmReminder(false);
                     setSelectedReceivable(null);
-            fetchReceivables();
+                    fetchReceivables();
                   }}
                   className="text-gray-400 hover:text-gray-500"
                 >
@@ -2029,11 +2022,11 @@ return issues.join(", ");
                 </div>
               </form>
 
-      {sendError && (
-        <div className="mt-4 text-red-600 text-sm font-medium">
-          Une erreur est survenue lors de l'envoi de la relance. Veuillez réessayer.
-        </div>
-      )}
+              {sendError && (
+                <div className="mt-4 text-red-600 text-sm font-medium">
+                  Une erreur est survenue lors de l'envoi de la relance. Veuillez réessayer.
+                </div>
+              )}
               <div className="flex justify-end space-x-4 mt-6">
                 <button
                   onClick={() => {
@@ -2049,14 +2042,14 @@ return issues.join(", ");
                   Annuler
                 </button>
                 <button
-          onClick={async () => {
-            setSendError(false);
-            setSendSuccess(false);
-            await handleSendReminder();
-            setSendSuccess(true);
-            setShowConfirmReminder(false);
-            setSelectedReceivable(null);
-            fetchReceivables();
+                  onClick={async () => {
+                    setSendError(false);
+                    setSendSuccess(false);
+                    await handleSendReminder();
+                    setSendSuccess(true);
+                    setShowConfirmReminder(false);
+                    setSelectedReceivable(null);
+                    fetchReceivables();
                   }}
                   disabled={sending}
                   className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md disabled:opacity-50"
@@ -2067,20 +2060,20 @@ return issues.join(", ");
             </div>
           </div>
         )}
-{sendSuccess && (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 flex flex-col items-center">
-      <CheckIcon className="h-12 w-12 text-green-500 mb-4" />
-      <h3 className="text-lg font-medium text-gray-900 mb-2">Relance envoyée avec succès !</h3>
-      <button
-        onClick={() => setSendSuccess(false)}
-        className="mt-4 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md"
-      >
-        Fermer
-      </button>
-    </div>
-  </div>
-) }
+        {sendSuccess && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 flex flex-col items-center">
+              <CheckIcon className="h-12 w-12 text-green-500 mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Relance envoyée avec succès !</h3>
+              <button
+                onClick={() => setSendSuccess(false)}
+                className="mt-4 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md"
+              >
+                Fermer
+              </button>
+            </div>
+          </div>
+        )}
 
         {showDeleteConfirm && receivableToDelete && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

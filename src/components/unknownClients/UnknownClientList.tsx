@@ -1,6 +1,6 @@
 import { Edit, Search, Trash2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { UnknownClient,Notification } from '../../types/database';
+import { UnknownClient, Notification } from '../../types/database';
 import { supabase } from '../../lib/supabase';
 import UnknownClientForm from './UnknownClientForm';
 import CSVImport, { CSVMapping } from './CSVImport';
@@ -45,22 +45,22 @@ const UnknownClientList = ({
 	const showError = (message: string) => {
 		setError(message);
 		setTimeout(() => {
-		  setError(null);
+			setError(null);
 		}, 3000);
-	  }
-	 async function saveNotification(notification:Notification) {
+	}
+	async function saveNotification(notification: Notification) {
 		const { data, error } = await supabase
-		  .from('notifications')
-		  .insert([notification]);
-	  console.log("notifications: ",notification);
-	  
+			.from('notifications')
+			.insert([notification]);
+		console.log("notifications: ", notification);
+
 		if (error) {
-		  console.error('Erreur lors de la sauvegarde de la notification :', error);
-		  throw error;
+			console.error('Erreur lors de la sauvegarde de la notification :', error);
+			throw error;
 		}
-	  
+
 		return data;
-	  }
+	}
 	const fetchClients = async () => {
 		try {
 			const {
@@ -120,26 +120,28 @@ const UnknownClientList = ({
 	const handleImportSuccess = async () => {
 		if (userId) {
 			console.log("NOTIFICATION A SAUVEGARDER POUR:", userId);
-			
-		  try {
-			await saveNotification({
-			  owner_id: userId,
-			  is_read: false,
-			  type: 'info',
-			  message: 'Importation réussie.',
-			});
-		  } catch (error:any) {
-			showError(error)
-			console.error('Erreur lors de l’enregistrement de la notification:', error);
-		  }
+
+			try {
+				await saveNotification({
+					owner_id: userId,
+					is_read: false,
+					type: 'info',
+					message: 'Importation réussie.',
+					need_mail_notification: false,
+					details: ''
+				});
+			} catch (error: any) {
+				showError(error)
+				console.error('Erreur lors de l’enregistrement de la notification:', error);
+			}
 		}
-	  console.log("NO USERID!!!!!!!!!!!!");
-	  
+		console.log("NO USERID!!!!!!!!!!!!");
+
 		setImportSuccess('Importation réussie');
 		setShowImportModal(false);
 		fetchClients();
-	  };
-	  
+	};
+
 
 	const handleSortOnClick = (key: keyof CSVMapping) => {
 		if (sortConfig?.key === key) {

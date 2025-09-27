@@ -19,15 +19,14 @@ const formatEmailTemplateWrapper = (
 		<body style="font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 20px;">
 			<div style="max-width: 600px; margin: 0 auto;">
 			${content}
-			${
-				signature
-					? `
+			${signature
+			? `
 				<div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee;">
 				${signature}
 				</div>
 			`
-					: ''
-			}
+			: ''
+		}
 			</div>
 		</body>
 		</html>`;
@@ -116,12 +115,12 @@ const updateReminderTable = async (
 				action === 'pre'
 					? 'Relance préventive'
 					: action === 'first'
-					? 'Relance 1'
-					: action === 'second'
-					? 'Relance 2'
-					: action === 'third'
-					? 'Relance 3'
-					: 'Relance finale',
+						? 'Relance 1'
+						: action === 'second'
+							? 'Relance 2'
+							: action === 'third'
+								? 'Relance 3'
+								: 'Relance finale',
 		})
 		.eq('id', receivableId);
 
@@ -184,11 +183,11 @@ const sendDueEmails = async (
 			html: emailContent, // html body
 			attachments: receivable.invoice_pdf_url
 				? [
-						{
-							filename: 'logo.png',
-							path: receivable.invoice_pdf_url,
-						},
-				  ]
+					{
+						filename: 'logo.png',
+						path: receivable.invoice_pdf_url,
+					},
+				]
 				: undefined,
 		});
 
@@ -258,11 +257,11 @@ const sendFirstReminders = async (
 			html: emailContent, // html body
 			attachments: receivable.invoice_pdf_url
 				? [
-						{
-							filename: 'logo.png',
-							path: receivable.invoice_pdf_url,
-						},
-				  ]
+					{
+						filename: 'logo.png',
+						path: receivable.invoice_pdf_url,
+					},
+				]
 				: undefined,
 		});
 
@@ -334,11 +333,11 @@ const secondReminders = async (
 			html: emailContent, // html body
 			attachments: receivable.invoice_pdf_url
 				? [
-						{
-							filename: 'logo.png',
-							path: receivable.invoice_pdf_url,
-						},
-				  ]
+					{
+						filename: 'logo.png',
+						path: receivable.invoice_pdf_url,
+					},
+				]
 				: undefined,
 		});
 
@@ -409,11 +408,11 @@ const thirdReminders = async (
 			html: emailContent, // html body
 			attachments: receivable.invoice_pdf_url
 				? [
-						{
-							filename: 'logo.png',
-							path: receivable.invoice_pdf_url,
-						},
-				  ]
+					{
+						filename: 'logo.png',
+						path: receivable.invoice_pdf_url,
+					},
+				]
 				: undefined,
 		});
 
@@ -485,11 +484,11 @@ const finalReminders = async (
 			html: emailContent, // html body
 			attachments: receivable.invoice_pdf_url
 				? [
-						{
-							filename: 'logo.png',
-							path: receivable.invoice_pdf_url,
-						},
-				  ]
+					{
+						filename: 'logo.png',
+						path: receivable.invoice_pdf_url,
+					},
+				]
 				: undefined,
 		});
 
@@ -531,109 +530,106 @@ export const setupMailTransporter = () => {
 	});
 };
 
-		const supabaseClient = createClient(
+export const reminderEmail = async (request: Request) => {
+
+	const supabaseClient = createClient(
 		process.env.SUPABASE_URL ?? '',
 		process.env.SUPABASE_SERVICE_ROLE_KEY ?? ''
-		);
+	);
 
-		const transporter = setupMailTransporter();
+	const transporter = setupMailTransporter();
 
-		// Send reminders to users who are closer to due date
-		// Send reminders to clients who are due a reminder according to their reminder profile and have enabled reminders
-		// After every reminder update the reminder history table with information about the reminder sent
+	// Send reminders to users who are closer to due date
+	// Send reminders to clients who are due a reminder according to their reminder profile and have enabled reminders
+	// After every reminder update the reminder history table with information about the reminder sent
 
-		const { data: clients, error: clientsError } = await supabaseClient
-			.from('clients')
-			.select('*');
+	const { data: clients, error: clientsError } = await supabaseClient
+		.from('clients')
+		.select('*');
 
-		if (clientsError) {
-			return new Response(JSON.stringify({ error: clientsError.message }), {
-				status: 500,
-				headers: { 'Content-Type': 'application/json' },
-			});
-		}
+	if (clientsError) {
+		return new Response(JSON.stringify({ error: clientsError.message }), {
+			status: 500,
+			headers: { 'Content-Type': 'application/json' },
+		});
+	}
 
-		const clientMap = new Map<string, any>(
-			clients.map((client: any) => [client.id, client])
-		);
+	const clientMap = new Map<string, any>(
+		clients.map((client: any) => [client.id, client])
+	);
 
-		const { data, error } = await supabaseClient
-			.from('receivables')
-			.select('*')
-			.eq('automatic_reminder', true)
-			.not('email', 'is', null);
+	const { data, error } = await supabaseClient
+		.from('receivables')
+		.select('*')
+		.eq('automatic_reminder', true)
+		.not('email', 'is', null);
 
-		if (error) {
-			return new Response(JSON.stringify({ error: error.message }), {
-				status: 500,
-				headers: { 'Content-Type': 'application/json' },
-			});
-		}
-
-		const notifiedIds1 = await sendDueEmails(
-			supabaseClient,
-			clientMap,
-			transporter,
-			data
-		);
-		// Filter all the records that an emai was not sent to and pass them to the next function
-		const notifiedIds2 = await sendFirstReminders(
-			supabaseClient,
-			clientMap,
-			transporter,
-			data.filter((record) => !notifiedIds1?.includes(record.id))
-		);
-		// Filter all the records that an emai was not sent to and pass them to the next function
-		const notifiedIds3 = await secondReminders(
-			supabaseClient,
-			clientMap,
-			transporter,
-			data.filter(
-				(record) => ![...notifiedIds1, ...notifiedIds2]?.includes(record.id)
-			)
-		);
-		// Filter all the records that an emai was not sent to and pass them to the next function
-		const notifiedIds4 = await thirdReminders(
-			supabaseClient,
-			clientMap,
-			transporter,
-			data.filter(
-				(record) =>
-					![...notifiedIds1, ...notifiedIds2, ...notifiedIds3]?.includes(
-						record.id
-					)
-			)
-		);
-		// Filter all the records that an emai was not sent to and pass them to the next function
-		await finalReminders(
-			supabaseClient,
-			clientMap,
-			transporter,
-			data.filter(
-				(record) =>
-					![
-						...notifiedIds1,
-						...notifiedIds2,
-						...notifiedIds3,
-						...notifiedIds4,
-					]?.includes(record.id)
-			)
-		);
-
-		return new Response(
-			JSON.stringify({
-				message: 'job ran successfully',
-			}),
-			{
-				headers: { 'Content-Type': 'application/json' },
-			}
-		);
-	} catch (error) {
+	if (error) {
 		return new Response(JSON.stringify({ error: error.message }), {
 			status: 500,
 			headers: { 'Content-Type': 'application/json' },
 		});
 	}
+
+	const notifiedIds1 = await sendDueEmails(
+		supabaseClient,
+		clientMap,
+		transporter,
+		data
+	);
+	// Filter all the records that an emai was not sent to and pass them to the next function
+	const notifiedIds2 = await sendFirstReminders(
+		supabaseClient,
+		clientMap,
+		transporter,
+		data.filter((record) => !notifiedIds1?.includes(record.id))
+	);
+	// Filter all the records that an emai was not sent to and pass them to the next function
+	const notifiedIds3 = await secondReminders(
+		supabaseClient,
+		clientMap,
+		transporter,
+		data.filter(
+			(record) => ![...notifiedIds1, ...notifiedIds2]?.includes(record.id)
+		)
+	);
+	// Filter all the records that an emai was not sent to and pass them to the next function
+	const notifiedIds4 = await thirdReminders(
+		supabaseClient,
+		clientMap,
+		transporter,
+		data.filter(
+			(record) =>
+				![...notifiedIds1, ...notifiedIds2, ...notifiedIds3]?.includes(
+					record.id
+				)
+		)
+	);
+	// Filter all the records that an emai was not sent to and pass them to the next function
+	await finalReminders(
+		supabaseClient,
+		clientMap,
+		transporter,
+		data.filter(
+			(record) =>
+				![
+					...notifiedIds1,
+					...notifiedIds2,
+					...notifiedIds3,
+					...notifiedIds4,
+				]?.includes(record.id)
+		)
+	);
+
+	return new Response(
+		JSON.stringify({
+			message: 'job ran successfully',
+		}),
+		{
+			headers: { 'Content-Type': 'application/json' },
+		}
+	);
+}
 
 
 /* To invoke locally:
@@ -642,8 +638,8 @@ export const setupMailTransporter = () => {
   2. Make an HTTP request:
 
   curl -i --location --request POST 'http://127.0.0.1:54321/functions/v1/pre-reminder-email' \
-    --header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0' \
-    --header 'Content-Type: application/json' \
-    --data '{"name":"Functions"}'
+	--header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0' \
+	--header 'Content-Type: application/json' \
+	--data '{"name":"Functions"}'
 
 */

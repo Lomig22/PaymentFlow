@@ -1,9 +1,12 @@
 import React, { useState } from "react";
-import { supabase } from "../lib/supabase";
+import { supabase } from "../../src/lib/supabase";
 import { Lock, Mail, Eye, EyeOff, ArrowLeft } from "lucide-react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useRouter } from "next/router";
+import Link from "next/link";
 
 export default function LoginPage() {
+  const router = useRouter();
+
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -12,8 +15,10 @@ export default function LoginPage() {
     text: string;
   } | null>(null);
   const [showPassword, setShowPassword] = useState(false);
-  const navigate = useNavigate();
-  const location = useLocation();
+  const navigate = (page: string) => {
+    router.push(page);
+  };
+
   const [showTotpPrompt, setShowTotpPrompt] = useState(false);
   const [totpCode, setTotpCode] = useState("");
   const [mfaChallenge, setMfaChallenge] = useState<string | null>(null);
@@ -87,7 +92,7 @@ export default function LoginPage() {
     try {
       const qs = new URLSearchParams(location.search);
       const hasOnboarding = qs.get("onboarding") === "1";
-      const redirectBase = "https://lomig.onirtech.com/dashboard/";
+      const redirectBase = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
       const redirectTo = hasOnboarding ? `${redirectBase}?onboarding=1` : redirectBase;
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
@@ -118,11 +123,10 @@ export default function LoginPage() {
 
         {message && (
           <div
-            className={`p-4 rounded-md mb-6 ${
-              message.type === "success"
-                ? "bg-green-50 text-green-700"
-                : "bg-red-50 text-red-700"
-            }`}
+            className={`p-4 rounded-md mb-6 ${message.type === "success"
+              ? "bg-green-50 text-green-700"
+              : "bg-red-50 text-red-700"
+              }`}
           >
             {message.text}
           </div>
@@ -208,7 +212,7 @@ export default function LoginPage() {
             <p className="text-sm text-gray-600">
               Pas encore de compte ?{" "}
               <Link
-                to="/signup"
+                href="/signup"
                 className="text-blue-600 hover:text-blue-800 font-medium"
               >
                 Créer un compte
@@ -217,7 +221,7 @@ export default function LoginPage() {
 
             <p className="text-sm">
               <Link
-                to="/forgot-password"
+                href="/forgot-password"
                 className="text-blue-600 hover:text-blue-800 font-medium"
               >
                 Mot de passe oublié ?
@@ -225,7 +229,7 @@ export default function LoginPage() {
             </p>
           </div>
         </form>
-        <Link to="/">
+        <Link href="/">
           <button className="mt-6 w-full flex items-center justify-center text-gray-600 hover:text-gray-800 transition-colors">
             <ArrowLeft className="h-5 w-5 mr-2" />
             Retour à l'accueil

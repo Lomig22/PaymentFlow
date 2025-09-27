@@ -193,7 +193,7 @@ export default function ReminderSettingsModal({
   const [reminder3AlreadySend, setReminder3AlreadySend] = useState(false);
   const [reminderFinalAlreadySend, setReminderFinalAlreadySend] =
     useState(false);
-    const [reminderProfileName,setReminderProfileName]=useState('')
+  const [reminderProfileName, setReminderProfileName] = useState('')
   const [preAlreadySend, setPreAlreadySend] = useState(false);
   useEffect(() => {
     let cancelled = false;
@@ -242,17 +242,17 @@ export default function ReminderSettingsModal({
 
       const isTherePastDate = [
         reminder_enable_1 &&
-          reminder_1_already_send === false &&
-          firstReminderDate,
+        reminder_1_already_send === false &&
+        firstReminderDate,
         reminder_enable_2 &&
-          reminder_2_already_send === false &&
-          secondReminderDate,
+        reminder_2_already_send === false &&
+        secondReminderDate,
         reminder_enable_3 &&
-          reminder_3_already_send === false &&
-          thirdReminderDate,
+        reminder_3_already_send === false &&
+        thirdReminderDate,
         reminder_enable_final &&
-          reminder_final_already_send === false &&
-          finalReminderDate,
+        reminder_final_already_send === false &&
+        finalReminderDate,
         pre_reminder_enable && pre_already_send === false && preReminderDate,
       ].some((date) => date && isBefore(startOfMinute(new Date(date)), now));
 
@@ -272,7 +272,7 @@ export default function ReminderSettingsModal({
         data: { user },
         error: userError,
       } = await supabase.auth.getUser();
-  
+
       if (userError || !user) {
         console.error('Erreur lors de la récupération de l’utilisateur', userError);
         return;
@@ -283,21 +283,21 @@ export default function ReminderSettingsModal({
         .select('name')
         .eq('id', client.reminder_profile)
         .single(); // pour récupérer un seul objet au lieu d'un tableau
-  
+
       if (error) {
         console.error("Erreur récupération de reminder_profile :", error);
         return;
       }
-  
+
       if (!cancelled) setReminderProfileName(reminderProfile.name);
     };
-  
+
     fetchReminderProfileName();
     return () => {
       cancelled = true;
     };
   }, [client.id]);
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -321,7 +321,7 @@ export default function ReminderSettingsModal({
     } = formData;
 
     // Construire dynamiquement la liste des dates activées
-    const dates = [];
+    const dates: { label: string, date: Date }[] = [];
 
     if (pre_reminder_enable) {
       dates.push({ label: "Prérelance", date: new Date(pre_reminder_date) });
@@ -345,8 +345,7 @@ export default function ReminderSettingsModal({
     for (let i = 0; i < dates.length - 1; i++) {
       if (dates[i].date >= dates[i + 1].date) {
         showError(
-          `La date de "${dates[i].label}" doit être avant la date de "${
-            dates[i + 1].label
+          `La date de "${dates[i].label}" doit être avant la date de "${dates[i + 1].label
           }".`
         );
         setLoading(false);
@@ -444,20 +443,15 @@ export default function ReminderSettingsModal({
         const details = JSON.stringify(
           {
             "Numéro de facture": `${receivable.invoice_number}`,
-            "Délai de relance 1": `${formData.reminder_delay_1.j || 1}:${
-              formData.reminder_delay_1.h || 0
-            }:${formData.reminder_delay_1.m || 0} `,
-            "Délai de relance 2": `${formData.reminder_delay_2.j || 1}:${
-              formData.reminder_delay_2.h || 0
-            }:${formData.reminder_delay_2.m || 0} `,
-            "Délai de relance 3": `${formData.reminder_delay_3.j || 1}:${
-              formData.reminder_delay_3.h || 0
-            }:${formData.reminder_delay_3.m || 0} `,
-            "Délai de relance finale": `${
-              formData.reminder_delay_final.j || 1
-            }:${formData.reminder_delay_final.h || 0}:${
-              formData.reminder_delay_final.m || 0
-            } `,
+            "Délai de relance 1": `${formData.reminder_delay_1.j || 1}:${formData.reminder_delay_1.h || 0
+              }:${formData.reminder_delay_1.m || 0} `,
+            "Délai de relance 2": `${formData.reminder_delay_2.j || 1}:${formData.reminder_delay_2.h || 0
+              }:${formData.reminder_delay_2.m || 0} `,
+            "Délai de relance 3": `${formData.reminder_delay_3.j || 1}:${formData.reminder_delay_3.h || 0
+              }:${formData.reminder_delay_3.m || 0} `,
+            "Délai de relance finale": `${formData.reminder_delay_final.j || 1
+              }:${formData.reminder_delay_final.h || 0}:${formData.reminder_delay_final.m || 0
+              } `,
             "Template de la relance 1": formData.reminder_template_1.trim(),
             "Template de la relance 2": formData.reminder_template_2.trim(),
             "Template de la relance 3": formData.reminder_template_3.trim(),
@@ -608,7 +602,7 @@ export default function ReminderSettingsModal({
               </p>
             </div>
           )}
-          <ReminderInfo client={client} reminderProfileName={reminderProfileName}/>
+          <ReminderInfo client={client} reminderProfileName={reminderProfileName} />
           {/*            {hasPastDateEnable && (
             <div className=" mb-4 p-4 border border-yellow-400 bg-yellow-100 text-yellow-800 rounded">
               Certaines dates de relance sont antérieures à la date actuelle
@@ -662,9 +656,8 @@ export default function ReminderSettingsModal({
               >
                 <span>Paramétrages des relances</span>
                 <svg
-                  className={`w-5 h-5 transition-transform ${
-                    showReminders ? "rotate-180" : "rotate-0"
-                  }`}
+                  className={`w-5 h-5 transition-transform ${showReminders ? "rotate-180" : "rotate-0"
+                    }`}
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="2"
@@ -688,34 +681,34 @@ export default function ReminderSettingsModal({
                       onChange={(date) => {
                         client.reminder_profile
                           ? setFormData({
-                              ...formData,
-                              reminder_date_1: date.toISOString(),
-                              reminder_date_2: addJHMToDate(
+                            ...formData,
+                            reminder_date_1: date.toISOString(),
+                            reminder_date_2: addJHMToDate(
+                              date.toISOString(),
+                              client.reminder_delay_2
+                            ),
+                            reminder_date_3: addJHMToDate(
+                              addJHMToDate(
                                 date.toISOString(),
                                 client.reminder_delay_2
                               ),
-                              reminder_date_3: addJHMToDate(
+                              client.reminder_delay_3
+                            ),
+                            reminder_date_final: addJHMToDate(
+                              addJHMToDate(
                                 addJHMToDate(
                                   date.toISOString(),
                                   client.reminder_delay_2
                                 ),
                                 client.reminder_delay_3
                               ),
-                              reminder_date_final: addJHMToDate(
-                                addJHMToDate(
-                                  addJHMToDate(
-                                    date.toISOString(),
-                                    client.reminder_delay_2
-                                  ),
-                                  client.reminder_delay_3
-                                ),
-                                client.reminder_delay_final
-                              ),
-                            })
+                              client.reminder_delay_final
+                            ),
+                          })
                           : setFormData({
-                              ...formData,
-                              reminder_date_1: date.toISOString(),
-                            });
+                            ...formData,
+                            reminder_date_1: date.toISOString(),
+                          });
                       }}
                       optional={formData.reminder_enable_1}
                       onToggleOptional={(checked) =>

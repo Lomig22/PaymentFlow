@@ -151,16 +151,16 @@ const PricingPage = ({ setShowContact, setDefaultSubject }: Props) => {
 
   const priceMap = {
     basic: {
-      monthly: import.meta.env.VITE_STRIPE_PRICE_BASIC,
-      yearly: import.meta.env.VITE_STRIPE_PRICE_BASIC_ANNUEL,
+      monthly: process.env.NEXT_STRIPE_PRICE_BASIC,
+      yearly: process.env.NEXT_STRIPE_PRICE_BASIC_ANNUEL,
     },
     pro: {
-      monthly: import.meta.env.VITE_STRIPE_PRICE_PRO,
-      yearly: import.meta.env.VITE_STRIPE_PRICE_PRO_ANNUEL,
+      monthly: process.env.NEXT_STRIPE_PRICE_PRO,
+      yearly: process.env.NEXT_STRIPE_PRICE_PRO_ANNUEL,
     },
     enterprise: {
-      monthly: import.meta.env.VITE_STRIPE_PRICE_ENTREPRISE,
-      yearly: import.meta.env.VITE_STRIPE_PRICE_ENTREPRISE_ANNUEL,
+      monthly: process.env.NEXT_STRIPE_PRICE_ENTREPRISE,
+      yearly: process.env.NEXT_STRIPE_PRICE_ENTREPRISE_ANNUEL,
     },
   };
 
@@ -232,7 +232,7 @@ const PricingPage = ({ setShowContact, setDefaultSubject }: Props) => {
     localStorage.setItem("selectedPlan", plan);
     localStorage.setItem("selectedInterval", interval);
 
-     // Récupère le token d'accès utilisateur Supabase
+    // Récupère le token d'accès utilisateur Supabase
     const { data: { session: stripeSession } } = await supabase.auth.getSession();
     const accessToken = stripeSession?.access_token;
 
@@ -242,13 +242,13 @@ const PricingPage = ({ setShowContact, setDefaultSubject }: Props) => {
       return;
     }
 
-    if(isSettingsPage){
+    if (isSettingsPage) {
       localStorage.setItem("navigateAfterPayment", JSON.stringify({
         pathname: "/settings",
         state: { initialSectionId: "billing", initialSubTabId: "subscription" }
       }));
     }
-    
+
 
     const payload = {
       price_id: priceMap[plan][interval],
@@ -271,7 +271,7 @@ const PricingPage = ({ setShowContact, setDefaultSubject }: Props) => {
 
       const result = await res.json();
       console.log("Stripe session result:", result);
-      
+
 
       if (result?.url) {
         window.location.href = result.url;
@@ -293,23 +293,23 @@ const PricingPage = ({ setShowContact, setDefaultSubject }: Props) => {
       className="min-h-screen bg-gradient-to-b from-gray-50 to-white"
     >
       <Helmet>
-  <title>Tarifs | Payment Flow</title>
-  <meta name="description" content="Découvrez nos offres et tarifs flexibles pour la gestion de vos paiements professionnels. Sans engagement, essai gratuit 30 jours." />
-  <meta name="robots" content="index, follow" />
-  <link rel="canonical" href="https://www.payment-flow.fr/pricing" />
+        <title>Tarifs | Payment Flow</title>
+        <meta name="description" content="Découvrez nos offres et tarifs flexibles pour la gestion de vos paiements professionnels. Sans engagement, essai gratuit 30 jours." />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href="https://www.payment-flow.fr/pricing" />
       </Helmet>
       {/* Main Pricing Content */}
       <main>
-      {isPricingPage && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-2 pt-4">
-          <button
-            onClick={() => navigate('/')}
-            className="flex items-center gap-2 text-xl font-medium text-blue-600 hover:text-blue-800 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Retour
-          </button>
-        </div>)}
+        {isPricingPage && (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-2 pt-4">
+            <button
+              onClick={() => navigate('/')}
+              className="flex items-center gap-2 text-xl font-medium text-blue-600 hover:text-blue-800 transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Retour
+            </button>
+          </div>)}
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
           {message && (
@@ -327,21 +327,19 @@ const PricingPage = ({ setShowContact, setDefaultSubject }: Props) => {
             <div className="flex items-center justify-center gap-4">
               <button
                 onClick={() => setBillingInterval("monthly")}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  billingInterval === "monthly"
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${billingInterval === "monthly"
                     ? "bg-blue-600 text-white shadow-md"
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
+                  }`}
               >
                 Facturation mensuelle
               </button>
               <button
                 onClick={() => setBillingInterval("yearly")}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  billingInterval === "yearly"
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${billingInterval === "yearly"
                     ? "bg-blue-600 text-white shadow-md"
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
+                  }`}
               >
                 Facturation annuelle
               </button>

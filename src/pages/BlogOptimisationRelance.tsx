@@ -160,14 +160,14 @@ export default function BlogOptimisationRelance() {
   return (
     <div style={{ background: '#fff', minHeight: "100vh", color: navy, fontFamily: 'Inter, Arial, sans-serif' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-2 pt-4">
-  <button
-    onClick={() => navigate('/blog')}
-    className="flex items-center gap-2 text-xl font-medium text-blue-600 hover:text-blue-800 transition-colors"
-  >
-    <ArrowLeft className="w-4 h-4" />
-    Retour
-  </button>
-</div>
+        <button
+          onClick={() => navigate('/blog')}
+          className="flex items-center gap-2 text-xl font-medium text-blue-600 hover:text-blue-800 transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Retour
+        </button>
+      </div>
       <Helmet>
         <title>Les 5 erreurs à éviter quand on relance ses clients | Blog Payment Flow</title>
         <meta name="robots" content="noindex" />
@@ -191,8 +191,8 @@ export default function BlogOptimisationRelance() {
       </section>
 
       {/* Barre de progression sticky lecture */}
-      <div style={{position: 'fixed', top: 0, left: 0, width: '100vw', zIndex: 1000, background: 'white'}}>
-        <div style={{width: '100%', height: 6, background: '#e5e7eb'}}>
+      <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', zIndex: 1000, background: 'white' }}>
+        <div style={{ width: '100%', height: 6, background: '#e5e7eb' }}>
           <div
             style={{
               width: `${progress}%`,
@@ -229,7 +229,9 @@ export default function BlogOptimisationRelance() {
             <motion.section
               key={s.id}
               id={s.id}
-              ref={el => sectionRefs.current[i] = el}
+              ref={el => {
+                sectionRefs.current[i] = el;
+              }}
               className="mb-12 bg-white rounded-xl shadow p-6 md:p-8 text-blue-900"
               style={{ borderLeft: `6px solid ${accentColor}` }}
               initial={{ opacity: 0, y: 30 }}
@@ -259,18 +261,18 @@ export default function BlogOptimisationRelance() {
             <ShareButtons url="https://www.payment-flow.fr/blog-optimisation-relance" title="Les 5 erreurs à éviter quand on relance ses clients | Blog Payment Flow" />
             <div className="text-xl font-semibold mb-2">💬 Vous voulez arrêter de courir après vos paiements ?</div>
             <Link
-  to="https://www.payment-flow.fr/signup"
-  target="_blank"
-  rel="noopener noreferrer"
-  className="inline-block px-6 py-3 rounded-xl bg-[#2563eb] hover:bg-[#1e293b] text-white font-bold shadow-md hover:shadow-lg transition-all duration-200 text-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
-  style={{ letterSpacing: 0.2 }}
->
-  Testez Payment Flow dès maintenant
-</Link>
+              to="https://www.payment-flow.fr/signup"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block px-6 py-3 rounded-xl bg-[#2563eb] hover:bg-[#1e293b] text-white font-bold shadow-md hover:shadow-lg transition-all duration-200 text-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
+              style={{ letterSpacing: 0.2 }}
+            >
+              Testez Payment Flow dès maintenant
+            </Link>
           </section>
         </main>
       </div>
-    <Footer />
-  </div>
+      <Footer />
+    </div>
   );
 }

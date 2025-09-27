@@ -20,7 +20,7 @@ export default function SuccessPage() {
 
       if (userData?.user) {
         userId = userData.user.id;
-        email = userData.user.email;
+        email = userData.user.email ?? null;
       } else {
         userId = localStorage.getItem("pendingUserId");
         email = localStorage.getItem("pendingEmail");

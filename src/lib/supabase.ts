@@ -1,7 +1,18 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
+
+console.log("Supabase URL:", supabaseUrl);
+
+// Compute storageKey
+const storageKey = (() => {
+  try {
+    return `paymentflow-auth:${new URL(supabaseUrl).host}`;
+  } catch {
+    return 'paymentflow-auth:default';
+  }
+})();
 
 // Création du client avec des options de persistance explicites
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
@@ -9,14 +20,8 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     persistSession: true, // Persister la session dans le localStorage
     // Utiliser une clé spécifique par environnement/projet pour éviter de réutiliser
     // un jeton obsolète provenant d'un autre domaine/projet (cause fréquente de 403).
-    storageKey: `paymentflow-auth:${(() => {
-      try {
-        return new URL(supabaseUrl).host;
-      } catch {
-        return 'default';
-      }
-    })()}`,
-    storage: window.localStorage, // Utiliser le localStorage pour la persistance
+    storageKey,
+    storage: typeof window !== 'undefined' ? window.localStorage : undefined, // Utiliser le localStorage pour la persistance
     autoRefreshToken: true, // Rafraîchir automatiquement le token
     detectSessionInUrl: true // Détecter la session dans l'URL pour le flow d'auth
   }

@@ -97,15 +97,15 @@ export default function BalanceAgeeChart() {
     }
 
     fetchOverdueReceivables();
-    
+
   }, [referenceDate]);
 
   interface CustomYAxisTickProps {
-  x: number;
-  y: number;
-  payload: { value: number };
-}
-function CustomYAxisTick({ x, y, payload }: CustomYAxisTickProps) {
+    x: number;
+    y: number;
+    payload: { value: number };
+  }
+  function CustomYAxisTick({ x, y, payload }: CustomYAxisTickProps) {
     const value = payload.value;
     let displayValue = "";
     let unit = "";
@@ -189,7 +189,9 @@ function CustomYAxisTick({ x, y, payload }: CustomYAxisTickProps) {
                 tick={{ fontSize: 13, fontWeight: 500 }}
                 stroke="#374151"
               />
-              <YAxis stroke="#374151" tick={<CustomYAxisTick />} />
+              <YAxis stroke="#374151" tick={<CustomYAxisTick x={0} y={0} payload={{
+                value: 0
+              }} />} />
 
               <Tooltip
                 formatter={(value: number) => [

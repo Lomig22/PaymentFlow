@@ -98,7 +98,7 @@ export default function ReceivableForm({
       // Trouver le client par nom ou email (tolérance sur le nom)
       const foundClient = clients.find(
         c => (queryParams.client_name && c.company_name?.toLowerCase().trim() === queryParams.client_name.toLowerCase().trim()) ||
-             (queryParams.client_email && c.email?.split(',').map(e => e.trim()).includes(queryParams.client_email))
+          (queryParams.client_email && c.email?.split(',').map(e => e.trim()).includes(queryParams.client_email))
       );
       if (foundClient) {
         setFormData((prev) => ({
@@ -160,7 +160,7 @@ export default function ReceivableForm({
         if (uploadError) {
           throw uploadError;
         }
-        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        const supabaseUrl = process.env.NEXT_SUPABASE_URL;
         invoicePath = `${supabaseUrl}/storage/v1/object/public/invoices/${user.id}/${uploadedFile.name}`;
       }
       // Si c'est un nouveau client, le créer d'abord
@@ -215,66 +215,66 @@ export default function ReceivableForm({
 
       console.log("Total après ajout du nouveau receivable :", updatedTotalAmount);
       const { data: subscription, error: subscriptionError } = await supabase
-      .from('subscriptions')
-      .select('plan')
-      .eq('user_id', user.id)
-      .limit(1)
-      .single();
-  
-    if (subscriptionError || !subscription) {
-      showError("Impossible de récupérer le type d'abonnement.");
-      return;
-    }
-  
-    // 2. Définir les limites selon les plans
-    const planLimits = {
-      free: 25000,
-      basic: 50000,
-      pro: 200000,
-      company: Infinity,
-    };
-    const userPlan = subscription.plan;
-const maxOverDues = planLimits[userPlan as keyof typeof planLimits] ?? 0;
+        .from('subscriptions')
+        .select('plan')
+        .eq('user_id', user.id)
+        .limit(1)
+        .single();
+
+      if (subscriptionError || !subscription) {
+        showError("Impossible de récupérer le type d'abonnement.");
+        return;
+      }
+
+      // 2. Définir les limites selon les plans
+      const planLimits = {
+        free: 25000,
+        basic: 50000,
+        pro: 200000,
+        company: Infinity,
+      };
+      const userPlan = subscription.plan;
+      const maxOverDues = planLimits[userPlan as keyof typeof planLimits] ?? 0;
 
 
-if (updatedTotalAmount >= maxOverDues) {
-	setError(`Limite atteinte : votre plan "${userPlan}" permet de gérer jusqu'à ${maxOverDues} Euro d'encours`)
-  return
-  //showError(`Limite atteinte : votre plan "${userPlan}" permet de gérer jusqu'à ${maxOverDues} Euro d'encours`);
-}
+      if (updatedTotalAmount >= maxOverDues) {
+        setError(`Limite atteinte : votre plan "${userPlan}" permet de gérer jusqu'à ${maxOverDues} Euro d'encours`)
+        return
+        //showError(`Limite atteinte : votre plan "${userPlan}" permet de gérer jusqu'à ${maxOverDues} Euro d'encours`);
+      }
 
 
       // Déterminer l'email à utiliser (nouveau champ prioritaire, sinon select)
-    const emailToUse = isNewClient
-      ? newClientData.email.trim()
-      : (newEmail.trim() || selectedEmail.trim());
-    if (!emailToUse) {
-      showError("Veuillez renseigner une adresse email.");
-      setLoading(false);
-      return;
-    }
+      const emailToUse = isNewClient
+        ? newClientData.email.trim()
+        : (newEmail.trim() || selectedEmail.trim());
+      if (!emailToUse) {
+        showError("Veuillez renseigner une adresse email.");
+        setLoading(false);
+        return;
+      }
 
-    // Si une nouvelle adresse email a été saisie, l'ajouter au client si non déjà présente
-    if (newEmail.trim() && clientId) {
-      // Récupérer les emails actuels du client
-      const { data: clientData, error: clientFetchError } = await supabase
-        .from("clients")
-        .select("email")
-        .eq("id", clientId)
-        .single();
-      if (!clientFetchError && clientData) {
-        const oldEmails = (clientData.email || "").split(",").map((e: string) => e.trim()).filter(Boolean);
-        if (!oldEmails.includes(newEmail.trim())) {
-          const updatedEmails = [...oldEmails, newEmail.trim()].join(",");
-          await supabase
-            .from("clients")
-            .update({ email: updatedEmails })
-            .eq("id", clientId);
+      // Si une nouvelle adresse email a été saisie, l'ajouter au client si non déjà présente
+      if (newEmail.trim() && clientId) {
+        // Récupérer les emails actuels du client
+        const { data: clientData, error: clientFetchError } = await supabase
+          .from("clients")
+          .select("email")
+          .eq("id", clientId)
+          .single();
+        if (!clientFetchError && clientData) {
+          const oldEmails = (clientData.email || "").split(",").map((e: string) => e.trim()).filter(Boolean);
+          if (!oldEmails.includes(newEmail.trim())) {
+            const updatedEmails = [...oldEmails, newEmail.trim()].join(",");
+            await supabase
+              .from("clients")
+              .update({ email: updatedEmails })
+              .eq("id", clientId);
+          }
         }
       }
-    }
 
-    // Ajouter la nouvelle créance
+      // Ajouter la nouvelle créance
       const { data, error } = await supabase
         .from("receivables")
         .insert([
@@ -324,15 +324,15 @@ if (updatedTotalAmount >= maxOverDues) {
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 z-50 overflow-y-scroll">
       <div className="min-h-screen py-8 px-4 flex items-center justify-center">
         <div className="relative bg-white rounded-lg shadow-xl p-8 w-full max-w-xl mx-auto">
-            <button
-              onClick={() => {
-                console.log('Fermeture modal demandée');
-                onClose();
-              }}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-            >
-              <X className="h-6 w-6" />
-            </button>
+          <button
+            onClick={() => {
+              console.log('Fermeture modal demandée');
+              onClose();
+            }}
+            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+          >
+            <X className="h-6 w-6" />
+          </button>
 
           <h2 className="text-2xl font-bold mb-6">Nouvelle créance</h2>
 
@@ -352,22 +352,20 @@ if (updatedTotalAmount >= maxOverDues) {
                   <button
                     type="button"
                     onClick={() => setIsNewClient(false)}
-                    className={`px-3 py-1 rounded-md ${
-                      !isNewClient
+                    className={`px-3 py-1 rounded-md ${!isNewClient
                         ? "bg-blue-100 text-blue-800"
                         : "bg-gray-100 text-gray-800"
-                    }`}
+                      }`}
                   >
                     Client existant
                   </button>
                   <button
                     type="button"
                     onClick={() => setIsNewClient(true)}
-                    className={`px-3 py-1 rounded-md ${
-                      isNewClient
+                    className={`px-3 py-1 rounded-md ${isNewClient
                         ? "bg-blue-100 text-blue-800"
                         : "bg-gray-100 text-gray-800"
-                    }`}
+                      }`}
                   >
                     Nouveau client
                   </button>
@@ -391,57 +389,57 @@ if (updatedTotalAmount >= maxOverDues) {
                     ))}
                   </select>
                   <div>
-  <label className="block text-sm font-medium text-gray-700 mb-2">
-    Email *
-  </label>
-  <select
-    value={selectedEmail}
-    onChange={e => setSelectedEmail(e.target.value)}
-    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-    disabled={showNewEmailInput}
-  >
-    <option value="">Sélectionner un email</option>
-    {clientEmails.map((email) => (
-      <option key={email} value={email}>
-        {email}
-      </option>
-    ))}
-  </select>
-  {!showNewEmailInput && (
-    <button
-      type="button"
-      className="mt-2 text-blue-600 hover:underline text-sm"
-      onClick={() => setShowNewEmailInput(true)}
-    >
-      + Ajouter une nouvelle adresse email
-    </button>
-  )}
-  {showNewEmailInput && (
-    <div className="mt-2 flex gap-2 items-center">
-      <input
-        type="email"
-        placeholder="Nouvelle adresse email"
-        className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        value={newEmail}
-        onChange={e => setNewEmail(e.target.value)}
-      />
-      <button
-        type="button"
-        className="px-3 py-2 bg-gray-100 rounded hover:bg-gray-200"
-        onClick={() => {
-          setShowNewEmailInput(false);
-          setNewEmail("");
-        }}
-        title="Annuler"
-      >
-        Annuler
-      </button>
-    </div>
-  )}
-  <p className="text-xs text-gray-500 mt-1">
-    L'email renseigné ici sera utilisé pour la créance, même si différent de celui enregistré dans la fiche client.
-  </p>
-</div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Email *
+                    </label>
+                    <select
+                      value={selectedEmail}
+                      onChange={e => setSelectedEmail(e.target.value)}
+                      className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      disabled={showNewEmailInput}
+                    >
+                      <option value="">Sélectionner un email</option>
+                      {clientEmails.map((email) => (
+                        <option key={email} value={email}>
+                          {email}
+                        </option>
+                      ))}
+                    </select>
+                    {!showNewEmailInput && (
+                      <button
+                        type="button"
+                        className="mt-2 text-blue-600 hover:underline text-sm"
+                        onClick={() => setShowNewEmailInput(true)}
+                      >
+                        + Ajouter une nouvelle adresse email
+                      </button>
+                    )}
+                    {showNewEmailInput && (
+                      <div className="mt-2 flex gap-2 items-center">
+                        <input
+                          type="email"
+                          placeholder="Nouvelle adresse email"
+                          className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          value={newEmail}
+                          onChange={e => setNewEmail(e.target.value)}
+                        />
+                        <button
+                          type="button"
+                          className="px-3 py-2 bg-gray-100 rounded hover:bg-gray-200"
+                          onClick={() => {
+                            setShowNewEmailInput(false);
+                            setNewEmail("");
+                          }}
+                          title="Annuler"
+                        >
+                          Annuler
+                        </button>
+                      </div>
+                    )}
+                    <p className="text-xs text-gray-500 mt-1">
+                      L'email renseigné ici sera utilisé pour la créance, même si différent de celui enregistré dans la fiche client.
+                    </p>
+                  </div>
                 </div>
               ) : (
                 <div className="space-y-4">

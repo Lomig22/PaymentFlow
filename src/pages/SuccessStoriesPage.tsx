@@ -3,7 +3,7 @@ import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import Footer from "../components/Footer";
-import ContactModal from "./ContactModal";
+import ContactModal from "../../pages/landing/ContactModal";
 import { useState } from "react";
 
 const sectorBlogs = [
@@ -52,38 +52,38 @@ const SuccessStoriesPage: React.FC = () => {
           <meta name="robots" content="index, follow" />
           <link rel="canonical" href="https://www.payment-flow.fr/temoignages" />
         </Helmet>
-      <h1 className="text-3xl font-bold mb-8">Témoignages & Success Stories</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {sectorBlogs.map((sector, idx) => (
-          <div key={idx} className="p-6 bg-white rounded-xl shadow-md flex flex-col justify-between">
-            <div>
-              <h2 className="text-xl font-semibold mb-2">{sector.title}</h2>
-              <div className="mb-2 text-gray-600">{sector.description}</div>
-              <div className="mb-4 text-sm text-blue-700 font-medium">Entreprises à l'honneur : {sector.featured}</div>
+        <h1 className="text-3xl font-bold mb-8">Témoignages & Success Stories</h1>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {sectorBlogs.map((sector, idx) => (
+            <div key={idx} className="p-6 bg-white rounded-xl shadow-md flex flex-col justify-between">
+              <div>
+                <h2 className="text-xl font-semibold mb-2">{sector.title}</h2>
+                <div className="mb-2 text-gray-600">{sector.description}</div>
+                <div className="mb-4 text-sm text-blue-700 font-medium">Entreprises à l'honneur : {sector.featured}</div>
+              </div>
+              <a href={sector.link} className="mt-4 inline-block px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 font-semibold text-center">Voir les cas clients</a>
             </div>
-            <a href={sector.link} className="mt-4 inline-block px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 font-semibold text-center">Voir les cas clients</a>
-          </div>
-        ))}
+          ))}
+        </div>
+        <div style={{ textAlign: 'center', marginTop: 48, color: '#888' }}>
+          <p>
+            <strong>Vous souhaitez diviser par 4 le temps de relance, réduire votre DSO et améliorer votre cash flow&nbsp;?</strong><br />
+            <span
+              onClick={() => setShowContactModal(true)}
+              style={{ color: '#1d4ed8', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
+              role="button"
+              tabIndex={0}
+              onKeyPress={e => { if (e.key === 'Enter' || e.key === ' ') setShowContactModal(true); }}
+            >
+              Contactez-nous pour un audit personnalisé&nbsp;!
+            </span>
+          </p>
+        </div>
       </div>
-      <div style={{ textAlign: 'center', marginTop: 48, color: '#888' }}>
-        <p>
-          <strong>Vous souhaitez diviser par 4 le temps de relance, réduire votre DSO et améliorer votre cash flow&nbsp;?</strong><br />
-          <span
-            onClick={() => setShowContactModal(true)}
-            style={{ color: '#1d4ed8', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
-            role="button"
-            tabIndex={0}
-            onKeyPress={e => { if (e.key === 'Enter' || e.key === ' ') setShowContactModal(true); }}
-          >
-            Contactez-nous pour un audit personnalisé&nbsp;!
-          </span>
-        </p>
-      </div>
-    </div>
-    <Footer />
-    {showContactModal && (
-      <ContactModal onClose={() => setShowContactModal(false)} defaultSubject="audit" />
-    )}
-  </>);
+      <Footer />
+      {showContactModal && (
+        <ContactModal onClose={() => setShowContactModal(false)} defaultSubject="audit" />
+      )}
+    </>);
 };
 export default SuccessStoriesPage;

@@ -7,7 +7,7 @@ import { supabase } from "../../lib/supabase";
 import { Clock } from "lucide-react";
 import { YearPicker } from "../../components/ui/year-picker";
 import { dateDiff } from "../../lib/dateDiff";
-registerLocale("fr", fr);
+registerLocale("fr", fr as any);
 
 const monthLabels = [
   "Janv.",
@@ -214,9 +214,8 @@ const DsoChart = () => {
             Période affichée :{" "}
             {!selectedMonth
               ? `Janvier à Décembre ${selectedYear}`
-              : `${selectedMonth} ${
-                  selectedYear - 1
-                } → ${selectedMonth} ${selectedYear}`}
+              : `${selectedMonth} ${selectedYear - 1
+              } → ${selectedMonth} ${selectedYear}`}
           </div>
 
           {filteredData.length > 0 ? (

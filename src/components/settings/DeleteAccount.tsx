@@ -87,7 +87,7 @@ const DeleteAccount = () => {
 
       // Appel API pour suppression côté back
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/clever-service`,
+        `${process.env.NEXT_SUPABASE_URL}/functions/v1/clever-service`,
         {
           method: "POST",
           headers: {

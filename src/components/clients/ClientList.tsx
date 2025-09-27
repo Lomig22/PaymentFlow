@@ -83,7 +83,7 @@ function ClientList({
     if (sortConfig) {
       try {
         localStorage.setItem(CLIENTS_SORT_KEY, JSON.stringify(sortConfig));
-      } catch {}
+      } catch { }
     }
   }, [sortConfig]);
   const [success, setSuccess] = useState<string | null>(null);
@@ -426,7 +426,7 @@ function ClientList({
       console.log("Clients supprimés:", data);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      Swal.fire("Erreur", `Une erreur est survenue : ${message}` , "error");
+      Swal.fire("Erreur", `Une erreur est survenue : ${message}`, "error");
     }
     setSelectedClientIds([]);
     //setSelectedAll(false);
@@ -462,7 +462,7 @@ function ClientList({
     setSortConfig(newConfig);
     try {
       localStorage.setItem(CLIENTS_SORT_KEY, JSON.stringify(newConfig));
-    } catch {}
+    } catch { }
   };
 
   const applySorting = (
@@ -653,11 +653,11 @@ function ClientList({
       )}
       {selectedClientIds.length > 0 && (
         <motion.div
-        initial={{ opacity: 0, y: -5 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        className="flex w-[99%] ml-4 items-center justify-between rounded-md border border-gray-200 bg-white px-4 py-2.5 mb-2 shadow-sm"
-      >
+          initial={{ opacity: 0, y: -5 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="flex w-[99%] ml-4 items-center justify-between rounded-md border border-gray-200 bg-white px-4 py-2.5 mb-2 shadow-sm"
+        >
           {selectedClientIds.length} client(s) sélectionné(s)
           <button
             type="button"
@@ -667,11 +667,10 @@ function ClientList({
               handleBulkDeleteConfirmation();
             }}
             disabled={selectedClientIds.length === 0}
-            className={`ml-2 px-4 py-1.5 rounded-lg text-white font-semibold transition-colors duration-200 ${
-              selectedClientIds.length === 0
-                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                : "bg-red-600 text-white hover:bg-red-200"
-            }`}
+            className={`ml-2 px-4 py-1.5 rounded-lg text-white font-semibold transition-colors duration-200 ${selectedClientIds.length === 0
+              ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+              : "bg-red-600 text-white hover:bg-red-200"
+              }`}
           >
             Supprimer la sélection
           </button>
@@ -680,11 +679,10 @@ function ClientList({
               type="button"
               onClick={() => handleBulkAssignProfile(assignProfile)}
               disabled={selectedClientIds.length === 0}
-              className={`ml-2 px-4 py-1.5 rounded-lg text-white font-semibold transition-colors duration-200 ${
-                selectedClientIds.length === 0
-                  ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                  : "bg-blue-600 hover:bg-blue-700"
-              }`}
+              className={`ml-2 px-4 py-1.5 rounded-lg text-white font-semibold transition-colors duration-200 ${selectedClientIds.length === 0
+                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700"
+                }`}
             >
               Assigner le profil "{assignProfile.name}"
             </button>
@@ -746,22 +744,20 @@ function ClientList({
                     backdrop-blur-sm border border-opacity-30
                     transition-all duration-300 ease-in-out transform
                     
-                    ${
-                      isActive
-                        ? isAsc
-                          ? "bg-blue-500/20 text-blue-800 border-blue-400/50 shadow-md"
-                          : "bg-red-500/20 text-red-800 border-red-400/50 shadow-md"
-                        : "bg-gray-100/30 text-gray-700 border-gray-300/50 hover:bg-gray-200/40"
-                    }
+                    ${isActive
+                            ? isAsc
+                              ? "bg-blue-500/20 text-blue-800 border-blue-400/50 shadow-md"
+                              : "bg-red-500/20 text-red-800 border-red-400/50 shadow-md"
+                            : "bg-gray-100/30 text-gray-700 border-gray-300/50 hover:bg-gray-200/40"
+                          }
 
                     focus:outline-none focus:ring-2 focus:ring-offset-2
-                    ${
-                      isActive
-                        ? isAsc
-                          ? "focus:ring-blue-300"
-                          : "focus:ring-red-300"
-                        : "focus:ring-gray-400"
-                    }
+                    ${isActive
+                            ? isAsc
+                              ? "focus:ring-blue-300"
+                              : "focus:ring-red-300"
+                            : "focus:ring-gray-400"
+                          }
                   `}
                       >
                         <span className="relative z-10 flex items-center gap-2">
@@ -784,9 +780,8 @@ function ClientList({
                         {isActive && (
                           <motion.div
                             layoutId="activeFilterTab"
-                            className={`absolute inset-0 rounded-lg ${
-                              isAsc ? "bg-blue-500/15" : "bg-red-500/15"
-                            }`}
+                            className={`absolute inset-0 rounded-lg ${isAsc ? "bg-blue-500/15" : "bg-red-500/15"
+                              }`}
                             style={{ zIndex: 0 }}
                             transition={{
                               type: "spring",
@@ -838,27 +833,27 @@ function ClientList({
 
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                   Relance
-                   
+
                 </th>
 
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wide">
-                Entreprise
-                 
+                  Entreprise
+
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                   Code Client
                 </th>
 
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
-                Email
+                  Email
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
                   Téléphone
-                
+
                 </th>
 
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
-                 Adresse
+                  Adresse
                 </th>
 
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
@@ -918,7 +913,9 @@ function ClientList({
                             openDropdownId === client.id ? null : client.id
                           )
                         }
-                        ref={(el) => (buttonRefs.current[client.id] = el)}
+                        ref={(el) => {
+                          buttonRefs.current[client.id] = el;
+                        }}
                         className="text-gray-600 hover:text-gray-800 "
                         title="Actions"
                       >
@@ -930,7 +927,9 @@ function ClientList({
                           onClick={(e) => {
                             e.stopPropagation();
                           }}
-                          ref={(el) => (dropdownRefs.current[client.id] = el)}
+                          ref={(el) => {
+                            dropdownRefs.current[client.id] = el;
+                          }}
                           className="fixed z-[51] w-48 origin-top-left rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-10 ml-2"
                           style={{
                             top: `${dropdownPosition.top}px`,
@@ -995,11 +994,10 @@ function ClientList({
                   >
                     <div className="flex items-center">
                       <span
-                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          client.needs_reminder
-                            ? "bg-red-100 text-red-800"
-                            : "bg-green-100 text-green-800"
-                        }`}
+                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${client.needs_reminder
+                          ? "bg-red-100 text-red-800"
+                          : "bg-green-100 text-green-800"
+                          }`}
                       >
                         {client.needs_reminder ? "Oui" : "Non"}
                       </span>
