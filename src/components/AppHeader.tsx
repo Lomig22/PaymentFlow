@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
 import { TrendingUp, X, BarChart3, Users, FileText, Settings } from "lucide-react";
 import AnimatedResourceIcon from "./AnimatedResourceIcon";
 import { Menu as HeadlessMenu } from "@headlessui/react";
 import { supabase } from "../lib/supabase";
 import { User } from "@supabase/supabase-js";
 import ContactModal from "../../pages/landing/ContactModal";
+import Link from "next/link";
+import { useRouter } from "next/router";
 
 interface AppHeaderProps {
   onContactClick: () => void;
@@ -17,7 +18,12 @@ export default function AppHeader({ user }: AppHeaderProps) {
   const [hideOnScroll, setHideOnScroll] = useState(false);
   const mobileFeaturesMenuRef = useRef<HTMLDivElement>(null);
   const mobileResourcesMenuRef = useRef<HTMLDivElement>(null);
-  const navigate = useNavigate();
+
+  const router = useRouter();
+
+  const navigate = (page: string) => {
+    router.push(page);
+  };
   const calendlyRef = useRef<any>(null);
   const [showContactModal, setShowContactModal] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -142,7 +148,7 @@ export default function AppHeader({ user }: AppHeaderProps) {
         <header className={`bg-white shadow-sm sticky top-0 z-50 transition-all ${hideOnScroll ? '-translate-y-full' : 'translate-y-0'}`} style={{ willChange: 'transform', transition: 'transform 0.7s cubic-bezier(0.4,0,0.2,1)' }}>
           <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             {/* Logo Link */}
-            <Link to="/" className="flex items-center space-x-2">
+            <Link href="/" className="flex items-center space-x-2">
               <TrendingUp className="h-8 w-8 text-blue-600" />
               <span className="text-xl font-bold text-gray-900">PaymentFlow</span>
             </Link>
@@ -261,7 +267,7 @@ export default function AppHeader({ user }: AppHeaderProps) {
                   )}
                 </div>
                 <Link
-                  to="/pricing"
+                  href="/pricing"
                   className="text-gray-600 hover:text-gray-900 px-3 py-2 -mx-3"
                 >
                   Tarifs
@@ -282,13 +288,13 @@ export default function AppHeader({ user }: AppHeaderProps) {
               {!user && (
                 <>
                   <Link
-                    to="/login"
+                    href="/login"
                     className="text-blue-600 px-4 py-2 rounded-md underline hover:bg-blue-50 transition-colors"
                   >
                     Connexion
                   </Link>
                   <Link
-                    to="/signup"
+                    href="/signup"
                     className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
                   >
                     S'inscrire
@@ -410,7 +416,7 @@ export default function AppHeader({ user }: AppHeaderProps) {
                       )}
                     </div>
                     <Link
-                      to="/pricing"
+                      href="/pricing"
                       className="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
@@ -436,14 +442,14 @@ export default function AppHeader({ user }: AppHeaderProps) {
                 {!user && (
                   <>
                     <Link
-                      to="/login"
+                      href="/login"
                       className="block w-full text-left px-3 py-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-md"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       Connexion
                     </Link>
                     <Link
-                      to="/signup"
+                      href="/signup"
                       className="block w-full text-left px-3 py-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-md"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
