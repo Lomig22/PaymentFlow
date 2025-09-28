@@ -8,7 +8,7 @@ import { AbonnementProvider } from "../src/components/context/AbonnementContext"
 import AppWithMFA from "../src/App";
 import { User } from "@supabase/supabase-js";
 import { UserProvider } from "../components/context/UserContext";
-import AppHeader from "../src/components/AppHeader";
+import AppHeader from "../components/AppHeader";
 
 function MyApp({ Component, pageProps }: AppProps) {
     const [user, setUser] = useState<User | null>(null);
@@ -36,7 +36,7 @@ function MyApp({ Component, pageProps }: AppProps) {
                 <CalendlyAndChatlingLoader />
                 <AbonnementProvider>
                     <UserProvider>
-                        <AppHeader user={user} onContactClick={() => { }} />
+                        {!user && <AppHeader user={user} onContactClick={() => { }} />}
                         <Component {...pageProps} />
                     </UserProvider>
                 </AbonnementProvider>

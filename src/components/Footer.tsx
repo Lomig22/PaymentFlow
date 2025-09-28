@@ -184,12 +184,12 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
-                <button
-                  onClick={() => navigate('/temoignages')}
+                <Link
+                  href={'/temoignages'}
                   className="text-gray-500 hover:text-gray-700"
                 >
                   Témoignages
-                </button>
+                </Link>
               </li>
             </ul>
           </div>
@@ -198,25 +198,25 @@ const Footer = () => {
             <h4 className="font-semibold text-gray-900 mb-4">Ressources</h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <button
+                <Link
                   className="text-gray-500 hover:text-gray-700"
-                  onClick={() => navigate('/blog')}
+                  href={'/blog'}
                 >
                   Blog
-                </button>
+                </Link>
               </li>
               <li>
-                <button
+                <Link
                   className="text-gray-500 hover:text-gray-700"
-                  onClick={() => navigate('/help')}
+                  href={'/help'}
                 >
                   Guides
-                </button>
+                </Link>
               </li>
               <li>
-                <button className="text-gray-500 hover:text-gray-700" onClick={() => navigate('/help')}>
+                <Link className="text-gray-500 hover:text-gray-700" href={'/help'}>
                   Support
-                </button>
+                </Link>
               </li>
             </ul>
           </div>
@@ -225,28 +225,28 @@ const Footer = () => {
             <h4 className="font-semibold text-gray-900 mb-4">Légal</h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <button
-                  onClick={() => navigate('/privacy')}
+                <Link
+                  href={'/privacy'}
                   className="text-gray-500 hover:text-gray-700"
                 >
                   Politique de confidentialité
-                </button>
+                </Link>
               </li>
               <li>
-                <button
-                  onClick={() => navigate('/conditions-utilisation')}
+                <Link
+                  href={'/conditions-utilisation'}
                   className="text-gray-500 hover:text-gray-700"
                 >
                   Conditions d'utilisation
-                </button>
+                </Link>
               </li>
               <li>
-                <button
-                  onClick={() => navigate('/mentions-legales')}
+                <Link
+                  href={'/mentions-legales'}
                   className="text-gray-500 hover:text-gray-700"
                 >
                   Mentions légales
-                </button>
+                </Link>
               </li>
               <li>
                 <button

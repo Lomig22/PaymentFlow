@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import Header from "../components/AppHeader";
+import Header from "../../components/AppHeader";
 import Footer from "../components/Footer";
 import HeroSection from "../components/help_and_supports/HeroSection";
 import FaqSection from "../components/help_and_supports/FaqSection";

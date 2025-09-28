@@ -5,8 +5,9 @@ import { supabase } from "../lib/supabase";
 import { useEffect, useState } from "react";
 import Footer from "../components/Footer";
 import { useLocation } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
+import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { useRouter } from "next/router";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
@@ -41,7 +42,11 @@ const PricingPage = ({ setShowContact, setDefaultSubject }: Props) => {
   const isPricingPage = location.pathname === "/pricing";
   const isSettingsPage = location.pathname === "/settings";
 
-  const navigate = useNavigate();
+  const router = useRouter();
+
+  const navigate = (page: string) => {
+    router.push(page);
+  };
   useEffect(() => {
     if (message) {
       const timer = setTimeout(() => {
@@ -302,13 +307,13 @@ const PricingPage = ({ setShowContact, setDefaultSubject }: Props) => {
       <main>
         {isPricingPage && (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-2 pt-4">
-            <button
-              onClick={() => navigate('/')}
+            <Link
+              href={'/'}
               className="flex items-center gap-2 text-xl font-medium text-blue-600 hover:text-blue-800 transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
               Retour
-            </button>
+            </Link>
           </div>)}
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -328,8 +333,8 @@ const PricingPage = ({ setShowContact, setDefaultSubject }: Props) => {
               <button
                 onClick={() => setBillingInterval("monthly")}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${billingInterval === "monthly"
-                    ? "bg-blue-600 text-white shadow-md"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  ? "bg-blue-600 text-white shadow-md"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                   }`}
               >
                 Facturation mensuelle
@@ -337,8 +342,8 @@ const PricingPage = ({ setShowContact, setDefaultSubject }: Props) => {
               <button
                 onClick={() => setBillingInterval("yearly")}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${billingInterval === "yearly"
-                    ? "bg-blue-600 text-white shadow-md"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  ? "bg-blue-600 text-white shadow-md"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                   }`}
               >
                 Facturation annuelle

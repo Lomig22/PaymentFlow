@@ -1,6 +1,6 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
-import { useNavigate } from 'react-router-dom';
+import Link from 'next/link';
 import { FaStar } from 'react-icons/fa';
 import {
   TestimonialBox,
@@ -11,7 +11,7 @@ import {
   FAQAccordion,
   CTA,
   VideoEmbed
-} from '../components/blog/BlogEnrichmentBlocks';
+} from '../../../src/components/blog/BlogEnrichmentBlocks';
 import { ArrowLeft } from 'lucide-react';
 
 interface BlogSectorProps {
@@ -76,7 +76,6 @@ interface BlogSectorProps {
 }
 
 const BlogCommunication: React.FC<BlogSectorProps> = ({ setShowContact, setDefaultSubject }) => {
-  const navigate = useNavigate();
   const pageUrl = "https://www.payment-flow.fr/blog-communication";
   const pageTitle = "Image de Marque : la communication au service du cash-flow | Payment Flow";
 
@@ -95,13 +94,13 @@ const BlogCommunication: React.FC<BlogSectorProps> = ({ setShowContact, setDefau
   return (
     <div className="blog-page-container" style={{ maxWidth: 900, margin: '0 auto', padding: '2rem 1rem' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-2 pt-4">
-        <button
-          onClick={() => navigate('/temoignages')}
+        <Link
+          href={'/temoignages'}
           className="flex items-center gap-2 text-xl font-medium text-blue-600 hover:text-blue-800 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Retour
-        </button>
+        </Link>
       </div>
       <Helmet>
         <title>Blog Communication | Payment Flow</title>
@@ -183,20 +182,20 @@ const BlogCommunication: React.FC<BlogSectorProps> = ({ setShowContact, setDefau
       {/* Visuels métiers / navigation cas suivants */}
       <div className="my-8 grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="flex flex-col items-center">
-          <button
+          <Link
             className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-            onClick={() => navigate('/blog-comptable-banque')}
+            href={'/blog/comptable-banque'}
           >
             Voir le cas suivant : Comptable / Banque
-          </button>
+          </Link>
         </div>
         <div className="flex flex-col items-center">
-          <button
+          <Link
             className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-            onClick={() => navigate('/blog-manufacture')}
+            href={'/blog/manufacture'}
           >
             Voir le cas précédent : Ouestelio
-          </button>
+          </Link>
         </div>
       </div>
       {/* Liens internes */}

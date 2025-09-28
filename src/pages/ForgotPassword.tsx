@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { supabase } from "../lib/supabase";
 import { Mail, ArrowLeft } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import Link from "next/link";
 
 export default function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false);
@@ -11,7 +11,6 @@ export default function ForgotPasswordPage() {
     text: string;
   } | null>(null);
   const [lastResetAttempt, setLastResetAttempt] = useState(0);
-  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,11 +77,10 @@ export default function ForgotPasswordPage() {
 
         {message && (
           <div
-            className={`p-4 rounded-md mb-6 ${
-              message.type === "success"
-                ? "bg-green-50 text-green-700"
-                : "bg-red-50 text-red-700"
-            }`}
+            className={`p-4 rounded-md mb-6 ${message.type === "success"
+              ? "bg-green-50 text-green-700"
+              : "bg-red-50 text-red-700"
+              }`}
           >
             {message.text}
           </div>
@@ -118,7 +116,7 @@ export default function ForgotPasswordPage() {
             <p className="text-sm text-gray-600">
               Vous vous souvenez de votre mot de passe ?{" "}
               <Link
-                to="/login"
+                href="/login"
                 className="text-blue-600 hover:text-blue-800 font-medium"
               >
                 Se connecter
@@ -127,13 +125,13 @@ export default function ForgotPasswordPage() {
           </div>
         </form>
 
-        <button
-          onClick={() => navigate("/")}
+        <Link
+          href={"/"}
           className="mt-6 w-full flex items-center justify-center text-gray-600 hover:text-gray-800 transition-colors"
         >
           <ArrowLeft className="h-5 w-5 mr-2" />
           Retour à l'accueil
-        </button>
+        </Link>
       </div>
     </div>
   );

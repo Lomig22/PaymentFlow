@@ -28,7 +28,7 @@ import {
 import Swal from "sweetalert2";
 import { useAbonnement } from "../context/AbonnementContext";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import Link from "next/link";
 
 type ClientListProps = {
   showForm: boolean;
@@ -57,7 +57,6 @@ function ClientList({
   assignProfileId,
 }: ClientListProps) {
   const { checkAbonnement } = useAbonnement();
-  const navigate = useNavigate();
   const [clients, setClients] = useState<
     (Client & { reminderProfile?: ReminderProfile })[]
   >([]);
@@ -642,13 +641,13 @@ function ClientList({
       {assignProfile && (
         <div className="ml-4 mb-3 px-4 py-2 rounded-md border border-blue-200 bg-blue-50 text-sm text-blue-800 flex items-center justify-between w-[99%]">
           <span>Mode d'assignation actif — Profil: <strong>{assignProfile.name}</strong>. Sélectionnez des clients puis cliquez sur "Assigner".</span>
-          <button
+          <Link
             type="button"
             className="text-blue-700 hover:text-blue-900 underline"
-            onClick={() => navigate('/clients')}
+            href={'/clients'}
           >
             Quitter
-          </button>
+          </Link>
         </div>
       )}
       {selectedClientIds.length > 0 && (

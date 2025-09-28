@@ -29,6 +29,14 @@
     "pages/landing/LandingPage.tsx",
     "pages/landing/ContactModal.tsx",
     "pages/login/index.tsx",
-    "components/Layout.tsx"
+    "components/Layout.tsx",
+    "components/AppHeader.tsx",
+    "pages/signup/index.tsx",
+    "pages/blog/garage/index.tsx",
+    "pages/temoignages/index.tsx",
+    "pages/blog/communication/index.tsx",
+    "pages/blog/manufacture/index.tsx",
+    "pages/blog/index.tsx",
+    "pages/blog/optimisation-relance/index.tsx"
   ]
 }

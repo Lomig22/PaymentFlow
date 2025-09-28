@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import { Client } from "../../types/database";
 import { X, Upload, FileUp } from "lucide-react";
@@ -353,8 +354,8 @@ export default function ReceivableForm({
                     type="button"
                     onClick={() => setIsNewClient(false)}
                     className={`px-3 py-1 rounded-md ${!isNewClient
-                        ? "bg-blue-100 text-blue-800"
-                        : "bg-gray-100 text-gray-800"
+                      ? "bg-blue-100 text-blue-800"
+                      : "bg-gray-100 text-gray-800"
                       }`}
                   >
                     Client existant
@@ -363,8 +364,8 @@ export default function ReceivableForm({
                     type="button"
                     onClick={() => setIsNewClient(true)}
                     className={`px-3 py-1 rounded-md ${isNewClient
-                        ? "bg-blue-100 text-blue-800"
-                        : "bg-gray-100 text-gray-800"
+                      ? "bg-blue-100 text-blue-800"
+                      : "bg-gray-100 text-gray-800"
                       }`}
                   >
                     Nouveau client
@@ -730,13 +731,12 @@ export default function ReceivableForm({
             </div>
 
             <div className="flex justify-end space-x-4">
-              <button
-                type="button"
-                onClick={() => navigate('/receivables')}
+              <Link
+                href={'/receivables'}
                 className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
               >
                 Annuler
-              </button>
+              </Link>
               <button
                 type="submit"
                 disabled={loading}

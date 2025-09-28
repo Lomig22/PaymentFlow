@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { TrendingUp, X, BarChart3, Users, FileText, Settings } from "lucide-react";
-import AnimatedResourceIcon from "./AnimatedResourceIcon";
+import AnimatedResourceIcon from "../src/components/AnimatedResourceIcon";
 import { Menu as HeadlessMenu } from "@headlessui/react";
-import { supabase } from "../lib/supabase";
+import { supabase } from "../src/lib/supabase";
 import { User } from "@supabase/supabase-js";
-import ContactModal from "../../pages/landing/ContactModal";
+import ContactModal from "../pages/landing/ContactModal";
 import Link from "next/link";
 import { useRouter } from "next/router";
 
@@ -174,48 +174,43 @@ export default function AppHeader({ user }: AppHeaderProps) {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
+                  <div className={`absolute left-0 top-full ${isFeaturesMenuOpen ? "opacity-100 visible" : "opacity-0 invisible"}`}>
+                    <div className="h-2 w-full" />
+                    <div className="w-64 origin-top-left bg-white border border-gray-200 divide-y divide-gray-100 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                      <div className="p-1">
+                        <Link
+                          href={"/reporting-recouvrement"}
+                          className="group flex rounded-md items-center w-full px-3 py-2 text-sm text-gray-900 hover:bg-blue-50 transition-colors"
+                        >
+                          <BarChart3 className="mr-3 h-5 w-5 text-blue-600" />
+                          Reporting de recouvrement
+                        </Link>
+                        <Link
+                          href={"/crm"}
+                          className="group flex rounded-md items-center w-full px-3 py-2 text-sm text-gray-900 hover:bg-blue-50 transition-colors"
+                        >
+                          <Users className="mr-3 h-5 w-5 text-blue-600" />
+                          CRM
+                        </Link>
 
-                  {isFeaturesMenuOpen && (
-                    <div className="absolute left-0 top-full">
-                      <div className="h-2 w-full" />
-                      <div className="w-64 origin-top-left bg-white border border-gray-200 divide-y divide-gray-100 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                        <div className="p-1">
-                          <button
-                            onClick={() => navigate("/reporting-recouvrement")}
-                            className="group flex rounded-md items-center w-full px-3 py-2 text-sm text-gray-900 hover:bg-blue-50 transition-colors"
-                          >
-                            <BarChart3 className="mr-3 h-5 w-5 text-blue-600" />
-                            Reporting de recouvrement
-                          </button>
-                          <button
-                            onClick={() => navigate("/crm")}
-                            className="group flex rounded-md items-center w-full px-3 py-2 text-sm text-gray-900 hover:bg-blue-50 transition-colors"
-                          >
-                            <Users className="mr-3 h-5 w-5 text-blue-600" />
-                            CRM
-                          </button>
+                        <Link
+                          href={"/simulateur-dso"}
+                          className="group flex rounded-md items-center w-full px-3 py-2 text-sm text-gray-900 hover:bg-blue-50 transition-colors"
+                        >
+                          <FileText className="mr-3 h-5 w-5 text-blue-600" />
+                          Outils de créances
+                        </Link>
 
-
-
-                          <button
-                            onClick={() => navigate("/simulateur-dso")}
-                            className="group flex rounded-md items-center w-full px-3 py-2 text-sm text-gray-900 hover:bg-blue-50 transition-colors"
-                          >
-                            <FileText className="mr-3 h-5 w-5 text-blue-600" />
-                            Outils de créances
-                          </button>
-
-                          <button
-                            onClick={() => { setIsFeaturesMenuOpen(false); navigate("/personnalisation"); }}
-                            className="group flex rounded-md items-center w-full px-3 py-2 text-sm text-gray-900 hover:bg-blue-50 transition-colors"
-                          >
-                            <Settings className="mr-3 h-5 w-5 text-blue-600" />
-                            Personnalisation
-                          </button>
-                        </div>
+                        <Link
+                          href={"/personnalisation"}
+                          className="group flex rounded-md items-center w-full px-3 py-2 text-sm text-gray-900 hover:bg-blue-50 transition-colors"
+                        >
+                          <Settings className="mr-3 h-5 w-5 text-blue-600" />
+                          Personnalisation
+                        </Link>
                       </div>
                     </div>
-                  )}
+                  </div>
                 </div>
                 <div
                   className="relative inline-block text-left"
@@ -235,32 +230,32 @@ export default function AppHeader({ user }: AppHeaderProps) {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
-                  {isResourcesMenuOpen && (
-                    <div className="absolute left-0 top-full z-50">
+                  {(
+                    <div className={`absolute left-0 top-full z-50 ${isResourcesMenuOpen ? "opacity-100 visible" : "opacity-0 invisible"}`}>
                       <div className="h-2 w-full" />
                       <div className="w-48 origin-top-left bg-white border border-gray-200 divide-y divide-gray-100 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                         <div className="p-1">
-                          <button
-                            onClick={() => navigate("/temoignages")}
+                          <Link
+                            href={"/temoignages"}
                             className="group flex rounded-md items-center w-full px-3 py-2 text-sm text-gray-900 hover:bg-blue-50 transition-colors gap-2"
                           >
                             <AnimatedResourceIcon type="testimonials" />
                             Témoignages
-                          </button>
-                          <button
-                            onClick={() => navigate("/help")}
+                          </Link>
+                          <Link
+                            href={"/help"}
                             className="group flex rounded-md items-center w-full px-3 py-2 text-sm text-gray-900 hover:bg-blue-50 transition-colors gap-2"
                           >
                             <AnimatedResourceIcon type="guides" />
                             Guide
-                          </button>
-                          <button
-                            onClick={() => navigate("/blog")}
+                          </Link>
+                          <Link
+                            href={"/blog"}
                             className="group flex rounded-md items-center w-full px-3 py-2 text-sm text-gray-900 hover:bg-blue-50 transition-colors gap-2"
                           >
                             <AnimatedResourceIcon type="blog" />
                             Blog
-                          </button>
+                          </Link>
                         </div>
                       </div>
                     </div>
@@ -284,27 +279,25 @@ export default function AppHeader({ user }: AppHeaderProps) {
             )}
 
             {/* Desktop Auth Buttons */}
-            <div className="hidden md:flex items-center gap-2">
-              {!user && (
-                <>
-                  <Link
-                    href="/login"
-                    className="text-blue-600 px-4 py-2 rounded-md underline hover:bg-blue-50 transition-colors"
-                  >
-                    Connexion
-                  </Link>
-                  <Link
-                    href="/signup"
-                    className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
-                  >
-                    S'inscrire
-                  </Link>
-                </>
-              )}
-            </div>
+            {!user && (
+              <div className="hidden md:flex items-center gap-2">
+                <Link
+                  href="/login"
+                  className="text-blue-600 px-4 py-2 rounded-md underline hover:bg-blue-50 transition-colors"
+                >
+                  Connexion
+                </Link>
+                <Link
+                  href="/signup"
+                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  S'inscrire
+                </Link>
+              </div>
+            )}
 
             {/* Mobile menu button */}
-            <div className="md:hidden">
+            <div className="flex md:hidden">
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 className="text-gray-600 hover:text-gray-900"
@@ -340,38 +333,36 @@ export default function AppHeader({ user }: AppHeaderProps) {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                         </svg>
                       </button>
-                      {isMobileFeaturesMenuOpen && (
-                        <div className="absolute left-0 w-56 mt-2 bg-white border border-gray-200 rounded-md shadow-lg z-50">
-                          <button
-                            onClick={() => { navigate("/reporting-recouvrement"); setIsMobileFeaturesMenuOpen(false); setIsMobileMenuOpen(false); }}
-                            className="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md flex items-center gap-2"
-                          >
-                            <BarChart3 className="h-5 w-5 text-blue-600" />
-                            Reporting de recouvrement
-                          </button>
-                          <button
-                            onClick={() => { navigate("/crm"); setIsMobileFeaturesMenuOpen(false); setIsMobileMenuOpen(false); }}
-                            className="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md flex items-center gap-2"
-                          >
-                            <Users className="h-5 w-5 text-blue-600" />
-                            CRM
-                          </button>
-                          <button
-                            onClick={() => { navigate("/simulateur-dso"); setIsMobileFeaturesMenuOpen(false); setIsMobileMenuOpen(false); }}
-                            className="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md flex items-center gap-2"
-                          >
-                            <FileText className="h-5 w-5 text-blue-600" />
-                            Outils de créances
-                          </button>
-                          <button
-                            onClick={() => { navigate("/personnalisation"); setIsMobileFeaturesMenuOpen(false); setIsMobileMenuOpen(false); }}
-                            className="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md flex items-center gap-2"
-                          >
-                            <Settings className="h-5 w-5 text-blue-600" />
-                            Personnalisation
-                          </button>
-                        </div>
-                      )}
+                      <div className={`absolute left-0 w-56 mt-2 bg-white border border-gray-200 rounded-md shadow-lg z-50 ${isMobileFeaturesMenuOpen ? "opacity-100 visible" : "opacity-0 invisible"}`}>
+                        <Link
+                          href={"/reporting-recouvrement"}
+                          className="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md flex items-center gap-2"
+                        >
+                          <BarChart3 className="h-5 w-5 text-blue-600" />
+                          Reporting de recouvrement
+                        </Link>
+                        <Link
+                          href={"/crm"}
+                          className="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md flex items-center gap-2"
+                        >
+                          <Users className="h-5 w-5 text-blue-600" />
+                          CRM
+                        </Link>
+                        <Link
+                          href={"/simulateur-dso"}
+                          className="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md flex items-center gap-2"
+                        >
+                          <FileText className="h-5 w-5 text-blue-600" />
+                          Outils de créances
+                        </Link>
+                        <Link
+                          href={"/personnalisation"}
+                          className="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md flex items-center gap-2"
+                        >
+                          <Settings className="h-5 w-5 text-blue-600" />
+                          Personnalisation
+                        </Link>
+                      </div>
                     </div>
                     {/* Mobile Ressources submenu */}
                     <div className="relative" ref={mobileResourcesMenuRef}>
@@ -389,29 +380,29 @@ export default function AppHeader({ user }: AppHeaderProps) {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                         </svg>
                       </button>
-                      {isResourcesMenuOpen && (
+                      {(
                         <div className="absolute left-0 w-48 mt-2 bg-white border border-gray-200 rounded-md shadow-lg z-50">
-                          <button
-                            onClick={() => { navigate('/temoignages'); setIsResourcesMenuOpen(false); setIsMobileMenuOpen(false); }}
+                          <Link
+                            href={"/temoignages"}
                             className="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md flex items-center gap-2 group"
                           >
                             <AnimatedResourceIcon type="testimonials" />
                             Témoignages
-                          </button>
-                          <button
-                            onClick={() => { navigate("/blog"); setIsResourcesMenuOpen(false); setIsMobileMenuOpen(false); }}
+                          </Link>
+                          <Link
+                            href={"/blog"}
                             className="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md flex items-center gap-2 group"
                           >
                             <AnimatedResourceIcon type="blog" />
                             Blog
-                          </button>
-                          <button
-                            onClick={() => { navigate("/help"); setIsResourcesMenuOpen(false); setIsMobileMenuOpen(false); }}
+                          </Link>
+                          <Link
+                            href={"/help"}
                             className="block w-full text-left px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md flex items-center gap-2 group"
                           >
                             <AnimatedResourceIcon type="guides" />
                             Guides
-                          </button>
+                          </Link>
                         </div>
                       )}
                     </div>

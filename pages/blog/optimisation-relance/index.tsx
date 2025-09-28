@@ -2,10 +2,10 @@ import React, { useEffect, useRef, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
 import { FaUserCog, FaPhoneAlt, FaClock, FaShareAlt, FaHandshake, FaCheckCircle, FaChevronDown, FaBullseye, FaEnvelopeOpenText, FaChartLine } from "react-icons/fa";
-import { Link, useNavigate } from "react-router-dom";
+import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { ShareButtons } from '../components/blog/BlogEnrichmentBlocks';
-import Footer from '../components/Footer';
+import { ShareButtons } from '../../../src/components/blog/BlogEnrichmentBlocks';
+import Footer from '../../../src/components/Footer';
 
 const accentColor = "#2563eb"; // bleu Payment Flow
 const navy = "#1e293b"; // bleu foncé Payment Flow (ex: text-blue-900)
@@ -156,17 +156,16 @@ export default function BlogOptimisationRelance() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const navigate = useNavigate();
   return (
     <div style={{ background: '#fff', minHeight: "100vh", color: navy, fontFamily: 'Inter, Arial, sans-serif' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-2 pt-4">
-        <button
-          onClick={() => navigate('/blog')}
+        <Link
+          href={"/blog"}
           className="flex items-center gap-2 text-xl font-medium text-blue-600 hover:text-blue-800 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Retour
-        </button>
+        </Link>
       </div>
       <Helmet>
         <title>Les 5 erreurs à éviter quand on relance ses clients | Blog Payment Flow</title>
@@ -261,7 +260,7 @@ export default function BlogOptimisationRelance() {
             <ShareButtons url="https://www.payment-flow.fr/blog-optimisation-relance" title="Les 5 erreurs à éviter quand on relance ses clients | Blog Payment Flow" />
             <div className="text-xl font-semibold mb-2">💬 Vous voulez arrêter de courir après vos paiements ?</div>
             <Link
-              to="https://www.payment-flow.fr/signup"
+              href="/signup"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-block px-6 py-3 rounded-xl bg-[#2563eb] hover:bg-[#1e293b] text-white font-bold shadow-md hover:shadow-lg transition-all duration-200 text-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"

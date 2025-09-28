@@ -6,20 +6,19 @@ import {
   Navigate,
 } from "react-router-dom";
 import DashboardRedirect from "./components/DashboardRedirect";
-import LandingPage from "../pages/landing/LandingPage";
-import SignupPage from "./pages/SignupPage";
+import SignupPage from "../pages/signup";
 import LoginPage from "../pages/login";
 import ForgotPassword from "./pages/ForgotPassword";
 import PricingPage from "./pages/PricingPage";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import LegalNoticePage from "./pages/LegalNoticePage";
 import TermsOfUsePage from "./pages/TermsOfUsePage";
-import BlogPage from "./pages/BlogPage";
-import BlogGarage from "./pages/BlogGarage";
-import BlogManufacture from "./pages/BlogManufacture";
-import BlogCommunication from "./pages/BlogCommunication";
+import BlogPage from "../pages/blog";
+import BlogGarage from "../pages/blog/garage";
+import BlogManufacture from "../pages/blog/manufacture";
+import BlogCommunication from "../pages/blog/communication";
 import BlogComptableBanque from "./pages/BlogComptableBanque";
-import BlogOptimisationRelance from "./pages/BlogOptimisationRelance";
+import BlogOptimisationRelance from "../pages/blog/optimisation-relance";
 import Layout from "../components/Layout";
 import Dashboard from "./components/Dashboard";
 import ClientPage from "./components/clients/ClientPage";
@@ -29,10 +28,10 @@ import Settings from "./components/settings/Settings";
 import ReminderProfilesPage from "./components/ReminderProfilesPage";
 import ReminderList from "./components/reminders/ReminderList";
 import HelpAndSupport from "./pages/HelpAndSupport";
-import SuccessStoriesPage from "./pages/SuccessStoriesPage";
+import SuccessStoriesPage from "../pages/temoignages";
 import AbonnementSuccess from "./pages/success";
 import Success from "./components/settings/paymentSuccess";
-import AppHeader from "./components/AppHeader";
+import AppHeader from "../components/AppHeader";
 import ReportingRecouvrement from "./pages/ReportingRecouvrement";
 import CrmPage from "./pages/CrmPage";
 import DSOSimulator from "./pages/DSOSimulator";
@@ -60,16 +59,6 @@ export default function AppRoutes({ user, onMFASuccess }: AppRoutesProps) {
 
       <Routes>
         {/* Routes publiques */}
-        <Route
-          path="/"
-          element={
-            !user ? (
-              <LandingPage onGetStarted={() => { }} />
-            ) : (
-              <Navigate to={{ pathname: "/dashboard", search: onboardingSuffix, hash }} replace />
-            )
-          }
-        />
         <Route path="/help" element={<HelpAndSupport />} />
         <Route path="/temoignages" element={<SuccessStoriesPage />} />
         {/* /subscribe route removed (SubscribePage absent) */}

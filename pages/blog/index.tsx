@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import ContactModal from "../../pages/landing/ContactModal";
+import ContactModal from "../landing/ContactModal";
 import { Helmet } from 'react-helmet-async';
 // Assurez-vous d'avoir installé react-icons : npm install react-icons
 import { FaStar } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/router';
 import { ArrowLeft } from 'lucide-react';
 
 interface BlogPageProps {
@@ -11,23 +11,22 @@ interface BlogPageProps {
   setDefaultSubject: React.Dispatch<React.SetStateAction<string>>;
 }
 
-import Footer from "../components/Footer";
-import { Link } from "react-router-dom";
+import Footer from "../../src/components/Footer";
+import Link from "next/link";
 
 const BlogPage: React.FC<BlogPageProps> = ({ setShowContact, setDefaultSubject }) => {
   const [showContactModal, setShowContactModal] = useState(false);
-  const navigate = useNavigate();
   return (
     <>
       <div className="blog-page-container" style={{ maxWidth: 900, margin: '0 auto', padding: '2rem 1rem' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-2 pt-4">
-          <button
-            onClick={() => navigate('/')}
+          <Link
+            href={"/"}
             className="flex items-center gap-2 text-xl font-medium text-blue-600 hover:text-blue-800 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Retour
-          </button>
+          </Link>
         </div>
         <Helmet>
           <title>Blog | Payment Flow</title>
@@ -50,7 +49,7 @@ const BlogPage: React.FC<BlogPageProps> = ({ setShowContact, setDefaultSubject }
             <h2 className="text-2xl font-bold mb-1">Les 5 erreurs à éviter quand on relance ses clients</h2>
             <div className="text-orange-300 font-medium mb-2">Optimisation des relances clients pour PME & TPE</div>
             <p className="mb-3 text-blue-100">Découvrez les erreurs les plus fréquentes et les solutions concrètes pour accélérer vos paiements, préserver la relation client et automatiser vos relances. Conseils concrets, visuels, et bonnes pratiques adaptées aux petites entreprises.</p>
-            <Link to="/blog-optimisation-relance" className="inline-block px-5 py-2 rounded bg-orange-500 hover:bg-orange-600 text-white font-semibold shadow transition-colors">Lire l'article</Link>
+            <Link href="/blog/optimisation-relance" className="inline-block px-5 py-2 rounded bg-orange-500 hover:bg-orange-600 text-white font-semibold shadow transition-colors">Lire l'article</Link>
           </div>
         </div>
 

@@ -2,10 +2,9 @@ import React from 'react';
 import { Helmet } from 'react-helmet';
 import { BarChart3, PieChart, TrendingUp, FileSpreadsheet } from 'lucide-react';
 import Footer from '../components/Footer';
-import { useNavigate } from 'react-router-dom';
+import Link from 'next/link';
 
 const ReportingRecouvrement = () => {
-  const navigate = useNavigate();
   return (
     <React.Fragment>
       <Helmet>
@@ -48,14 +47,14 @@ const ReportingRecouvrement = () => {
             </div>
             <div>
               <script async src="https://js.storylane.io/js/v2/storylane.js"></script>
-              <div className="sl-embed" style={{position: 'relative', paddingBottom: 'calc(43.71% + 25px)', width: '100%', height: 0, transform: 'scale(1)'}}>
-                <iframe 
-                  loading="lazy" 
-                  className="sl-demo" 
-                  src="https://app.storylane.io/demo/v5yqrknolcgj?embed=inline" 
-                  name="sl-embed" 
-                  allow="fullscreen" 
-                  allowFullScreen 
+              <div className="sl-embed" style={{ position: 'relative', paddingBottom: 'calc(43.71% + 25px)', width: '100%', height: 0, transform: 'scale(1)' }}>
+                <iframe
+                  loading="lazy"
+                  className="sl-demo"
+                  src="https://app.storylane.io/demo/v5yqrknolcgj?embed=inline"
+                  name="sl-embed"
+                  allow="fullscreen"
+                  allowFullScreen
                   style={{
                     position: 'absolute',
                     top: 0,
@@ -141,12 +140,12 @@ const ReportingRecouvrement = () => {
             <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
               Découvrez comment PaymentFlow peut vous aider à améliorer votre performance de recouvrement.
             </p>
-            <button
+            <Link
               className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors"
-              onClick={() => navigate('/signup')}
+              href={'/signup'}
             >
               Commencer maintenant
-            </button>
+            </Link>
           </div>
         </div>
       </div>

@@ -1,9 +1,7 @@
 import { GetServerSideProps } from "next";
-import { useRouter } from "next/router";
 import { useUser } from "../components/context/UserContext";
-import { useEffect } from "react";
 import LandingPage from "./landing/LandingPage";
-import AppHeader from "../src/components/AppHeader";
+import AppHeader from "../components/AppHeader";
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
     const token = context.req.cookies.token;

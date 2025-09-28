@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { supabase } from "../lib/supabase";
+import { supabase } from "../../src/lib/supabase";
 import { Lock, Mail, Eye, EyeOff, ArrowLeft } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import Link from "next/link";
+import { useRouter } from "next/router";
 
 const validatePassword = (password: string) => {
   const minLength = password.length >= 8;
@@ -33,7 +34,11 @@ export default function SignupPage() {
     useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const navigate = useNavigate();
+
+  const router = useRouter();
+  const navigate = (path: string) => {
+    router.push(path);
+  };
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [company, setCompany] = useState("");
@@ -266,13 +271,13 @@ export default function SignupPage() {
       <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-xl">
         {/* Bouton retour accueil */}
         {step === 1 && (
-          <button
-            onClick={() => navigate('/')}
+          <Link
+            href={'/'}
             className="flex items-center gap-2 text-xl font-medium text-blue-600 hover:text-blue-800 transition-colors mb-6"
           >
             <ArrowLeft className="w-4 h-4" />
             Retour
-          </button>
+          </Link>
         )}
         <div className="text-center">
           <h2 className="text-3xl font-bold text-gray-900">
@@ -281,7 +286,7 @@ export default function SignupPage() {
           <p className="mt-2 text-sm text-gray-600">
             Déjà un compte?{" "}
             <Link
-              to="/login"
+              href="/login"
               className="font-medium text-blue-600 hover:text-blue-500"
             >
               Se connecter
@@ -537,7 +542,7 @@ export default function SignupPage() {
               </button>
               <div className="text-center text-sm">
                 <Link
-                  to="/forgot-password"
+                  href="/forgot-password"
                   className="font-medium text-blue-600 hover:text-blue-500"
                 >
                   Mot de passe oublié?
