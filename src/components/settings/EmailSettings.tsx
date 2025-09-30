@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { differenceInDays } from "date-fns";
 import { supabase } from "../../lib/supabase";
 import {
   AlertCircle,
@@ -116,6 +117,7 @@ export default function EmailSettings() {
     return data;
   }
   const [isDisabled, setIsDisabled] = useState(false);
+  const [isTrial, setIsTrial] = useState(false);
 
   useEffect(() => {
     const checkUserAndSubscription = async () => {
@@ -130,12 +132,21 @@ export default function EmailSettings() {
       }
 
       if (user?.id) {
+        // Détecte l'essai gratuit (30 jours à partir de la création du compte)
+        let trial = false;
+        try {
+          if (user.created_at) {
+            const createdAt = new Date(user.created_at);
+            trial = differenceInDays(new Date(), createdAt) < 30;
+          }
+        } catch {}
+        setIsTrial(trial);
+
         const subscription = await fetchSubscription(supabase, user.id);
-        if (
-          subscription[0]?.plan === "free" ||
-          subscription[0]?.plan === "basic"
-        ) {
-          setIsDisabled(true);
+        const plan = subscription?.[0]?.plan;
+        if (plan === "free" || plan === "basic") {
+          // En essai gratuit, on n'applique pas le blocage UI
+          setIsDisabled(!trial);
         }
       }
     };

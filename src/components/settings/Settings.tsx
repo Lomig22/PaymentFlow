@@ -136,6 +136,13 @@ export default function Settings() {
   const handleReminderProfileDirty = (dirty: boolean) => {
     setUnsavedChanges(dirty);
   };
+  // Helper: l’onglet courant nécessite-t-il un avertissement ?
+  const isUnsavedTrackedActive = () => {
+    return (
+      (activeSectionId === "reminders" && activeSubTabId === "sender") ||
+      (activeSectionId === "account" && activeSubTabId === "account")
+    );
+  };
   // Callback pour forcer la sauvegarde ou quitter
   const handleLeaveReminderSettings = () => {
     setShowUnsavedModal(false);
@@ -190,8 +197,8 @@ export default function Settings() {
                 <button
                   key={section?.id}
                   onClick={() => {
-                    // Si on quitte "Paramètres d’envoi de relances" avec des changements non enregistrés
-                    if (activeSectionId === "reminders" && unsavedChanges && section?.id !== "reminders") {
+                    // Si on quitte une section avec des changements non enregistrés
+                    if (unsavedChanges && isUnsavedTrackedActive() && (section?.id !== activeSectionId)) {
                       setShowUnsavedModal(true);
                       setPendingSectionId(section?.id ?? null);
                       setPendingSubTabId(section?.subTabs[0]?.id ?? null);
@@ -222,8 +229,8 @@ export default function Settings() {
               <button
                 key={tab.id}
                 onClick={() => {
-                  // Si on quitte un sous-menu de "Paramètres d’envoi de relances" avec des changements non enregistrés
-                  if (activeSectionId === "reminders" && unsavedChanges && tab.id !== activeSubTabId) {
+                  // Si on quitte un sous-onglet avec des changements non enregistrés
+                  if (unsavedChanges && isUnsavedTrackedActive() && tab.id !== activeSubTabId) {
                     setShowUnsavedModal(true);
                     setPendingSectionId(activeSectionId);
                     setPendingSubTabId(tab.id);
@@ -248,9 +255,11 @@ export default function Settings() {
               <ActiveComponent />
             </Elements>
           ) : (
-            // Injection du callback dans ReminderProfileSettings et SignatureSettings
+            // Injection du callback dans SenderSettings (relances) et ProfileSettings (compte)
             activeSectionId === "reminders" && activeSubTabId === "sender" ? (
               <SignatureSettings onDirtyChange={handleReminderProfileDirty} />
+            ) : activeSectionId === "account" && activeSubTabId === "account" ? (
+              <ProfileSettings onDirtyChange={handleReminderProfileDirty} />
             ) : (
               <ActiveComponent />
             )

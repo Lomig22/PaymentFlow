@@ -28,8 +28,29 @@ type Receivable = {
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
-  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || Deno.env.get("SERVICE_ROLE_KEY")!
 );
+
+// Garde anti-doublon: vérifie s'il existe déjà une relance de même niveau créée récemment
+async function hasRecentReminder(
+  receivableId: string,
+  level: string | null,
+  windowMs: number = 3 * 60 * 1000
+): Promise<boolean> {
+  if (!level) return false;
+  const since = new Date(Date.now() - windowMs).toISOString();
+  const { count, error } = await supabase
+    .from("reminders")
+    .select("id", { count: "exact", head: true })
+    .eq("receivable_id", receivableId)
+    .eq("reminder_type", level)
+    .gt("reminder_date", since);
+  if (error) {
+    console.warn("hasRecentReminder error", error);
+    return false;
+  }
+  return (count ?? 0) > 0;
+}
 function convertJHMToMinutes(
   jhm: { j?: number; h?: number; m: number } | undefined
 ): number {
@@ -272,11 +293,16 @@ export async function sendManualReminder(
     );
     if (!level || !template) return false;
 
+    // Anti-doublon: si une relance identique vient d'être créée, ne pas renvoyer
+    if (await hasRecentReminder(receivableId, level, 3 * 60 * 1000)) {
+      console.log("Skip duplicate auto reminder", { receivableId, level });
+      return false;
+    }
+
     // Formater le contenu de l'e-mail
     const emailContent = formatTemplate(template, {
       company: receivable.client.company_name,
       amount: receivable.amount,
-      invoice_number: receivable.invoice_number,
       due_date: receivable.due_date,
       days_late: daysLate || 0,
       days_left: Math.max(0, -1 * daysLate),

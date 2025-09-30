@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { AlertCircle, Save } from 'lucide-react';
 import { useAbonnement } from "../context/AbonnementContext";
 
-export default function ProfileSettings() {
+export default function ProfileSettings({ onDirtyChange }: { onDirtyChange?: (dirty: boolean) => void }) {
   const { checkAbonnement } = useAbonnement();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -15,6 +15,8 @@ export default function ProfileSettings() {
     company: '',
     phone: ''
   });
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const initialRef = useRef<{ email: string; name: string; company: string; phone: string } | null>(null);
   const handleClick = () => {
     if (!checkAbonnement()) return;
     console.log("Action autorisée !");
@@ -30,6 +32,23 @@ export default function ProfileSettings() {
   useEffect(() => {
     loadProfile();
   }, []);
+
+  // Propager l'état dirty vers le parent (Settings)
+  useEffect(() => {
+    onDirtyChange?.(hasUnsavedChanges);
+  }, [hasUnsavedChanges, onDirtyChange]);
+
+  // Avertissement si on quitte la page avec des changements non enregistrés
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
 
   const loadProfile = async () => {
     try {
@@ -51,6 +70,14 @@ export default function ProfileSettings() {
           company: data.company || '',
           phone: data.phone || ''
         });
+        initialRef.current = {
+          email: data.email || '',
+          name: data.name || '',
+          company: data.company || '',
+          phone: data.phone || ''
+        };
+        setHasUnsavedChanges(false);
+        onDirtyChange?.(false);
       }
     } catch (error) {
       console.error('Erreur lors du chargement du profil:', error);
@@ -58,6 +85,20 @@ export default function ProfileSettings() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const computeDirty = (next: { email: string; name: string; company: string; phone: string }) => {
+    const init = initialRef.current;
+    if (!init) {
+      setHasUnsavedChanges(true);
+      return;
+    }
+    const dirty =
+      init.email !== next.email ||
+      init.name !== next.name ||
+      init.company !== next.company ||
+      init.phone !== next.phone;
+    setHasUnsavedChanges(dirty);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -83,6 +124,9 @@ export default function ProfileSettings() {
 
       if (error) throw error;
       setSuccess(true);
+      // Réinitialise l'état dirty après sauvegarde
+      initialRef.current = { ...formData };
+      setHasUnsavedChanges(false);
     } catch (error) {
       console.error('Erreur lors de la sauvegarde:', error);
       showError('Impossible de sauvegarder le profil');
@@ -124,7 +168,11 @@ export default function ProfileSettings() {
           <input
             type="email"
             value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            onChange={(e) => {
+              const next = { ...formData, email: e.target.value };
+              setFormData(next);
+              computeDirty(next);
+            }}
             className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             required
           />
@@ -137,7 +185,11 @@ export default function ProfileSettings() {
           <input
             type="text"
             value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            onChange={(e) => {
+              const next = { ...formData, name: e.target.value };
+              setFormData(next);
+              computeDirty(next);
+            }}
             className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
@@ -149,7 +201,11 @@ export default function ProfileSettings() {
           <input
             type="text"
             value={formData.company}
-            onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+            onChange={(e) => {
+              const next = { ...formData, company: e.target.value };
+              setFormData(next);
+              computeDirty(next);
+            }}
             className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
@@ -161,7 +217,11 @@ export default function ProfileSettings() {
           <input
             type="tel"
             value={formData.phone}
-            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+            onChange={(e) => {
+              const next = { ...formData, phone: e.target.value };
+              setFormData(next);
+              computeDirty(next);
+            }}
             className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>

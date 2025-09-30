@@ -1,9 +1,8 @@
-import { useMemo, useEffect, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Reminder } from '../../types/database';
 import { X } from 'lucide-react';
 import { decodeReminderStatus } from '../../lib/decodeReminderStatus';
-import { supabase } from '../../lib/supabase';
-import EmailOpenTester from './EmailOpenTester';
+import { useReminderOpenStatus } from '../../hooks/useReminderOpenStatus';
 
 type ReminderHistoryProps = {
 	receivableId: string;
@@ -11,82 +10,25 @@ type ReminderHistoryProps = {
 	onClose: () => void;
 };
 
-const ReminderHistory = ({
+function ReminderHistory({
 	receivableId,
 	reminders,
 	onClose,
-}: ReminderHistoryProps) => {
+}: ReminderHistoryProps) {
+	// Maintient une copie locale rafraîchie des rappels pour cette créance
+	const [liveReminders, setLiveReminders] = useState<Reminder[]>(() =>
+		(reminders || []).filter((r) => r.receivable_id === receivableId)
+	);
+
 	const filteredReminders = useMemo(() => {
-		return reminders.filter(
+		return (liveReminders || []).filter(
 			(reminder) => reminder.receivable_id === receivableId
 		);
-	}, [reminders, receivableId]);
+	}, [liveReminders, receivableId]);
 
 	const [openStatus, setOpenStatus] = useState<Record<string, boolean | null>>({});
-	const [receivableEmailId, setReceivableEmailId] = useState<string | null>(null);
 
-	useEffect(() => {
-		let cancelled = false;
-		let interval: number | null = null;
-
-		// Charger l'email_id au niveau de la créance pour fallback
-		const fetchReceivableEmailId = async () => {
-			const { data } = await supabase
-				.from('receivables')
-				.select('email_id')
-				.eq('id', receivableId)
-				.single();
-			if (!cancelled) setReceivableEmailId(data?.email_id ?? null);
-		};
-
-		const fetchOpenStatus = async () => {
-			const status: Record<string, boolean | null> = {};
-			if (filteredReminders.length === 0) {
-				if (!cancelled) setOpenStatus(status);
-				return;
-			}
-
-			// Renseigner par défaut Non suivi lorsqu'il n'y a pas d'email_id
-			const emailIdSet = new Set<string>();
-			for (const r of filteredReminders) {
-				if (r.email_id) emailIdSet.add(r.email_id);
-			}
-			if (receivableEmailId) emailIdSet.add(receivableEmailId);
-			const emailIds = Array.from(emailIdSet);
-
-			// Pré-remplir Non suivi pour ceux sans email_id
-			for (const r of filteredReminders) {
-				if (!r.email_id && !receivableEmailId) status[r.id] = null;
-			}
-
-			if (emailIds.length > 0) {
-				const { data, error } = await supabase
-					.from('email_opens')
-					.select('email_id')
-					.in('email_id', emailIds);
-				if (cancelled) return;
-				if (!error && data) {
-					const opened = new Set<string>(data.map((d: any) => d.email_id));
-					for (const r of filteredReminders) {
-						const idToCheck = r.email_id || receivableEmailId || null;
-						if (!idToCheck) continue;
-						status[r.id] = opened.has(idToCheck);
-					}
-				}
-			}
-
-			if (!cancelled) setOpenStatus(status);
-		};
-
-		// Appel initial + polling toutes les 5 secondes
-		fetchReceivableEmailId().then(fetchOpenStatus);
-		interval = window.setInterval(fetchOpenStatus, 5000);
-
-		return () => {
-			cancelled = true;
-			if (interval) window.clearInterval(interval);
-		};
-	}, [filteredReminders, receivableId]);
+	useReminderOpenStatus(receivableId, setLiveReminders, setOpenStatus);
 
 	return (
 		<div className='fixed inset-0 bg-gray-600 bg-opacity-50 z-50 overflow-y-scroll'>
@@ -112,9 +54,6 @@ const ReminderHistory = ({
 									<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
 										Ouverture Email
 									</th>
-									<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-										Test
-									</th>
 								</tr>
 							</thead>
 							<tbody className='bg-white divide-y divide-gray-200'>
@@ -129,21 +68,12 @@ const ReminderHistory = ({
 										<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
 											{openStatus[record.id] === undefined ? '...' : openStatus[record.id] === null ? 'Non suivi' : openStatus[record.id] ? 'Ouvert' : 'Non ouvert'}
 										</td>
-										<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
-											{record.email_id || receivableEmailId ? (
-												<EmailOpenTester
-													emailId={record.email_id || receivableEmailId!}
-												/>
-											) : (
-												<span className='text-gray-400'>—</span>
-											)}
-										</td>
 									</tr>
 								))}
 								{filteredReminders.length === 0 && (
 									<tr>
 										<td
-											colSpan={4}
+											colSpan={3}
 											className='px-6 py-4 text-center text-gray-500'
 										>
 											Aucune relance trouvée
@@ -157,6 +87,6 @@ const ReminderHistory = ({
 			</div>
 		</div>
 	);
-};
+}
 
 export default ReminderHistory;

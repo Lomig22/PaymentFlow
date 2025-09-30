@@ -227,19 +227,24 @@ export default function ReceivableEditForm({
         const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
         invoicePath = `${supabaseUrl}/storage/v1/object/public/invoices/${filePath}`;
       }
+      // Whitelist stricte des colonnes de la table receivables
+      const receivableUpdatePayload = {
+        invoice_number: formData.invoice_number,
+        amount: parseFloat(formData.amount),
+        paid_amount: formData.paid_amount ? parseFloat(formData.paid_amount) : 0,
+        document_date: formData.document_date || null,
+        due_date: formData.due_date,
+        installment_number: formData.installment_number || null,
+        status: formData.status,
+        invoice_pdf_url: invoicePath ? invoicePath : undefined,
+        notes: formData.notes,
+        email: formData.email,
+        updated_at: new Date().toISOString(),
+      } as const;
+
       const { data, error } = await supabase
         .from("receivables")
-        .update({
-          ...formData,
-          amount: parseFloat(formData.amount),
-          paid_amount: formData.paid_amount
-            ? parseFloat(formData.paid_amount)
-            : 0,
-          document_date: formData.document_date || null,
-          installment_number: formData.installment_number || null,
-          invoice_pdf_url: invoicePath ? invoicePath : undefined,
-          updated_at: new Date().toISOString(),
-        })
+        .update(receivableUpdatePayload)
         .eq("id", receivable.id)
         .select("*, client:clients(*)")
         .single();

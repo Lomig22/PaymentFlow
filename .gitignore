@@ -26,3 +26,12 @@ node_modules_save
 supabase/functions/node_modules
 # Local Netlify folder
 .netlify
+
+# Supabase CLI temporary state (do not commit)
+supabase/.temp/
+
+# Supabase CLI binaries and archives (do not commit)
+supabase-cli/
+
+# Edge Functions environment files (do not commit)
+supabase/functions/**/.env

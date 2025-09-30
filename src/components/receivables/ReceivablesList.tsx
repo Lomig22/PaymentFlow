@@ -1664,7 +1664,7 @@ return issues.join(", ");
       <Tooltip
         label={(remindersEnabled(receivable.client) || canPlayDirect(receivable)) ? 'Activer les relances' : "Aucune relance n'est activée pour ce client"}
         theme="orange"
-        key="play"
+        key={`play-${receivable.id}`}
       >
         <button
           type="button"
@@ -1674,7 +1674,7 @@ return issues.join(", ");
           style={{ fontSize: '1.2rem' }}
         >
           <motion.span
-            key="play-icon"
+            key={`play-icon-${receivable.id}`}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
@@ -1686,7 +1686,7 @@ return issues.join(", ");
         </button>
       </Tooltip>
     ) : (
-      <Tooltip label="Mettre en pause" theme="green" key="pause">
+      <Tooltip label="Mettre en pause" theme="green" key={`pause-${receivable.id}`}>
         <button
           type="button"
           className="flex items-center justify-center rounded-full w-8 h-8 bg-orange-500 hover:bg-orange-600 text-white transition focus:outline-none"
@@ -1694,7 +1694,7 @@ return issues.join(", ");
           style={{ fontSize: '1.2rem' }}
         >
           <motion.span
-            key="pause-icon"
+            key={`pause-icon-${receivable.id}`}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}

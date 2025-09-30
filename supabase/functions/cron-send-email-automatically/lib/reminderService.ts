@@ -1,6 +1,6 @@
-import { supabase } from './supabase';
-import { Receivable, Client } from '../types/database';
-import { sendEmail } from './email';
+import { supabase } from './supabase.ts';
+import { Receivable, Client } from '../types/database.ts';
+import { sendEmail } from './email.ts';
 
 interface EmailSettings {
 	provider_type: string;
@@ -104,7 +104,6 @@ export function determineReminderLevel(
 	if (status === 'Relance préventive' && client.reminder_template_1 )
 		return { level: 'first', template: client.reminder_template_1 };
 	if (status ==='pending' && client.pre_reminder_template && daysLate<=0){
-		alert("pending")
 		return { level: 'pre', template: client.pre_reminder_template }; 
 	}
 	// Si aucun statut de relance encore, on peut proposer un pré-reminder
@@ -182,10 +181,9 @@ export async function sendOneReminder(receivableId: string): Promise<boolean> {
 		if (receivableError) throw receivableError;
 		if (!receivable) return false;
 
-		const { data: { user } } = await supabase.auth.getUser();
-		if (!user) return false;
-
-		const emailSettings = await getEmailSettings(user.id);
+		// En contexte Edge (cron), il n'y a pas d'utilisateur authentifié.
+		// On utilise l'owner de la créance pour récupérer les paramètres d'email.
+		const emailSettings = await getEmailSettings(receivable.owner_id);
 		if (!emailSettings) return false;
 
 		const dueDate = new Date(receivable.due_date);
@@ -244,21 +242,27 @@ export async function sendOneReminder(receivableId: string): Promise<boolean> {
 			days_left: Math.max(0, -1 * daysLate),
 		});
 
+		// Générer et propager un emailTrackingId pour le pixel d'ouverture
+		const autoEmailTrackingId = crypto.randomUUID();
+
 		const emailSent = await sendEmail(
 			emailSettings,
 			receivable.client.email,
 			`Relance facture ${receivable.invoice_number}`,
 			emailContent,
-			receivable.invoice_pdf_url
+			receivable.invoice_pdf_url,
+			autoEmailTrackingId
 		);
 
 		if (emailSent) {
+			// Enregistrer la relance avec email_id, pour activer le suivi d'ouverture
 			await supabase.from('reminders').insert({
 				receivable_id: receivableId,
 				reminder_type: level,
 				reminder_date: new Date().toISOString(),
 				email_sent: true,
 				email_content: emailContent,
+				email_id: autoEmailTrackingId,
 			});
 
 			await supabase
@@ -276,6 +280,7 @@ export async function sendOneReminder(receivableId: string): Promise<boolean> {
 							: level === 'pre'
 							? 'Relance préventive'
 							: 'Relance',
+					email_id: autoEmailTrackingId,
 					updated_at: new Date().toISOString(),
 				})
 				.eq('id', receivableId);
@@ -342,7 +347,7 @@ export async function AutomaticallySendReminders(): Promise<void> {
 			if (shouldSendReminder(receivable)) {
 				console.log("SEND REMINDERS FORM RECEIVABLE"+receivable.client.company_name+" WITH CURRENT STATUS "+receivable.status);
 				
-				await sendManualReminder(receivable.id);
+				await sendOneReminder(receivable.id);
 			}
 		
 		}

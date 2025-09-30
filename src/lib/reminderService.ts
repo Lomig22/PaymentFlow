@@ -262,6 +262,20 @@ export async function sendManualReminder(
 		);
 		if (!level || (!template && !content)) return false;
 
+		// Anti-doublon: si une relance identique vient d'être créée récemment, ne pas renvoyer
+		try {
+			const sinceIso = new Date(Date.now() - 3 * 60 * 1000).toISOString();
+			const { count: dupCount, error: dupErr } = await supabase
+				.from('reminders')
+				.select('id', { count: 'exact', head: true })
+				.eq('receivable_id', receivableId)
+				.eq('reminder_type', level)
+				.gt('reminder_date', sinceIso);
+			if (!dupErr && (dupCount ?? 0) > 0) {
+				return false;
+			}
+		} catch {}
+
 		// ✅ Générer le contenu personnalisé ou utiliser le template par défaut
 		console.log("content: ",content)
 
