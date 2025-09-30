@@ -92,7 +92,7 @@ export default function LoginPage() {
     try {
       const qs = new URLSearchParams(location.search);
       const hasOnboarding = qs.get("onboarding") === "1";
-      const redirectBase = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+      const redirectBase = `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard`;
       const redirectTo = hasOnboarding ? `${redirectBase}?onboarding=1` : redirectBase;
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
