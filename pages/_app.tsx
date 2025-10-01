@@ -7,11 +7,35 @@ import CalendlyAndChatlingLoader from "../src/components/CalendlyAndChatlingLoad
 import { AbonnementProvider } from "../src/components/context/AbonnementContext";
 import AppWithMFA from "../src/App";
 import { User } from "@supabase/supabase-js";
-import { UserProvider } from "../components/context/UserContext";
+import { UserProvider, useUser } from "../components/context/UserContext";
 import AppHeader from "../components/AppHeader";
+import Layout from "../components/Layout";
+
+interface AppContentProps {
+    Component: any;
+    pageProps: any;
+}
+
+function AppContent({ Component, pageProps }: AppContentProps) {
+    const { user } = useUser();
+
+    if (user) {
+        return (
+            <Layout>
+                <Component {...pageProps} />
+            </Layout>
+        );
+    }
+
+    return (
+        <>
+            <AppHeader user={user} onContactClick={() => { }} />
+            <Component {...pageProps} />
+        </>
+    );
+}
 
 function MyApp({ Component, pageProps }: AppProps) {
-    const [user, setUser] = useState<User | null>(null);
     useEffect(() => {
         if (!window.__pfErrorListenerAdded) {
             window.__pfErrorListenerAdded = true;
@@ -36,8 +60,7 @@ function MyApp({ Component, pageProps }: AppProps) {
                 <CalendlyAndChatlingLoader />
                 <AbonnementProvider>
                     <UserProvider>
-                        {!user && <AppHeader user={user} onContactClick={() => { }} />}
-                        <Component {...pageProps} />
+                        <AppContent Component={Component} pageProps={pageProps} />
                     </UserProvider>
                 </AbonnementProvider>
             </MantineProvider>
