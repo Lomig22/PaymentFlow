@@ -37,6 +37,25 @@
     "pages/blog/communication/index.tsx",
     "pages/blog/manufacture/index.tsx",
     "pages/blog/index.tsx",
-    "pages/blog/optimisation-relance/index.tsx"
+    "pages/blog/optimisation-relance/index.tsx",
+    "pages/clients/index.tsx",
+    "pages/receivables/index.tsx",
+    "pages/reminder-profiles/index.tsx",
+    "pages/settings/index.tsx",
+    "pages/settings/EmailSettings.tsx",
+    "pages/forgot-password/index.tsx",
+    "components/Footer.tsx",
+    "pages/pricing/index.tsx",
+    "pages/crm/index.tsx",
+    "pages/mentions-legales/index.tsx",
+    "pages/help/index.tsx",
+    "pages/reporting-recouvrement/index.tsx",
+    "pages/simulateur-dso/index.tsx",
+    "pages/personnalisation/index.tsx",
+    "pages/privacy/index.tsx",
+    "pages/conditions-utilisation/index.tsx",
+    "pages/paiement-abonnement/index.tsx",
+    "pages/success/index.tsx",
+    "pages/reminders/index.tsx"
   ]
 }

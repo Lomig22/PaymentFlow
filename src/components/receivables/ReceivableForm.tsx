@@ -161,7 +161,7 @@ export default function ReceivableForm({
         if (uploadError) {
           throw uploadError;
         }
-        const supabaseUrl = process.env.NEXT_SUPABASE_URL;
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
         invoicePath = `${supabaseUrl}/storage/v1/object/public/invoices/${user.id}/${uploadedFile.name}`;
       }
       // Si c'est un nouveau client, le créer d'abord

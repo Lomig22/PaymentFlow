@@ -1,57 +1,49 @@
-import React from 'react';
+import { Users, MessageSquare, Database, BarChart } from 'lucide-react';
+import Footer from '../../components/Footer';
+import CrmIntro from '../../src/components/CrmIntro';
 import { Helmet } from 'react-helmet';
-import { BarChart3, PieChart, TrendingUp, FileSpreadsheet } from 'lucide-react';
-import Footer from '../components/Footer';
+
 import Link from 'next/link';
 
-const ReportingRecouvrement = () => {
+const CrmPage = () => {
   return (
-    <React.Fragment>
+    <>
       <Helmet>
-        <title>Reporting recouvrement | Payment Flow</title>
-        <meta name="description" content="Visualisez vos performances de recouvrement avec des tableaux de bord et analyses avancées sur Payment Flow." />
+        <title>CRM de recouvrement | Payment Flow</title>
+        <meta name="description" content="Centralisez vos interactions clients et optimisez le recouvrement avec le CRM Payment Flow." />
       </Helmet>
       <div className="min-h-screen bg-gray-50">
+        {/* CRM Immersive Intro Section */}
+        <CrmIntro onScrollToDemo={() => {
+          const demo = document.getElementById('crm-demo-section');
+          if (demo) {
+            demo.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }} />
         {/* Hero Section */}
         <div className="bg-white py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center">
               <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                Reporting de Recouvrement
+                CRM de Recouvrement
               </h1>
               <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                Optimisez votre gestion de recouvrement grâce à des tableaux de bord détaillés et des analyses approfondies
+                Centralisez vos interactions clients et optimisez votre processus de recouvrement avec notre CRM spécialisé
               </p>
             </div>
           </div>
         </div>
 
         {/* Demo Section */}
-        <div className="py-12 bg-white">
+        <div id="crm-demo-section" className="py-12 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="mb-8 flex flex-col md:flex-row items-center justify-center gap-6">
-              {/* Icônes interactives */}
-              <div className="grid grid-cols-2 grid-rows-2 gap-4 md:gap-6 items-center justify-items-center">
-                <BarChart3 className="w-10 h-10 text-blue-600 transition-transform duration-300 hover:scale-110 hover:text-blue-800 cursor-pointer" aria-label="Tableaux de bord" />
-                <PieChart className="w-10 h-10 text-blue-500 transition-transform duration-300 hover:scale-110 hover:text-blue-700 cursor-pointer" aria-label="Analyse graphique" />
-                <TrendingUp className="w-10 h-10 text-green-600 transition-transform duration-300 hover:scale-110 hover:text-green-800 cursor-pointer" aria-label="Tendances" />
-                <FileSpreadsheet className="w-10 h-10 text-yellow-500 transition-transform duration-300 hover:scale-110 hover:text-yellow-700 cursor-pointer" aria-label="Export de rapports" />
-              </div>
-              {/* Texte d’intro */}
-              <div className="text-center md:text-left">
-                <h2 className="text-2xl font-bold text-gray-800 mb-2">Découvrez la puissance du reporting interactif</h2>
-                <p className="text-gray-600 max-w-2xl mx-auto md:mx-0">
-                  Visualisez en temps réel comment PaymentFlow transforme vos données de recouvrement en tableaux de bord dynamiques et intuitifs. Cette démonstration vous permet d'explorer les fonctionnalités clés et de comprendre comment optimiser votre gestion grâce à des analyses avancées.
-                </p>
-              </div>
-            </div>
             <div>
               <script async src="https://js.storylane.io/js/v2/storylane.js"></script>
               <div className="sl-embed" style={{ position: 'relative', paddingBottom: 'calc(43.71% + 25px)', width: '100%', height: 0, transform: 'scale(1)' }}>
                 <iframe
                   loading="lazy"
                   className="sl-demo"
-                  src="https://app.storylane.io/demo/v5yqrknolcgj?embed=inline"
+                  src="https://app.storylane.io/demo/gfhhbkzljhts?embed=inline"
                   name="sl-embed"
                   allow="fullscreen"
                   allowFullScreen
@@ -79,52 +71,52 @@ const ReportingRecouvrement = () => {
               {/* Feature 1 */}
               <div className="bg-white p-6 rounded-lg shadow-sm">
                 <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-                  <BarChart3 className="w-6 h-6 text-blue-600" />
+                  <Users className="w-6 h-6 text-blue-600" />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  Tableaux de Bord Personnalisables
+                  Gestion des Contacts
                 </h3>
                 <p className="text-gray-600">
-                  Créez des tableaux de bord sur mesure pour suivre vos KPIs de recouvrement et visualiser vos performances en temps réel.
+                  Centralisez toutes les informations de vos clients et suivez l'historique complet de vos interactions pour un recouvrement plus efficace.
                 </p>
               </div>
 
               {/* Feature 2 */}
               <div className="bg-white p-6 rounded-lg shadow-sm">
                 <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-                  <TrendingUp className="w-6 h-6 text-blue-600" />
+                  <MessageSquare className="w-6 h-6 text-blue-600" />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  Analyse des Tendances
+                  Communication Intégrée
                 </h3>
                 <p className="text-gray-600">
-                  Identifiez les tendances de paiement et anticipez les comportements clients grâce à nos outils d'analyse avancés.
+                  Gérez tous vos échanges emails et suivez les relances directement depuis l'interface, avec des modèles personnalisables.
                 </p>
               </div>
 
               {/* Feature 3 */}
               <div className="bg-white p-6 rounded-lg shadow-sm">
                 <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-                  <PieChart className="w-6 h-6 text-blue-600" />
+                  <Database className="w-6 h-6 text-blue-600" />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  Segmentation des Créances
+                  Base de Données Centralisée
                 </h3>
                 <p className="text-gray-600">
-                  Analysez votre portefeuille de créances par âge, montant, secteur et bien d'autres critères pour optimiser vos actions.
+                  Accédez à toutes vos données clients, factures et historiques de paiement en un seul endroit sécurisé.
                 </p>
               </div>
 
               {/* Feature 4 */}
               <div className="bg-white p-6 rounded-lg shadow-sm">
                 <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-                  <FileSpreadsheet className="w-6 h-6 text-blue-600" />
+                  <BarChart className="w-6 h-6 text-blue-600" />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  Export de Rapports
+                  Suivi des Performances
                 </h3>
                 <p className="text-gray-600">
-                  Générez et exportez des rapports détaillés au format Excel ou PDF pour partager facilement vos analyses.
+                  Mesurez l'efficacité de vos actions de recouvrement avec des indicateurs clés et des tableaux de bord personnalisés.
                 </p>
               </div>
             </div>
@@ -135,23 +127,24 @@ const ReportingRecouvrement = () => {
         <div className="bg-blue-600 py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h2 className="text-3xl font-bold text-white mb-4">
-              Prêt à optimiser votre recouvrement ?
+              Prêt à améliorer votre relation client ?
             </h2>
             <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
-              Découvrez comment PaymentFlow peut vous aider à améliorer votre performance de recouvrement.
+              Découvrez comment notre CRM peut transformer votre processus de recouvrement.
             </p>
             <Link
-              className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors"
               href={'/signup'}
+              className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors"
             >
               Commencer maintenant
             </Link>
           </div>
         </div>
+        <div style={{ height: '0.5cm' }} />
+        <Footer />
       </div>
-      <Footer />
-    </React.Fragment>
+    </>
   );
 };
 
-export default ReportingRecouvrement;
+export default CrmPage;

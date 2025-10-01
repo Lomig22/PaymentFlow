@@ -606,12 +606,12 @@ export default function Layout({ children }: LayoutProps) {
           <header className="p-4 border-b flex justify-end items-center gap-4">
             <AbonnementInfo />
 
-            <a
+            <Link
               href="/pricing"
               className="text-sm text-blue-600 bg-blue-50 px-3 py-1 rounded-full hover:bg-blue-100 transition font-medium shadow-sm"
             >
               Voir les tarifs
-            </a>
+            </Link>
           </header>
 
           <div className={`transition-all duration-200 ${isExpanded ? 'pl-64' : 'pl-24'}`}>

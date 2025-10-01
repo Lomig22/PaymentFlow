@@ -4,7 +4,7 @@ import { Client, Receivable } from "../../types/database";
 import { X, Upload, FileUp } from "lucide-react";
 import Swal from "sweetalert2";
 import { sendEmail } from "../../lib/email";
-import Settings from "../settings/Settings";
+import Settings from "../../../pages/settings";
 import { getEmailSettings } from "../../lib/reminderService";
 
 interface ReceivableEditFormProps {
@@ -224,7 +224,7 @@ export default function ReceivableEditForm({
           throw uploadError;
         }
 
-        const supabaseUrl = process.env.NEXT_SUPABASE_URL;
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
         invoicePath = `${supabaseUrl}/storage/v1/object/public/invoices/${filePath}`;
       }
       const { data, error } = await supabase

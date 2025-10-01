@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "../lib/supabase";
+import { supabase } from "../../src/lib/supabase";
 
 export default function SuccessPage() {
   const [error, setError] = useState<string | null>(null);

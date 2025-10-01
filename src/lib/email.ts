@@ -10,8 +10,8 @@ interface EmailSettings {
 
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from './supabase';
-const supabaseUrl: string = process.env.NEXT_SUPABASE_URL ?? "";
-const supabaseAnonKey: string = process.env.NEXT_SUPABASE_ANON_KEY ?? "";
+const supabaseUrl: string = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+const supabaseAnonKey: string = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
 
 export const sendEmail = async (
 	settings: EmailSettings,

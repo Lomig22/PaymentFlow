@@ -8,7 +8,7 @@ import { useUser } from "../components/context/UserContext";
 
 function clearSupabaseAuthOnly() {
   try {
-    const supabaseUrl = process.env.NEXT_SUPABASE_URL as string;
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
     const host = new URL(supabaseUrl).host;
     // Supprimer uniquement les clés d'auth Supabase locales
     localStorage.removeItem(`paymentflow-auth:${host}`);

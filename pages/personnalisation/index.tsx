@@ -1,13 +1,13 @@
 import { CheckCircle, Mail, Smartphone, UserCog, Users } from "lucide-react";
 import React from "react";
 
-import PersonnalisationSectorCards from "../components/PersonnalisationSectorCards";
-import RelanceProfileSlider from "../components/RelanceProfileSlider";
-import RelanceInfographie from "../components/RelanceInfographie";
-import PersonnalisationTestimonial from "../components/PersonnalisationTestimonial";
-import PersonnalisationDemoGif from "../components/PersonnalisationDemoGif";
-import PersonnalisationIconsRow from "../components/PersonnalisationIconsRow";
-import Footer from "../components/Footer";
+import PersonnalisationSectorCards from "../../src/components/PersonnalisationSectorCards";
+import RelanceProfileSlider from "../../src/components/RelanceProfileSlider";
+import RelanceInfographie from "../../src/components/RelanceInfographie";
+import PersonnalisationTestimonial from "../../src/components/PersonnalisationTestimonial";
+import PersonnalisationDemoGif from "../../src/components/PersonnalisationDemoGif";
+import PersonnalisationIconsRow from "../../src/components/PersonnalisationIconsRow";
+import Footer from "../../components/Footer";
 
 import Link from "next/link";
 

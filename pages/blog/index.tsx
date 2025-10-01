@@ -11,7 +11,7 @@ interface BlogPageProps {
   setDefaultSubject: React.Dispatch<React.SetStateAction<string>>;
 }
 
-import Footer from "../../src/components/Footer";
+import Footer from "../../components/Footer";
 import Link from "next/link";
 
 const BlogPage: React.FC<BlogPageProps> = ({ setShowContact, setDefaultSubject }) => {

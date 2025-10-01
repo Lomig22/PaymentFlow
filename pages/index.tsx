@@ -2,6 +2,8 @@ import { GetServerSideProps } from "next";
 import { useUser } from "../components/context/UserContext";
 import LandingPage from "./landing/LandingPage";
 import AppHeader from "../components/AppHeader";
+import { useRouter } from "next/router";
+import { useEffect } from "react";
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
     const token = context.req.cookies.token;
@@ -18,14 +20,14 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 };
 
 export default function Home() {
-    // const router = useRouter();
+    const router = useRouter();
     const { user, isLoading } = useUser();
 
-    // useEffect(() => {
-    //     if (!isLoading && user) {
-    //         // Redirect logged-in user to dashboard
-    //         router.replace("/dashboard");
-    //     }
-    // }, [user, isLoading, router]);
+    useEffect(() => {
+        if (!isLoading && user) {
+            // Redirect logged-in user to dashboard
+            router.replace("/dashboard");
+        }
+    }, [user, isLoading, router]);
     return <LandingPage onGetStarted={() => { }} />;
 }

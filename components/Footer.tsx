@@ -11,7 +11,7 @@ import {
   CheckCircle,
   ChevronRight,
 } from "lucide-react";
-import ContactModal from "../../pages/landing/ContactModal";
+import ContactModal from "../pages/landing/ContactModal";
 
 // Animation variants (déplacés hors du composant)
 const fadeInScale = {

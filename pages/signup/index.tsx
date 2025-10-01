@@ -236,7 +236,7 @@ export default function SignupPage() {
     }
     const payload = {
       price_id: priceMap[plan as keyof typeof priceMap][interval as "monthly" | "yearly"],
-      success_url: window.location.origin + "/paiement-abonement",
+      success_url: window.location.origin + "/paiement-abnonement",
       cancel_url: window.location,
     };
 

@@ -5,7 +5,7 @@ import { FaUserCog, FaPhoneAlt, FaClock, FaShareAlt, FaHandshake, FaCheckCircle,
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { ShareButtons } from '../../../src/components/blog/BlogEnrichmentBlocks';
-import Footer from '../../../src/components/Footer';
+import Footer from '../../../components/Footer';
 
 const accentColor = "#2563eb"; // bleu Payment Flow
 const navy = "#1e293b"; // bleu foncé Payment Flow (ex: text-blue-900)

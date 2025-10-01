@@ -5,37 +5,9 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-import DashboardRedirect from "./components/DashboardRedirect";
-import SignupPage from "../pages/signup";
-import LoginPage from "../pages/login";
-import ForgotPassword from "./pages/ForgotPassword";
-import PricingPage from "./pages/PricingPage";
-import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
-import LegalNoticePage from "./pages/LegalNoticePage";
-import TermsOfUsePage from "./pages/TermsOfUsePage";
-import BlogPage from "../pages/blog";
-import BlogGarage from "../pages/blog/garage";
-import BlogManufacture from "../pages/blog/manufacture";
-import BlogCommunication from "../pages/blog/communication";
-import BlogComptableBanque from "./pages/BlogComptableBanque";
-import BlogOptimisationRelance from "../pages/blog/optimisation-relance";
-import Layout from "../components/Layout";
-import Dashboard from "./components/Dashboard";
-import ClientPage from "../pages/clients";
-import ReceivablesList from "../pages/receivables";
 import ReceivableForm from "./components/receivables/ReceivableForm";
-import Settings from "./components/settings/Settings";
-import ReminderProfilesPage from "./components/ReminderProfilesPage";
-import ReminderList from "./components/reminders/ReminderList";
-import HelpAndSupport from "./pages/HelpAndSupport";
-import SuccessStoriesPage from "../pages/temoignages";
-import AbonnementSuccess from "./pages/success";
-import Success from "./components/settings/paymentSuccess";
+import ReminderList from "../pages/reminders";
 import AppHeader from "../components/AppHeader";
-import ReportingRecouvrement from "./pages/ReportingRecouvrement";
-import CrmPage from "./pages/CrmPage";
-import DSOSimulator from "./pages/DSOSimulator";
-import Personnalisation from "./pages/Personnalisation";
 
 import { User } from "@supabase/supabase-js";
 import AuthMFA from "./components/AuthMFA";
@@ -59,67 +31,18 @@ export default function AppRoutes({ user, onMFASuccess }: AppRoutesProps) {
 
       <Routes>
         {/* Routes publiques */}
-        <Route path="/help" element={<HelpAndSupport />} />
-        <Route path="/temoignages" element={<SuccessStoriesPage />} />
         {/* /subscribe route removed (SubscribePage absent) */}
-        <Route
-          path="/reporting-recouvrement"
-          element={<ReportingRecouvrement />}
-        />
-        <Route path="/crm" element={<CrmPage />} />
-        <Route path="/simulateur-dso" element={<DSOSimulator />} />
-        <Route path="/personnalisation" element={<Personnalisation />} />
-        <Route path="/paiement-abonement" element={<AbonnementSuccess />} />
-        <Route
-          path="/signup"
-          element={
-            !user ? <SignupPage /> : <Navigate to="/dashboard" replace />
-          }
-        />
-        <Route
-          path="/login"
-          element={!user ? <LoginPage /> : <Navigate to={{ pathname: "/dashboard", search: onboardingSuffix, hash }} replace />}
-        />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/pricing" element={<PricingPage setShowContact={() => { }} setDefaultSubject={() => { }} />} />
-        <Route path="/privacy" element={<PrivacyPolicyPage />} />
-        <Route path="/mentions-legales" element={<LegalNoticePage />} />
-        <Route path="/conditions-utilisation" element={<TermsOfUsePage />} />
-        <Route
-          path="/blog"
-          element={
-            <BlogPage setShowContact={() => { }} setDefaultSubject={() => { }} />
-          }
-        />
-        <Route path="/blog-garage" element={<BlogGarage />} />
-        <Route path="/blog-manufacture" element={<BlogManufacture />} />
-        <Route path="/blog-communication" element={<BlogCommunication />} />
-        <Route
-          path="/blog-comptable-banque"
-          element={<BlogComptableBanque />}
-        />
-        <Route path="/blog-optimisation-relance" element={<BlogOptimisationRelance />} />
         <Route path="/reset-password" element={<ResetPassword />} />
 
         {/* Routes protégées */}
         <Route
           path="/"
         >
-          <Route path="dashboard">
-            <Route index element={<DashboardRedirect />} />
-            <Route path=":email" element={<Dashboard />} />
-          </Route>
           <Route
             path="mfa"
             element={<AuthMFA onMFASuccess={onMFASuccess || (() => { })} />}
           />
-          <Route path="clients" element={<ClientPage />} />
-          <Route path="receivables" element={<ReceivablesList />} />
           <Route path="receivables/new" element={<ReceivableForm onClose={() => { }} onReceivableAdded={() => { }} />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/reminder-profiles" element={<ReminderProfilesPage />} />
-          <Route path="reminders" element={<ReminderList />} />
-          <Route path="success" element={<Success />} />
         </Route>
 
         {/* Redirection par défaut */}

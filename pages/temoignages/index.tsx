@@ -2,7 +2,7 @@ import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
-import Footer from "../../src/components/Footer";
+import Footer from "../../components/Footer";
 import ContactModal from "../landing/ContactModal";
 import { useState } from "react";
 

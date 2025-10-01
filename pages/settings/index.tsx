@@ -1,17 +1,17 @@
-import React, { useEffect, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import { Mail, User, Bell, Shield, Users } from "lucide-react";
 import { Elements } from "@stripe/react-stripe-js"; // Importer Elements
 import { loadStripe } from "@stripe/stripe-js"; // Importer loadStripe
 // Composants à créer ou importer
 import EmailSettings from "./EmailSettings";
-import { SecuritySettings} from "./SecuritySettings";
+import { SecuritySettings } from "../../src/components/settings/SecuritySettings";
 //import UserManagementSettings from './UserManagementSettings';
 
 import {
   BillingInfoSettings,
   SubscriptionSettings,
   PaymentMethodSettings,
-} from "./Billing";
+} from "../../src/components/settings/Billing";
 
 /*
 import AutoNotificationSettings from './AutoNotificationSettings';
@@ -23,15 +23,15 @@ import ExternalApiSettings from './ExternalApiSettings';
 import WebhookSettings from './WebhookSettings';
 import ZapierSettings from './ZapierSettings'; */
 
-import NotificationSettings from "./NotificationSettings";
+import NotificationSettings from "../../src/components/settings/NotificationSettings";
 //import ReminderFrequencySettings from './ReminderFrequencySettings';
 
-import UnsavedChangesModal from "./UnsavedChangesModal"; // Modal pour changements non enregistrés
-import ProfileSettings from "./ProfileSettings";
-import SignatureSettings from "./SenderSettings";
-import { useLocation } from "react-router-dom";
-import DeleteAccount from "./DeleteAccount";
-import MemberList from "./MemberList";
+import UnsavedChangesModal from "../../src/components/settings/UnsavedChangesModal"; // Modal pour changements non enregistrés
+import ProfileSettings from "../../src/components/settings/ProfileSettings";
+import SignatureSettings from "../../src/components/settings/SenderSettings";
+import { useRouter } from "next/router";
+import DeleteAccount from "../../src/components/settings/DeleteAccount";
+import MemberList from "../../src/components/settings/MemberList";
 /* 
 import GuideSettings from './GuideSettings';
 import ContactSupportSettings from './ContactSupportSettings';
@@ -111,7 +111,7 @@ const sections = [
   {
     id: "members",
     name: "Gestion des membres",
-    icon: Users, 
+    icon: Users,
     subTabs: [
       {
         id: "list",
@@ -129,8 +129,8 @@ export default function Settings() {
   // --- Ajout pour la gestion des changements non enregistrés ---
   const [unsavedChanges, setUnsavedChanges] = useState(false);
   const [showUnsavedModal, setShowUnsavedModal] = useState(false);
-  const [pendingSectionId, setPendingSectionId] = useState<string|null>(null);
-  const [pendingSubTabId, setPendingSubTabId] = useState<string|null>(null);
+  const [pendingSectionId, setPendingSectionId] = useState<string | null>(null);
+  const [pendingSubTabId, setPendingSubTabId] = useState<string | null>(null);
 
   // Callback pour détecter des changements dans ReminderProfileSettings
   const handleReminderProfileDirty = (dirty: boolean) => {
@@ -151,9 +151,9 @@ export default function Settings() {
     setPendingSubTabId(null);
   };
 
-	const location = useLocation();
-	const initialSectionId = location.state?.initialSectionId;
-	const initialSubTabId = location.state?.initialSubTabId
+  const router = useRouter();
+  const initialSectionId = router.query?.initialSectionId;
+  const initialSubTabId = router.query?.initialSubTabId
   const [activeSectionId, setActiveSectionId] = useState(
     initialSectionId || sections[0]?.id
   );
@@ -168,15 +168,15 @@ export default function Settings() {
   );
   const ActiveComponent =
     activeSubTab?.component || (() => <div>Aucun composant</div>);
- // À chaque changement de location, mettre à jour les états
- useEffect(() => {
-    if (location.state?.initialSectionId) {
-      setActiveSectionId(location.state.initialSectionId);
+  // À chaque changement de location, mettre à jour les états
+  useEffect(() => {
+    if (router.query?.initialSectionId) {
+      setActiveSectionId(router.query.initialSectionId);
     }
-    if (location.state?.initialSubTabId) {
-      setActiveSubTabId(location.state.initialSubTabId);
+    if (router.query?.initialSubTabId) {
+      setActiveSubTabId(router.query.initialSubTabId);
     }
-  }, [location]);
+  }, [router.query]);
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Paramètres</h1>
@@ -197,14 +197,15 @@ export default function Settings() {
                       setPendingSubTabId(section?.subTabs[0]?.id ?? null);
                       return;
                     }
-                    setActiveSectionId(section?.id);
-                    setActiveSubTabId(section?.subTabs[0].id);
+                    if (section) {
+                      setActiveSectionId(section?.id);
+                      setActiveSubTabId(section?.subTabs[0].id);
+                    }
                   }}
-                  className={`flex items-center px-4 py-2 rounded-md text-left ${
-                    activeSectionId === section?.id
-                      ? "bg-blue-100 text-blue-700 font-semibold"
-                      : "text-gray-600 hover:bg-gray-100"
-                  }`}
+                  className={`flex items-center px-4 py-2 rounded-md text-left ${activeSectionId === section?.id
+                    ? "bg-blue-100 text-blue-700 font-semibold"
+                    : "text-gray-600 hover:bg-gray-100"
+                    }`}
                 >
                   {Icon ? <Icon className="h-5 w-5 mr-3" /> : null}
                   {section?.name}
@@ -231,11 +232,10 @@ export default function Settings() {
                   }
                   setActiveSubTabId(tab.id);
                 }}
-                className={`pb-2 border-b-2 text-sm ${
-                  activeSubTabId === tab.id
-                    ? "border-blue-600 text-blue-600 font-semibold"
-                    : "border-transparent text-gray-600 hover:text-gray-800"
-                }`}
+                className={`pb-2 border-b-2 text-sm ${activeSubTabId === tab.id
+                  ? "border-blue-600 text-blue-600 font-semibold"
+                  : "border-transparent text-gray-600 hover:text-gray-800"
+                  }`}
               >
                 {tab.name}
               </button>

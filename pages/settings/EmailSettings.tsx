@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { supabase } from "../../lib/supabase";
+import { supabase } from "../../src/lib/supabase";
 import {
   AlertCircle,
   Save,
@@ -8,9 +8,10 @@ import {
   RefreshCw,
   PencilIcon,
 } from "lucide-react";
-import { sendEmail } from "../../lib/email";
-import { useNavigate } from "react-router-dom";
-import { useAbonnement } from "../context/AbonnementContext";
+import { sendEmail } from "../../src/lib/email";
+import { useRouter } from "next/router";
+import { useAbonnement } from "../../src/components/context/AbonnementContext";
+import { Url, UrlObject } from "url";
 
 const PROVIDER_PRESETS = {
   platform: {
@@ -94,16 +95,16 @@ export default function EmailSettings() {
 
     initializeSettings();
   }, []);
-    useEffect(() => {
-      const navigateInfo = localStorage.getItem("navigateAfterPayment");
-      if (navigateInfo) {
-        const { pathname, state } = JSON.parse(navigateInfo);
-        navigate(pathname, { state });
-        localStorage.removeItem("navigateAfterPayment");
-      }
-    }, []);
-  async function fetchSubscription(supabase: any, userId: any) {
-    const { data, error } = await supabase
+  useEffect(() => {
+    const navigateInfo = localStorage.getItem("navigateAfterPayment");
+    if (navigateInfo) {
+      const { pathname, state } = JSON.parse(navigateInfo);
+      navigate(pathname, { state });
+      localStorage.removeItem("navigateAfterPayment");
+    }
+  }, []);
+  async function fetchSubscription(supabase: any, userId: any): Promise<any | null> {
+    const { data: [subscription], error } = await supabase
       .from("subscriptions")
       .select("plan")
       .eq("user_id", userId)
@@ -113,7 +114,7 @@ export default function EmailSettings() {
       console.error("Erreur abonnement :", error.message);
       return null;
     }
-    return data;
+    return subscription;
   }
   const [isDisabled, setIsDisabled] = useState(false);
 
@@ -131,11 +132,17 @@ export default function EmailSettings() {
 
       if (user?.id) {
         const subscription = await fetchSubscription(supabase, user.id);
-        if (
-          subscription[0]?.plan === "free" ||
-          subscription[0]?.plan === "basic"
-        ) {
+        if (!subscription) {
           setIsDisabled(true);
+        }
+        else {
+          if (
+            subscription?.plan === "free" ||
+            subscription?.plan === "basic"
+          ) {
+            setIsDisabled(true);
+          }
+
         }
       }
     };
@@ -169,7 +176,7 @@ export default function EmailSettings() {
         // Détection heuristique des presets courants si la base a 'custom'
         const server = String(data.smtp_server || '').toLowerCase();
         const port = Number(data.smtp_port) || 0;
-        const enc  = String(data.smtp_encryption || '').toLowerCase();
+        const enc = String(data.smtp_encryption || '').toLowerCase();
         const looksInfomaniak = server === 'mail.infomaniak.com' && port === 587 && enc === 'tls';
         const looksOVH = server === 'ssl0.ovh.net' && port === 587 && enc === 'tls';
         const looksGmail = server === 'smtp.gmail.com' && port === 587 && enc === 'tls';
@@ -290,13 +297,19 @@ export default function EmailSettings() {
       setSaving(false);
     }
   };
-  const navigate = useNavigate();
+  const router = useRouter();
+  const navigate = (path: string, query: Url["query"]) => {
+    router.push(path);
+  };
+
+  const goToSettings = (query: Url["query"]) => {
+    navigate("/settings", query);
+  };
+
 
   const sendToSignatureSetting = () => {
     // alert("send")
-    navigate("/settings", {
-      state: { initialSectionId: "reminders", initialSubTabId: "sender" },
-    });
+    goToSettings({ initialSectionId: "reminders", initialSubTabId: "sender" });
   };
   const handleTestEmail = async () => {
     // Si on est en mode 'platform' (par défaut PaymentFlow), on n'exige pas de credentials côté UI
@@ -347,7 +360,7 @@ export default function EmailSettings() {
       console.error("Erreur lors du test d'envoi:", error);
       showError(
         error.message ||
-          "Impossible d'envoyer l'email de test. Vérifiez vos paramètres."
+        "Impossible d'envoyer l'email de test. Vérifiez vos paramètres."
       );
     } finally {
       setTesting(false);
@@ -495,61 +508,61 @@ export default function EmailSettings() {
 
         {(formData.provider_type === "custom" ||
           formData.provider_type === "reset_defaults") && (
-          <>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Serveur SMTP
-              </label>
-              <input
-                disabled={isDisabled}
-                type="text"
-                required
-                value={formData.smtp_server}
-                onChange={(e) =>
-                  setFormData({ ...formData, smtp_server: e.target.value })
-                }
-                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Serveur SMTP
+                </label>
+                <input
+                  disabled={isDisabled}
+                  type="text"
+                  required
+                  value={formData.smtp_server}
+                  onChange={(e) =>
+                    setFormData({ ...formData, smtp_server: e.target.value })
+                  }
+                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Port SMTP
-              </label>
-              <input
-                disabled={isDisabled}
-                type="number"
-                required
-                value={formData.smtp_port}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    smtp_port: parseInt(e.target.value),
-                  })
-                }
-                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Port SMTP
+                </label>
+                <input
+                  disabled={isDisabled}
+                  type="number"
+                  required
+                  value={formData.smtp_port}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      smtp_port: parseInt(e.target.value),
+                    })
+                  }
+                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Chiffrement SMTP
-              </label>
-              <select
-                disabled={isDisabled}
-                value={formData.smtp_encryption}
-                onChange={(e) =>
-                  setFormData({ ...formData, smtp_encryption: e.target.value })
-                }
-                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="tls">TLS</option>
-                <option value="ssl">SSL</option>
-                <option value="none">Aucun</option>
-              </select>
-            </div>
-          </>
-        )}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Chiffrement SMTP
+                </label>
+                <select
+                  disabled={isDisabled}
+                  value={formData.smtp_encryption}
+                  onChange={(e) =>
+                    setFormData({ ...formData, smtp_encryption: e.target.value })
+                  }
+                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="tls">TLS</option>
+                  <option value="ssl">SSL</option>
+                  <option value="none">Aucun</option>
+                </select>
+              </div>
+            </>
+          )}
         <div className="mb-4">
           <label
             htmlFor="signature"

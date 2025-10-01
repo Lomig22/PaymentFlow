@@ -1,10 +1,9 @@
 import { Helmet } from "react-helmet";
 import { motion, useInView } from "framer-motion";
 import { CheckCircle, TrendingUp } from "lucide-react";
-import { supabase } from "../lib/supabase";
+import { supabase } from "../../src/lib/supabase";
 import { useEffect, useState } from "react";
-import Footer from "../components/Footer";
-import { useLocation } from "react-router-dom";
+import Footer from "../../components/Footer";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/router";
@@ -38,11 +37,10 @@ const PricingPage = ({ setShowContact, setDefaultSubject }: Props) => {
   );
   const [selectedPlan, setSelectedPlan] = useState("basic");
   const [message, setMessage] = useState<string | null>(null);
-  const location = useLocation();
-  const isPricingPage = location.pathname === "/pricing";
-  const isSettingsPage = location.pathname === "/settings";
 
   const router = useRouter();
+  const isPricingPage = router.pathname === "/pricing";
+  const isSettingsPage = router.pathname === "/settings";
 
   const navigate = (page: string) => {
     router.push(page);
@@ -257,7 +255,7 @@ const PricingPage = ({ setShowContact, setDefaultSubject }: Props) => {
 
     const payload = {
       price_id: priceMap[plan][interval],
-      success_url: window.location.origin + "/paiement-abonement",
+      success_url: window.location.origin + "/paiement-abonnement",
       cancel_url: window.location.href,
     };
 

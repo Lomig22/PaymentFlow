@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from "react";
 import Header from "../../components/AppHeader";
-import Footer from "../components/Footer";
-import HeroSection from "../components/help_and_supports/HeroSection";
-import FaqSection from "../components/help_and_supports/FaqSection";
-import SupportOptions from "../components/help_and_supports/SupportOptions";
-import KnowledgeBase from "../components/help_and_supports/KnowledgeBase";
-import ContactForm from "../components/help_and_supports/ContactForm";
-import { checkAuth, supabase } from "../lib/supabase";
+import Footer from "../../components/Footer";
+import HeroSection from "../../components/help_and_supports/HeroSection";
+import FaqSection from "../../components/help_and_supports/FaqSection";
+import SupportOptions from "../../components/help_and_supports/SupportOptions";
+import KnowledgeBase from "../../components/help_and_supports/KnowledgeBase";
+import ContactForm from "../../components/help_and_supports/ContactForm";
+import { checkAuth, supabase } from "../../src/lib/supabase";
 import { User } from "@supabase/supabase-js";
-import useChatlingScript from "../lib/useChatling";
+import useChatlingScript from "../../src/lib/useChatling";
 
 const HelpAndSupport: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);

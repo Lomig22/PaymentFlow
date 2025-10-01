@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import { supabase } from "../../lib/supabase";
-import { Client, Receivable, Reminder } from "../../types/database";
+import { supabase } from "../../src/lib/supabase";
+import { Client, Receivable, Reminder } from "../../src/types/database";
 import { AlertCircle, Eye, FileText, Mail, Trash2 } from "lucide-react";
-import { Link } from "react-router-dom";
-import { decodeReminderStatus } from "../../lib/decodeReminderStatus";
+import Link from "next/link";
+import { decodeReminderStatus } from "../../src/lib/decodeReminderStatus";
 import Swal from "sweetalert2";
 import { File } from "lucide-react";
-import { useAbonnement } from "../context/AbonnementContext";
+import { useAbonnement } from "../../src/components/context/AbonnementContext";
 
 const ReminderList = () => {
   const { checkAbonnement } = useAbonnement();
@@ -142,7 +142,7 @@ const ReminderList = () => {
     <div className="p-6">
       <div className="flex gap-4 items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Relance</h1>
-        <Link to="/receivables" className="flex items-center h-16 px-4">
+        <Link href="/receivables" className="flex items-center h-16 px-4">
           <button className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2">
             <FileText className="h-5 w-5" />
             Créances
@@ -179,11 +179,10 @@ const ReminderList = () => {
               handleBulkDeleteConfirmation();
             }}
             disabled={selectedIds.length === 0}
-            className={`inline-flex items-center gap-1 px-4 py-1.5 rounded-lg text-sm font-semibold transition duration-200 ${
-              selectedIds.length === 0
-                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                : "bg-red-600 text-white  hover:bg-red-200"
-            }`}
+            className={`inline-flex items-center gap-1 px-4 py-1.5 rounded-lg text-sm font-semibold transition duration-200 ${selectedIds.length === 0
+              ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+              : "bg-red-600 text-white  hover:bg-red-200"
+              }`}
           >
             Supprimer la sélection
           </button>
@@ -280,9 +279,8 @@ const ReminderList = () => {
                         if (!allowed) return;
                         Swal.fire({
                           title: "Email envoyé",
-                          html: `<div style="text-align:left">${
-                            record.email_content || "Aucun contenu."
-                          }</div>`,
+                          html: `<div style="text-align:left">${record.email_content || "Aucun contenu."
+                            }</div>`,
                           confirmButtonText: "Fermer",
                           customClass: {
                             popup: "text-left",

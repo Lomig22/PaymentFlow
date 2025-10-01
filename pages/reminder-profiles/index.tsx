@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
-import { supabase } from "../lib/supabase";
+import { supabase } from "../../src/lib/supabase";
 import { confirmAlert } from "react-confirm-alert";
 import "react-confirm-alert/src/react-confirm-alert.css";
 import { Plus, MoreHorizontal, Copy, UserPlus, Pencil, Trash2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/router";
 
 export default function ReminderProfilesPage() {
   const [profiles, setProfiles] = useState<any[]>([]);
@@ -23,7 +23,10 @@ export default function ReminderProfilesPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [errors, setErrors] = useState<any>({});
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
-  const navigate = useNavigate();
+  const router = useRouter();
+  const navigate = (page: string) => {
+    router.push(page);
+  };
   const menuRefs = useRef<Record<string, HTMLElement | null>>({});
 
   useEffect(() => {

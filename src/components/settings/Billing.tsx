@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import {   useStripe,
-    useElements,
-    CardElement,
-    IbanElement,
-    Elements,
- } from '@stripe/react-stripe-js';
+import {
+  useStripe,
+  useElements,
+  CardElement,
+  IbanElement,
+  Elements,
+} from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import { supabase } from '../../lib/supabase';
-import PricingPage from "../../pages/PricingPage"
+import PricingPage from "../../../pages/pricing"
 import { useAbonnement } from "../context/AbonnementContext";
 
 // Composant 1 : Informations de facturation
@@ -17,7 +18,7 @@ export function BillingInfoSettings() {
   const [address, setAddress] = useState('');
   const [siret, setSiret] = useState('');
   const [success, setSuccess] = useState<string | null>(null);
-	const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const handleClick = () => {
     if (!checkAbonnement()) return;
     console.log("Action autorisée !");
@@ -73,12 +74,12 @@ export function BillingInfoSettings() {
     const allowed = handleClick();
     if (!allowed) return;
     console.log({ company, address, siret });
-  
+
     const {
       data: { user },
       error: userError,
     } = await supabase.auth.getUser();
-  
+
     if (userError) {
       showError('Erreur lors de la récupération de l’utilisateur : ' + (userError?.message || userError));
       return;
@@ -86,34 +87,34 @@ export function BillingInfoSettings() {
     const { error } = await supabase
       .from('facturation_settings')
       .upsert({
-        owner_id:user?.id,
+        owner_id: user?.id,
         entreprise: company,
         adresse: address,
         siret: siret,
-      },{onConflict:"owner_id"})
-    
-  
+      }, { onConflict: "owner_id" })
+
+
     if (error) {
-      showError('Erreur lors de la mise à jour :'+ error);
+      showError('Erreur lors de la mise à jour :' + error);
     } else {
       showSuccess('Mise à jour réussie !');
     }
   };
-  
+
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
       <h2 className="text-lg font-semibold">Informations de facturation</h2>
       {success && (
-						<div className='mb-4 p-4 bg-green-50 border border-green-200 rounded-md text-green-700'>
-							{success}
-						</div>
-					)}
-					{error && (
-						<div className='mb-4 p-4 bg-red-50 border border-red-200 rounded-md text-red-700'>
-							{error}
-						</div>
-					)}
+        <div className='mb-4 p-4 bg-green-50 border border-green-200 rounded-md text-green-700'>
+          {success}
+        </div>
+      )}
+      {error && (
+        <div className='mb-4 p-4 bg-red-50 border border-red-200 rounded-md text-red-700'>
+          {error}
+        </div>
+      )}
       <div>
         <label className="block font-medium">Entreprise</label>
         <input
@@ -221,21 +222,21 @@ export function SubscriptionSettings() {
 
       // Add new subscription to Supabase
       const { error: upsertError } = await supabase
-      .from("subscriptions")
-      .upsert(
-        [
-          {
-            user_id: user.id,
-            status: "active",
-            plan: plan,
-          },
-        ],
-        { onConflict: 'user_id' } 
-      );
+        .from("subscriptions")
+        .upsert(
+          [
+            {
+              user_id: user.id,
+              status: "active",
+              plan: plan,
+            },
+          ],
+          { onConflict: 'user_id' }
+        );
 
       if (upsertError) {
         console.error("Error saving subscription:", upsertError);
-     //   alert("Erreur lors de la création de l'abonnement");
+        //   alert("Erreur lors de la création de l'abonnement");
         return;
       }
 

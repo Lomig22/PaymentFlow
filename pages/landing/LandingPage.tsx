@@ -23,7 +23,7 @@ import "swiper/css/pagination";
 
 import { User } from "@supabase/supabase-js";
 import Link from "next/link";
-import Footer from "../../src/components/Footer";
+import Footer from "../../components/Footer";
 
 interface LandingPageProps {
   onGetStarted: () => void;
