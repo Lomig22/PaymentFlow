@@ -1,26 +1,24 @@
-import React, { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useRouter } from 'next/router';
+import { useEffect, useState } from 'react';
 
 export default function Success() {
-  const [message, setMessage] = useState<string>('En cours...');
-  const location = useLocation();
+  const [message, setMessage] = useState<string>("En cours...");
+  const router = useRouter();
 
   useEffect(() => {
-    // Récupérer les paramètres d'URL (ex : `setupIntent` ou `error` depuis le backend)
-    const params = new URLSearchParams(location.search);
-    const status = params.get('status');
-    const setupIntent = params.get('setupIntent');
-    const error = params.get('error');
+    if (!router.isReady) return; // Wait until query params are available
+
+    const { status, setupIntent, error } = router.query;
 
     if (error) {
       setMessage(`Une erreur est survenue : ${error}`);
-    } else if (status === 'succeeded' && setupIntent) {
-      setMessage('Le paiement a été effectué avec succès !');
-      // Tu peux ici appeler ton backend pour vérifier l'état du setupIntent ou effectuer des actions supplémentaires.
+    } else if (status === "succeeded" && setupIntent) {
+      setMessage("Le paiement a été effectué avec succès !");
+      // Call your backend here if needed
     } else {
-      setMessage('Le paiement n’a pas pu être confirmé.');
+      setMessage("Le paiement n’a pas pu être confirmé.");
     }
-  }, [location]);
+  }, [router.isReady, router.query]);
 
   return (
     <div className="p-6 text-center">

@@ -1,5 +1,4 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
 // import { Dialog } from "@headlessui/react"; // Supprimé car non disponible
 import ManualReminderModal from "../receivables/ManualReminderModal";
 import { sendManualReminder } from "../../lib/reminderService";
@@ -18,6 +17,7 @@ import {
   Wrench,
   FileText,
 } from "lucide-react";
+import { useRouter } from "next/router";
 
 interface ClientDetailModalProps {
   client: any;
@@ -26,7 +26,7 @@ interface ClientDetailModalProps {
 }
 
 const ClientDetailModal: React.FC<ClientDetailModalProps> = ({ client, isOpen, onClose }) => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const [showReminderModal, setShowReminderModal] = React.useState(false);
   const [sending, setSending] = React.useState(false);
   if (!client) return null;
@@ -248,8 +248,9 @@ const ClientDetailModal: React.FC<ClientDetailModalProps> = ({ client, isOpen, o
             <button
               className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-md shadow transition-colors text-lg"
               onClick={() => {
-                navigate('/receivables', {
-                  state: { openReminderForClient: client.id }
+                router.push({
+                  pathname: '/receivables',
+                  query: { openReminderForClient: client.id }
                 });
               }}
               type="button"

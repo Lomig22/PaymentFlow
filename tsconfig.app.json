@@ -14,7 +14,7 @@
     "allowImportingTsExtensions": true,
     "isolatedModules": true,
     "moduleDetection": "force",
-    "noEmit": true,
+    "emitDeclarationOnly": true,
     "jsx": "react-jsx",
     /* Linting */
     "strict": true,
@@ -22,7 +22,8 @@
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true,
     "allowJs": true,
-    "checkJs": false
+    "checkJs": false,
+    "composite": true
   },
   "include": [
     "src",
@@ -56,6 +57,7 @@
     "pages/conditions-utilisation/index.tsx",
     "pages/paiement-abonnement/index.tsx",
     "pages/success/index.tsx",
-    "pages/reminders/index.tsx"
+    "pages/reminders/index.tsx",
+    "pages/reset-password/index.tsx"
   ]
 }

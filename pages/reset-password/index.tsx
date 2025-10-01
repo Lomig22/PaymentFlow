@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { TrendingUp, Lock } from "lucide-react";
-import { supabase } from "../lib/supabase";
+import { supabase } from "../../src/lib/supabase";
 
 const validatePassword = (password: string) => {
   const minLength = password.length >= 8;
@@ -120,8 +120,8 @@ export default function ResetPassword() {
           {message && (
             <div
               className={`p-4 rounded-md mb-6 ${message.type === "success"
-                  ? "bg-green-50 text-green-700"
-                  : "bg-red-50 text-red-700"
+                ? "bg-green-50 text-green-700"
+                : "bg-red-50 text-red-700"
                 }`}
             >
               {message.text}

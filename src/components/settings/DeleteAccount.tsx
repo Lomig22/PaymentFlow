@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabase";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/router";
 import { Eye, EyeOff } from "lucide-react";
 import { useAbonnement } from "../context/AbonnementContext";
 
 const DeleteAccount = () => {
   const { checkAbonnement } = useAbonnement();
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const [password, setPassword] = useState("");
   const [mfaCode, setMfaCode] = useState("");
@@ -102,7 +102,7 @@ const DeleteAccount = () => {
       if (!response.ok) throw new Error(result.error || "Erreur lors de la suppression du compte.");
 
       await supabase.auth.signOut();
-      navigate("/account-deleted");
+      router.push("/account-deleted");
     } catch (err: any) {
       setErrorMsg(err.message);
     } finally {

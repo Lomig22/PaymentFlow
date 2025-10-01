@@ -11,7 +11,6 @@ import AppHeader from "../components/AppHeader";
 
 import { User } from "@supabase/supabase-js";
 import AuthMFA from "./components/AuthMFA";
-import ResetPassword from "./components/ResetPassword";
 
 interface AppRoutesProps {
   user: User | null;
@@ -32,7 +31,6 @@ export default function AppRoutes({ user, onMFASuccess }: AppRoutesProps) {
       <Routes>
         {/* Routes publiques */}
         {/* /subscribe route removed (SubscribePage absent) */}
-        <Route path="/reset-password" element={<ResetPassword />} />
 
         {/* Routes protégées */}
         <Route
@@ -44,12 +42,6 @@ export default function AppRoutes({ user, onMFASuccess }: AppRoutesProps) {
           />
           <Route path="receivables/new" element={<ReceivableForm onClose={() => { }} onReceivableAdded={() => { }} />} />
         </Route>
-
-        {/* Redirection par défaut */}
-        <Route
-          path="*"
-          element={<Navigate to={user ? { pathname: "/dashboard", search: onboardingSuffix, hash } : { pathname: "/" }} replace />}
-        />
       </Routes>
     </Router>
   );

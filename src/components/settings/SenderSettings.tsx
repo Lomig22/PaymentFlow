@@ -14,27 +14,25 @@ import {
   X,
 } from "lucide-react";
 import { useAbonnement } from "../context/AbonnementContext";
-import { useLocation, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
+import { useRouter } from "next/router";
 
 type SignatureSettingsProps = {
   onDirtyChange?: (dirty: boolean) => void;
 };
 
 export default function SignatureSettings({ onDirtyChange }: SignatureSettingsProps) {
+  const router = useRouter();
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [pendingNavigation, setPendingNavigation] = useState<string | null>(null);
+  const [showUnsavedWarning, setShowUnsavedWarning] = useState(false);
 
-  // Notifie le parent (Settings) quand l'état dirty change
+  // Notify parent when dirty state changes
   useEffect(() => {
     if (onDirtyChange) onDirtyChange(hasUnsavedChanges);
   }, [hasUnsavedChanges, onDirtyChange]);
-  const [showUnsavedWarning, setShowUnsavedWarning] = useState(false);
-  const [pendingNavigation, setPendingNavigation] = useState<string | null>(null);
-  const location = useLocation();
-  const navigate = useNavigate();
 
   useEffect(() => {
-    // Handler global pour intercepter les clics sur les liens internes
     const handleClick = (e: MouseEvent) => {
       const anchor = (e.target as HTMLElement).closest("a");
       if (
@@ -42,7 +40,7 @@ export default function SignatureSettings({ onDirtyChange }: SignatureSettingsPr
         anchor instanceof HTMLAnchorElement &&
         anchor.href &&
         anchor.origin === window.location.origin &&
-        anchor.pathname !== location.pathname &&
+        anchor.pathname + anchor.search + anchor.hash !== router.asPath &&
         !anchor.href.startsWith("mailto:") &&
         !anchor.href.startsWith("tel:")
       ) {
@@ -50,7 +48,7 @@ export default function SignatureSettings({ onDirtyChange }: SignatureSettingsPr
           e.preventDefault();
           Swal.fire({
             title: 'Modifications non enregistrées',
-            text: 'Vous avez des modifications non enregistrées. Voulez-vous vraiment quitter cette page ?',
+            text: 'Vous avez des modifications non enregistrées. Voulez-vous vraiment quitter cette page ?',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonText: 'Continuer sans enregistrer',
@@ -62,20 +60,21 @@ export default function SignatureSettings({ onDirtyChange }: SignatureSettingsPr
             },
           }).then((result) => {
             if (result.isConfirmed) {
-              navigate(anchor.pathname + anchor.search + anchor.hash);
+              router.push(anchor.pathname + anchor.search + anchor.hash);
             }
           });
         }
       }
     };
+
     document.addEventListener("click", handleClick);
     return () => document.removeEventListener("click", handleClick);
-  }, [hasUnsavedChanges, location.pathname]);
+  }, [hasUnsavedChanges, router.asPath, router]);
 
-  // Fonction pour continuer la navigation après l'avertissement
+  // Function to continue navigation programmatically
   const handleContinue = () => {
     if (pendingNavigation) {
-      navigate(pendingNavigation);
+      router.push(pendingNavigation);
       setShowUnsavedWarning(false);
       setPendingNavigation(null);
     }
@@ -324,64 +323,64 @@ export default function SignatureSettings({ onDirtyChange }: SignatureSettingsPr
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-  
+
     const isValidSize = await new Promise<boolean>((resolve, reject) => {
       const img = new Image();
       const reader = new FileReader();
-  
+
       reader.onload = (event) => {
         if (!event.target?.result) return reject("Erreur de lecture du fichier");
         img.src = event.target.result as string;
       };
-  
+
       img.onload = () => {
         const isValid = img.width <= 300 && img.height <= 100;
         resolve(isValid);
       };
-  
+
       img.onerror = () => reject("Erreur de chargement de l'image");
-  
+
       reader.readAsDataURL(file);
     });
-  
+
     if (!isValidSize) {
       showError("L'image dépasse les dimensions maximales de 300px x 100px.");
       return;
     }
-  
+
     setLocalLogo(file); // utile pour prévisualiser
-  
+
     const {
       data: { session },
       error: sessionError,
     } = await supabase.auth.getSession();
-  
+
     if (sessionError || !session) {
       console.error("Utilisateur non authentifié");
       showError("Veuillez vous connecter d'abord");
       return;
     }
-  
+
     const user = session.user;
     const filePath = `${user.id}/${file.name}`;
-  
+
     const { error: uploadError } = await supabase.storage
       .from("logos")
       .upload(filePath, file, {
         upsert: true,
         contentType: file.type,
       });
-  
+
     if (uploadError) {
       console.error("Erreur d'upload:", uploadError);
       showError("Erreur lors de l'envoi du logo");
       return;
     }
-  
+
     const { data: publicUrlData } = supabase.storage
       .from("logos")
       .getPublicUrl(filePath);
-  
+
     if (publicUrlData?.publicUrl) {
       setLogoUrl(publicUrlData.publicUrl);
       showSuccess("Logo uploadé avec succès !");
@@ -389,7 +388,7 @@ export default function SignatureSettings({ onDirtyChange }: SignatureSettingsPr
       showError("Échec de la récupération de l'URL du logo");
     }
   };
-  
+
 
   const copySignatureToClipboard = async () => {
     try {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Menu, X, LifeBuoy, BookOpen, MessageCircle, TrendingUp } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 
 const Header: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -21,15 +21,15 @@ const Header: React.FC = () => {
 
   return (
     <header
-      className={' bg-white shadow-sm sticky top-0 z-50' }
+      className={' bg-white shadow-sm sticky top-0 z-50'}
     >
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
-          <Link to="/" className="flex items-center space-x-2">
-          <TrendingUp className="h-8 w-8 text-blue-600" />
-          <span className="text-xl font-bold text-gray-900">PaymentFlow</span>
-        </Link>
+            <Link href="/" className="flex items-center space-x-2">
+              <TrendingUp className="h-8 w-8 text-blue-600" />
+              <span className="text-xl font-bold text-gray-900">PaymentFlow</span>
+            </Link>
           </div>
 
           <nav className="hidden md:flex space-x-8">
@@ -64,11 +64,10 @@ const Header: React.FC = () => {
               <input
                 type="text"
                 placeholder="Rechercher de l'aide..."
-                className={`pl-10 pr-4 py-2 rounded-full text-sm transition-all focus:outline-none focus:ring-2 ${
-                  isScrolled
+                className={`pl-10 pr-4 py-2 rounded-full text-sm transition-all focus:outline-none focus:ring-2 ${isScrolled
                     ? 'bg-gray-100 text-gray-800 focus:ring-blue-300'
                     : 'bg-blue-500 text-white placeholder-blue-200 focus:ring-blue-400'
-                }`}
+                  }`}
               />
               <Search className="absolute left-3 top-2.5 h-4 w-4" />
             </div>

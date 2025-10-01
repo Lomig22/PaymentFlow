@@ -2,21 +2,21 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Minus, Filter } from 'lucide-react';
 import FaqItem from './FaqItem';
-import { faqData } from '../data/faqData';
+import { faqData } from '../../src/components/data/faqData';
 
 const FaqSection: React.FC = () => {
   const [filter, setFilter] = useState('all');
   const categories = ['all', 'billing', 'features', 'account', 'technical'];
 
-  const filteredFaqs = filter === 'all' 
-    ? faqData 
+  const filteredFaqs = filter === 'all'
+    ? faqData
     : faqData.filter(item => item.category === filter);
 
   return (
     <section className="mb-16" id="faq">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8">
         <h2 className="text-2xl md:text-3xl font-bold text-gray-800">Questions Fréquentes</h2>
-        
+
         <div className="mt-4 md:mt-0 flex items-center">
           <Filter className="h-5 w-5 mr-2 text-blue-600" />
           <div className="flex flex-wrap gap-2">
@@ -24,11 +24,10 @@ const FaqSection: React.FC = () => {
               <button
                 key={category}
                 onClick={() => setFilter(category)}
-                className={`px-3 py-1 text-sm rounded-full transition-colors ${
-                  filter === category
+                className={`px-3 py-1 text-sm rounded-full transition-colors ${filter === category
                     ? 'bg-blue-600 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+                  }`}
               >
                 {category.charAt(0).toUpperCase() + category.slice(1)}
               </button>
@@ -37,7 +36,7 @@ const FaqSection: React.FC = () => {
         </div>
       </div>
 
-      <motion.div 
+      <motion.div
         className="space-y-4"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}

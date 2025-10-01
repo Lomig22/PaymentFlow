@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import { Client } from "../../types/database";
 import { X, Upload, FileUp } from "lucide-react";
+import { useRouter } from "next/router";
 
 interface ReceivableFormProps {
   onClose: () => void;
@@ -16,16 +16,15 @@ export default function ReceivableForm({
   onReceivableAdded,
   preselectedClient,
 }: ReceivableFormProps) {
-  const navigate = useNavigate();
-  const location = useLocation();
-  // Parse query params for client_name and client_email
-  const queryParams = React.useMemo(() => {
-    const params = new URLSearchParams(location.search);
+  const router = useRouter();
+
+  const queryParams = useMemo(() => {
     return {
-      client_name: params.get("client_name") || "",
-      client_email: params.get("client_email") || "",
+      client_name: (router.query.client_name as string) || "",
+      client_email: (router.query.client_email as string) || "",
     };
-  }, [location.search]);
+  }, [router.query]);
+
   const [loading, setLoading] = useState(false);
   const [clients, setClients] = useState<Client[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -304,7 +303,7 @@ export default function ReceivableForm({
 
       if (data) {
         onReceivableAdded(data);
-        navigate('/receivables');
+        router.push('/receivables');
       }
     } catch (error: any) {
       console.error("Erreur lors de l'ajout de la créance:", error);

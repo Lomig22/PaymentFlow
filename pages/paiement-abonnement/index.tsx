@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/router";
 import { supabase } from "../../src/lib/supabase";
 
 export default function SuccessPage() {
   const [error, setError] = useState<string | null>(null);
-  const navigate = useNavigate();
+  const router = useRouter();
   const [hasRun, setHasRun] = useState(false);
 
   useEffect(() => {
@@ -94,7 +94,7 @@ export default function SuccessPage() {
       localStorage.removeItem("selectedInterval");
 
       // Redirection
-      setTimeout(() => navigate("/login"), 2000);
+      setTimeout(() => router.push("/login"), 2000);
     };
 
     registerUser();
