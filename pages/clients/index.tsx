@@ -1,9 +1,9 @@
 import { AlertCircle, Check, Plus, Upload } from "lucide-react";
 import { useState } from "react";
-import { useLocation } from "react-router-dom";
-import ClientList from "./ClientList";
-import UnknownClientList from "../unknownClients/UnknownClientList";
-import { useAbonnement } from "../context/AbonnementContext";
+import { useRouter } from "next/router";
+import ClientList from "../../src/components/clients/ClientList";
+import UnknownClientList from "../../src/components/unknownClients/UnknownClientList";
+import { useAbonnement } from "../../src/components/context/AbonnementContext";
 
 export type SelectedPage = "client" | "unknown";
 
@@ -14,14 +14,14 @@ const ClientPage = () => {
   const [showImportModal, setShowImportModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [importSuccess, setImportSuccess] = useState<string | null>(null);
-  const location = useLocation();
-  const params = new URLSearchParams(location.search);
-  const assignProfileId = params.get("assignProfile");
+
+  const router = useRouter();
+  const { assignProfile: assignProfileId } = router.query;
   // const [searchTerm, setSearchTerm] = useState<string>('');
   const handleClick = () => {
     if (!checkAbonnement()) return;
     console.log("Action autorisée !");
-	return true;
+    return true;
   };
   return (
     <div className="p-6">
@@ -62,22 +62,20 @@ const ClientPage = () => {
         <button
           type="button"
           onClick={() => setTab("client")}
-          className={`px-3 py-1 rounded-md ${
-            tab === "client"
-              ? "bg-blue-100 text-blue-800"
-              : "bg-gray-100 text-gray-800"
-          }`}
+          className={`px-3 py-1 rounded-md ${tab === "client"
+            ? "bg-blue-100 text-blue-800"
+            : "bg-gray-100 text-gray-800"
+            }`}
         >
           Créances client
         </button>
         <button
           type="button"
           onClick={() => setTab("unknown")}
-          className={`px-3 py-1 rounded-md ${
-            tab === "unknown"
-              ? "bg-blue-100 text-blue-800"
-              : "bg-gray-100 text-gray-800"
-          }`}
+          className={`px-3 py-1 rounded-md ${tab === "unknown"
+            ? "bg-blue-100 text-blue-800"
+            : "bg-gray-100 text-gray-800"
+            }`}
         >
           Client comptoir
         </button>

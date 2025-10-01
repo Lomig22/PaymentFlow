@@ -1,11 +1,11 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { supabase } from "../../lib/supabase";
+import { supabase } from "../../src/lib/supabase";
 import {
   Receivable,
   Client,
   ReminderProfile,
   Reminder,
-} from "../../types/database";
+} from "../../src/types/database";
 import {
   Plus,
   Mail,
@@ -32,26 +32,27 @@ import {
   Key,
   Filter,
 } from "lucide-react";
-import ReceivableForm from "./ReceivableForm";
-import ReceivableEditForm from "./ReceivableEditForm";
-import ReminderSettingsModal from "./ReminderSettingsModal";
+import ReceivableForm from "../../src/components/receivables/ReceivableForm";
+import ReceivableEditForm from "../../src/components/receivables/ReceivableEditForm";
+import ReminderSettingsModal from "../../src/components/receivables/ReminderSettingsModal";
 import {
   getReminderTemplate,
   sendManualReminder,
   getEmailSettings,
-} from "../../lib/reminderService";
-import CSVImportModal, { CSVMapping } from "./CSVImportModal";
-import ReminderHistory from "./ReminderHistory";
-import { Link, useNavigate, useLocation } from "react-router-dom";
-import { dateCompare, numberCompare, stringCompare } from "../../lib/comparers";
-import SortableColHead from "../Common/SortableColHead";
-import { dateDiff } from "../../lib/dateDiff";
-import { saveNotification } from "../../lib/notification";
+} from "../../src/lib/reminderService";
+import CSVImportModal, { CSVMapping } from "../../src/components/receivables/CSVImportModal";
+import ReminderHistory from "../../src/components/receivables/ReminderHistory";
+import Link from "next/link";
+import { useRouter } from "next/router";
+import { dateCompare, numberCompare, stringCompare } from "../../src/lib/comparers";
+import SortableColHead from "../../src/components/Common/SortableColHead";
+import { dateDiff } from "../../src/lib/dateDiff";
+import { saveNotification } from "../../src/lib/notification";
 import Swal from "sweetalert2";
-import { getReminderStatus } from "../../lib/function";
+import { getReminderStatus } from "../../src/lib/function";
 import { isBefore } from "date-fns";
-import ReceivableStatusBadge from "./receivableStatusBadge";
-import Tooltip from "../Common/Tooltip";
+import ReceivableStatusBadge from "../../src/components/receivables/receivableStatusBadge";
+import Tooltip from "../../src/components/Common/Tooltip";
 
 // Fonction utilitaire pour vérifier si des relances sont activées pour un client
 function remindersEnabled(client: any): boolean {
@@ -65,7 +66,7 @@ function remindersEnabled(client: any): boolean {
 }
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useAbonnement } from "../context/AbonnementContext";
+import { useAbonnement } from "../../src/components/context/AbonnementContext";
 
 type SortColumnConfig = {
   key: keyof CSVMapping | "client" | "email" | "Delay in Days";
@@ -73,7 +74,7 @@ type SortColumnConfig = {
 };
 
 function ReceivablesList() {
-  const location = useLocation();
+  const router = useRouter();
   const [sendError, setSendError] = useState(false);
   const { checkAbonnement } = useAbonnement();
   const [receivables, setReceivables] = useState<
@@ -116,17 +117,19 @@ function ReceivablesList() {
   }
 
   const [hasConsumedReminderNavigation, setHasConsumedReminderNavigation] = useState(false);
-  const navigate = useNavigate();
+  const navigate = (page: string) => {
+    router.push(page);
+  };
 
   useEffect(() => {
     let cancelled = false;
     if (
-      location.state?.openReminderForClient &&
+      router.query?.openReminderForClient &&
       receivables.length > 0 &&
       !hasConsumedReminderNavigation
     ) {
       const receivable = receivables.find(
-        r => r.client.id === location.state.openReminderForClient
+        r => r.client.id === router.query.openReminderForClient
       );
       if (receivable) {
         if (cancelled) return;
@@ -134,14 +137,16 @@ function ReceivablesList() {
         setSelectedReceivable(receivable);
         setShowConfirmReminder(true);
         // Vide l'état React Router pour éviter toute réouverture
-        navigate("", { replace: true, state: null });
+        const { pathname, query } = router;
+        delete query.openReminderForClient;
+        router.replace({ pathname, query }, undefined, { shallow: true });
       }
     }
     return () => {
       cancelled = true;
     };
     // eslint-disable-next-line
-  }, [location.state, receivables, hasConsumedReminderNavigation]);
+  }, [router.query, receivables, hasConsumedReminderNavigation]);
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [receivableToDelete, setReceivableToDelete] = useState<
@@ -788,8 +793,9 @@ function ReceivablesList() {
   };
   const sendToSignatureSetting = () => {
     // alert("send")
-    navigate("/settings", {
-      state: { initialSectionId: "reminders", initialSubTabId: "sender" },
+    router.push({
+      pathname: "/settings",
+      query: { initialSectionId: "reminders", initialSubTabId: "sender" },
     });
   };
 
@@ -1372,7 +1378,7 @@ function ReceivablesList() {
       <div className="flex justify-between items-center mb-6">
         <div className="flex gap-4 items-center">
           <h1 className=" ml-4 text-2xl font-bold text-gray-900">Créances</h1>
-          <Link to="/reminders" className="flex items-center h-16 px-4">
+          <Link href="/reminders" className="flex items-center h-16 px-4">
             <button
               className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-white font-medium shadow-md
                    hover:bg-blue-700 transition-all duration-300 ease-in-out

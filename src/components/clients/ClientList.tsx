@@ -38,7 +38,7 @@ type ClientListProps = {
   setError: (error: string | null) => void;
   setImportSuccess: (message: string | null) => void;
   importSuccess: string | null;
-  assignProfileId?: string | null;
+  assignProfileId?: string[] | string | undefined;
 };
 
 type SortColumnConfig = {
