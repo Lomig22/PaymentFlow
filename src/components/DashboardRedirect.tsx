@@ -34,8 +34,7 @@ export default function DashboardRedirect() {
       if (mfaEnabled) {
         router.push(`/mfa${searchOut}${hashOut}`);
       } else {
-        const email = encodeURIComponent(userData.user.email || "");
-        router.push(`/dashboard/${email}${searchOut}${hashOut}`);
+        router.push(`/dashboard`);
       }
     };
 

@@ -102,7 +102,7 @@ export default function SignupPage() {
     setMessage(null);
 
     try {
-      const SITE_URL = (process.env.NEXT_SITE_URL as string) || (typeof window !== 'undefined' ? window.location.origin : 'https://payment-flow.fr');
+      const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? window?.location.origin;
       const emailRedirectTo = `${SITE_URL}/login?onboarding=1`;
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,

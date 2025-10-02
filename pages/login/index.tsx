@@ -73,8 +73,10 @@ export default function LoginPage() {
         throw new Error("Email utilisateur introuvable. Veuillez réessayer.");
       }
       const qs = new URLSearchParams(location.search);
-      const suffix = qs.get("onboarding") === "1" ? "?onboarding=1" : "";
-      navigate(`/dashboard/${encodeURIComponent(data.user.email)}${suffix}`);
+      router.push({
+        pathname: "/dashboard",
+        query: { onboarding: qs.get("onboarding") === "1" }
+      });
     } catch (error: any) {
       setMessage({
         type: "error",
@@ -94,6 +96,8 @@ export default function LoginPage() {
       const hasOnboarding = qs.get("onboarding") === "1";
       const redirectBase = `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard`;
       const redirectTo = hasOnboarding ? `${redirectBase}?onboarding=1` : redirectBase;
+
+      console.log("Google login redirectTo:", redirectTo);
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {

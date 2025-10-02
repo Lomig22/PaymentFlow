@@ -4,12 +4,13 @@ import LandingPage from "./landing/LandingPage";
 import AppHeader from "../components/AppHeader";
 import { useRouter } from "next/router";
 import { useEffect } from "react";
+import { checkAuth } from "../src/lib/supabase";
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
-    const token = context.req.cookies.token;
-    const userIsLoggedIn = Boolean(token);
+    const session = await checkAuth();
 
-    if (userIsLoggedIn) {
+
+    if (session?.user) {
         return {
             redirect: { destination: "/dashboard", permanent: false },
         };
