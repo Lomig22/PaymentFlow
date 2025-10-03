@@ -6,7 +6,7 @@ import Link from "next/link";
 import { decodeReminderStatus } from "../../src/lib/decodeReminderStatus";
 import Swal from "sweetalert2";
 import { File } from "lucide-react";
-import { useAbonnement } from "../../src/components/context/AbonnementContext";
+import { useAbonnement } from "../../components/context/AbonnementContext";
 
 const ReminderList = () => {
   const { checkAbonnement } = useAbonnement();

@@ -11,7 +11,7 @@ import {
   FAQAccordion,
   CTA,
   VideoEmbed
-} from '../../../src/components/blog/BlogEnrichmentBlocks';
+} from '../../../components/blog/BlogEnrichmentBlocks';
 import { ArrowLeft } from 'lucide-react';
 
 interface BlogSectorProps {

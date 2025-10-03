@@ -34,7 +34,7 @@ import {
   Radar,
   LabelList,
 } from "recharts";
-import ClientBalanceBar from "../../src/components/chart/ClientBalanceBar";
+import ClientBalanceBar from "../../components/chart/ClientBalanceBar";
 interface DashboardStats {
   totalClients: number;
   clientsNeedingReminder: number;
@@ -67,11 +67,11 @@ interface NotificationList extends Array<NotificationType> { }
 
 import { motion } from "framer-motion";
 import { Helmet } from "react-helmet";
-import DsoChart from "../../src/components/chart/DsoChart";
-import RemindersCard from "../../src/components/chart/RemindersCard";
-import OverdueInvoices from "../../src/components/chart/OverdueInvoices";
-import DashboardLayout from "../../src/components/chart/DashboardLayout";
-import BalanceAgeeChart from "../../src/components/chart/BalanceAgeeChart";
+import DsoChart from "../../components/chart/DsoChart";
+import RemindersCard from "../../components/chart/RemindersCard";
+import OverdueInvoices from "../../components/chart/OverdueInvoices";
+import DashboardLayout from "../../components/chart/DashboardLayout";
+import BalanceAgeeChart from "../../components/chart/BalanceAgeeChart";
 export default function Dashboard() {
   const [stats, setStats] = useState<DashboardStats>({
     totalClients: 0,

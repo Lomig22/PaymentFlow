@@ -12,7 +12,7 @@ import {
   FAQAccordion,
   CTA,
   VideoEmbed
-} from '../../../src/components/blog/BlogEnrichmentBlocks';
+} from '../../../components/blog/BlogEnrichmentBlocks';
 import { FaStar } from 'react-icons/fa';
 
 const blogPost = {

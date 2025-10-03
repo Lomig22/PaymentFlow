@@ -5,12 +5,12 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-import ReceivableForm from "./components/receivables/ReceivableForm";
+import ReceivableForm from "../components/receivables/ReceivableForm";
 import ReminderList from "../pages/reminders";
 import AppHeader from "../components/AppHeader";
 
 import { User } from "@supabase/supabase-js";
-import AuthMFA from "./components/AuthMFA";
+import AuthMFA from "../components/AuthMFA";
 
 interface AppRoutesProps {
   user: User | null;

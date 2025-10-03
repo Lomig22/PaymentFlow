@@ -1,6 +1,6 @@
 import { Users, MessageSquare, Database, BarChart } from 'lucide-react';
 import Footer from '../../components/Footer';
-import CrmIntro from '../../src/components/CrmIntro';
+import CrmIntro from '../../components/CrmIntro';
 import { Helmet } from 'react-helmet';
 
 import Link from 'next/link';

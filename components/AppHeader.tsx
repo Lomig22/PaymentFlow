@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { TrendingUp, X, BarChart3, Users, FileText, Settings } from "lucide-react";
-import AnimatedResourceIcon from "../src/components/AnimatedResourceIcon";
+import AnimatedResourceIcon from "./AnimatedResourceIcon";
 import { Menu as HeadlessMenu } from "@headlessui/react";
 import { supabase } from "../src/lib/supabase";
 import { User } from "@supabase/supabase-js";

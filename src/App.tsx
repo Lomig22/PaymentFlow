@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase, checkAuth } from "./lib/supabase";
 import { User } from "@supabase/supabase-js";
-import AuthMFA from "./components/AuthMFA";
+import AuthMFA from "../components/AuthMFA";
 import AppRoutes from "./AppRoutes";
 
 import { useUser } from "../components/context/UserContext";

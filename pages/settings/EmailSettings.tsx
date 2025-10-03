@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { sendEmail } from "../../src/lib/email";
 import { useRouter } from "next/router";
-import { useAbonnement } from "../../src/components/context/AbonnementContext";
+import { useAbonnement } from "../../components/context/AbonnementContext";
 import { Url, UrlObject } from "url";
 
 const PROVIDER_PRESETS = {

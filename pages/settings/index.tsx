@@ -4,14 +4,14 @@ import { Elements } from "@stripe/react-stripe-js"; // Importer Elements
 import { loadStripe } from "@stripe/stripe-js"; // Importer loadStripe
 // Composants à créer ou importer
 import EmailSettings from "./EmailSettings";
-import { SecuritySettings } from "../../src/components/settings/SecuritySettings";
+import { SecuritySettings } from "../../components/settings/SecuritySettings";
 //import UserManagementSettings from './UserManagementSettings';
 
 import {
   BillingInfoSettings,
   SubscriptionSettings,
   PaymentMethodSettings,
-} from "../../src/components/settings/Billing";
+} from "../../components/settings/Billing";
 
 /*
 import AutoNotificationSettings from './AutoNotificationSettings';
@@ -23,15 +23,15 @@ import ExternalApiSettings from './ExternalApiSettings';
 import WebhookSettings from './WebhookSettings';
 import ZapierSettings from './ZapierSettings'; */
 
-import NotificationSettings from "../../src/components/settings/NotificationSettings";
+import NotificationSettings from "../../components/settings/NotificationSettings";
 //import ReminderFrequencySettings from './ReminderFrequencySettings';
 
-import UnsavedChangesModal from "../../src/components/settings/UnsavedChangesModal"; // Modal pour changements non enregistrés
-import ProfileSettings from "../../src/components/settings/ProfileSettings";
-import SignatureSettings from "../../src/components/settings/SenderSettings";
+import UnsavedChangesModal from "../../components/settings/UnsavedChangesModal"; // Modal pour changements non enregistrés
+import ProfileSettings from "../../components/settings/ProfileSettings";
+import SignatureSettings from "../../components/settings/SenderSettings";
 import { useRouter } from "next/router";
-import DeleteAccount from "../../src/components/settings/DeleteAccount";
-import MemberList from "../../src/components/settings/MemberList";
+import DeleteAccount from "../../components/settings/DeleteAccount";
+import MemberList from "../../components/settings/MemberList";
 /* 
 import GuideSettings from './GuideSettings';
 import ContactSupportSettings from './ContactSupportSettings';

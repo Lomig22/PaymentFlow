@@ -14,11 +14,11 @@ import {
 } from "lucide-react";
 import { supabase } from "../src/lib/supabase";
 import { AuthSessionMissingError } from "@supabase/supabase-js";
-import AbonnementInfo from "../src/components/settings/AbonnementInfo";
+import AbonnementInfo from "./settings/AbonnementInfo";
 import useEnsureEmailSettings from "../src/lib/ensureEmailSettings";
-import OnboardingTour from "../src/components/onboarding/OnboardingTour";
-import OnboardingSurveyWizard from "../src/components/onboarding/OnboardingSurveyWizard";
-import OnboardingSpotlight, { SpotlightStep } from "../src/components/onboarding/OnboardingSpotlight";
+import OnboardingTour from "./onboarding/OnboardingTour";
+import OnboardingSurveyWizard from "./onboarding/OnboardingSurveyWizard";
+import OnboardingSpotlight, { SpotlightStep } from "./onboarding/OnboardingSpotlight";
 
 interface LayoutProps {
   children: ReactNode;

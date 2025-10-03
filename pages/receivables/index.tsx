@@ -32,27 +32,27 @@ import {
   Key,
   Filter,
 } from "lucide-react";
-import ReceivableForm from "../../src/components/receivables/ReceivableForm";
-import ReceivableEditForm from "../../src/components/receivables/ReceivableEditForm";
-import ReminderSettingsModal from "../../src/components/receivables/ReminderSettingsModal";
+import ReceivableForm from "../../components/receivables/ReceivableForm";
+import ReceivableEditForm from "../../components/receivables/ReceivableEditForm";
+import ReminderSettingsModal from "../../components/receivables/ReminderSettingsModal";
 import {
   getReminderTemplate,
   sendManualReminder,
   getEmailSettings,
 } from "../../src/lib/reminderService";
-import CSVImportModal, { CSVMapping } from "../../src/components/receivables/CSVImportModal";
-import ReminderHistory from "../../src/components/receivables/ReminderHistory";
+import CSVImportModal, { CSVMapping } from "../../components/receivables/CSVImportModal";
+import ReminderHistory from "../../components/receivables/ReminderHistory";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { dateCompare, numberCompare, stringCompare } from "../../src/lib/comparers";
-import SortableColHead from "../../src/components/Common/SortableColHead";
+import SortableColHead from "../../components/Common/SortableColHead";
 import { dateDiff } from "../../src/lib/dateDiff";
 import { saveNotification } from "../../src/lib/notification";
 import Swal from "sweetalert2";
 import { getReminderStatus } from "../../src/lib/function";
 import { isBefore } from "date-fns";
-import ReceivableStatusBadge from "../../src/components/receivables/receivableStatusBadge";
-import Tooltip from "../../src/components/Common/Tooltip";
+import ReceivableStatusBadge from "../../components/receivables/receivableStatusBadge";
+import Tooltip from "../../components/Common/Tooltip";
 
 // Fonction utilitaire pour vérifier si des relances sont activées pour un client
 function remindersEnabled(client: any): boolean {
@@ -66,7 +66,7 @@ function remindersEnabled(client: any): boolean {
 }
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useAbonnement } from "../../src/components/context/AbonnementContext";
+import { useAbonnement } from "../../components/context/AbonnementContext";
 
 type SortColumnConfig = {
   key: keyof CSVMapping | "client" | "email" | "Delay in Days";

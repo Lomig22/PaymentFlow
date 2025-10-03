@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Minus, Filter } from 'lucide-react';
 import FaqItem from './FaqItem';
-import { faqData } from '../../src/components/data/faqData';
+import { faqData } from '../data/faqData';
 
 const FaqSection: React.FC = () => {
   const [filter, setFilter] = useState('all');
@@ -25,8 +25,8 @@ const FaqSection: React.FC = () => {
                 key={category}
                 onClick={() => setFilter(category)}
                 className={`px-3 py-1 text-sm rounded-full transition-colors ${filter === category
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
               >
                 {category.charAt(0).toUpperCase() + category.slice(1)}

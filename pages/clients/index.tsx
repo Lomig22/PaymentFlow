@@ -1,9 +1,9 @@
 import { AlertCircle, Check, Plus, Upload } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/router";
-import ClientList from "../../src/components/clients/ClientList";
-import UnknownClientList from "../../src/components/unknownClients/UnknownClientList";
-import { useAbonnement } from "../../src/components/context/AbonnementContext";
+import ClientList from "../../components/clients/ClientList";
+import UnknownClientList from "../../components/unknownClients/UnknownClientList";
+import { useAbonnement } from "../../components/context/AbonnementContext";
 
 export type SelectedPage = "client" | "unknown";
 

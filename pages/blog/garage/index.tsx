@@ -14,7 +14,7 @@ import {
   CTA,
   AnimatedGif,
   VideoEmbed
-} from '../../../src/components/blog/BlogEnrichmentBlocks';
+} from '../../../components/blog/BlogEnrichmentBlocks';
 import { ArrowLeft } from 'lucide-react';
 import ContactModal from "../../landing/ContactModal";
 
