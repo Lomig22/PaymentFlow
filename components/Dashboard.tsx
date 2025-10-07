@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { supabase } from "../src/lib/supabase";
+import { supabase } from "../src/lib/supabase/supabase";
 import {
   BarChart3,
   Users,
@@ -65,7 +65,6 @@ interface NotificationType {
 
 interface NotificationList extends Array<NotificationType> { }
 
-import { motion } from "framer-motion";
 import { Helmet } from "react-helmet";
 import DsoChart from "./chart/DsoChart";
 import RemindersCard from "./chart/RemindersCard";
@@ -713,8 +712,8 @@ export default function Dashboard() {
                               setDropdownOpen(false);
                             }}
                             className={`block w-full text-left px-4 py-2 text-sm ${filter === "all"
-                                ? "bg-blue-600 text-white"
-                                : "text-gray-700 hover:bg-gray-100"
+                              ? "bg-blue-600 text-white"
+                              : "text-gray-700 hover:bg-gray-100"
                               }`}
                           >
                             Toutes
@@ -726,8 +725,8 @@ export default function Dashboard() {
                               setDropdownOpen(false);
                             }}
                             className={`block w-full text-left px-4 py-2 text-sm ${filter === "unread"
-                                ? "bg-blue-600 text-white"
-                                : "text-gray-700 hover:bg-gray-100"
+                              ? "bg-blue-600 text-white"
+                              : "text-gray-700 hover:bg-gray-100"
                               }`}
                           >
                             Non lues
@@ -739,8 +738,8 @@ export default function Dashboard() {
                               setDropdownOpen(false);
                             }}
                             className={`block w-full text-left px-4 py-2 text-sm ${filter === "read"
-                                ? "bg-blue-600 text-white"
-                                : "text-gray-700 hover:bg-gray-100"
+                              ? "bg-blue-600 text-white"
+                              : "text-gray-700 hover:bg-gray-100"
                               }`}
                           >
                             Lues
@@ -767,10 +766,10 @@ export default function Dashboard() {
                           <div className="flex-1">
                             <p
                               className={`text-sm font-medium ${notification.type === "erreur"
-                                  ? "text-red-600"
-                                  : notification.type === "info"
-                                    ? "text-blue-600"
-                                    : "text-gray-800"
+                                ? "text-red-600"
+                                : notification.type === "info"
+                                  ? "text-blue-600"
+                                  : "text-gray-800"
                                 }`}
                             >
                               {notification.message}
@@ -949,7 +948,7 @@ export default function Dashboard() {
                       className="bg-orange-400 h-2 rounded-full" // plus vif que orange-500
                       style={{
                         width: `${(stats.reminderSteps.second /
-                            stats.totalReceivables) *
+                          stats.totalReceivables) *
                           100
                           }%`,
                       }}
@@ -1037,13 +1036,13 @@ export default function Dashboard() {
                     style={{
                       backgroundColor: "#4F8CFF", // bleu vif
                       width: `${stats.totalClients > 0
-                          ? Math.min(
-                            (stats.clientsNeedingReminder /
-                              stats.totalClients) *
-                            100,
-                            100
-                          )
-                          : 0
+                        ? Math.min(
+                          (stats.clientsNeedingReminder /
+                            stats.totalClients) *
+                          100,
+                          100
+                        )
+                        : 0
                         }%`,
                     }}
                   />
@@ -1064,12 +1063,12 @@ export default function Dashboard() {
                     style={{
                       backgroundColor: "#F6C752", // jaune orangé plus vif
                       width: `${stats.totalReceivables > 0
-                          ? Math.min(
-                            (stats.activeReminders / stats.totalReceivables) *
-                            100,
-                            100
-                          )
-                          : 0
+                        ? Math.min(
+                          (stats.activeReminders / stats.totalReceivables) *
+                          100,
+                          100
+                        )
+                        : 0
                         }%`,
                     }}
                   />
@@ -1090,13 +1089,13 @@ export default function Dashboard() {
                     style={{
                       backgroundColor: "#00C853", // vert plus vif
                       width: `${stats.totalReceivables > 0
-                          ? Math.min(
-                            (stats.resolvedReminders /
-                              stats.totalReceivables) *
-                            100,
-                            100
-                          )
-                          : 0
+                        ? Math.min(
+                          (stats.resolvedReminders /
+                            stats.totalReceivables) *
+                          100,
+                          100
+                        )
+                        : 0
                         }%`,
                     }}
                   />
@@ -1117,13 +1116,13 @@ export default function Dashboard() {
                     style={{
                       backgroundColor: "#A259FF", // violet vif
                       width: `${stats.totalReceivables > 0
-                          ? Math.min(
-                            (stats.resolvedReminders /
-                              stats.totalReceivables) *
-                            100,
-                            100
-                          )
-                          : 0
+                        ? Math.min(
+                          (stats.resolvedReminders /
+                            stats.totalReceivables) *
+                          100,
+                          100
+                        )
+                        : 0
                         }%`,
                     }}
                   />

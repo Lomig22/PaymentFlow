@@ -26,7 +26,7 @@ export default function AppRoutes({ user, onMFASuccess }: AppRoutesProps) {
 
   return (
     <Router>
-      {!user && <AppHeader user={user} onContactClick={() => { }} />}
+      {!user && <AppHeader user={user} />}
 
       <Routes>
         {/* Routes publiques */}
@@ -38,7 +38,7 @@ export default function AppRoutes({ user, onMFASuccess }: AppRoutesProps) {
         >
           <Route
             path="mfa"
-            element={<AuthMFA onMFASuccess={onMFASuccess || (() => { })} />}
+            element={<AuthMFA />}
           />
           <Route path="receivables/new" element={<ReceivableForm onClose={() => { }} onReceivableAdded={() => { }} />} />
         </Route>

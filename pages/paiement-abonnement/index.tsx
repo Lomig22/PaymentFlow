@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import { supabase } from "../../src/lib/supabase";
+import { supabase } from "../../src/lib/supabase/supabase";
 
 export default function SuccessPage() {
   const [error, setError] = useState<string | null>(null);

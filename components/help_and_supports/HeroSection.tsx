@@ -1,6 +1,7 @@
 import React from "react";
 import { Search, HelpCircle } from "lucide-react";
-import { motion } from "framer-motion";
+import * as motion from 'motion/react-client';
+
 
 const HeroSection: React.FC = () => {
   return (

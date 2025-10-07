@@ -1,11 +1,7 @@
 import { useState } from "react";
-import { supabase } from "../src/lib/supabase";
+import { supabase } from "../src/lib/supabase/supabase";
 
-type Props = {
-  onMFASuccess: () => void;
-};
-
-export default function AuthMFA({ onMFASuccess }: Props) {
+export default function AuthMFA() {
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);

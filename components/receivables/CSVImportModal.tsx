@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { supabase } from "../../src/lib/supabase";
+import { supabase } from "../../src/lib/supabase/supabase";
 import { X, Upload, AlertCircle, Info, Loader2 } from "lucide-react";
 import { Receivable, Client } from "../../src/types/database";
 import Papa from "papaparse";

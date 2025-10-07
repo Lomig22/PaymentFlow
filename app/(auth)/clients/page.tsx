@@ -1,13 +1,14 @@
+'use client';
 import { AlertCircle, Check, Plus, Upload } from "lucide-react";
 import { useState } from "react";
-import { useRouter } from "next/router";
-import ClientList from "../../components/clients/ClientList";
-import UnknownClientList from "../../components/unknownClients/UnknownClientList";
-import { useAbonnement } from "../../components/context/AbonnementContext";
+import ClientList from "../../../components/clients/ClientList";
+import UnknownClientList from "../../../components/unknownClients/UnknownClientList";
+import { useAbonnement } from "../../../components/context/AbonnementContext";
+import { useSearchParams } from "next/navigation";
 
 export type SelectedPage = "client" | "unknown";
 
-const ClientPage = () => {
+export default function ClientPage() {
   const { checkAbonnement } = useAbonnement();
   const [tab, setTab] = useState<"client" | "unknown">("client");
   const [showForm, setShowForm] = useState(false);
@@ -15,8 +16,10 @@ const ClientPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [importSuccess, setImportSuccess] = useState<string | null>(null);
 
-  const router = useRouter();
-  const { assignProfile: assignProfileId } = router.query;
+
+  const searchParams = useSearchParams();
+  const assignProfileId = searchParams?.get("assignProfile") ?? "";
+
   // const [searchTerm, setSearchTerm] = useState<string>('');
   const handleClick = () => {
     if (!checkAbonnement()) return;
@@ -119,5 +122,3 @@ const ClientPage = () => {
     </div>
   );
 };
-
-export default ClientPage;

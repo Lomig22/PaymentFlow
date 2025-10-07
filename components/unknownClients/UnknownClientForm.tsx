@@ -1,7 +1,7 @@
 import { X } from 'lucide-react';
 import { useState } from 'react';
 import { UnknownClient } from '../../src/types/database';
-import { supabase } from '../../src/lib/supabase';
+import { supabase } from '../../src/lib/supabase/supabase';
 
 type UnknownClientFormProps = {
 	onClose: () => void;

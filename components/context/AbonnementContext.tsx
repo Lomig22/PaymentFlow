@@ -1,4 +1,4 @@
-// context/AbonnementContext.tsx
+'use client';
 import React, { createContext, useContext, useState } from "react";
 import useAbonnementCheck from "../../src/hooks/useAbonnementCheck";
 import ModalAbonnementExpiré from "../ModalAbonnementExpiré";

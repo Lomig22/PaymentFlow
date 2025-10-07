@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { supabase } from "../../src/lib/supabase";
+import { supabase } from "../../src/lib/supabase/supabase";
 import { saveNotification } from "../../src/lib/notification";
 import { Client, Receivable, ReminderProfile } from "../../src/types/database";
 import { X, AlertCircle, Play, Pause } from "lucide-react";

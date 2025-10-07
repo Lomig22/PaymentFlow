@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { supabase } from "../../src/lib/supabase";
 import { BanknoteIcon } from "lucide-react";
 const statusColors: Record<string, string> = {
   late: "#FF7F50",
@@ -24,28 +23,12 @@ export default function ClientBalanceBar() {
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const response = await fetch("api/receivables", {
+        method: "GET",
+        headers: { "Content-Type": "application/json" }
+      })
 
-      if (!user) throw new Error("Utilisateur non authentifié");
-
-      const userEmail = user.email;
-
-      const { data: invitedByData, error: invitedByError } = await supabase
-        .from("invited_users")
-        .select("invited_by")
-        .eq("invited_email", userEmail);
-
-      if (invitedByError) throw invitedByError;
-
-      const invitedByIds = invitedByData.map((entry) => entry.invited_by);
-      const allOwnerIds = [user.id, ...invitedByIds];
-
-      const { data: receivables, error } = await supabase
-        .from("receivables")
-        .select("status, amount, paid_amount, due_date")
-        .in("owner_id", allOwnerIds);
+      const { receivables, error } = await response.json();
 
       if (error) {
         console.error("Erreur Supabase :", error.message);

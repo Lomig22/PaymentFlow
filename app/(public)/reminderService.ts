@@ -1,6 +1,6 @@
-import { supabase } from './supabase';
-import { Receivable, Client } from '../types/database';
-import { sendEmail } from './email';
+import { supabase } from '../../src/lib/supabase/supabase';
+import { Receivable, Client } from '../../src/types/database';
+import { sendEmail } from '../../src/lib/email';
 import { v4 as uuidv4 } from 'uuid';
 
 interface EmailSettings {
@@ -13,70 +13,70 @@ interface EmailSettings {
 	email_signature?: string;
 }
 
-  
-  function convertJHMToMinutes(jhm: {j:number;h:number;m:number}| undefined): number {
-	if(!jhm){
+
+function convertJHMToMinutes(jhm: { j: number; h: number; m: number } | undefined): number {
+	if (!jhm) {
 		return 60
 	}
 	const joursEnMinutes = jhm.j * 24 * 60;
 	const heuresEnMinutes = jhm.h * 60;
 	const minutes = jhm.m;
-  
+
 	return joursEnMinutes + heuresEnMinutes + minutes;
-  }
+}
 // Fonction pour récupérer les paramètres email de l'utilisateur
 export async function getEmailSettings(userId: string): Promise<EmailSettings | null> {
-  try {
-    const { data, error } = await supabase
-      .from('email_settings')
-      .select('*')
-      .eq('user_id', userId)
-      .maybeSingle();
+	try {
+		const { data, error } = await supabase
+			.from('email_settings')
+			.select('*')
+			.eq('user_id', userId)
+			.maybeSingle();
 
-    if (error) {
-      if (error.code === 'PGRST116') {
-        // No record: fallback to platform defaults (resolved server-side by Edge Function)
-        return {
-          provider_type: 'platform',
-          smtp_username: '',
-          smtp_password: '',
-          smtp_server: '',
-          smtp_port: 0 as unknown as number,
-          smtp_encryption: '',
-          email_signature: undefined,
-        } as EmailSettings;
-      }
-      throw error;
-    }
-    // If user has partial settings, still allow platform fallback by returning 'platform'
-    if (!data) {
-      return {
-        provider_type: 'platform',
-        smtp_username: '',
-        smtp_password: '',
-        smtp_server: '',
-        smtp_port: 0 as unknown as number,
-        smtp_encryption: '',
-        email_signature: undefined,
-      } as EmailSettings;
-    }
-    return data as unknown as EmailSettings;
-  } catch (error) {
-    console.error(
-      'Erreur lors de la récupération des paramètres email:',
-      error
-    );
-    // In case of any error, fallback to platform
-    return {
-      provider_type: 'platform',
-      smtp_username: '',
-      smtp_password: '',
-      smtp_server: '',
-      smtp_port: 0 as unknown as number,
-      smtp_encryption: '',
-      email_signature: undefined,
-    } as EmailSettings;
-  }
+		if (error) {
+			if (error.code === 'PGRST116') {
+				// No record: fallback to platform defaults (resolved server-side by Edge Function)
+				return {
+					provider_type: 'platform',
+					smtp_username: '',
+					smtp_password: '',
+					smtp_server: '',
+					smtp_port: 0 as unknown as number,
+					smtp_encryption: '',
+					email_signature: undefined,
+				} as EmailSettings;
+			}
+			throw error;
+		}
+		// If user has partial settings, still allow platform fallback by returning 'platform'
+		if (!data) {
+			return {
+				provider_type: 'platform',
+				smtp_username: '',
+				smtp_password: '',
+				smtp_server: '',
+				smtp_port: 0 as unknown as number,
+				smtp_encryption: '',
+				email_signature: undefined,
+			} as EmailSettings;
+		}
+		return data as unknown as EmailSettings;
+	} catch (error) {
+		console.error(
+			'Erreur lors de la récupération des paramètres email:',
+			error
+		);
+		// In case of any error, fallback to platform
+		return {
+			provider_type: 'platform',
+			smtp_username: '',
+			smtp_password: '',
+			smtp_server: '',
+			smtp_port: 0 as unknown as number,
+			smtp_encryption: '',
+			email_signature: undefined,
+		} as EmailSettings;
+	}
 }
 
 // Fonction pour formater le template avec les variables
@@ -114,7 +114,7 @@ function determineReminderLevel(
 	daysLate: number,
 	client: Client,
 	status: string,
-	content?:string|null
+	content?: string | null
 ): {
 	level: 'pre' | 'first' | 'second' | 'third' | 'final' | null;
 	template: string | null;
@@ -127,26 +127,26 @@ function determineReminderLevel(
 
 	// Si une relance a déjà été faite avec un certain niveau,
 	// on renvoie directement le niveau suivant avec le template correspondant
-	if (status === 'Relance 3' && (client.reminder_template_final||content))
+	if (status === 'Relance 3' && (client.reminder_template_final || content))
 		return { level: 'final', template: (client.reminder_template_final ?? content) ?? null };
 	if (status === 'Relance 2' && (client.reminder_template_3 || content))
 		return { level: 'third', template: (client.reminder_template_3 ?? content) ?? null };
-	if (status === 'Relance 1' && (client.reminder_template_2||content))
+	if (status === 'Relance 1' && (client.reminder_template_2 || content))
 		return { level: 'second', template: (client.reminder_template_2 ?? content) ?? null };
-	if (status === 'Relance préventive' && (client.reminder_template_1||content) )
+	if (status === 'Relance préventive' && (client.reminder_template_1 || content))
 		return { level: 'first', template: (client.reminder_template_1 ?? content) ?? null };
-	if (status ==='pending' && client.pre_reminder_template){
-	//	alert("pending")
-		return { level: 'pre', template: (client.pre_reminder_template ?? content) ?? null }; 
+	if (status === 'pending' && client.pre_reminder_template) {
+		//	alert("pending")
+		return { level: 'pre', template: (client.pre_reminder_template ?? content) ?? null };
 	}
 	// Si aucun statut de relance encore, on peut proposer un pré-reminder
-/*  	if (status==="pending" && client.reminder_template_1 && daysLate>0){
-		return { level: 'first', template: client.reminder_template_1 };
-	}  */
-		
+	/*  	if (status==="pending" && client.reminder_template_1 && daysLate>0){
+			return { level: 'first', template: client.reminder_template_1 };
+		}  */
+
 
 	// Conversion des jours de retard en minutes (1 jour = 24h * 60min)
-	let daysLateMinutes:number = daysLate * 24 * 60;
+	let daysLateMinutes: number = daysLate * 24 * 60;
 
 	// Vérification selon le nombre de minutes de retard et les templates disponibles
 	// On commence par les relances les plus sévères (final → first)
@@ -159,14 +159,14 @@ function determineReminderLevel(
 	}
 
 	if (
-		daysLateMinutes >= (convertJHMToMinutes(client.reminder_delay_3) ) &&
+		daysLateMinutes >= (convertJHMToMinutes(client.reminder_delay_3)) &&
 		client.reminder_template_3
 	) {
 		return { level: 'third', template: client.reminder_template_3 };
 	}
 
 	if (
-		daysLateMinutes >= (convertJHMToMinutes(client.reminder_delay_2) ) &&
+		daysLateMinutes >= (convertJHMToMinutes(client.reminder_delay_2)) &&
 		client.reminder_template_2
 	) {
 		return { level: 'second', template: client.reminder_template_2 };
@@ -182,9 +182,9 @@ function determineReminderLevel(
 	// Si aucun des cas ci-dessus ne s'applique, on retourne une relance préventive si disponible
 	return { level: 'pre', template: client.pre_reminder_template || null };
 }
-export  async function getReminderTemplate(
+export async function getReminderTemplate(
 	receivableId: string,
-	status?:string
+	status?: string
 ): Promise<{ level: string; template: string } | null> {
 	try {
 		// Récupérer la créance avec les détails du client
@@ -207,11 +207,11 @@ export  async function getReminderTemplate(
 		const { level, template } = determineReminderLevel(
 			daysLate,
 			receivable.client,
-			status||receivable.status
+			status || receivable.status
 		);
 
 		if (!level || !template) return null;
-	//	alert(level)
+		//	alert(level)
 		// Retourner les informations pour la template
 		return {
 			level,
@@ -228,7 +228,7 @@ export  async function getReminderTemplate(
 export async function sendManualReminder(
 	receivableId: string,
 	subject?: string,
-	content?: string|null,
+	content?: string | null,
 ): Promise<boolean> {
 	try {
 		const { data: receivable, error: receivableError } = await supabase
@@ -258,12 +258,12 @@ export async function sendManualReminder(
 			daysLate,
 			receivable.client,
 			receivable.status,
-			content?content:null
+			content ? content : null
 		);
 		if (!level || (!template && !content)) return false;
 
 		// ✅ Générer le contenu personnalisé ou utiliser le template par défaut
-		console.log("content: ",content)
+		console.log("content: ", content)
 
 		// Garantir une string pour le template d'email
 		const emailBodyTemplate = (content ?? template ?? "");
@@ -275,19 +275,19 @@ export async function sendManualReminder(
 			due_date: receivable.due_date,
 			days_late: daysLate || 0,
 			days_left: Math.max(0, -1 * daysLate),
-		  }).replace(/\n/g, '<br>');
-		  
-		
-/* 		if (content){
-			content=formatTemplate(content, {
-				company: receivable.client.company_name,
-				amount: receivable.amount,
-				invoice_number: receivable.invoice_number,
-				due_date: receivable.due_date,
-				days_late: daysLate || 0,
-				days_left: Math.max(0, -1 * daysLate),
-			});
-		} */
+		}).replace(/\n/g, '<br>');
+
+
+		/* 		if (content){
+					content=formatTemplate(content, {
+						company: receivable.client.company_name,
+						amount: receivable.amount,
+						invoice_number: receivable.invoice_number,
+						due_date: receivable.due_date,
+						days_late: daysLate || 0,
+						days_left: Math.max(0, -1 * daysLate),
+					});
+				} */
 
 		const finalSubject =
 			subject || `Relance facture ${receivable.invoice_number}`;
@@ -299,12 +299,12 @@ export async function sendManualReminder(
 		const toEmail = receivable.email ?? receivable.client.email ?? '';
 		if (!toEmail) throw new Error('Aucune adresse email disponible pour la relance');
 		const emailSent = await sendEmail(
-		  emailSettings,
-		  toEmail,
-		  finalSubject,
-		  finalContent,
-		  receivable.invoice_pdf_url,
-		  emailTrackingId
+			emailSettings,
+			toEmail,
+			finalSubject,
+			finalContent,
+			receivable.invoice_pdf_url,
+			emailTrackingId
 		);
 		if (emailSent) {
 			// Enregistrer la relance (toujours), afin d'activer le suivi d'ouverture via email_id
@@ -330,14 +330,14 @@ export async function sendManualReminder(
 							level === 'first'
 								? 'Relance 1'
 								: level === 'second'
-								? 'Relance 2'
-								: level === 'third'
-								? 'Relance 3'
-								: level === 'final'
-								? 'Relance finale'
-								: level === 'pre'
-								? 'Relance préventive'
-								: 'Relance',
+									? 'Relance 2'
+									: level === 'third'
+										? 'Relance 3'
+										: level === 'final'
+											? 'Relance finale'
+											: level === 'pre'
+												? 'Relance préventive'
+												: 'Relance',
 						updated_at: new Date().toISOString(),
 					})
 					.eq('id', receivableId);
@@ -480,14 +480,14 @@ export async function sendOneReminder(receivableId: string): Promise<boolean> {
 							level === 'first'
 								? 'Relance 1'
 								: level === 'second'
-								? 'Relance 2'
-								: level === 'third'
-								? 'Relance 3'
-								: level === 'final'
-								? 'Relance finale'
-								: level === 'pre'
-								? 'Relance préventive'
-								: 'Relance',
+									? 'Relance 2'
+									: level === 'third'
+										? 'Relance 3'
+										: level === 'final'
+											? 'Relance finale'
+											: level === 'pre'
+												? 'Relance préventive'
+												: 'Relance',
 						email_id: autoEmailTrackingId,
 						updated_at: new Date().toISOString(),
 					})
@@ -544,24 +544,24 @@ function shouldSendReminder(receivable: any): boolean {
 	return now.getTime() >= nextReminderTime;
 }
 
-  
+
 export async function AutomaticallySendReminders(): Promise<void> {
 	try {
 		const { data: receivables, error } = await supabase
 			.from('receivables')
 			.select('*, client:clients(*)')
 			.in('status', ['pending', 'Relance 1', 'Relance 2', 'Relance 3', 'Relance finale', 'Relance préventive']) // ou selon tes statuts
-			
+
 
 		if (error) throw error;
 		if (!receivables || receivables.length === 0) return;
 		for (const receivable of receivables) {
 			if (shouldSendReminder(receivable)) {
-				console.log("SEND REMINDERS FORM RECEIVABLE"+receivable.client.company_name+" WITH CURRENT STATUS "+receivable.status);
-				
+				console.log("SEND REMINDERS FORM RECEIVABLE" + receivable.client.company_name + " WITH CURRENT STATUS " + receivable.status);
+
 				await sendOneReminder(receivable.id);
 			}
-		
+
 		}
 	} catch (err) {
 		console.error('Erreur lors de l’envoi automatique des relances :', err);

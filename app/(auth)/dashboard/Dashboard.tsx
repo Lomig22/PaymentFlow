@@ -1,5 +1,6 @@
+'use client';
 import React, { useEffect, useState, useRef } from "react";
-import { supabase } from "../../src/lib/supabase";
+import { supabase } from "../../../src/lib/supabase/supabase";
 import {
   BarChart3,
   Users,
@@ -13,7 +14,7 @@ import {
   Bell,
   FileBarChart2,
 } from "lucide-react";
-import { Client, Receivable } from "../../src/types/database";
+import { Client, Receivable } from "../../../src/types/database";
 import Swal from "sweetalert2";
 import {
   ResponsiveContainer,
@@ -34,7 +35,7 @@ import {
   Radar,
   LabelList,
 } from "recharts";
-import ClientBalanceBar from "../../components/chart/ClientBalanceBar";
+import ClientBalanceBar from "../../../components/chart/ClientBalanceBar";
 interface DashboardStats {
   totalClients: number;
   clientsNeedingReminder: number;
@@ -65,14 +66,14 @@ interface NotificationType {
 
 interface NotificationList extends Array<NotificationType> { }
 
-import { motion } from "framer-motion";
 import { Helmet } from "react-helmet";
-import DsoChart from "../../components/chart/DsoChart";
-import RemindersCard from "../../components/chart/RemindersCard";
-import OverdueInvoices from "../../components/chart/OverdueInvoices";
-import DashboardLayout from "../../components/chart/DashboardLayout";
-import BalanceAgeeChart from "../../components/chart/BalanceAgeeChart";
-export default function Dashboard() {
+import DsoChart from "../../../components/chart/DsoChart";
+import RemindersCard from "../../../components/chart/RemindersCard";
+import OverdueInvoices from "../../../components/chart/OverdueInvoices";
+import DashboardLayout from "../../../components/chart/DashboardLayout";
+import BalanceAgeeChart from "../../../components/chart/BalanceAgeeChart";
+import { User } from "@supabase/supabase-js";
+export default function Dashboard({ user }: { user: User }) {
   const [stats, setStats] = useState<DashboardStats>({
     totalClients: 0,
     clientsNeedingReminder: 0,
@@ -250,9 +251,6 @@ export default function Dashboard() {
 
   useEffect(() => {
     const fetchNotifications = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
 
       if (!user) throw new Error("Utilisateur non authentifié");
 
@@ -379,9 +377,6 @@ export default function Dashboard() {
     );
   };
   const fetchDashboardStats = async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
 
     try {
       if (!user) throw new Error("Utilisateur non authentifié");

@@ -1,15 +1,15 @@
+'use client';
 import { useEffect, useRef, useState } from "react";
 import { TrendingUp, X, BarChart3, Users, FileText, Settings } from "lucide-react";
 import AnimatedResourceIcon from "./AnimatedResourceIcon";
 import { Menu as HeadlessMenu } from "@headlessui/react";
-import { supabase } from "../src/lib/supabase";
+import { supabase } from "../src/lib/supabase/supabase";
 import { User } from "@supabase/supabase-js";
 import ContactModal from "../pages/landing/ContactModal";
 import Link from "next/link";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 interface AppHeaderProps {
-  onContactClick: () => void;
   user: User | null;
 }
 

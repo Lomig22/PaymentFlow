@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { supabase } from '../../src/lib/supabase';
+import { supabase } from '../../src/lib/supabase/supabase';
 import { X, Upload, AlertCircle, HelpCircle, Loader2 } from 'lucide-react';
 import { Client, Notification } from '../../src/types/database';
 import { toast } from 'react-toastify';
@@ -1064,8 +1064,8 @@ export default function CSVImportModal({
 												<td className='px-4 py-3 whitespace-nowrap'>
 													<span
 														className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${client.needs_reminder
-																? 'bg-red-100 text-red-800'
-																: 'bg-green-100 text-green-800'
+															? 'bg-red-100 text-red-800'
+															: 'bg-green-100 text-green-800'
 															}`}
 													>
 														{client.needs_reminder ? 'Oui' : 'Non'}

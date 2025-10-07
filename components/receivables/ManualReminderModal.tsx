@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { X, CheckIcon } from "lucide-react";
-import { motion } from "framer-motion";
+import * as motion from 'motion/react-client';
+
 import { Dialog, Transition } from "@headlessui/react";
 
 interface ManualReminderModalProps {

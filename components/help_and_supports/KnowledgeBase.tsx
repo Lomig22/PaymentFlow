@@ -1,5 +1,6 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import * as motion from 'motion/react-client';
+
 import { Book, FileText, Video, ArrowRight } from 'lucide-react';
 
 const KnowledgeBase: React.FC = () => {
@@ -37,7 +38,7 @@ const KnowledgeBase: React.FC = () => {
   return (
     <section className="mb-16" id="knowledge-base">
       <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-6">Base de connaissances</h2>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {resources.map((resource, index) => (
           <motion.div

@@ -1,5 +1,5 @@
 import { BarChart2, AlertTriangle, CheckCircle, Wrench, Building2, Car, Rocket, Factory } from "lucide-react";
-import { motion } from "framer-motion";
+import * as motion from 'motion/react-client';
 import { useRef } from "react";
 
 const sectors = [

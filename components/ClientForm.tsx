@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { supabase } from "../src/lib/supabase";
+import { supabase } from "../src/lib/supabase/supabase";
 import { Client, Receivable, ReminderProfile } from "../src/types/database";
 import { confirmAlert } from "react-confirm-alert";
 import { Minus, Plus, X } from "lucide-react";
@@ -472,8 +472,8 @@ export default function ClientForm({
                           handleEmailChange(index, e.target.value)
                         }
                         className={`w-full p-3 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent ${!isValidEmail(email) && email !== ""
-                            ? "border-red-500"
-                            : "border-gray-300"
+                          ? "border-red-500"
+                          : "border-gray-300"
                           }`}
                         placeholder="exemple@domaine.com"
                       />

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "../../src/lib/supabase";
+import { supabase } from "../../src/lib/supabase/supabase";
 import { Client, Receivable, Reminder } from "../../src/types/database";
 import { AlertCircle, Eye, FileText, Mail, Trash2 } from "lucide-react";
 import Link from "next/link";

@@ -1,6 +1,7 @@
 import React from 'react';
 import { MessageCircle, PhoneCall, Mail, Clock } from 'lucide-react';
-import { motion } from 'framer-motion';
+import * as motion from 'motion/react-client';
+
 
 const SupportOptions: React.FC = () => {
   const options = [

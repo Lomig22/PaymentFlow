@@ -1,7 +1,6 @@
-import { motion, useInView } from "framer-motion";
+import * as motion from "motion/react-client";
 import Link from "next/link";
-import { useRouter } from "next/router";
-import { useRef, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   BarChart2,
   Mail,
@@ -12,6 +11,9 @@ import {
   ChevronRight,
 } from "lucide-react";
 import ContactModal from "../pages/landing/ContactModal";
+import { FooterContactModal } from "./footer/FooterContactModal";
+import { ExtensionAlert } from "./footer/ExtensionAlert";
+import { ResetCacheButton } from "./footer/ResetCacheButton";
 
 // Animation variants (déplacés hors du composant)
 const fadeInScale = {
@@ -39,108 +41,6 @@ const fadeInLeft = {
 };
 
 const Footer = () => {
-  const scrollToSection = (id: string) => {
-    const element = document.getElementById(id);
-    element?.scrollIntoView({ behavior: "smooth" });
-    setIsMobileMenuOpen(false);
-  };
-
-  const router = useRouter();
-
-  const navigate = (path: string) => {
-    router.push(path);
-  }
-
-  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    e.preventDefault(); // prevent default anchor behavior
-    router.push("/pricing"); // navigate
-    window.scrollTo({ top: 0, left: 0, behavior: "smooth" }); // smooth scroll to top
-  };
-
-  const calendlyRef = useRef<any>(null);
-  const [showContactModal, setShowContactModal] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [showContact, setShowContact] = useState(false);
-
-  const showContactModalRef = useRef(showContactModal);
-  const isMobileMenuOpenRef = useRef(isMobileMenuOpen);
-
-  useEffect(() => {
-    showContactModalRef.current = showContactModal;
-  }, [showContactModal]);
-
-  useEffect(() => {
-    isMobileMenuOpenRef.current = isMobileMenuOpen;
-  }, [isMobileMenuOpen]);
-
-  // Add ESC key handler
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        // Close contact modal first if open
-        if (showContactModalRef.current) {
-          setShowContactModal(false);
-        }
-        // Then close mobile menu if open
-        else if (isMobileMenuOpenRef.current) {
-          setIsMobileMenuOpen(false);
-        }
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
-
-  const fadeInUp = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.6, ease: [0.42, 0, 0.58, 1] as [number, number, number, number] },
-    },
-  };
-
-
-  const handleNavToSection = (id: string) => {
-    if (window.location.pathname === "/") {
-      scrollToSection(id);
-    } else {
-      navigate(`/#${id}`);
-    }
-  };
-
-  // --- Détection extensions/suspicious scripts ---
-  const [extensionAlert, setExtensionAlert] = useState<string | null>(null);
-  useEffect(() => {
-    // Liste de patterns connus pour scripts d'extensions courantes (adblock, capture, etc)
-    const suspiciousPatterns = [
-      'chrome-extension://',
-      'adblock',
-      'web-capture',
-      'cookie-banner',
-      'Switch-',
-      'polyfill.js',
-      'feature.js',
-      'lib/web-capture-bootstrap.js',
-    ];
-    // Liste tous les scripts présents
-    const scripts = Array.from(document.getElementsByTagName('script'));
-    const found = scripts.find(script => {
-      const src = script.src || '';
-      return suspiciousPatterns.some(pattern => src.includes(pattern));
-    });
-    if (found) {
-      setExtensionAlert('Attention : Des extensions ou scripts tiers sont détectés sur cette page. Cela peut entraîner des bugs ou une surconsommation mémoire. Essayez de désactiver vos extensions ou d\'utiliser la navigation privée.');
-    }
-  }, []);
-
-  // --- Reset cache/localStorage ---
-  const handleResetCache = () => {
-    localStorage.clear();
-    sessionStorage.clear();
-    window.location.reload();
-  };
 
   return (
     <motion.footer
@@ -172,14 +72,15 @@ const Footer = () => {
             <ul className="space-y-2 text-sm">
               <li>
                 <button
-                  onClick={() => handleNavToSection("features")}
                   className="text-gray-500 hover:text-gray-700"
                 >
-                  Fonctionnalités
+                  <Link href={"#features"}>
+                    Fonctionnalités
+                  </Link>
                 </button>
               </li>
               <li>
-                <Link href="/pricing" onClick={handleClick} className="text-gray-500 hover:text-gray-700">
+                <Link href="/pricing" className="text-gray-500 hover:text-gray-700">
                   Tarifs
                 </Link>
               </li>
@@ -248,38 +149,19 @@ const Footer = () => {
                   Mentions légales
                 </Link>
               </li>
-              <li>
-                <button
-                  onClick={() => setShowContactModal(true)}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  Contactez-nous
-                </button>
-              </li>
+              <FooterContactModal></FooterContactModal>
             </ul>
           </div>
         </motion.div>
-        {showContactModal && (
-          <ContactModal onClose={() => setShowContactModal(false)} />
-        )}
+
         <motion.div
           className="pt-8 border-t border-gray-200 text-center text-sm text-gray-500"
           variants={fadeInLeft}
         >
           <p>2024 PaymentFlow. Tous droits réservés.</p>
           {/* Bouton reset cache/localStorage */}
-          <button
-            className="mt-4 px-3 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200 transition"
-            onClick={handleResetCache}
-          >
-            Réinitialiser le cache / localStorage
-          </button>
-          {/* Alerte extensions/suspicious scripts */}
-          {extensionAlert && (
-            <div className="mt-4 p-3 bg-yellow-100 text-yellow-800 rounded border border-yellow-300">
-              {extensionAlert}
-            </div>
-          )}
+          <ResetCacheButton />
+          <ExtensionAlert></ExtensionAlert>
         </motion.div>
       </div>
     </motion.footer>

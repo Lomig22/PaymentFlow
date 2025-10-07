@@ -6,7 +6,7 @@ import FaqSection from "../../components/help_and_supports/FaqSection";
 import SupportOptions from "../../components/help_and_supports/SupportOptions";
 import KnowledgeBase from "../../components/help_and_supports/KnowledgeBase";
 import ContactForm from "../../components/help_and_supports/ContactForm";
-import { checkAuth, supabase } from "../../src/lib/supabase";
+import { checkAuth, supabase } from "../../src/lib/supabase/supabase";
 import { User } from "@supabase/supabase-js";
 import useChatlingScript from "../../src/lib/useChatling";
 
@@ -37,7 +37,7 @@ const HelpAndSupport: React.FC = () => {
   }, []);
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      {user && <Header user={user} onContactClick={() => { }} />}
+      {user && <Header user={user} />}
       <main className="flex-grow">
         <HeroSection />
         <div className="container mx-auto px-4 py-12">

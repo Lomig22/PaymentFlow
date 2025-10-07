@@ -1,6 +1,6 @@
 // hooks/useAbonnementCheck.ts
 import { useEffect, useState } from "react";
-import { supabase } from "../lib/supabase";
+import { supabase } from "../lib/supabase/supabase";
 import { isBefore, format, differenceInDays } from "date-fns";
 import { fr } from "date-fns/locale";
 

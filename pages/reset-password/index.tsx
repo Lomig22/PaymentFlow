@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { TrendingUp, Lock } from "lucide-react";
-import { supabase } from "../../src/lib/supabase";
+import { supabase } from "../../src/lib/supabase/supabase";
 
 const validatePassword = (password: string) => {
   const minLength = password.length >= 8;

@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { supabase } from "../../src/lib/supabase";
+import { supabase } from "../../src/lib/supabase/supabase";
 import {
   Receivable,
   Client,
@@ -39,7 +39,7 @@ import {
   getReminderTemplate,
   sendManualReminder,
   getEmailSettings,
-} from "../../src/lib/reminderService";
+} from "../../app/(public)/reminderService";
 import CSVImportModal, { CSVMapping } from "../../components/receivables/CSVImportModal";
 import ReminderHistory from "../../components/receivables/ReminderHistory";
 import Link from "next/link";

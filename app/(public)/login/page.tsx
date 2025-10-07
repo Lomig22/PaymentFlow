@@ -1,8 +1,10 @@
+'use client';
 import React, { useState } from "react";
-import { supabase } from "../../src/lib/supabase";
+import { supabase } from "../../../src/lib/supabase/supabase";
 import { Lock, Mail, Eye, EyeOff, ArrowLeft } from "lucide-react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
+
 
 export default function LoginPage() {
   const router = useRouter();
@@ -19,36 +21,16 @@ export default function LoginPage() {
     router.push(page);
   };
 
-  const [showTotpPrompt, setShowTotpPrompt] = useState(false);
-  const [totpCode, setTotpCode] = useState("");
-  const [mfaChallenge, setMfaChallenge] = useState<string | null>(null);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setMessage(null);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        if (error.name === "MFARequiredError") {
-          // Si MFA est requis
-          setMfaChallenge(error.message); // message = mfa ticket
-          setShowTotpPrompt(true);
-          return; // On attend la saisie du code MFA
-        }
-
-        if (error.message.includes("Invalid login credentials")) {
-          throw new Error("Email ou mot de passe incorrect.");
-        }
-        throw error;
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (!data.user) {
+        throw Error("Utilisateur non trouvé");
       }
-
-      if (!data.user) throw new Error("Utilisateur non trouvé");
 
       // Vérifier l’abonnement (crée un abonnement 'free' si absent)
       const { data: subscriptions, error: subError } = await supabase
@@ -57,7 +39,7 @@ export default function LoginPage() {
         .eq("user_id", data.user.id)
         .limit(1);
 
-      if (!subError && (!subscriptions || subscriptions.length === 0)) {
+      if (!subError && !subscriptions?.length) {
         const { error: insErr } = await supabase.from("subscriptions").insert({
           user_id: data.user.id,
           created_at: new Date().toISOString(),
@@ -72,11 +54,10 @@ export default function LoginPage() {
       if (!data.user.email) {
         throw new Error("Email utilisateur introuvable. Veuillez réessayer.");
       }
-      const qs = new URLSearchParams(location.search);
-      router.push({
-        pathname: "/dashboard",
-        query: { onboarding: qs.get("onboarding") === "1" }
-      });
+
+      // Otherwise, login successful
+      router.push("/login");
+      return;
     } catch (error: any) {
       setMessage({
         type: "error",
@@ -93,21 +74,23 @@ export default function LoginPage() {
 
     try {
       const qs = new URLSearchParams(location.search);
-      const hasOnboarding = qs.get("onboarding") === "1";
-      const redirectBase = `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard`;
-      const redirectTo = hasOnboarding ? `${redirectBase}?onboarding=1` : redirectBase;
+      const res = await fetch("/api/oauth/google");
+      const json = await res.json();
 
-      console.log("Google login redirectTo:", redirectTo);
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo,
-        },
-      });
-
-      if (error) {
-        throw error;
+      if (json.error) {
+        throw json.error;
       }
+
+      console.log("GOOGLE REDIRECT URL", json.url);
+
+      window.location.href = json.url;
+
+      // const { data, error } = await supabase.auth.signInWithOAuth({
+      //   provider: "google",
+      //   options: {
+      //     redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
+      //   },
+      // });
 
       // L'utilisateur est redirigé automatiquement via l'OAuth callback.
     } catch (error: any) {
@@ -197,10 +180,7 @@ export default function LoginPage() {
             <span className="text-sm text-gray-500">ou</span>
           </div>
           <div className="space-y-4 mb-6">
-            <button
-              type="button"
-              onClick={handleGoogleLogin}
-              disabled={loading}
+            <button type="button" onClick={handleGoogleLogin} disabled={loading}
               className="w-full flex items-center justify-center gap-2 bg-white border border-gray-300 text-gray-700 p-3 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-50"
             >
               <img
@@ -208,8 +188,7 @@ export default function LoginPage() {
                 alt="Google"
                 className="h-5 w-5"
               />
-              Continuer avec Google
-            </button>
+              Continuer avec Google</button>
           </div>
 
           <div className="text-center space-y-2">

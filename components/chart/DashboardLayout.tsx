@@ -12,7 +12,7 @@ import {
   AreaChart,
 } from "recharts";
 import { Card } from "../ui/card";
-import { supabase } from "../../src/lib/supabase";
+import { supabase } from "../../src/lib/supabase/supabase";
 import { Activity } from "lucide-react";
 import { YearPicker } from "../../components/ui/year-picker";
 

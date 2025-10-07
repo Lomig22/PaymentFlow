@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import * as motion from 'motion/react-client';
+
 import { Send, CheckCircle } from 'lucide-react';
 
 const ContactForm: React.FC = () => {
@@ -21,7 +22,7 @@ const ContactForm: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log('Form submitted:', formState);
-    
+
     setTimeout(() => {
       setIsSubmitted(true);
       setFormState({
@@ -34,7 +35,7 @@ const ContactForm: React.FC = () => {
   };
 
   return (
-    <motion.div 
+    <motion.div
       className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100"
       id="contact"
       initial={{ opacity: 0, y: 20 }}
@@ -48,7 +49,7 @@ const ContactForm: React.FC = () => {
 
       <div className="px-6 py-6">
         {isSubmitted ? (
-          <motion.div 
+          <motion.div
             className="text-center py-8"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -58,7 +59,7 @@ const ContactForm: React.FC = () => {
             <p className="text-gray-600">
               Merci de nous avoir contactés. Notre équipe support vous répondra rapidement.
             </p>
-            <button 
+            <button
               onClick={() => setIsSubmitted(false)}
               className="mt-6 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
             >
@@ -82,7 +83,7 @@ const ContactForm: React.FC = () => {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
-              
+
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                   Email
@@ -97,7 +98,7 @@ const ContactForm: React.FC = () => {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
-              
+
               <div>
                 <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">
                   Sujet
@@ -118,7 +119,7 @@ const ContactForm: React.FC = () => {
                   <option value="other">Autre</option>
                 </select>
               </div>
-              
+
               <div>
                 <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
                   Message
@@ -133,7 +134,7 @@ const ContactForm: React.FC = () => {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 ></textarea>
               </div>
-              
+
               <div className="pt-2">
                 <button
                   type="submit"

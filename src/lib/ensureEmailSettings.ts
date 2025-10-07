@@ -1,11 +1,11 @@
 import { useEffect } from 'react';
-import { supabase } from './supabase';
+import { supabase } from './supabase/supabase';
 const useEnsureEmailSettings = () => {
   useEffect(() => {
     const ensureEmailSettings = async () => {
-        // Vérifie l'utilisateur côté serveur pour éviter d'agir avec une session invalide
-        const { data: userData } = await supabase.auth.getUser();
-        const userId = userData?.user?.id ?? null;
+      // Vérifie l'utilisateur côté serveur pour éviter d'agir avec une session invalide
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData?.user?.id ?? null;
       if (!userId) return;
 
       // Vérifie si une configuration existe déjà

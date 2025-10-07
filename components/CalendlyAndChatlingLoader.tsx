@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "../src/lib/supabase";
+import { supabase } from "../src/lib/supabase/supabase";
 import { User } from "@supabase/supabase-js";
 
 declare global {

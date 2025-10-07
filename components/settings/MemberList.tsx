@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { supabase } from "../../src/lib/supabase";
+import { supabase } from "../../src/lib/supabase/supabase";
 import { sendEmail } from "../../src/lib/email";
-import { getEmailSettings } from "../../src/lib/reminderService";
+import { getEmailSettings } from "../../app/(public)/reminderService";
 import { useAbonnement } from "../context/AbonnementContext";
 import Swal from "sweetalert2";
 

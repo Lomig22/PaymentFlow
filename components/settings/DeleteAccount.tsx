@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { supabase } from "../../src/lib/supabase";
+import { supabase } from "../../src/lib/supabase/supabase";
 import { useRouter } from "next/router";
 import { Eye, EyeOff } from "lucide-react";
 import { useAbonnement } from "../context/AbonnementContext";

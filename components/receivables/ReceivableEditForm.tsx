@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
-import { supabase } from "../../src/lib/supabase";
+import { supabase } from "../../src/lib/supabase/supabase";
 import { Client, Receivable } from "../../src/types/database";
 import { X, Upload, FileUp } from "lucide-react";
 import Swal from "sweetalert2";
 import { sendEmail } from "../../src/lib/email";
 import Settings from "../../pages/settings";
-import { getEmailSettings } from "../../src/lib/reminderService";
+import { getEmailSettings } from "../../app/(public)/reminderService";
 
 interface ReceivableEditFormProps {
   onClose: () => void;

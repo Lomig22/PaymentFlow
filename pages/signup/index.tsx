@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { supabase } from "../../src/lib/supabase";
+import { supabase } from "../../src/lib/supabase/supabase";
 import { Lock, Mail, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/router";

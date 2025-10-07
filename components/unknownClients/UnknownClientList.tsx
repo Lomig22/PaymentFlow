@@ -1,7 +1,7 @@
 import { Edit, Search, Trash2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { UnknownClient, Notification } from '../../src/types/database';
-import { supabase } from '../../src/lib/supabase';
+import { supabase } from '../../src/lib/supabase/supabase';
 import UnknownClientForm from './UnknownClientForm';
 import CSVImport, { CSVMapping } from './CSVImport';
 import { dateCompare, numberCompare, stringCompare } from '../../src/lib/comparers';

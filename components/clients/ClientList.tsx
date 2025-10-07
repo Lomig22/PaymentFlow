@@ -1,5 +1,6 @@
+'use client;'
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { supabase } from "../../src/lib/supabase";
+import { supabase } from "../../src/lib/supabase/supabase";
 import { Client, ReminderProfile } from "../../src/types/database";
 import {
   Search,
@@ -27,7 +28,8 @@ import {
 } from "../../src/lib/comparers";
 import Swal from "sweetalert2";
 import { useAbonnement } from "../context/AbonnementContext";
-import { motion, AnimatePresence } from "framer-motion";
+import * as motion from "motion/react-client";
+import { AnimatePresence } from "motion/react";
 import Link from "next/link";
 
 type ClientListProps = {
@@ -113,33 +115,12 @@ function ClientList({
   }; */
   const fetchClients = async () => {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const response = await fetch("api/clients", {
+        method: "GET",
+        headers: { "Content-Type": "application/json" }
+      })
 
-      if (!user) throw new Error("Utilisateur non authentifié");
-
-      const userEmail = user.email;
-
-      // 1. Récupérer les IDs des utilisateurs qui ont invité l'utilisateur courant
-      const { data: invitedByData, error: invitedByError } = await supabase
-        .from("invited_users")
-        .select("invited_by")
-        .eq("invited_email", userEmail);
-
-      if (invitedByError) throw invitedByError;
-
-      const invitedByIds = invitedByData.map((entry) => entry.invited_by);
-
-      // 2. Inclure l'utilisateur actuel dans les IDs à filtrer
-      const allOwnerIds = [user.id, ...invitedByIds];
-
-      // 3. Récupérer les clients pour ces propriétaires
-      const { data: clientsData, error: clientsError } = await supabase
-        .from("clients")
-        .select("*, reminderProfile:reminder_profile(*)")
-        .in("owner_id", allOwnerIds)
-        .order("company_name");
+      const { clients: clientsData, error: clientsError } = await response.json();
 
       if (clientsError) throw clientsError;
 

@@ -1,8 +1,9 @@
 import React from "react";
 // import { Dialog } from "@headlessui/react"; // Supprimé car non disponible
 import ManualReminderModal from "../receivables/ManualReminderModal";
-import { sendManualReminder } from "../../src/lib/reminderService";
-import { motion } from "framer-motion";
+import { sendManualReminder } from "../../app/(public)/reminderService";
+import * as motion from 'motion/react-client';
+
 import {
   X,
   Building,

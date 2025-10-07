@@ -1,3 +1,4 @@
+'use client';
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
@@ -17,10 +18,11 @@ const storageKey = (() => {
 // Création du client avec des options de persistance explicites
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
+    flowType: 'pkce',
     persistSession: true, // Persister la session dans le localStorage
     // Utiliser une clé spécifique par environnement/projet pour éviter de réutiliser
     // un jeton obsolète provenant d'un autre domaine/projet (cause fréquente de 403).
-    storageKey,
+    storageKey: "sb-oowgifeydggomowegnnv-auth-token",
     storage: typeof window !== 'undefined' ? window.localStorage : undefined, // Utiliser le localStorage pour la persistance
     autoRefreshToken: true, // Rafraîchir automatiquement le token
     detectSessionInUrl: true // Détecter la session dans l'URL pour le flow d'auth

@@ -1,7 +1,8 @@
 import { useState, useRef } from "react";
 import { useForm, Controller } from "react-hook-form";
 import "./DSOSimulator.module.css";
-import { motion } from "framer-motion";
+import * as motion from 'motion/react-client';
+
 import DSOIntro from "../../components/DSOIntro";
 import Footer from "../../components/Footer";
 

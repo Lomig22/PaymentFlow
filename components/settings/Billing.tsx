@@ -7,7 +7,7 @@ import {
   Elements,
 } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
-import { supabase } from '../../src/lib/supabase';
+import { supabase } from '../../src/lib/supabase/supabase';
 import PricingPage from "../../pages/pricing"
 import { useAbonnement } from "../context/AbonnementContext";
 

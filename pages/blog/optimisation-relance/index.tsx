@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Helmet } from "react-helmet-async";
-import { motion } from "framer-motion";
+import * as motion from 'motion/react-client';
+
 import { FaUserCog, FaPhoneAlt, FaClock, FaShareAlt, FaHandshake, FaCheckCircle, FaChevronDown, FaBullseye, FaEnvelopeOpenText, FaChartLine } from "react-icons/fa";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";

@@ -29,7 +29,7 @@ function AppContent({ Component, pageProps }: AppContentProps) {
 
     return (
         <>
-            <AppHeader user={user} onContactClick={() => { }} />
+            <AppHeader user={user} />
             <Component {...pageProps} />
         </>
     );

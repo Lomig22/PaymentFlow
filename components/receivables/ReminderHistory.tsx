@@ -2,7 +2,7 @@ import { useMemo, useEffect, useState } from 'react';
 import { Reminder } from '../../src/types/database';
 import { X } from 'lucide-react';
 import { decodeReminderStatus } from '../../src/lib/decodeReminderStatus';
-import { supabase } from '../../src/lib/supabase';
+import { supabase } from '../../src/lib/supabase/supabase';
 import EmailOpenTester from './EmailOpenTester';
 
 type ReminderHistoryProps = {

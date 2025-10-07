@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../../src/lib/supabase';
+import { supabase } from '../../src/lib/supabase/supabase';
 import { AlertCircle, Save } from 'lucide-react';
 import { useAbonnement } from "../context/AbonnementContext";
 

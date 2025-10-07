@@ -9,7 +9,7 @@ interface EmailSettings {
 }
 
 import { v4 as uuidv4 } from 'uuid';
-import { supabase } from './supabase';
+import { supabase } from './supabase/supabase';
 const supabaseUrl: string = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 const supabaseAnonKey: string = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
 

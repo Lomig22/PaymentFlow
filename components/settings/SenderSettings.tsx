@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import SignatureImageCropper from "./SignatureImageCropper";
 import { renderToStaticMarkup } from "react-dom/server";
-import { supabase } from "../../src/lib/supabase";
+import { supabase } from "../../src/lib/supabase/supabase";
 import ThemeCustomizer from "./ThemeCustomizer";
 import { motion, AnimatePresence } from "framer-motion";
 import {

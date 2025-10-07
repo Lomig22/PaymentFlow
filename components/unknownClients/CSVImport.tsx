@@ -1,6 +1,6 @@
 import Papa from 'papaparse';
 import { useEffect, useRef, useState } from 'react';
-import { supabase } from '../../src/lib/supabase';
+import { supabase } from '../../src/lib/supabase/supabase';
 import { UnknownClient } from '../../src/types/database';
 import { AlertCircle, Info, Loader2, Upload, X } from 'lucide-react';
 

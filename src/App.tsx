@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { supabase, checkAuth } from "./lib/supabase";
+import { supabase, checkAuth } from "./lib/supabase/supabase";
 import { User } from "@supabase/supabase-js";
 import AuthMFA from "../components/AuthMFA";
 import AppRoutes from "./AppRoutes";
@@ -165,7 +165,7 @@ export default function AppWithMFA() {
   }
 
   if (showMFAScreen) {
-    return <AuthMFA onMFASuccess={handleMFASuccess} />;
+    return <AuthMFA />;
   }
 
   return <AppRoutes user={user} mfaRequired={false} onMFASuccess={handleMFASuccess} />;

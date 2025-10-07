@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { supabase } from "../../src/lib/supabase";
+import { supabase } from "../../src/lib/supabase/supabase";
 import { Client } from "../../src/types/database";
 import { X, Upload, FileUp } from "lucide-react";
 import { useRouter } from "next/router";

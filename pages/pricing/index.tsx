@@ -1,7 +1,7 @@
 import { Helmet } from "react-helmet";
 import { motion, useInView } from "framer-motion";
 import { CheckCircle, TrendingUp } from "lucide-react";
-import { supabase } from "../../src/lib/supabase";
+import { supabase } from "../../src/lib/supabase/supabase";
 import { useEffect, useState } from "react";
 import Footer from "../../components/Footer";
 import Link from "next/link";
