@@ -27,37 +27,32 @@ export default function LoginPage() {
     setMessage(null);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      if (!data.user) {
-        throw Error("Utilisateur non trouvé");
-      }
+      const res = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
 
-      // Vérifier l’abonnement (crée un abonnement 'free' si absent)
-      const { data: subscriptions, error: subError } = await supabase
-        .from("subscriptions")
-        .select("id")
-        .eq("user_id", data.user.id)
-        .limit(1);
+      const result = await res.json();
 
-      if (!subError && !subscriptions?.length) {
-        const { error: insErr } = await supabase.from("subscriptions").insert({
-          user_id: data.user.id,
-          created_at: new Date().toISOString(),
-          status: "active",
-          plan: "free",
+      if (result.error) {
+        setMessage({
+          type: "error",
+          text: result.error || "Une erreur est survenue lors de la connexion",
         });
-        if (insErr) {
-          console.warn("Impossible de créer l'abonnement par défaut:", insErr);
-        }
+        return;
+      }
+      const { user, session, requiresMFA } = result;
+
+      if (requiresMFA) {
+        router.push("auth/mfa");
+      }
+      else {
+        router.push("/dashboard");
       }
 
-      if (!data.user.email) {
-        throw new Error("Email utilisateur introuvable. Veuillez réessayer.");
-      }
-
-      // Otherwise, login successful
-      router.push("/login");
       return;
+
     } catch (error: any) {
       setMessage({
         type: "error",
