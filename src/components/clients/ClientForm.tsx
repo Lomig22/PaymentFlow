@@ -209,31 +209,33 @@ export default function ClientForm({
 
           await AddReceivableToClient(newReceivable as Receivable);
         }
-
         if (data && onClientAdded) {
           onClientAdded(data);
         }
       } else {
-        const { data: clientBeforeUpdate } = await supabase
-          .from("clients")
-          .select("needs_reminder")
-          .eq("id", client?.id)
-          .single();
-        /*   setFormData({
-				...formData,
-				reminder_profile: reminder_profile? reminder_profile : ""
-			  }); */
-        if (formData.reminder_profile === "") {
-          formData.reminder_profile = "";
-        }
-
-        // Build update payload and apply selected profile values if any
-        const updatePayload: any = { ...formData };
-        if (selectedProfile) {
-          updatePayload.reminder_delay_1 = selectedProfile.delay1;
-          updatePayload.reminder_delay_2 = selectedProfile.delay2;
-          updatePayload.reminder_delay_3 = selectedProfile.delay3;
-          updatePayload.reminder_delay_final = selectedProfile.delay4;
+      const { data: clientBeforeUpdate } = await supabase
+        .from("clients")
+        .select("needs_reminder")
+        .eq("id", client?.id)
+        .single();
+      /*   setFormData({
+        ...formData,
+        reminder_profile: reminder_profile? reminder_profile : ""
+          }); */
+      // Build update payload and apply selected profile values if any
+      const updatePayload: any = { ...formData };
+      // IMPORTANT: if reminder_profile is an empty string, send null instead of ""
+      // to avoid PostgreSQL invalid UUID (22P02) errors
+      if (formData.reminder_profile === "") {
+        updatePayload.reminder_profile = null;
+      } else if (formData.reminder_profile) {
+        updatePayload.reminder_profile = formData.reminder_profile;
+      }
+      if (selectedProfile) {
+        updatePayload.reminder_delay_1 = selectedProfile.delay1;
+        updatePayload.reminder_delay_2 = selectedProfile.delay2;
+        updatePayload.reminder_delay_3 = selectedProfile.delay3;
+        updatePayload.reminder_delay_final = selectedProfile.delay4;
           if (selectedProfile.email_template_1) updatePayload.reminder_template_1 = selectedProfile.email_template_1;
           if (selectedProfile.email_template_2) updatePayload.reminder_template_2 = selectedProfile.email_template_2;
           if (selectedProfile.email_template_3) updatePayload.reminder_template_3 = selectedProfile.email_template_3;
