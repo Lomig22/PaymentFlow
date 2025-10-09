@@ -1,5 +1,6 @@
+'use client';
 import React, { useState, useEffect } from "react";
-import { supabase } from "../../src/lib/supabase/supabase";
+import { supabase } from "../../../src/lib/supabase/supabase";
 import {
   AlertCircle,
   Save,
@@ -8,9 +9,9 @@ import {
   RefreshCw,
   PencilIcon,
 } from "lucide-react";
-import { sendEmail } from "../../src/lib/email";
-import { useRouter } from "next/router";
-import { useAbonnement } from "../../components/context/AbonnementContext";
+import { sendEmail } from "../../../src/lib/email";
+import { useRouter } from "next/navigation";
+import { useAbonnement } from "../../../components/context/AbonnementContext";
 import { Url, UrlObject } from "url";
 
 const PROVIDER_PRESETS = {
@@ -63,17 +64,11 @@ export default function EmailSettings() {
   const [formData, setFormData] = useState(DEFAULT_FORM_DATA);
   const [userId, setUserId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
-  const { checkAbonnement } = useAbonnement();
   const showError = (message: string) => {
     setError(message);
     setTimeout(() => {
       setError(null);
     }, 3000);
-  };
-  const handleClick = () => {
-    if (!checkAbonnement()) return;
-    console.log("Action autorisée !");
-    return true;
   };
   useEffect(() => {
     const initializeSettings = async () => {
@@ -238,8 +233,6 @@ export default function EmailSettings() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const allowed = handleClick();
-    if (!allowed) return;
     if (!userId) {
       showError("Utilisateur non authentifié");
       return;
@@ -580,8 +573,6 @@ export default function EmailSettings() {
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                const allowed = handleClick();
-                if (!allowed) return;
                 sendToSignatureSetting();
               }}
               className="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -603,8 +594,6 @@ export default function EmailSettings() {
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-              const allowed = handleClick();
-              if (!allowed) return;
               handleTestEmail();
             }}
             disabled={

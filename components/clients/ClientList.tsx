@@ -27,7 +27,6 @@ import {
   stringCompare,
 } from "../../src/lib/comparers";
 import Swal from "sweetalert2";
-import { useAbonnement } from "../context/AbonnementContext";
 import * as motion from "motion/react-client";
 import { AnimatePresence } from "motion/react";
 import Link from "next/link";
@@ -58,7 +57,6 @@ function ClientList({
   setImportSuccess,
   assignProfileId,
 }: ClientListProps) {
-  const { checkAbonnement } = useAbonnement();
   const [clients, setClients] = useState<
     (Client & { reminderProfile?: ReminderProfile })[]
   >([]);
@@ -96,11 +94,6 @@ function ClientList({
     ? reminderProfiles.find((rp) => (rp.id as string) === assignProfileId)
     : undefined) || null;
 
-  const handleClick = () => {
-    if (!checkAbonnement()) return;
-    //  console.log("Action autorisée !");
-    return true;
-  };
   const showError = (message: string) => {
     setError(message);
     setTimeout(() => {
@@ -642,8 +635,6 @@ function ClientList({
           <button
             type="button"
             onClick={() => {
-              const allowed = handleClick();
-              if (!allowed) return;
               handleBulkDeleteConfirmation();
             }}
             disabled={selectedClientIds.length === 0}
@@ -920,8 +911,6 @@ function ClientList({
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                const allowed = handleClick();
-                                if (!allowed) return;
                                 setSelectedClient(client);
                                 setShowForm(true);
                                 setOpenDropdownId(null);
@@ -933,8 +922,6 @@ function ClientList({
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                const allowed = handleClick();
-                                if (!allowed) return;
                                 handleDeleteClick(client);
                                 setOpenDropdownId(null);
                               }}

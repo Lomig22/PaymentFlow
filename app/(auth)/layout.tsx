@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
-import Layout from "../../components/Layout";
-import { createClient } from "../../src/lib/supabase/server";
+import Layout from "../../components/layout/Layout";
+import { createClient, ensureEmailSettings, syncPendingProfile, verifySubscription } from "../../src/lib/supabase/server";
+import { Suspense } from "react";
+import { VerifySubscription } from "../../components/layout/VerifySubscription";
 
 export default async function AuthLayout({ children }: { children: React.ReactNode }) {
     const supabase = await createClient();
@@ -10,5 +12,10 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
         redirect("/login");
     }
 
-    return <main><Layout>{children}</Layout></main>;
+
+    await syncPendingProfile();
+    await ensureEmailSettings();
+    await verifySubscription();
+
+    return <main><Suspense fallback={<VerifySubscription />}><Layout>{children}</Layout></Suspense></main>;
 }

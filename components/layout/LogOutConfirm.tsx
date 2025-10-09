@@ -3,7 +3,7 @@ import { AuthSessionMissingError } from "@supabase/supabase-js";
 import { LogOut, X } from "lucide-react";
 import { useState } from "react";
 
-export function LogOutConfirm({ isExpanded }: { isExpanded: boolean }) {
+export function LogOutConfirm() {
 
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
     const [logoutError, setLogoutError] = useState<string | null>(null);
@@ -73,13 +73,11 @@ export function LogOutConfirm({ isExpanded }: { isExpanded: boolean }) {
         <div className="border-t border-gray-200">
             <button
                 onClick={() => setShowLogoutConfirm(true)}
-                className={`flex items-center  ${!isExpanded && "justify-center"
-                    } w-full px-4 py-6 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-md transition-all duration-300`}
+                className={`flex items-center justify-center hover:justify-start w-full px-4 py-6 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-md transition-all duration-300`}
             >
                 <LogOut className="h-5 w-5 flex-shrink-0 text-inherit" />
                 <span
-                    className={`ml-3 whitespace-nowrap transition-opacity duration-300 ${isExpanded ? "block opacity-100" : "hidden"
-                        }`}
+                    className="ml-3 whitespace-nowrap transition-opacity duration-300 hover:block hover:opacity-100 hidden"
                 >
                     Déconnexion
                 </span>

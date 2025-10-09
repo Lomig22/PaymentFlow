@@ -1,11 +1,12 @@
+'use client';
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { supabase } from "../../src/lib/supabase/supabase";
+import { supabase } from "../../../src/lib/supabase/supabase";
 import {
   Receivable,
   Client,
   ReminderProfile,
   Reminder,
-} from "../../src/types/database";
+} from "../../../src/types/database";
 import {
   Plus,
   Mail,
@@ -32,27 +33,27 @@ import {
   Key,
   Filter,
 } from "lucide-react";
-import ReceivableForm from "../../components/receivables/ReceivableForm";
-import ReceivableEditForm from "../../components/receivables/ReceivableEditForm";
-import ReminderSettingsModal from "../../components/receivables/ReminderSettingsModal";
+import ReceivableForm from "../../../components/receivables/ReceivableForm";
+import ReceivableEditForm from "../../../components/receivables/ReceivableEditForm";
+import ReminderSettingsModal from "../../../components/receivables/ReminderSettingsModal";
 import {
   getReminderTemplate,
   sendManualReminder,
   getEmailSettings,
-} from "../../app/(public)/reminderService";
-import CSVImportModal, { CSVMapping } from "../../components/receivables/CSVImportModal";
-import ReminderHistory from "../../components/receivables/ReminderHistory";
+} from "../../(public)/reminderService";
+import CSVImportModal, { CSVMapping } from "../../../components/receivables/CSVImportModal";
+import ReminderHistory from "../../../components/receivables/ReminderHistory";
 import Link from "next/link";
-import { useRouter } from "next/router";
-import { dateCompare, numberCompare, stringCompare } from "../../src/lib/comparers";
-import SortableColHead from "../../components/Common/SortableColHead";
-import { dateDiff } from "../../src/lib/dateDiff";
-import { saveNotification } from "../../src/lib/notification";
+import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
+import { dateCompare, numberCompare, stringCompare } from "../../../src/lib/comparers";
+import SortableColHead from "../../../components/Common/SortableColHead";
+import { dateDiff } from "../../../src/lib/dateDiff";
+import { saveNotification } from "../../../src/lib/notification";
 import Swal from "sweetalert2";
-import { getReminderStatus } from "../../src/lib/function";
+import { getReminderStatus } from "../../../src/lib/function";
 import { isBefore } from "date-fns";
-import ReceivableStatusBadge from "../../components/receivables/receivableStatusBadge";
-import Tooltip from "../../components/Common/Tooltip";
+import ReceivableStatusBadge from "../../../components/receivables/receivableStatusBadge";
+import Tooltip from "../../../components/Common/Tooltip";
 
 // Fonction utilitaire pour vérifier si des relances sont activées pour un client
 function remindersEnabled(client: any): boolean {
@@ -66,17 +67,16 @@ function remindersEnabled(client: any): boolean {
 }
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useAbonnement } from "../../components/context/AbonnementContext";
+import { User as SupabaseUser } from "@supabase/supabase-js";
 
 type SortColumnConfig = {
   key: keyof CSVMapping | "client" | "email" | "Delay in Days";
   sort: "none" | "asc" | "desc";
 };
 
-function ReceivablesList() {
+export function ReceivablesList({ user }: { user: SupabaseUser }) {
   const router = useRouter();
   const [sendError, setSendError] = useState(false);
-  const { checkAbonnement } = useAbonnement();
   const [receivables, setReceivables] = useState<
     (Receivable & { client: Client })[]
   >([]);
@@ -121,15 +121,17 @@ function ReceivablesList() {
     router.push(page);
   };
 
+  const searchParams = useSearchParams();
   useEffect(() => {
     let cancelled = false;
+
     if (
-      router.query?.openReminderForClient &&
+      searchParams?.get("openReminderForClient") &&
       receivables.length > 0 &&
       !hasConsumedReminderNavigation
     ) {
       const receivable = receivables.find(
-        r => r.client.id === router.query.openReminderForClient
+        r => r.client.id === searchParams?.get("openReminderForClient")
       );
       if (receivable) {
         if (cancelled) return;
@@ -137,16 +139,17 @@ function ReceivablesList() {
         setSelectedReceivable(receivable);
         setShowConfirmReminder(true);
         // Vide l'état React Router pour éviter toute réouverture
-        const { pathname, query } = router;
-        delete query.openReminderForClient;
-        router.replace({ pathname, query }, undefined, { shallow: true });
+        const pathname = usePathname();
+        if (pathname) {
+          router.replace(`${pathname}/${searchParams.toString()}`);
+        }
       }
     }
     return () => {
       cancelled = true;
     };
     // eslint-disable-next-line
-  }, [router.query, receivables, hasConsumedReminderNavigation]);
+  }, [searchParams, receivables, hasConsumedReminderNavigation]);
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [receivableToDelete, setReceivableToDelete] = useState<
@@ -164,11 +167,11 @@ function ReceivablesList() {
     {}
   );
 
-  const handleClick = () => {
-    if (!checkAbonnement()) return;
-    console.log("Action autorisée !");
-    return true;
-  };
+  // const handleClick = () => {
+  //   if (!checkAbonnement()) return;
+  //   console.log("Action autorisée !");
+  //   return true;
+  // };
 
   // Nettoyer le timeout si le composant est démonté avant la fin
   useEffect(() => {
@@ -255,9 +258,6 @@ function ReceivablesList() {
 
   const fetchReceivables = async () => {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
 
       if (!user) throw new Error("Utilisateur non authentifié");
 
@@ -357,11 +357,6 @@ function ReceivablesList() {
           setSignature("");
           return;
         }
-
-        const {
-          data: { user },
-          error,
-        } = await supabase.auth.getUser();
         if (error || !user) {
           console.error("Utilisateur non connecté");
           return;
@@ -692,9 +687,6 @@ function ReceivablesList() {
   const handleSendReminder = async () =>
   // receivable: Receivable & { client: Client }
   {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
 
     if (!user) throw new Error("Utilisateur non authentifié");
     try {
@@ -793,17 +785,11 @@ function ReceivablesList() {
   };
   const sendToSignatureSetting = () => {
     // alert("send")
-    router.push({
-      pathname: "/settings",
-      query: { initialSectionId: "reminders", initialSubTabId: "sender" },
-    });
+    router.push(`/settings?initialSectionId=reminders&initialSubTabId=sender`);
   };
 
   const handleImportSuccess = async (importedCount: number) => {
     setImportSuccess(`${importedCount} créance(s) importée(s) avec succès`);
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
 
     await saveNotification({
       owner_id: user?.id ?? "",
@@ -911,9 +897,6 @@ function ReceivablesList() {
   };
 
   const handleAutomaticReminderToggle = async (receivable: Receivable) => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
     try {
       // setLoading(true);
       setError(null);
@@ -1394,8 +1377,6 @@ function ReceivablesList() {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              const allowed = handleClick();
-              if (!allowed) return;
               setShowImportModal(true);
             }}
             className="flex items-center gap-2 rounded-md bg-green-600 px-4 py-2 text-white font-medium shadow-md
@@ -1408,8 +1389,6 @@ function ReceivablesList() {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              const allowed = handleClick();
-              if (!allowed) return;
               setShowForm(true);
             }}
             className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-white font-medium shadow-md
@@ -1473,8 +1452,6 @@ function ReceivablesList() {
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
-                const allowed = handleClick();
-                if (!allowed) return;
                 handleBulkDeleteConfirmation();
               }}
               disabled={selectedIds.length === 0}
@@ -1635,7 +1612,6 @@ function ReceivablesList() {
                             className="w-6 h-6 flex items-center justify-center cursor-pointer relative z-0"
                             onClick={(e) => {
                               e.stopPropagation();
-                              if (!handleClick()) return;
                               setOpenDropdownId(
                                 openDropdownId === receivable.id
                                   ? null
@@ -1653,7 +1629,6 @@ function ReceivablesList() {
                           onClick={e => {
                             e.stopPropagation();
                             if (!(remindersEnabled(receivable.client) || canPlayDirect(receivable))) return;
-                            if (!handleClick()) return;
                             handleAutomaticReminderToggle(receivable);
                           }}
                           aria-disabled={!(remindersEnabled(receivable.client) || canPlayDirect(receivable))}

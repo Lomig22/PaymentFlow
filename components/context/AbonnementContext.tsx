@@ -1,15 +1,15 @@
-'use client';
 import React, { createContext, useContext, useState } from "react";
 import useAbonnementCheck from "../../src/hooks/useAbonnementCheck";
 import ModalAbonnementExpiré from "../ModalAbonnementExpiré";
+import { fetchAbonnementInfo } from "../../src/lib/supabase/server";
 
 const AbonnementContext = createContext<{
   checkAbonnement: () => boolean;
   loading: boolean;
 } | null>(null);
 
-export const AbonnementProvider = ({ children }: { children: React.ReactNode }) => {
-  const { isExpired, loading } = useAbonnementCheck();
+export const AbonnementProvider = async ({ children }: { children: React.ReactNode }) => {
+  const { isExpired } = await fetchAbonnementInfo();
   const [modalVisible, setModalVisible] = useState(false);
 
   const checkAbonnement = () => {
@@ -23,7 +23,7 @@ export const AbonnementProvider = ({ children }: { children: React.ReactNode }) 
   };
 
   return (
-    <AbonnementContext.Provider value={{ checkAbonnement, loading }}>
+    <AbonnementContext.Provider value={{ checkAbonnement, loading: false }}>
       {children}
       <ModalAbonnementExpiré visible={modalVisible} onClose={() => setModalVisible(false)} />
     </AbonnementContext.Provider>

@@ -4,12 +4,8 @@ import type { AppProps } from "next/app";
 import { MantineProvider } from "@mantine/core";
 import { HelmetProvider } from "react-helmet-async";
 import CalendlyAndChatlingLoader from "../components/CalendlyAndChatlingLoader";
-import { AbonnementProvider } from "../components/context/AbonnementContext";
-import AppWithMFA from "../src/App";
-import { User } from "@supabase/supabase-js";
 import { UserProvider, useUser } from "../components/context/UserContext";
 import AppHeader from "../components/AppHeader";
-import Layout from "../components/Layout";
 
 interface AppContentProps {
     Component: any;
@@ -21,9 +17,7 @@ function AppContent({ Component, pageProps }: AppContentProps) {
 
     if (user) {
         return (
-            <Layout>
-                <Component {...pageProps} />
-            </Layout>
+            <Component {...pageProps} />
         );
     }
 
@@ -58,11 +52,9 @@ function MyApp({ Component, pageProps }: AppProps) {
         <HelmetProvider>
             <MantineProvider defaultColorScheme="light">
                 <CalendlyAndChatlingLoader />
-                <AbonnementProvider>
-                    <UserProvider>
-                        <AppContent Component={Component} pageProps={pageProps} />
-                    </UserProvider>
-                </AbonnementProvider>
+                <UserProvider>
+                    <AppContent Component={Component} pageProps={pageProps} />
+                </UserProvider>
             </MantineProvider>
         </HelmetProvider >
     );

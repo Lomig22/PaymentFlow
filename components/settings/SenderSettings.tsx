@@ -13,7 +13,6 @@ import {
   ChevronUp,
   X,
 } from "lucide-react";
-import { useAbonnement } from "../context/AbonnementContext";
 import Swal from "sweetalert2";
 import { useRouter } from "next/router";
 
@@ -93,7 +92,6 @@ export default function SignatureSettings({ onDirtyChange }: SignatureSettingsPr
   }, [hasUnsavedChanges]);
 
   const [rawSignatureImg, setRawSignatureImg] = useState<string | null>(null);
-  const { checkAbonnement } = useAbonnement();
   const [senderName, setSenderName] = useState("");
   const [senderEmail, setSenderEmail] = useState("");
   const [companyName, setCompanyName] = useState("");
@@ -118,12 +116,6 @@ export default function SignatureSettings({ onDirtyChange }: SignatureSettingsPr
 
   // Helpers pour marquer la page comme "modifiée"
   const markUnsaved = () => setHasUnsavedChanges(true);
-
-  const onClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    if (!checkAbonnement()) return;
-    console.log("Action autorisée !");
-    return true;
-  };
 
   const removeLogoUrl = () => {
     setLogoUrl("");
@@ -531,8 +523,6 @@ export default function SignatureSettings({ onDirtyChange }: SignatureSettingsPr
                         value={font}
                         onChange={(e) => {
                           e.stopPropagation();
-                          const allowed = onClick(e as any);
-                          if (!allowed) return;
                           setFont(e.target.value);
                           markUnsaved();
                         }}
@@ -552,8 +542,6 @@ export default function SignatureSettings({ onDirtyChange }: SignatureSettingsPr
                         value={textColor}
                         onChange={(e) => {
                           e.stopPropagation();
-                          const allowed = onClick(e as any);
-                          if (!allowed) return;
                           setTextColor(e.target.value);
                           markUnsaved();
                         }}
@@ -567,8 +555,6 @@ export default function SignatureSettings({ onDirtyChange }: SignatureSettingsPr
                         value={bgColor}
                         onChange={(e) => {
                           e.stopPropagation();
-                          const allowed = onClick(e as any);
-                          if (!allowed) return;
                           setBgColor(e.target.value);
                           markUnsaved();
                         }}
@@ -590,8 +576,6 @@ export default function SignatureSettings({ onDirtyChange }: SignatureSettingsPr
               className="hidden"
               onChange={(e) => {
                 e.stopPropagation();
-                const allowed = onClick(e as any);
-                if (!allowed) return;
                 if (e.target.files && e.target.files[0]) {
                   const file = e.target.files[0];
                   // Vérifie le type MIME
@@ -738,8 +722,6 @@ export default function SignatureSettings({ onDirtyChange }: SignatureSettingsPr
               icon: showHtml ? <Eye /> : <Code />,
               onClick: (e: React.MouseEvent<HTMLButtonElement>) => {
                 e.stopPropagation();
-                const allowed = onClick(e);
-                if (!allowed) return;
                 setShowHtml(!showHtml);
               },
               color: "bg-gray-100",
@@ -749,8 +731,6 @@ export default function SignatureSettings({ onDirtyChange }: SignatureSettingsPr
               icon: <Save />,
               onClick: (e: React.MouseEvent<HTMLButtonElement>) => {
                 e.stopPropagation();
-                const allowed = onClick(e);
-                if (!allowed) return;
                 saveToSupabase();
               },
               color: "bg-green-600 text-white",
@@ -760,8 +740,6 @@ export default function SignatureSettings({ onDirtyChange }: SignatureSettingsPr
               icon: <Clipboard />,
               onClick: (e: React.MouseEvent<HTMLButtonElement>) => {
                 e.stopPropagation();
-                const allowed = onClick(e);
-                if (!allowed) return;
                 copySignatureToClipboard();
               },
               color: "bg-blue-600 text-white",

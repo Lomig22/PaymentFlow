@@ -1,17 +1,18 @@
-import React, { use, useEffect, useState } from "react";
+'use client';
+import React, { useEffect, useState } from "react";
 import { Mail, User, Bell, Shield, Users } from "lucide-react";
 import { Elements } from "@stripe/react-stripe-js"; // Importer Elements
 import { loadStripe } from "@stripe/stripe-js"; // Importer loadStripe
 // Composants à créer ou importer
 import EmailSettings from "./EmailSettings";
-import { SecuritySettings } from "../../components/settings/SecuritySettings";
+import { SecuritySettings } from "../../../components/settings/SecuritySettings";
 //import UserManagementSettings from './UserManagementSettings';
 
 import {
   BillingInfoSettings,
   SubscriptionSettings,
   PaymentMethodSettings,
-} from "../../components/settings/Billing";
+} from "../../../components/settings/Billing";
 
 /*
 import AutoNotificationSettings from './AutoNotificationSettings';
@@ -23,15 +24,15 @@ import ExternalApiSettings from './ExternalApiSettings';
 import WebhookSettings from './WebhookSettings';
 import ZapierSettings from './ZapierSettings'; */
 
-import NotificationSettings from "../../components/settings/NotificationSettings";
+import NotificationSettings from "../../../components/settings/NotificationSettings";
 //import ReminderFrequencySettings from './ReminderFrequencySettings';
 
-import UnsavedChangesModal from "../../components/settings/UnsavedChangesModal"; // Modal pour changements non enregistrés
-import ProfileSettings from "../../components/settings/ProfileSettings";
-import SignatureSettings from "../../components/settings/SenderSettings";
-import { useRouter } from "next/router";
-import DeleteAccount from "../../components/settings/DeleteAccount";
-import MemberList from "../../components/settings/MemberList";
+import UnsavedChangesModal from "../../../components/settings/UnsavedChangesModal"; // Modal pour changements non enregistrés
+import ProfileSettings from "../../../components/settings/ProfileSettings";
+import SignatureSettings from "../../../components/settings/SenderSettings";
+import { useRouter } from "next/navigation";
+import DeleteAccount from "../../../components/settings/DeleteAccount";
+import MemberList from "../../../components/settings/MemberList";
 /* 
 import GuideSettings from './GuideSettings';
 import ContactSupportSettings from './ContactSupportSettings';

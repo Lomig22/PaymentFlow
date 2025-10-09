@@ -1,11 +1,9 @@
 import { differenceInDays } from "date-fns";
-import useAbonnementCheck from "../../src/hooks/useAbonnementCheck";
 import { AlertCircle } from "lucide-react";
+import { fetchAbonnementInfo } from "../../src/lib/supabase/server";
 
-function AbonnementInfo() {
-  const { isExpired, loading, abonnement, expiryDate, rawExpiryDate } =
-    useAbonnementCheck();
-
+export async function AbonnementInfo() {
+  const { isExpired, abonnement, expiryDate, rawExpiryDate } = await fetchAbonnementInfo();
   const getColorClass = () => {
     if (!rawExpiryDate) return "text-black";
     const daysLeft = differenceInDays(rawExpiryDate, new Date());
@@ -14,15 +12,6 @@ function AbonnementInfo() {
     if (daysLeft <= 5) return "text-orange-500 font-medium";
     return "text-black";
   };
-
-  if (loading) {
-    return (
-      <p className="text-sm text-gray-500 animate-pulse">
-        Chargement de l’abonnement…
-      </p>
-    );
-  }
-
   return (
     <div className="flex items-center flex-wrap gap-4">
       {isExpired ? (

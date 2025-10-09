@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../src/lib/supabase/supabase';
 import { AlertCircle, Save } from 'lucide-react';
-import { useAbonnement } from "../context/AbonnementContext";
 
 export default function ProfileSettings() {
-  const { checkAbonnement } = useAbonnement();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -15,11 +13,6 @@ export default function ProfileSettings() {
     company: '',
     phone: ''
   });
-  const handleClick = () => {
-    if (!checkAbonnement()) return;
-    console.log("Action autorisée !");
-    return true;
-  };
   const showError = (message: string) => {
     setError(message);
     setTimeout(() => {
@@ -63,8 +56,6 @@ export default function ProfileSettings() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const allowed = handleClick();
-    if (!allowed) return;
     setSaving(true);
     setError(null);
     setSuccess(false);

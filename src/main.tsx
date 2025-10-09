@@ -24,7 +24,6 @@ import { createRoot } from "react-dom/client";
 import "./index.css";
 import { MantineProvider } from "@mantine/core";
 import CalendlyAndChatlingLoader from "../components/CalendlyAndChatlingLoader"
-import { AbonnementProvider } from "../components/context/AbonnementContext";
 import AppWithMFA from "./App";
 import { HelmetProvider } from "react-helmet-async";
 
@@ -33,9 +32,7 @@ createRoot(document.getElementById("root")!).render(
     <HelmetProvider>
       <MantineProvider defaultColorScheme="light">
         <CalendlyAndChatlingLoader />
-        <AbonnementProvider>
-          <AppWithMFA />
-        </AbonnementProvider>
+        <AppWithMFA />
       </MantineProvider>
     </HelmetProvider>
   </StrictMode>

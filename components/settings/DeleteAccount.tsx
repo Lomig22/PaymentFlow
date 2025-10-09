@@ -1,11 +1,10 @@
+'use client';
 import { useState, useEffect } from "react";
 import { supabase } from "../../src/lib/supabase/supabase";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
-import { useAbonnement } from "../context/AbonnementContext";
 
 const DeleteAccount = () => {
-  const { checkAbonnement } = useAbonnement();
   const router = useRouter();
 
   const [password, setPassword] = useState("");
@@ -39,7 +38,6 @@ const DeleteAccount = () => {
 
   const handleDelete = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!checkAbonnement()) return;
 
     setLoading(true);
     setErrorMsg("");

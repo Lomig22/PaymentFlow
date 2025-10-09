@@ -6,7 +6,6 @@ import { useAbonnement } from "../context/AbonnementContext";
 import Swal from "sweetalert2";
 
 function MemberList() {
-  const { checkAbonnement } = useAbonnement();
   type Member = {
     id: string;
     invited_email: string;
@@ -19,11 +18,6 @@ function MemberList() {
 
   const [userId, setUserId] = useState("");
   const [userEmail, setUserEmail] = useState("");
-  const handleClick = () => {
-    if (!checkAbonnement()) return;
-    // console.log("Action autorisée !");
-    return true;
-  };
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -126,8 +120,6 @@ function MemberList() {
   const handleInvite = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    const allowed = handleClick();
-    if (!allowed) return;
     setInviting(true);
 
     if (!isValidEmail(email)) {

@@ -4,7 +4,7 @@ import { Client, Receivable } from "../../src/types/database";
 import { X, Upload, FileUp } from "lucide-react";
 import Swal from "sweetalert2";
 import { sendEmail } from "../../src/lib/email";
-import Settings from "../../pages/settings";
+import Settings from "../../app/(auth)/settings/page";
 import { getEmailSettings } from "../../app/(public)/reminderService";
 
 interface ReceivableEditFormProps {

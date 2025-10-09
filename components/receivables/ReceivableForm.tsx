@@ -3,7 +3,7 @@ import Link from "next/link";
 import { supabase } from "../../src/lib/supabase/supabase";
 import { Client } from "../../src/types/database";
 import { X, Upload, FileUp } from "lucide-react";
-import { useRouter } from "next/router";
+import { useRouter, useSearchParams } from "next/navigation";
 
 interface ReceivableFormProps {
   onClose: () => void;
@@ -18,12 +18,7 @@ export default function ReceivableForm({
 }: ReceivableFormProps) {
   const router = useRouter();
 
-  const queryParams = useMemo(() => {
-    return {
-      client_name: (router.query.client_name as string) || "",
-      client_email: (router.query.client_email as string) || "",
-    };
-  }, [router.query]);
+  const searchParams = useSearchParams();
 
   const [loading, setLoading] = useState(false);
   const [clients, setClients] = useState<Client[]>([]);
@@ -49,11 +44,11 @@ export default function ReceivableForm({
     status: "pending",
     invoice_pdf_url: "",
     notes: "",
-    email: preselectedClient?.email?.split(",")[0] || queryParams.client_email || "",
+    email: preselectedClient?.email?.split(",")[0] || searchParams?.get("client_email") || "",
   });
   const [newClientData, setNewClientData] = useState({
-    company_name: preselectedClient?.company_name || queryParams.client_name || "",
-    email: preselectedClient?.email || queryParams.client_email || "",
+    company_name: preselectedClient?.company_name || searchParams?.get("client_name") || "",
+    email: preselectedClient?.email || searchParams?.get(".client_email") || "",
     phone: "",
     address: "",
     postal_code: "",
@@ -68,15 +63,15 @@ export default function ReceivableForm({
     if (!preselectedClient) {
       setFormData((prev) => ({
         ...prev,
-        email: queryParams.client_email || "",
+        email: searchParams?.get("client_email") || "",
       }));
       setNewClientData((prev) => ({
         ...prev,
-        company_name: queryParams.client_name || "",
-        email: queryParams.client_email || "",
+        company_name: searchParams?.get("client_name") || "",
+        email: searchParams?.get("client_email") || "",
       }));
     }
-  }, [queryParams.client_name, queryParams.client_email, preselectedClient]);
+  }, [searchParams?.get("client_name"), searchParams?.get("client_email"), preselectedClient]);
   const showError = (message: string) => {
     setError(message);
     setTimeout(() => {
@@ -94,22 +89,22 @@ export default function ReceivableForm({
 
   // Pré-sélection automatique du client et de l’email depuis les query params
   useEffect(() => {
-    if (!preselectedClient && clients.length > 0 && (queryParams.client_name || queryParams.client_email)) {
+    if (!preselectedClient && clients.length > 0 && (searchParams?.get("client_name") || searchParams?.get("client_email"))) {
       // Trouver le client par nom ou email (tolérance sur le nom)
       const foundClient = clients.find(
-        c => (queryParams.client_name && c.company_name?.toLowerCase().trim() === queryParams.client_name.toLowerCase().trim()) ||
-          (queryParams.client_email && c.email?.split(',').map(e => e.trim()).includes(queryParams.client_email))
+        c => (searchParams?.get("client_name") && c.company_name?.toLowerCase().trim() === searchParams?.get("client_name")?.toLowerCase().trim()) ||
+          (searchParams?.get("client_email") && c.email?.split(',').map(e => e.trim()).includes(searchParams?.get("client_email") as string))
       );
       if (foundClient) {
         setFormData((prev) => ({
           ...prev,
           client_id: foundClient.id,
-          email: queryParams.client_email || foundClient.email?.split(',')[0] || "",
+          email: searchParams?.get("client_email") || foundClient.email?.split(',')[0] || "",
         }));
         setClientEmails(foundClient.email?.split(',').map(e => e.trim()) || []);
       }
     }
-  }, [clients, preselectedClient, queryParams.client_name, queryParams.client_email]);
+  }, [clients, preselectedClient, searchParams?.get("client_name"), searchParams?.get("client_email")]);
 
   const fetchClients = async () => {
     try {
