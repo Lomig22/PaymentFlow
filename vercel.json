@@ -1,5 +1,8 @@
 {
   "rewrites": [
-    { "source": "/((?!api).*)", "destination": "/api/prerender?path=$1" }
+    {
+      "source": "/:path*",
+      "destination": "/api/prerender?path=:path*"
+    }
   ]
 }
