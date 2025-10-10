@@ -13,6 +13,17 @@ interface EmailSettings {
 	email_signature?: string;
 }
 
+// Retourne la première adresse email valide trouvée dans une chaîne potentiellement séparée par des virgules
+function pickFirstValidEmail(raw?: string | null): string | null {
+  if (!raw) return null;
+  const parts = String(raw)
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const candidate = parts.find((e) => e.includes('@')) || null;
+  return candidate && candidate.length > 3 ? candidate : null;
+}
+
   
   function convertJHMToMinutes(jhm: {j:number;h:number;m:number}| undefined): number {
 	if(!jhm){
@@ -309,8 +320,11 @@ export async function sendManualReminder(
 
 		// Générer un identifiant unique pour le tracking
 		const emailTrackingId = uuidv4();
-		// Toujours fournir une adresse email valide (jamais null) à sendEmail
-		const toEmail = receivable.email ?? receivable.client.email ?? '';
+		// Toujours fournir une adresse email valide (jamais vide) à sendEmail
+		const toEmail =
+		  pickFirstValidEmail((receivable.email ?? '').trim()) ||
+		  pickFirstValidEmail((receivable.client?.email ?? '').trim()) ||
+		  '';
 		if (!toEmail) throw new Error('Aucune adresse email disponible pour la relance');
 		const emailSent = await sendEmail(
 		  emailSettings,
@@ -366,7 +380,8 @@ export async function sendManualReminder(
 		return false;
 	} catch (error) {
 		console.error("Erreur lors de l'envoi de la relance:", error);
-		return false;
+		// Propager l'erreur pour que l'UI affiche le message et enregistre une notification détaillée
+		throw error;
 	}
 }
 
@@ -464,9 +479,14 @@ export async function sendOneReminder(receivableId: string): Promise<boolean> {
 		// Générer et propager un emailTrackingId pour le pixel d'ouverture
 		const autoEmailTrackingId = uuidv4();
 
+		const autoToEmail =
+		  pickFirstValidEmail((receivable.email ?? '').trim()) ||
+		  pickFirstValidEmail((receivable.client?.email ?? '').trim()) ||
+		  '';
+		if (!autoToEmail) return false;
 		const emailSent = await sendEmail(
 			emailSettings,
-			receivable.client.email,
+			autoToEmail,
 			`Relance facture ${receivable.invoice_number}`,
 			emailContent,
 			receivable.invoice_pdf_url,

@@ -3,7 +3,7 @@ import { supabase } from '../../lib/supabase';
 import { AlertCircle, Save } from 'lucide-react';
 import { useAbonnement } from "../context/AbonnementContext";
 
-export default function NotificationSettings() {
+export default function NotificationSettings({ onDirtyChange }: { onDirtyChange?: (dirty: boolean) => void }) {
     const { checkAbonnement } = useAbonnement();
   
   const [loading, setLoading] = useState(true);
@@ -17,6 +17,8 @@ export default function NotificationSettings() {
     daily_summary: false,
     weekly_summary: true
   });
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const initialRef = React.useRef<typeof formData | null>(null);
   const handleClick = () => {
     if (!checkAbonnement()) return;
     console.log("Action autorisée !");
@@ -37,6 +39,33 @@ export default function NotificationSettings() {
   useEffect(() => {
     loadNotificationSettings();
   }, []);
+
+  // Met à jour l'état dirty quand le formulaire change
+  useEffect(() => {
+    if (!initialRef.current) return;
+    try {
+      setHasUnsavedChanges(
+        JSON.stringify(initialRef.current) !== JSON.stringify(formData)
+      );
+    } catch {}
+  }, [formData]);
+
+  // Informe le parent Settings
+  useEffect(() => {
+    onDirtyChange?.(hasUnsavedChanges);
+  }, [hasUnsavedChanges, onDirtyChange]);
+
+  // Avertissement en fermeture/reload
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
 
   // Gestion de la touche Echap
   useEffect(() => {
@@ -71,6 +100,18 @@ export default function NotificationSettings() {
 
       if (data) {
         setFormData(data);
+        initialRef.current = {
+          email_notifications: !!data.email_notifications,
+          reminder_notifications: !!data.reminder_notifications,
+          payment_notifications: !!data.payment_notifications,
+          daily_summary: !!data.daily_summary,
+          weekly_summary: !!data.weekly_summary,
+        };
+        setHasUnsavedChanges(false);
+      } else {
+        // Aucun enregistrement existant: snapshot sur les valeurs par défaut
+        initialRef.current = { ...formData };
+        setHasUnsavedChanges(false);
       }
     } catch (error) {
       console.error('Erreur lors du chargement des paramètres:', error);
@@ -101,7 +142,11 @@ export default function NotificationSettings() {
         });
 
       if (error) throw error;
-      showSuccess()
+      showSuccess();
+      // Snapshot après sauvegarde
+      initialRef.current = { ...formData };
+      setHasUnsavedChanges(false);
+      onDirtyChange?.(false);
     } catch (error) {
       console.error('Erreur lors de la sauvegarde:', error);
       showError('Impossible de sauvegarder les paramètres');

@@ -1,2 +1,2 @@
-ALTER TABLE recevable
-ALTER status DEFAULT 'pending';
+ALTER TABLE receivables
+  ALTER COLUMN status SET DEFAULT 'pending';

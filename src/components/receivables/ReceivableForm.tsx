@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
 import { Client } from "../../types/database";
-import { X, Upload, FileUp } from "lucide-react";
+import { X, Upload, FileUp, Plus } from "lucide-react";
 
 interface ReceivableFormProps {
   onClose: () => void;
@@ -410,10 +410,11 @@ if (updatedTotalAmount >= maxOverDues) {
   {!showNewEmailInput && (
     <button
       type="button"
-      className="mt-2 text-blue-600 hover:underline text-sm"
       onClick={() => setShowNewEmailInput(true)}
+      className="mt-2 px-4 py-2 text-blue-600 border border-blue-600 rounded-md hover:bg-blue-50 transition-colors flex items-center gap-2 w-fit"
     >
-      + Ajouter une nouvelle adresse email
+      <Plus className="h-4 w-4" />
+      Ajouter un email
     </button>
   )}
   {showNewEmailInput && (

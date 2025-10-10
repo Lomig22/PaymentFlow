@@ -9,5 +9,5 @@ CREATE TABLE IF NOT EXISTS unknown_client (
     updated_at timestamptz DEFAULT now()
 );
 
-ALTER TABLE unknown_client ADD CONSTRAINT u_client_code UNIQUE (owner_id, client_code)
+ALTER TABLE unknown_client ADD CONSTRAINT u_client_code UNIQUE (owner_id, client_code);
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS unknown_client_mapping text;

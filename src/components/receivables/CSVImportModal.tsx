@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { supabase } from "../../lib/supabase";
 import { X, Upload, AlertCircle, Info, Loader2 } from "lucide-react";
 import { Receivable, Client } from "../../types/database";
@@ -198,9 +198,18 @@ export default function CSVImportModal({
   const [newClients, setNewClients] = useState<Record<string, Client>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [mapping, setMapping] = useState<Record<string, keyof CSVMapping>>({});
+  const [originalMapping, setOriginalMapping] = useState<Record<string, keyof CSVMapping>>({});
+  const [dirty, setDirty] = useState(false);
   const [savingSchema, setSavingSchema] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
   let planMessage="";
+  const isDirtyComputed = useMemo(() => {
+    try {
+      return JSON.stringify(mapping) !== JSON.stringify(originalMapping);
+    } catch {
+      return false;
+    }
+  }, [mapping, originalMapping]);
   // Plus de validation des en-têtes requis
   const expectedHeaders: string[] = [];
   const showError = (message: string) => {
@@ -309,6 +318,8 @@ export default function CSVImportModal({
       }
     }
     setMapping(autoMapping);
+    setOriginalMapping(autoMapping);
+    setDirty(false);
     setStep("mapping");
   };
 
@@ -323,6 +334,7 @@ export default function CSVImportModal({
     } else {
       setMapping({ ...mapping, [header]: field });
     }
+    setDirty(true);
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -590,9 +602,9 @@ export default function CSVImportModal({
       );
       const statusIndex = csvHeaders.findIndex((h) => mapping[h] === "status");
       // Plus de validation des colonnes requises, utilisation de valeurs par défaut
-      const clientCodeIndex = csvHeaders.findIndex(
-        (h) => mapping[h] === "client_code"
-      );
+      const clientCodeIndexByClientCode = csvHeaders.findIndex((h) => mapping[h] === "client_code");
+    const clientCodeIndexByCode = csvHeaders.findIndex((h) => mapping[h] === "code");
+    const clientCodeIndex = clientCodeIndexByClientCode !== -1 ? clientCodeIndexByClientCode : clientCodeIndexByCode;
 
       // Réinitialiser les nouveaux clients
       const newClientsMap: Record<string, Client> = {};
@@ -629,7 +641,7 @@ export default function CSVImportModal({
             formatDate(dueDateStr) || new Date().toISOString().split("T")[0];
 
           const status = mapStatus(statusStr);
-          const clientCode = row[clientCodeIndex] || "";
+          const clientCode = clientCodeIndex !== -1 ? (row[clientCodeIndex] || "") : "";
           // Trouver le client correspondant en utilisant le nom du client
 
           const clientId = getClientId(clientName);
@@ -655,9 +667,7 @@ export default function CSVImportModal({
               id: tempId,
               company_name: clientName,
               client_code:
-                clientCodeIndex !== -1
-                  ? row[clientCodeIndex]
-                  : Math.floor(Math.random() * (100000 - 150000) + 100000),
+                clientCode || Math.floor(Math.random() * (100000 - 150000) + 100000),
               email: email,
               needs_reminder: true,
               created_at: new Date().toISOString(),
@@ -687,6 +697,11 @@ export default function CSVImportModal({
               email: email,
             } as Receivable & { client: Client };
           }
+          // Pour un client existant, cloner et surcharger le code client avec la valeur du CSV si fournie
+          const displayClient: Client = {
+            ...(client as any),
+            client_code: clientCode || (client as any)?.client_code || "",
+          } as any;
           return {
             id: `preview-${index}`,
             client_id: client.id,
@@ -699,7 +714,7 @@ export default function CSVImportModal({
             status,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
-            client: client,
+            client: displayClient,
             email: email,
           } as Receivable & { client: Client };
         });
@@ -748,9 +763,9 @@ export default function CSVImportModal({
         (h) => mapping[h] === "installment_number"
       );
       const statusIndex = csvHeaders.findIndex((h) => mapping[h] === "status");
-      const clientCodeIndex = csvHeaders.findIndex(
-        (h) => mapping[h] === "client_code"
-      );
+      const clientCodeIndexByClientCode = csvHeaders.findIndex((h) => mapping[h] === "client_code");
+      const clientCodeIndexByCode = csvHeaders.findIndex((h) => mapping[h] === "code");
+      const clientCodeIndex = clientCodeIndexByClientCode !== -1 ? clientCodeIndexByClientCode : clientCodeIndexByCode;
       //Shanaka (Finish)
       // Créer d'abord les nouveaux clients
       const createdClients: Record<string, string> = {}; // Map des IDs temporaires vers les vrais IDs
@@ -852,7 +867,7 @@ export default function CSVImportModal({
           const dueDate =
             formatDate(dueDateStr) || new Date().toISOString().split("T")[0];
           const status = mapStatus(statusStr);
-          const clientCode = row[clientCodeIndex] || "";
+          const clientCode = clientCodeIndex !== -1 ? (row[clientCodeIndex] || "") : "";
           //Jetemail
           const email = row[emailIndex];
           // Trouver le client correspondant
@@ -1195,7 +1210,8 @@ if (updatedTotalAmount >= maxOverDues) {
         .update({ receivables_mapping: JSON.stringify(mapping) })
         .eq("id", user.id);
       showSuccess("Le mapping a été enregistré avec succès.");
-
+      setOriginalMapping(mapping);
+      setDirty(false);
       setSavingSchema(false);
     } catch (err) {
       console.error(
@@ -1372,8 +1388,8 @@ if (updatedTotalAmount >= maxOverDues) {
               <div className="flex justify-between space-x-4">
                 <button
                   onClick={saveMapping}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors flex"
-                  disabled={savingSchema}
+                  className={`px-4 py-2 rounded-md transition-colors flex ${(dirty || isDirtyComputed) ? "bg-blue-600 text-white hover:bg-blue-700" : "border border-gray-300 text-gray-700 hover:bg-gray-50"}`}
+                  disabled={savingSchema || !(dirty || isDirtyComputed)}
                 >
                   {savingSchema && <Loader2 className="animate-spin" />}
                   Sauvegarder
@@ -1438,6 +1454,9 @@ if (updatedTotalAmount >= maxOverDues) {
                         Client
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Code client
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Facture
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -1486,6 +1505,9 @@ if (updatedTotalAmount >= maxOverDues) {
                           ) : (
                             receivable.client.company_name
                           )}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                          {receivable.client?.client_code ?? "-"}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                           {receivable.invoice_number}
@@ -1551,10 +1573,10 @@ if (updatedTotalAmount >= maxOverDues) {
 
               <div className="flex justify-end space-x-4">
                 <button
-                  onClick={resetForm}
+                  onClick={() => setStep("mapping")}
                   className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
                 >
-                  Annuler
+                  Précédent
                 </button>
                 <button
                   onClick={importReceivables}
