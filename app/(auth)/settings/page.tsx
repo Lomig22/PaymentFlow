@@ -1,6 +1,6 @@
 'use client';
-import React, { useEffect, useState } from "react";
-import { Mail, User, Bell, Shield, Users } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
+import { Mail, User, Bell, Shield, Users, Landmark, LucideIcon } from "lucide-react";
 import { Elements } from "@stripe/react-stripe-js"; // Importer Elements
 import { loadStripe } from "@stripe/stripe-js"; // Importer loadStripe
 // Composants à créer ou importer
@@ -29,14 +29,21 @@ import NotificationSettings from "../../../components/settings/NotificationSetti
 import UnsavedChangesModal from "../../../components/settings/UnsavedChangesModal"; // Modal pour changements non enregistrés
 import ProfileSettings from "../../../components/settings/ProfileSettings";
 import SignatureSettings from "../../../components/settings/SenderSettings";
-import { useSearchParams } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import DeleteAccount from "../../../components/settings/DeleteAccount";
 import MemberList from "../../../components/settings/MemberList";
+import { PaymentSync } from "../../../components/settings/PaymentSync";
+import Swal from "sweetalert2";
+
 /* 
 import GuideSettings from './GuideSettings';
 import ContactSupportSettings from './ContactSupportSettings';
 import FAQSettings from './FAQSettings'; */
 const stripePromise = loadStripe("ta_clé_publique_stripe");
+
+type OnDirtyChange = (dirty: boolean) => void;
+
+type SubTab = { id: string, name: string, component: (props: { onDirtyChange?: OnDirtyChange }) => JSX.Element }
 
 const sections = [
   {
@@ -119,22 +126,52 @@ const sections = [
         component: MemberList,
       },
     ],
+  }, {
+    id: "integration-bancaire",
+    name: "Intégration bancaire",
+    version: "alpha",
+    icon: Landmark,
+    subTabs: [
+      {
+        id: "sync-Payment",
+        name: "Synchronisation des paiements",
+        component: PaymentSync
+      }
+    ]
   }
-];
+] as const satisfies { id: string, name: string, version?: "stable" | "alpha" | "beta", icon: LucideIcon, subTabs: SubTab[] }[];
 type SettingsProps = {
   initialSectionId?: string;
   initialSubTabId?: string;
 };
 export default function Settings() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   // --- Ajout pour la gestion des changements non enregistrés ---
   const [unsavedChanges, setUnsavedChanges] = useState(false);
   const [showUnsavedModal, setShowUnsavedModal] = useState(false);
   const [pendingSectionId, setPendingSectionId] = useState<string | null>(null);
   const [pendingSubTabId, setPendingSubTabId] = useState<string | null>(null);
 
+  const prevPathRef = useRef(pathname);
+
+
   // Callback pour détecter des changements dans ReminderProfileSettings
   const handleReminderProfileDirty = (dirty: boolean) => {
     setUnsavedChanges(dirty);
+  };
+  // Helper: l’onglet courant nécessite-t-il un avertissement ?
+  const isUnsavedTrackedActive = () => {
+    return (
+      (activeSectionId === "reminders" && activeSubTabId === "sender") ||
+      (activeSectionId === "account" && activeSubTabId === "account") ||
+      (activeSectionId === "account" && activeSubTabId === "email") ||
+      (activeSectionId === "account" && activeSubTabId === "password") ||
+      (activeSectionId === "notifications" && activeSubTabId === "email_sms") ||
+      (activeSectionId === "billing" && activeSubTabId === "billing_info")
+    );
   };
   // Callback pour forcer la sauvegarde ou quitter
   const handleLeaveReminderSettings = () => {
@@ -151,7 +188,6 @@ export default function Settings() {
     setPendingSubTabId(null);
   };
 
-  const searchParams = useSearchParams();
   const initialSectionId = searchParams?.get("initialSectionId");
   const initialSubTabId = searchParams?.get("initialSubTabId");
   const [activeSectionId, setActiveSectionId] = useState(
@@ -177,6 +213,53 @@ export default function Settings() {
       setActiveSubTabId(initialSubTabId);
     }
   }, [searchParams]);
+
+  // Miroir global pour Layout: expose l'état dirty dans sessionStorage
+  useEffect(() => {
+    try {
+      if (unsavedChanges && isUnsavedTrackedActive()) {
+        sessionStorage.setItem('unsaved:settings', '1');
+      } else {
+        sessionStorage.removeItem('unsaved:settings');
+      }
+    } catch { }
+  }, [unsavedChanges, activeSectionId, activeSubTabId]);
+
+  // Garde de navigation: si on quitte /settings avec des changements non sauvegardés
+  useEffect(() => {
+    const prevPath = prevPathRef.current;
+    const nextPath = pathname;
+    // On détecte un départ depuis /settings
+    if (
+      prevPath === "/settings" &&
+      nextPath !== "/settings" &&
+      unsavedChanges
+    ) {
+      // Afficher l’alerte et, si annulé, revenir sur /settings
+      Swal.fire({
+        title: 'Modifications non enregistrées',
+        text: 'Vous avez des modifications non enregistrées. Voulez-vous vraiment quitter cette page ?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Continuer sans enregistrer',
+        cancelButtonText: 'Annuler',
+        reverseButtons: true,
+        customClass: {
+          confirmButton: 'bg-yellow-600 text-white px-4 py-2 rounded mr-2 hover:bg-yellow-700',
+          cancelButton: 'bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700',
+        },
+      }).then((result) => {
+        if (!result.isConfirmed) {
+          // Revenir immédiatement sur /settings
+          router.replace(prevPath);
+        } else {
+          // L’utilisateur confirme le départ: on peut réinitialiser l’état
+          setUnsavedChanges(false);
+        }
+      });
+    }
+    prevPathRef.current = nextPath;
+  }, [pathname]);
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Paramètres</h1>
@@ -216,7 +299,7 @@ export default function Settings() {
         </div>
 
         {/* Zone de contenu */}
-        <div className="flex-1 p-6">
+        < div className="flex-1 p-6" >
           {/* Sous-onglets */}
           <div className="flex space-x-4 border-b border-gray-200 mb-6">
             {activeSection?.subTabs.map((tab) => (
@@ -252,17 +335,33 @@ export default function Settings() {
             activeSectionId === "reminders" && activeSubTabId === "sender" ? (
               <SignatureSettings onDirtyChange={handleReminderProfileDirty} />
             ) : (
-              <ActiveComponent />
+              // Injection du callback dans SenderSettings (relances) et ProfileSettings (compte)
+              activeSectionId === "reminders" && activeSubTabId === "sender" ? (
+                <SignatureSettings onDirtyChange={handleReminderProfileDirty} />
+              ) : activeSectionId === "account" && activeSubTabId === "account" ? (
+                <ProfileSettings onDirtyChange={handleReminderProfileDirty} />
+              ) : activeSectionId === "account" && activeSubTabId === "email" ? (
+                <EmailSettings onDirtyChange={handleReminderProfileDirty} />
+              ) : activeSectionId === "account" && activeSubTabId === "password" ? (
+                <SecuritySettings onDirtyChange={handleReminderProfileDirty} />
+              ) : activeSectionId === "notifications" && activeSubTabId === "email_sms" ? (
+                <NotificationSettings onDirtyChange={handleReminderProfileDirty} />
+              ) : activeSectionId === "billing" && activeSubTabId === "billing_info" ? (
+                <BillingInfoSettings onDirtyChange={handleReminderProfileDirty} />
+              ) : (
+                <ActiveComponent />
+              )
             )
-          )}
+          )
+          }
           {/* Modal pour changements non enregistrés */}
           <UnsavedChangesModal
             open={showUnsavedModal}
             onStay={handleStayReminderSettings}
             onLeave={handleLeaveReminderSettings}
           />
-        </div>
-      </div>
-    </div>
+        </div >
+      </div >
+    </div >
   );
 }

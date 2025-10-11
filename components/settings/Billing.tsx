@@ -8,15 +8,24 @@ import {
 } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import { supabase } from '../../src/lib/supabase/supabase';
-import PricingPage from "../../pages/pricing"
+import PricingPage from "../../pages/pricing/index"
+import { useAbonnement } from "../context/AbonnementContext";
 
 // Composant 1 : Informations de facturation
-export function BillingInfoSettings() {
+export function BillingInfoSettings({ onDirtyChange }: { onDirtyChange?: (dirty: boolean) => void }) {
+  const { checkAbonnement } = useAbonnement();
   const [company, setCompany] = useState('');
   const [address, setAddress] = useState('');
   const [siret, setSiret] = useState('');
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const initialRef = React.useRef<{ company: string; address: string; siret: string }>({ company: '', address: '', siret: '' });
+  const handleClick = () => {
+    if (!checkAbonnement()) return;
+    console.log("Action autorisée !");
+    return true;
+  };
   const showError = (message: string) => {
     setError(message);
     setTimeout(() => {
@@ -55,15 +64,43 @@ export function BillingInfoSettings() {
         setCompany(data.entreprise || "");
         setAddress(data.adresse || "");
         setSiret(data.siret || "");
+        initialRef.current = { company: data.entreprise || "", address: data.adresse || "", siret: data.siret || "" };
+        setHasUnsavedChanges(false);
       }
     };
 
     fetchSettings();
   }, []);
 
+  // Recalcul dirty à chaque changement
+  useEffect(() => {
+    const init = initialRef.current;
+    const dirty = init.company !== company || init.address !== address || init.siret !== siret;
+    setHasUnsavedChanges(dirty);
+  }, [company, address, siret]);
+
+  // Informe le parent (Settings)
+  useEffect(() => {
+    onDirtyChange?.(hasUnsavedChanges);
+  }, [hasUnsavedChanges, onDirtyChange]);
+
+  // beforeunload si dirty
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    const allowed = handleClick();
+    if (!allowed) return;
     console.log({ company, address, siret });
 
     const {
@@ -89,6 +126,9 @@ export function BillingInfoSettings() {
       showError('Erreur lors de la mise à jour :' + error);
     } else {
       showSuccess('Mise à jour réussie !');
+      initialRef.current = { company, address, siret };
+      setHasUnsavedChanges(false);
+      onDirtyChange?.(false);
     }
   };
 

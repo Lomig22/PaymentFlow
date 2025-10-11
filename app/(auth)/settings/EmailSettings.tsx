@@ -1,5 +1,5 @@
-'use client';
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { differenceInDays } from "date-fns";
 import { supabase } from "../../../src/lib/supabase/supabase";
 import {
   AlertCircle,
@@ -10,9 +10,9 @@ import {
   PencilIcon,
 } from "lucide-react";
 import { sendEmail } from "../../../src/lib/email";
-import { useRouter } from "next/navigation";
+import { useNavigate, useLocation } from "react-router-dom";
+import Swal from "sweetalert2";
 import { useAbonnement } from "../../../components/context/AbonnementContext";
-import { Url, UrlObject } from "url";
 
 const PROVIDER_PRESETS = {
   platform: {
@@ -54,7 +54,7 @@ const DEFAULT_FORM_DATA = {
   sender_display_name: "",
 };
 
-export default function EmailSettings() {
+export default function EmailSettings({ onDirtyChange }: { onDirtyChange?: (dirty: boolean) => void }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -64,11 +64,20 @@ export default function EmailSettings() {
   const [formData, setFormData] = useState(DEFAULT_FORM_DATA);
   const [userId, setUserId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const { checkAbonnement } = useAbonnement();
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const initialRef = useRef<typeof DEFAULT_FORM_DATA | null>(null);
+  const location = useLocation();
   const showError = (message: string) => {
     setError(message);
     setTimeout(() => {
       setError(null);
     }, 3000);
+  };
+  const handleClick = () => {
+    if (!checkAbonnement()) return;
+    console.log("Action autorisée !");
+    return true;
   };
   useEffect(() => {
     const initializeSettings = async () => {
@@ -98,8 +107,8 @@ export default function EmailSettings() {
       localStorage.removeItem("navigateAfterPayment");
     }
   }, []);
-  async function fetchSubscription(supabase: any, userId: any): Promise<any | null> {
-    const { data: [subscription], error } = await supabase
+  async function fetchSubscription(supabase: any, userId: any) {
+    const { data, error } = await supabase
       .from("subscriptions")
       .select("plan")
       .eq("user_id", userId)
@@ -109,9 +118,10 @@ export default function EmailSettings() {
       console.error("Erreur abonnement :", error.message);
       return null;
     }
-    return subscription;
+    return data;
   }
   const [isDisabled, setIsDisabled] = useState(false);
+  const [isTrial, setIsTrial] = useState(false);
 
   useEffect(() => {
     const checkUserAndSubscription = async () => {
@@ -126,18 +136,21 @@ export default function EmailSettings() {
       }
 
       if (user?.id) {
-        const subscription = await fetchSubscription(supabase, user.id);
-        if (!subscription) {
-          setIsDisabled(true);
-        }
-        else {
-          if (
-            subscription?.plan === "free" ||
-            subscription?.plan === "basic"
-          ) {
-            setIsDisabled(true);
+        // Détecte l'essai gratuit (30 jours à partir de la création du compte)
+        let trial = false;
+        try {
+          if (user.created_at) {
+            const createdAt = new Date(user.created_at);
+            trial = differenceInDays(new Date(), createdAt) < 30;
           }
+        } catch { }
+        setIsTrial(trial);
 
+        const subscription = await fetchSubscription(supabase, user.id);
+        const plan = subscription?.[0]?.plan;
+        if (plan === "free" || plan === "basic") {
+          // En essai gratuit, on n'applique pas le blocage UI
+          setIsDisabled(!trial);
         }
       }
     };
@@ -186,7 +199,7 @@ export default function EmailSettings() {
           else if (looksGmail) effectiveProvider = 'gmail';
         }
 
-        setFormData({
+        const newForm = {
           provider_type: effectiveProvider,
           smtp_username: (placeholderLike || savedAsCustomLooksPlatform) ? "" : (data.smtp_username || ""),
           smtp_password: (placeholderLike || savedAsCustomLooksPlatform) ? "" : (data.smtp_password || ""),
@@ -195,7 +208,16 @@ export default function EmailSettings() {
           smtp_encryption: (data.smtp_encryption || "tls").toLowerCase(),
           email_signature: data.email_signature || "",
           sender_display_name: data.sender_display_name || "",
-        });
+        } as typeof DEFAULT_FORM_DATA;
+        setFormData(newForm);
+        initialRef.current = newForm;
+        setHasUnsavedChanges(false);
+      } else {
+        // Aucun enregistrement: on initialise le snapshot au formulaire par défaut
+        const newForm = { ...DEFAULT_FORM_DATA } as typeof DEFAULT_FORM_DATA;
+        setFormData(newForm);
+        initialRef.current = newForm;
+        setHasUnsavedChanges(false);
       }
     } catch (error) {
       console.error("Erreur lors du chargement des paramètres:", error);
@@ -233,6 +255,8 @@ export default function EmailSettings() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    const allowed = handleClick();
+    if (!allowed) return;
     if (!userId) {
       showError("Utilisateur non authentifié");
       return;
@@ -283,6 +307,7 @@ export default function EmailSettings() {
       }, 3000);
       // Recharger les paramètres pour confirmer la mise à jour
       await loadEmailSettings(userId);
+      // Snapshot mis à jour via loadEmailSettings
     } catch (error) {
       console.error("Erreur lors de la sauvegarde:", error);
       showError("Impossible de sauvegarder les paramètres");
@@ -290,19 +315,104 @@ export default function EmailSettings() {
       setSaving(false);
     }
   };
-  const router = useRouter();
-  const navigate = (path: string, query: Url["query"]) => {
-    router.push(path);
-  };
+  const navigate = useNavigate();
 
-  const goToSettings = (query: Url["query"]) => {
-    navigate("/settings", query);
-  };
+  // Met à jour automatiquement l'état dirty quand formData change
+  useEffect(() => {
+    if (!initialRef.current) return;
+    try {
+      setHasUnsavedChanges(
+        JSON.stringify(initialRef.current) !== JSON.stringify(formData)
+      );
+    } catch { }
+  }, [formData]);
 
+  // Informe le parent (Settings) de l'état dirty
+  useEffect(() => {
+    onDirtyChange?.(hasUnsavedChanges);
+  }, [hasUnsavedChanges, onDirtyChange]);
+
+  // Expose l’état dirty au niveau global (Layout) via sessionStorage
+  useEffect(() => {
+    try {
+      if (hasUnsavedChanges) sessionStorage.setItem('unsaved:settings', '1');
+      else sessionStorage.removeItem('unsaved:settings');
+    } catch { }
+  }, [hasUnsavedChanges]);
+
+  // Avertissement natif si on quitte l’onglet ou recharge avec des modifications non enregistrées
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [hasUnsavedChanges]);
+
+  // Intercepte les clics sur les liens internes pour demander confirmation si nécessaire
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      const anchor = (e.target as HTMLElement).closest("a");
+      if (
+        anchor &&
+        anchor instanceof HTMLAnchorElement &&
+        anchor.href &&
+        anchor.origin === window.location.origin &&
+        anchor.pathname !== location.pathname &&
+        !anchor.href.startsWith("mailto:") &&
+        !anchor.href.startsWith("tel:")
+      ) {
+        if (hasUnsavedChanges) {
+          e.preventDefault();
+          Swal.fire({
+            title: 'Modifications non enregistrées',
+            text: 'Vous avez des modifications non enregistrées. Voulez-vous vraiment quitter cette page ?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Continuer sans enregistrer',
+            cancelButtonText: 'Annuler',
+            reverseButtons: true,
+            customClass: {
+              confirmButton: 'bg-yellow-600 text-white px-4 py-2 rounded mr-2 hover:bg-yellow-700',
+              cancelButton: 'bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700',
+            },
+          }).then((result) => {
+            if (result.isConfirmed) {
+              const a = anchor as HTMLAnchorElement;
+              navigate(a.pathname + a.search + a.hash);
+            }
+          });
+        }
+      }
+    };
+    document.addEventListener('click', handleClick, true);
+    return () => document.removeEventListener('click', handleClick, true);
+  }, [hasUnsavedChanges, location.pathname, navigate]);
 
   const sendToSignatureSetting = () => {
-    // alert("send")
-    goToSettings({ initialSectionId: "reminders", initialSubTabId: "sender" });
+    const doNav = () => navigate("/settings", { state: { initialSectionId: "reminders", initialSubTabId: "sender" } });
+    if (!hasUnsavedChanges) {
+      doNav();
+      return;
+    }
+    Swal.fire({
+      title: 'Modifications non enregistrées',
+      text: 'Vous avez des modifications non enregistrées. Voulez-vous vraiment quitter cette page ?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Continuer sans enregistrer',
+      cancelButtonText: 'Annuler',
+      reverseButtons: true,
+      customClass: {
+        confirmButton: 'bg-yellow-600 text-white px-4 py-2 rounded mr-2 hover:bg-yellow-700',
+        cancelButton: 'bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700',
+      },
+    }).then((result) => {
+      if (result.isConfirmed) doNav();
+    });
   };
   const handleTestEmail = async () => {
     // Si on est en mode 'platform' (par défaut PaymentFlow), on n'exige pas de credentials côté UI
@@ -573,6 +683,8 @@ export default function EmailSettings() {
             <button
               onClick={(e) => {
                 e.stopPropagation();
+                const allowed = handleClick();
+                if (!allowed) return;
                 sendToSignatureSetting();
               }}
               className="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -594,6 +706,8 @@ export default function EmailSettings() {
             type="button"
             onClick={(e) => {
               e.stopPropagation();
+              const allowed = handleClick();
+              if (!allowed) return;
               handleTestEmail();
             }}
             disabled={

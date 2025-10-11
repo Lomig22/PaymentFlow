@@ -3,13 +3,13 @@ import { supabase } from "../../src/lib/supabase/supabase";
 import { AlertCircle, Save, Lock } from "lucide-react";
 import { useAbonnement } from "../context/AbonnementContext";
 import SecretKeyDisplay from "./SecretKeyDisplay";
-export function SecuritySettings() {
+export function SecuritySettings({ onDirtyChange }: { onDirtyChange?: (dirty: boolean) => void }) {
   return (
     <div className="space-y-10 max-w-2xl mx-auto">
       <h1 className="text-2xl font-bold mb-6">Paramètres de sécurité</h1>
       <MfaSettings />
       <hr />
-      <PasswordSettings />
+      <PasswordSettings onDirtyChange={onDirtyChange} />
     </div>
   );
 }
@@ -218,7 +218,8 @@ export function MfaSettings() {
 
 
 
-export function PasswordSettings() {
+export function PasswordSettings({ onDirtyChange }: { onDirtyChange?: (dirty: boolean) => void }) {
+  const { checkAbonnement } = useAbonnement();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -227,6 +228,18 @@ export function PasswordSettings() {
     newPassword: "",
     confirmPassword: "",
   });
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  // Snapshot initial vide (tous champs vides)
+  const initialRef = React.useRef<{ currentPassword: string; newPassword: string; confirmPassword: string }>({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const handleClick = () => {
+    if (!checkAbonnement()) return;
+    console.log("Action autorisée !");
+    return true;
+  };
   const showError = (message: string) => {
     setError(message);
     setTimeout(() => {
@@ -239,6 +252,32 @@ export function PasswordSettings() {
       setSuccess(false);
     }, 3000);
   };
+  // Compute dirty à chaque modification
+  useEffect(() => {
+    const init = initialRef.current;
+    const dirty =
+      init.currentPassword !== formData.currentPassword ||
+      init.newPassword !== formData.newPassword ||
+      init.confirmPassword !== formData.confirmPassword;
+    setHasUnsavedChanges(dirty);
+  }, [formData]);
+
+  // Informe le parent
+  useEffect(() => {
+    onDirtyChange?.(hasUnsavedChanges);
+  }, [hasUnsavedChanges, onDirtyChange]);
+
+  // beforeunload si dirty
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
   // Gestion de la touche Echap
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
@@ -260,6 +299,8 @@ export function PasswordSettings() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    const allowed = handleClick();
+    if (!allowed) return;
     if (formData.newPassword !== formData.confirmPassword) {
       showError("Les nouveaux mots de passe ne correspondent pas");
       return;
@@ -277,11 +318,10 @@ export function PasswordSettings() {
       if (error) throw error;
 
       showSuccess();
-      setFormData({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      });
+      const cleared = { currentPassword: "", newPassword: "", confirmPassword: "" };
+      setFormData(cleared);
+      initialRef.current = cleared;
+      onDirtyChange?.(false);
     } catch (error) {
       console.error("Erreur lors du changement de mot de passe:", error);
       showError("Impossible de changer le mot de passe");
