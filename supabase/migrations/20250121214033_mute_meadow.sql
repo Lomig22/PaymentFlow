@@ -1,11 +1,3 @@
--- Ensure anonymous users can sign up
-ALTER TABLE auth.users ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Enable insert for anon users only"
-ON auth.users
-FOR INSERT
-TO anon
-WITH CHECK (true);
 
 -- Grant necessary permissions to the auth schema and tables
 GRANT USAGE ON SCHEMA auth TO anon;

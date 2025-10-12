@@ -36,3 +36,39 @@ CREATE POLICY "Users can update their external payments"
             SELECT invoice_number FROM receivables RIGHT JOIN clients ON receivables.client_id = clients.id WHERE clients.owner_id = auth.uid()
         )
     );
+
+CREATE OR REPLACE FUNCTION increment_receivable_paid_amount(
+  p_invoice_number text,
+  p_amount numeric
+)
+RETURNS void AS $$
+BEGIN
+  UPDATE receivables
+  SET paid_amount = paid_amount + p_amount
+  WHERE invoice_number = p_invoice_number;
+  UPDATE receivables
+  SET status ='paid'
+  WHERE paid_amount >= amount;
+END;
+$$ LANGUAGE plpgsql;
+
+alter publication supabase_realtime
+add table receivables;
+
+
+select
+  cron.schedule(
+    'invoke-function-every-5-minutes',
+    '*/5 * * * *', -- every 5 minutes
+    $$
+    select
+      net.http_post(
+          url:= (select decrypted_secret from vault.decrypted_secrets where name = 'project_url') || '/functions/v1/sync-external-payments',
+          headers:=jsonb_build_object(
+            'Content-type', 'application/json',
+            'Authorization', 'Bearer ' || (select decrypted_secret from vault.decrypted_secrets where name = 'anon_key')
+          ),
+          body:=concat('{"time": "', now(), '"}')::jsonb
+      ) as request_id;
+    $$
+  );

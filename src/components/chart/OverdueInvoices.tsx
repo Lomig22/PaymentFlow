@@ -5,47 +5,47 @@ import { Dialog, Transition } from "@headlessui/react";
 import { Fragment } from "react";
 import ClientDetailModal from "../clients/ClientDetailModal";
 
-const OverdueInvoices = () => {
+const OverdueInvoices = ({ refreshKey }: { refreshKey: number }) => {
   const [topDebtors, setTopDebtors] = useState<{ id: string; name: string; code: string; amount: number }[]>([]);
   type Debtor = { id: string; name: string; code: string; amount: number } | null;
-const [selectedDebtor, setSelectedDebtor] = useState<Debtor>(null);
+  const [selectedDebtor, setSelectedDebtor] = useState<Debtor>(null);
   const [isOpen, setIsOpen] = useState(false);
-  type ClientDetails = { id?: string; [key: string]: any } | null;
-const [clientDetails, setClientDetails] = useState<ClientDetails>(null);
+  type ClientDetails = { id?: string;[key: string]: any } | null;
+  const [clientDetails, setClientDetails] = useState<ClientDetails>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
   // Handler pour chaque débiteur
   const handleDebtorClick = async (clientId: string) => {
-  try {
-    console.log('Client id cliqué:', clientId);
-    console.log('Recherche du client par id:', clientId);
-    const { data, error } = await supabase
-      .from("clients")
-      .select("*")
-      .eq("id", clientId)
-      .single();
+    try {
+      console.log('Client id cliqué:', clientId);
+      console.log('Recherche du client par id:', clientId);
+      const { data, error } = await supabase
+        .from("clients")
+        .select("*")
+        .eq("id", clientId)
+        .single();
 
-    if (error) {
-      console.error('Erreur Supabase:', error);
+      if (error) {
+        console.error('Erreur Supabase:', error);
+        setClientDetails(null);
+        setModalOpen(true);
+        return;
+      }
+      if (data) {
+        console.log('Client trouvé pour la modale:', data);
+        setClientDetails(data);
+        setModalOpen(true);
+      } else {
+        console.warn('Aucun client trouvé pour cet id:', clientId);
+        setClientDetails(null);
+        setModalOpen(true);
+      }
+    } catch (err) {
+      console.error('Exception lors du chargement du client:', err);
       setClientDetails(null);
       setModalOpen(true);
-      return;
     }
-    if (data) {
-      console.log('Client trouvé pour la modale:', data);
-      setClientDetails(data);
-      setModalOpen(true);
-    } else {
-      console.warn('Aucun client trouvé pour cet id:', clientId);
-      setClientDetails(null);
-      setModalOpen(true);
-    }
-  } catch (err) {
-    console.error('Exception lors du chargement du client:', err);
-    setClientDetails(null);
-    setModalOpen(true);
-  }
-};
+  };
 
   const [loading, setLoading] = useState<boolean>(true);
   const openModal = (debtor: { id: string; name: string; code: string; amount: number }) => {
@@ -107,7 +107,7 @@ const [clientDetails, setClientDetails] = useState<ClientDetails>(null);
         // rec.clients est l'objet joint, rec.client_id est le champ FK
         // rec.clients est l'objet joint (doit être un objet, pas un tableau)
         const clientArr = rec.clients as { id: string; company_name: string; client_code: string }[];
-const client = Array.isArray(clientArr) ? clientArr[0] : clientArr;
+        const client = Array.isArray(clientArr) ? clientArr[0] : clientArr;
         if (!client || !client.id) continue;
         const key = client.client_code;
         if (!key) continue;
@@ -136,7 +136,7 @@ const client = Array.isArray(clientArr) ? clientArr[0] : clientArr;
     };
 
     fetchOverdues();
-  }, []);
+  }, [refreshKey]);
 
   return (
     <div className="rounded-2xl p-6 max-h-[350px] overflow-y-auto">

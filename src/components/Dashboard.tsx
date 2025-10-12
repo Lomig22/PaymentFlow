@@ -63,7 +63,7 @@ interface NotificationType {
   details?: string;
 }
 
-interface NotificationList extends Array<NotificationType> {}
+interface NotificationList extends Array<NotificationType> { }
 
 import { motion } from "framer-motion";
 import { Helmet } from "react-helmet";
@@ -73,6 +73,7 @@ import OverdueInvoices from "./chart/OverdueInvoices";
 import DashboardLayout from "./chart/DashboardLayout";
 import BalanceAgeeChart from "./chart/BalanceAgeeChart";
 export default function Dashboard() {
+  const [refreshKey, setRefreshKey] = useState(0);
   const [stats, setStats] = useState<DashboardStats>({
     totalClients: 0,
     clientsNeedingReminder: 0,
@@ -159,13 +160,12 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchDashboardStats();
-
     // Mettre en place un écouteur pour les changements en temps réel
     const clientsSubscription = supabase
       .channel("clients-changes")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "clients" },
+        { event: "*", schema: "public", table: "clients", filter: "" },
         () => {
           fetchDashboardStats();
         }
@@ -177,11 +177,15 @@ export default function Dashboard() {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "receivables" },
-        () => {
+        (payload) => {
+          console.log("Realtime payload:", payload);
           fetchDashboardStats();
+          setRefreshKey(k => k + 1);
         }
       )
-      .subscribe();
+      .subscribe(status => {
+        console.log("Receivable channel status:", status);
+      });
 
     return () => {
       clientsSubscription.unsubscribe();
@@ -449,8 +453,8 @@ export default function Dashboard() {
       const averagePaymentDelay =
         delays.length > 0
           ? Math.round(
-              delays.reduce((sum, delay) => sum + delay, 0) / delays.length
-            )
+            delays.reduce((sum, delay) => sum + delay, 0) / delays.length
+          )
           : 0;
 
       const reminderSteps = {
@@ -501,6 +505,17 @@ export default function Dashboard() {
   });
 
   const visibleNotifications = filteredNotifications.slice(0, visibleCount);
+  useEffect(() => {
+    console.log("FETCH API BANCAIRE")
+    const fetchApiBancaire = async () => {
+      fetch("/api/poc-api-bancaire", {
+        method: "GET"
+      }).then(res => res.json()).then(text => {
+        console.log("DASHBOARD POC BANCAIRE: ", text);
+      });
+    };
+    fetchApiBancaire();
+  }, []);
 
   if (loading) {
     return (
@@ -557,17 +572,20 @@ export default function Dashboard() {
 
     return null;
   };
+
+
+
   return (
     <>
       <div className="p-6">
         <div className="mb-8">
           <Helmet>
-  <title>Tableau de bord</title>
-</Helmet>
-<h1 className="text-3xl font-bold text-gray-900">Tableau de bord</h1>
-<p className="mt-2 text-gray-600">
-  Vue d'ensemble de vos relances clients
-</p>
+            <title>Tableau de bord</title>
+          </Helmet>
+          <h1 className="text-3xl font-bold text-gray-900">Tableau de bord</h1>
+          <p className="mt-2 text-gray-600">
+            Vue d'ensemble de vos relances clients
+          </p>
         </div>
 
         <div
@@ -645,7 +663,7 @@ export default function Dashboard() {
           <div className="xl:col-span-8 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="rounded-2xl shadow bg-white">
-                <ClientBalanceBar />
+                <ClientBalanceBar refreshKey={refreshKey} />
               </div>
               <div className="rounded-2xl shadow bg-white">
                 <DsoChart />
@@ -654,7 +672,7 @@ export default function Dashboard() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="rounded-2xl shadow bg-white">
-                <DashboardLayout />
+                <DashboardLayout refreshKey={refreshKey} />
               </div>
               <div className="rounded-2xl shadow bg-white">
                 <BalanceAgeeChart />
@@ -686,8 +704,8 @@ export default function Dashboard() {
                       {filter === "all"
                         ? "Toutes"
                         : filter === "unread"
-                        ? "Non lues"
-                        : "Lues"}
+                          ? "Non lues"
+                          : "Lues"}
                       <svg
                         className="-mr-1 ml-2 h-5 w-5"
                         xmlns="http://www.w3.org/2000/svg"
@@ -712,11 +730,10 @@ export default function Dashboard() {
                               setVisibleCount(5);
                               setDropdownOpen(false);
                             }}
-                            className={`block w-full text-left px-4 py-2 text-sm ${
-                              filter === "all"
-                                ? "bg-blue-600 text-white"
-                                : "text-gray-700 hover:bg-gray-100"
-                            }`}
+                            className={`block w-full text-left px-4 py-2 text-sm ${filter === "all"
+                              ? "bg-blue-600 text-white"
+                              : "text-gray-700 hover:bg-gray-100"
+                              }`}
                           >
                             Toutes
                           </button>
@@ -726,11 +743,10 @@ export default function Dashboard() {
                               setVisibleCount(5);
                               setDropdownOpen(false);
                             }}
-                            className={`block w-full text-left px-4 py-2 text-sm ${
-                              filter === "unread"
-                                ? "bg-blue-600 text-white"
-                                : "text-gray-700 hover:bg-gray-100"
-                            }`}
+                            className={`block w-full text-left px-4 py-2 text-sm ${filter === "unread"
+                              ? "bg-blue-600 text-white"
+                              : "text-gray-700 hover:bg-gray-100"
+                              }`}
                           >
                             Non lues
                           </button>
@@ -740,11 +756,10 @@ export default function Dashboard() {
                               setVisibleCount(5);
                               setDropdownOpen(false);
                             }}
-                            className={`block w-full text-left px-4 py-2 text-sm ${
-                              filter === "read"
-                                ? "bg-blue-600 text-white"
-                                : "text-gray-700 hover:bg-gray-100"
-                            }`}
+                            className={`block w-full text-left px-4 py-2 text-sm ${filter === "read"
+                              ? "bg-blue-600 text-white"
+                              : "text-gray-700 hover:bg-gray-100"
+                              }`}
                           >
                             Lues
                           </button>
@@ -769,13 +784,12 @@ export default function Dashboard() {
                           {/* Contenu principal */}
                           <div className="flex-1">
                             <p
-                              className={`text-sm font-medium ${
-                                notification.type === "erreur"
-                                  ? "text-red-600"
-                                  : notification.type === "info"
+                              className={`text-sm font-medium ${notification.type === "erreur"
+                                ? "text-red-600"
+                                : notification.type === "info"
                                   ? "text-blue-600"
                                   : "text-gray-800"
-                              }`}
+                                }`}
                             >
                               {notification.message}
                             </p>
@@ -893,7 +907,7 @@ export default function Dashboard() {
                 <RemindersCard />
               </div>
               <div className="rounded-2xl shadow bg-white">
-                <OverdueInvoices />
+                <OverdueInvoices refreshKey={refreshKey} />
               </div>
             </div>
 
@@ -933,10 +947,9 @@ export default function Dashboard() {
                     <div
                       className="bg-yellow-400 h-2 rounded-full" // plus vif que yellow-500
                       style={{
-                        width: `${
-                          (stats.reminderSteps.first / stats.totalReceivables) *
+                        width: `${(stats.reminderSteps.first / stats.totalReceivables) *
                           100
-                        }%`,
+                          }%`,
                       }}
                     />
                   </div>
@@ -953,11 +966,10 @@ export default function Dashboard() {
                     <div
                       className="bg-orange-400 h-2 rounded-full" // plus vif que orange-500
                       style={{
-                        width: `${
-                          (stats.reminderSteps.second /
-                            stats.totalReceivables) *
+                        width: `${(stats.reminderSteps.second /
+                          stats.totalReceivables) *
                           100
-                        }%`,
+                          }%`,
                       }}
                     />
                   </div>
@@ -974,10 +986,9 @@ export default function Dashboard() {
                     <div
                       className="bg-red-500 h-2 rounded-full" // déjà assez vif
                       style={{
-                        width: `${
-                          (stats.reminderSteps.third / stats.totalReceivables) *
+                        width: `${(stats.reminderSteps.third / stats.totalReceivables) *
                           100
-                        }%`,
+                          }%`,
                       }}
                     />
                   </div>
@@ -994,10 +1005,9 @@ export default function Dashboard() {
                     <div
                       className="bg-purple-500 h-2 rounded-full" // déjà vif et distinctif
                       style={{
-                        width: `${
-                          (stats.reminderSteps.final / stats.totalReceivables) *
+                        width: `${(stats.reminderSteps.final / stats.totalReceivables) *
                           100
-                        }%`,
+                          }%`,
                       }}
                     />
                   </div>
@@ -1014,10 +1024,9 @@ export default function Dashboard() {
                     <div
                       className="bg-red-600 h-2 rounded-full" // plus vif que red-300
                       style={{
-                        width: `${
-                          (stats.reminderSteps.legal / stats.totalReceivables) *
+                        width: `${(stats.reminderSteps.legal / stats.totalReceivables) *
                           100
-                        }%`,
+                          }%`,
                       }}
                     />
                   </div>
@@ -1045,16 +1054,15 @@ export default function Dashboard() {
                     className="h-2 rounded"
                     style={{
                       backgroundColor: "#4F8CFF", // bleu vif
-                      width: `${
-                        stats.totalClients > 0
-                          ? Math.min(
-                              (stats.clientsNeedingReminder /
-                                stats.totalClients) *
-                                100,
-                              100
-                            )
-                          : 0
-                      }%`,
+                      width: `${stats.totalClients > 0
+                        ? Math.min(
+                          (stats.clientsNeedingReminder /
+                            stats.totalClients) *
+                          100,
+                          100
+                        )
+                        : 0
+                        }%`,
                     }}
                   />
                 </div>
@@ -1073,15 +1081,14 @@ export default function Dashboard() {
                     className="h-2 rounded"
                     style={{
                       backgroundColor: "#F6C752", // jaune orangé plus vif
-                      width: `${
-                        stats.totalReceivables > 0
-                          ? Math.min(
-                              (stats.activeReminders / stats.totalReceivables) *
-                                100,
-                              100
-                            )
-                          : 0
-                      }%`,
+                      width: `${stats.totalReceivables > 0
+                        ? Math.min(
+                          (stats.activeReminders / stats.totalReceivables) *
+                          100,
+                          100
+                        )
+                        : 0
+                        }%`,
                     }}
                   />
                 </div>
@@ -1100,16 +1107,15 @@ export default function Dashboard() {
                     className="h-2 rounded"
                     style={{
                       backgroundColor: "#00C853", // vert plus vif
-                      width: `${
-                        stats.totalReceivables > 0
-                          ? Math.min(
-                              (stats.resolvedReminders /
-                                stats.totalReceivables) *
-                                100,
-                              100
-                            )
-                          : 0
-                      }%`,
+                      width: `${stats.totalReceivables > 0
+                        ? Math.min(
+                          (stats.resolvedReminders /
+                            stats.totalReceivables) *
+                          100,
+                          100
+                        )
+                        : 0
+                        }%`,
                     }}
                   />
                 </div>
@@ -1128,24 +1134,23 @@ export default function Dashboard() {
                     className="h-2 rounded"
                     style={{
                       backgroundColor: "#A259FF", // violet vif
-                      width: `${
-                        stats.totalReceivables > 0
-                          ? Math.min(
-                              (stats.resolvedReminders /
-                                stats.totalReceivables) *
-                                100,
-                              100
-                            )
-                          : 0
-                      }%`,
+                      width: `${stats.totalReceivables > 0
+                        ? Math.min(
+                          (stats.resolvedReminders /
+                            stats.totalReceivables) *
+                          100,
+                          100
+                        )
+                        : 0
+                        }%`,
                     }}
                   />
                 </div>
                 <span className="col-span-2 text-sm font-medium text-right">
                   {stats.totalReceivables > 0
                     ? `${Math.round(
-                        (stats.resolvedReminders / stats.totalReceivables) * 100
-                      )}%`
+                      (stats.resolvedReminders / stats.totalReceivables) * 100
+                    )}%`
                     : "0%"}
                 </span>
               </div>

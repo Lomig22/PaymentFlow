@@ -12,7 +12,6 @@ BEGIN
       AND tablename = 'email_opens'
       AND policyname = 'Users can view their email opens via receivables'
   ) THEN
-    EXECUTE $$
       create policy "Users can view their email opens via receivables"
         on email_opens for select
         to authenticated
@@ -24,7 +23,6 @@ BEGIN
               and c.owner_id = auth.uid()
           )
         );
-    $$;
   END IF;
 END
 $$;
