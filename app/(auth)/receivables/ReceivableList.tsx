@@ -40,6 +40,7 @@ import {
   getReminderTemplate,
   sendManualReminder,
   getEmailSettings,
+  sendOneReminder,
 } from "../../(public)/reminderService";
 import CSVImportModal, { CSVMapping } from "../../../components/receivables/CSVImportModal";
 import ReminderHistory from "../../../components/receivables/ReminderHistory";
@@ -314,6 +315,19 @@ export function ReceivablesList({ user }: { user: SupabaseUser }) {
   };
 
   useEffect(() => {
+    const receivablesSubscription = supabase
+      .channel("receivables-changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "receivables" },
+        (payload) => {
+          console.log("Realtime payload:", payload);
+          fetchReceivables();
+        }
+      )
+      .subscribe(status => {
+        console.log("Receivable channel status:", status);
+      });
     fetchReceivables();
   }, []);
 
@@ -643,6 +657,146 @@ export function ReceivablesList({ user }: { user: SupabaseUser }) {
       });
     }
   };
+
+  // Vérifie si une créance est éligible au "play" (bouton vert)
+  const isReceivablePlayEligible = (r: Receivable & { client: Client }) =>
+    (remindersEnabled(r.client) || canPlayDirect(r)) && !r.automatic_reminder;
+
+  // Activer en masse les relances pour la sélection courante (uniquement celles éligibles)
+  const handleBulkPlayActivate = async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    const eligible = receivables.filter(
+      (r) => selectedIds.includes(r.id) && isReceivablePlayEligible(r)
+    );
+
+    if (eligible.length === 0) {
+      showError(
+        "Aucune des créances sélectionnées n'est éligible à l'activation."
+      );
+      return;
+    }
+
+    const result = await Swal.fire({
+      title: "Activer les relances ?",
+      text: `Vous êtes sur le point d'activer les relances pour ${eligible.length} créance(s) sélectionnée(s).`,
+      showCancelButton: true,
+      buttonsStyling: false,
+      customClass: {
+        confirmButton:
+          "bg-green-600 text-white px-4 py-2 rounded mr-2 hover:bg-green-700",
+        cancelButton:
+          "bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700",
+      },
+      confirmButtonText: "Activer",
+      cancelButtonText: "Annuler",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      const ids = eligible.map((r) => r.id);
+      const { error } = await supabase
+        .from("receivables")
+        .update({ automatic_reminder: true })
+        .in("id", ids);
+      if (error) throw error;
+
+      if (user?.id) {
+        await saveNotification({
+          owner_id: user.id,
+          need_mail_notification: true,
+          is_read: false,
+          type: "info",
+          message: "Relances activées",
+          details: `${eligible.length} créance(s) activée(s)`,
+        });
+      }
+
+      // Tentative d'envoi immédiat pour chaque créance activée (si conditions réunies)
+      try {
+        await Promise.allSettled(
+          eligible.map((r) => sendOneReminder(r.id))
+        );
+      } catch (_) { }
+
+      // Rafraîchir et nettoyer la sélection
+      fetchReceivables();
+      setSelectedIds([]);
+      setSelectedAll(false);
+    } catch (e: any) {
+      console.error("Erreur activation groupée:", e);
+      showError(
+        e?.message || "Impossible d'activer les relances pour la sélection."
+      );
+    }
+  };
+
+  // Mettre en pause en masse les relances pour la sélection courante (uniquement celles actives)
+  const handleBulkPauseActivate = async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    const active = receivables.filter(
+      (r) => selectedIds.includes(r.id) && r.automatic_reminder === true
+    );
+
+    if (active.length === 0) {
+      showError(
+        "Aucune des créances sélectionnées n'est actuellement active."
+      );
+      return;
+    }
+
+    const result = await Swal.fire({
+      title: "Mettre en pause les relances ?",
+      text: `Vous êtes sur le point de mettre en pause ${active.length} créance(s) sélectionnée(s).`,
+      showCancelButton: true,
+      buttonsStyling: false,
+      customClass: {
+        confirmButton:
+          "bg-orange-600 text-white px-4 py-2 rounded mr-2 hover:bg-orange-700",
+        cancelButton:
+          "bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700",
+      },
+      confirmButtonText: "Mettre en pause",
+      cancelButtonText: "Annuler",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      const ids = active.map((r) => r.id);
+      const { error } = await supabase
+        .from("receivables")
+        .update({ automatic_reminder: false })
+        .in("id", ids);
+      if (error) throw error;
+
+      if (user?.id) {
+        await saveNotification({
+          owner_id: user.id,
+          need_mail_notification: true,
+          is_read: false,
+          type: "info",
+          message: "Relances mises en pause",
+          details: `${active.length} créance(s) mises en pause`,
+        });
+      }
+
+      fetchReceivables();
+      setSelectedIds([]);
+      setSelectedAll(false);
+    } catch (e: any) {
+      console.error("Erreur pause groupée:", e);
+      showError(
+        e?.message || "Impossible de mettre en pause la sélection."
+      );
+    }
+  };
   //fonction récursive de détection de statut activé
   function getNextEnabledReminderStatus(
     status: string,
@@ -687,6 +841,9 @@ export function ReceivablesList({ user }: { user: SupabaseUser }) {
   const handleSendReminder = async () =>
   // receivable: Receivable & { client: Client }
   {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user) throw new Error("Utilisateur non authentifié");
     try {
@@ -951,6 +1108,72 @@ export function ReceivablesList({ user }: { user: SupabaseUser }) {
   const dropdownRefs = useRef<Record<string, HTMLDivElement | HTMLSpanElement | null>>({});
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  // Édition inline de l'email dans le tableau
+  const [editingEmailId, setEditingEmailId] = useState<string | null>(null);
+  const [emailDraft, setEmailDraft] = useState<string>("");
+  const [addEmailToClient, setAddEmailToClient] = useState<boolean>(true);
+  const [addingNewEmail, setAddingNewEmail] = useState<boolean>(false);
+  const startEditEmail = (r: any) => {
+    setEditingEmailId(r.id);
+    const current = r.email || (r?.client?.email?.split(',')[0] ?? "");
+    setEmailDraft(current);
+    setAddEmailToClient(true);
+    setAddingNewEmail(false);
+  };
+  const cancelEditEmail = () => {
+    setEditingEmailId(null);
+    setEmailDraft("");
+    setAddEmailToClient(true);
+    setAddingNewEmail(false);
+  };
+  const saveEmailInline = async (r: any, directEmail?: string) => {
+    try {
+      const newEmail = (directEmail ?? emailDraft ?? "").trim();
+      if (!newEmail || !newEmail.includes("@")) {
+        showError("Adresse email invalide");
+        return;
+      }
+      // Mise à jour de la créance
+      const { error: recErr } = await supabase
+        .from('receivables')
+        .update({ email: newEmail, updated_at: new Date().toISOString() })
+        .eq('id', r.id);
+      if (recErr) throw recErr;
+
+      // Option: ajouter aussi à la fiche client si absente
+      if (addEmailToClient && addingNewEmail && r?.client?.id) {
+        const currentEmails = (r.client.email || "").split(',').map((e: string) => e.trim()).filter(Boolean);
+        if (!currentEmails.includes(newEmail)) {
+          const updated = [...currentEmails, newEmail].join(',');
+          await supabase.from('clients').update({ email: updated }).eq('id', r.client.id);
+          r.client.email = updated;
+        }
+      }
+      // État local
+      setReceivables((prev) => prev.map((item) =>
+        item.id === r.id
+          ? {
+            ...item,
+            email: newEmail,
+            client: addEmailToClient
+              ? {
+                ...item.client,
+                email: (() => {
+                  const arr = (item.client?.email || "").split(',').map((e) => e.trim()).filter(Boolean);
+                  if (!arr.includes(newEmail)) arr.push(newEmail);
+                  return arr.join(',');
+                })(),
+              }
+              : item.client,
+          }
+          : item
+      ));
+      cancelEditEmail();
+    } catch (e: any) {
+      console.error('Erreur enregistrement email inline:', e);
+      showError("Impossible d'enregistrer l'email");
+    }
+  };
   useEffect(() => {
     if (!openDropdownId) return;
     const handleMouseMove = (event: MouseEvent) => {
@@ -996,15 +1219,15 @@ export function ReceivablesList({ user }: { user: SupabaseUser }) {
         buttonRefs.current[openDropdownId]!.getBoundingClientRect();
       const dropdown = dropdownRefs.current[openDropdownId];
       const table = tableRefs.current;
-
+  
       if (!dropdown || !table) return;
-
+  
       const dropdownHeight = dropdown.getBoundingClientRect().height;
       const tableHeight = table.offsetHeight;
-
+  
       // const overflowHeight = dropdownTop + dropdownHeight - tableHeight;
       //alert(`Position de la souris : X=${mousePosition.x}, Y=${mousePosition.y},table height=${tableHeight}`);
-
+  
       /*   if (mousePosition.y > tableHeight) {
       setDropdownPosition({
         top: buttonRect.top - dropdownHeight,
@@ -1034,7 +1257,7 @@ export function ReceivablesList({ user }: { user: SupabaseUser }) {
 
       /*  const dropdownHeight = dropdown.getBoundingClientRect().height;
       const tableHeight = table.offsetHeight;
- 
+   
         if (mousePosition.y > tableHeight) {
       setDropdownPosition({
         top: buttonRect.top - dropdownHeight,
@@ -1296,7 +1519,7 @@ export function ReceivablesList({ user }: { user: SupabaseUser }) {
       client.reminder_enable_3 && client.reminder_date_3,
       client.reminder_enable_final && client.reminder_date_final,
     ];
-
+  
     const hasPastDate = datesToCheck.some(
       (date) => date && isBefore(new Date(date), now)
     );
@@ -1638,7 +1861,7 @@ export function ReceivablesList({ user }: { user: SupabaseUser }) {
                               <Tooltip
                                 label={(remindersEnabled(receivable.client) || canPlayDirect(receivable)) ? 'Activer les relances' : "Aucune relance n'est activée pour ce client"}
                                 theme="orange"
-                                key="play"
+                                key={`play-${receivable.id}`}
                               >
                                 <button
                                   type="button"
@@ -1648,7 +1871,7 @@ export function ReceivablesList({ user }: { user: SupabaseUser }) {
                                   style={{ fontSize: '1.2rem' }}
                                 >
                                   <motion.span
-                                    key="play-icon"
+                                    key={`play-icon-${receivable.id}`}
                                     initial={{ opacity: 0, y: 8 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: -8 }}
@@ -1660,7 +1883,7 @@ export function ReceivablesList({ user }: { user: SupabaseUser }) {
                                 </button>
                               </Tooltip>
                             ) : (
-                              <Tooltip label="Mettre en pause" theme="green" key="pause">
+                              <Tooltip label="Mettre en pause" theme="green" key={`pause-${receivable.id}`}>
                                 <button
                                   type="button"
                                   className="flex items-center justify-center rounded-full w-8 h-8 bg-orange-500 hover:bg-orange-600 text-white transition focus:outline-none"
@@ -1668,7 +1891,7 @@ export function ReceivablesList({ user }: { user: SupabaseUser }) {
                                   style={{ fontSize: '1.2rem' }}
                                 >
                                   <motion.span
-                                    key="pause-icon"
+                                    key={`pause-icon-${receivable.id}`}
                                     initial={{ opacity: 0, y: 8 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: -8 }}
@@ -1687,90 +1910,94 @@ export function ReceivablesList({ user }: { user: SupabaseUser }) {
                         </span>
 
 
-                        {getReminderIssues(receivable) && (
-                          <Tooltip label={getReminderIssues(receivable)}>
-                            <Info className="w-5 h-5 text-yellow-500 relative z-0" />
-                          </Tooltip>
-                        )}
-                      </div>
+                        {
+                          getReminderIssues(receivable) && (
+                            <Tooltip label={getReminderIssues(receivable)}>
+                              <Info className="w-5 h-5 text-yellow-500 relative z-0" />
+                            </Tooltip>
+                          )
+                        }
+                      </div >
 
                       {/* Dropdown */}
-                      {openDropdownId === receivable.id && (
-                        <div
-                          ref={(el) => {
-                            dropdownRefs.current[receivable.id] = el;
-                          }}
-                          className="fixed z-[51] w-48 origin-top-left rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-10 ml-2"
-                          style={{
-                            top: `${dropdownPosition.top}px`,
-                            left: `${dropdownPosition.left}px`,
-                          }}
-                        >
-                          <div className="py-1">
-                            <button
-                              onClick={() => {
-                                setShowEditForm(true);
-                                setSelectedReceivable(receivable);
-                                setOpenDropdownId(null);
-                              }}
-                              className="flex  w-full px-2 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                            >
-                              <Edit className="w-4 h-4 mr-2" /> Modifier
-                            </button>
-                            {receivable.status !== "paid" && (
+                      {
+                        openDropdownId === receivable.id && (
+                          <div
+                            ref={(el) => {
+                              dropdownRefs.current[receivable.id] = el;
+                            }}
+                            className="fixed z-[51] w-48 origin-top-left rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-10 ml-2"
+                            style={{
+                              top: `${dropdownPosition.top}px`,
+                              left: `${dropdownPosition.left}px`,
+                            }}
+                          >
+                            <div className="py-1">
+                              <button
+                                onClick={() => {
+                                  setShowEditForm(true);
+                                  setSelectedReceivable(receivable);
+                                  setOpenDropdownId(null);
+                                }}
+                                className="flex  w-full px-2 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                              >
+                                <Edit className="w-4 h-4 mr-2" /> Modifier
+                              </button>
+                              {receivable.status !== "paid" && (
+                                <button
+                                  onClick={() => {
+                                    setSelectedReceivable(receivable);
+                                    setShowConfirmReminder(true);
+                                    setOpenDropdownId(null);
+                                  }}
+                                  className="flex  w-full px-2 py-2 text-sm text-yellow-600 hover:bg-yellow-100"
+                                >
+                                  <Mail className="w-4 h-4 mr-2" /> Envoyer une
+                                  relance
+                                </button>
+                              )}
+                              <button
+                                onClick={() => {
+                                  setSelectedClient(receivable.client);
+                                  setSelectedReceivable(receivable);
+                                  setShowSettings(true);
+                                  setOpenDropdownId(null);
+                                }}
+                                className="flex  w-full px-2 py-2 text-sm text-gray-600 hover:bg-gray-100"
+                              >
+                                <Clock className="w-4 h-4 mr-2" /> Paramètres de
+                                relance
+                              </button>
                               <button
                                 onClick={() => {
                                   setSelectedReceivable(receivable);
-                                  setShowConfirmReminder(true);
+                                  setShowReminderHistory(true);
                                   setOpenDropdownId(null);
                                 }}
-                                className="flex  w-full px-2 py-2 text-sm text-yellow-600 hover:bg-yellow-100"
+                                className="flex  w-full px-2 py-2 text-sm text-gray-600 hover:bg-gray-100"
                               >
-                                <Mail className="w-4 h-4 mr-2" /> Envoyer une
-                                relance
+                                <ListRestart className="w-4 h-4 mr-2" />{" "}
+                                Historique des relances
                               </button>
-                            )}
-                            <button
-                              onClick={() => {
-                                setSelectedClient(receivable.client);
-                                setSelectedReceivable(receivable);
-                                setShowSettings(true);
-                                setOpenDropdownId(null);
-                              }}
-                              className="flex  w-full px-2 py-2 text-sm text-gray-600 hover:bg-gray-100"
-                            >
-                              <Clock className="w-4 h-4 mr-2" /> Paramètres de
-                              relance
-                            </button>
-                            <button
-                              onClick={() => {
-                                setSelectedReceivable(receivable);
-                                setShowReminderHistory(true);
-                                setOpenDropdownId(null);
-                              }}
-                              className="flex  w-full px-2 py-2 text-sm text-gray-600 hover:bg-gray-100"
-                            >
-                              <ListRestart className="w-4 h-4 mr-2" />{" "}
-                              Historique des relances
-                            </button>
-                            <button
-                              onClick={() => {
-                                handleDeleteClick(receivable);
-                                setOpenDropdownId(null);
-                              }}
-                              className="flex  w-full px-2 py-2 text-sm text-red-600 hover:bg-red-100"
-                            >
-                              <Trash2 className="w-4 h-4 mr-2" /> Supprimer
-                            </button>
+                              <button
+                                onClick={() => {
+                                  handleDeleteClick(receivable);
+                                  setOpenDropdownId(null);
+                                }}
+                                className="flex  w-full px-2 py-2 text-sm text-red-600 hover:bg-red-100"
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" /> Supprimer
+                              </button>
+                            </div>
                           </div>
-                        </div>
-                      )}
-                    </td>
+                        )
+                      }
+                    </td >
 
                     {/* Données */}
-                    <td className="px-4 py-3">
+                    < td className="px-4 py-3" >
                       <ReceivableStatusBadge receivable={receivable} />
-                    </td>
+                    </td >
                     <td className="px-4 py-3">
                       {receivable.client?.company_name ?? "Client inconnu"}
                     </td>
@@ -1832,19 +2059,22 @@ export function ReceivablesList({ user }: { user: SupabaseUser }) {
                         "-"
                       )}
                     </td>
-                  </tr>
-                ))}
-                {filteredReceivables.length === 0 && (
-                  <tr>
-                    <td colSpan={15} className="text-center py-6 text-gray-500">
-                      Aucune créance trouvée
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                  </tr >
+                ))
+                }
+                {
+                  filteredReceivables.length === 0 && (
+                    <tr>
+                      <td colSpan={15} className="text-center py-6 text-gray-500">
+                        Aucune créance trouvée
+                      </td>
+                    </tr>
+                  )
+                }
+              </tbody >
+            </table >
+          </div >
+        </div >
 
         {showForm && (
           <ReceivableForm
@@ -1860,255 +2090,269 @@ export function ReceivablesList({ user }: { user: SupabaseUser }) {
           />
         )}
 
-        {selectedReceivable && showEditForm && (
-          <ReceivableEditForm
-            receivable={selectedReceivable}
-            onClose={() => {
-              setShowEditForm(false);
-              setSelectedReceivable(null);
-            }}
-            onReceivableUpdated={(updatedReceivable) => {
-              setTimeout(() => {
-                setReceivables(
-                  receivables.map((r) =>
-                    r.id === updatedReceivable.id ? updatedReceivable : r
-                  )
-                );
+        {
+          selectedReceivable && showEditForm && (
+            <ReceivableEditForm
+              receivable={selectedReceivable}
+              onClose={() => {
+                setShowEditForm(false);
                 setSelectedReceivable(null);
-              }, 2000);
-            }}
-          />
-        )}
+              }}
+              onReceivableUpdated={(updatedReceivable) => {
+                setTimeout(() => {
+                  setReceivables(
+                    receivables.map((r) =>
+                      r.id === updatedReceivable.id ? updatedReceivable : r
+                    )
+                  );
+                  setSelectedReceivable(null);
+                }, 2000);
+              }}
+            />
+          )
+        }
 
-        {showSettings && selectedClient && selectedReceivable && (
-          <ReminderSettingsModal
-            open={showSettings}
-            client={selectedClient}
-            onClose={() => {
-              setShowSettings(false);
-              setSelectedClient(null);
-              setSelectedReceivable(null);
-              // Rafraîchir les données pour mettre à jour l'affichage des icônes d'avertissement
-              fetchReceivables();
-            }}
-            reminderProfiles={reminderProfiles}
-            receivable={selectedReceivable}
-          />
-        )}
+        {
+          showSettings && selectedClient && selectedReceivable && (
+            <ReminderSettingsModal
+              open={showSettings}
+              client={selectedClient}
+              onClose={() => {
+                setShowSettings(false);
+                setSelectedClient(null);
+                setSelectedReceivable(null);
+                // Rafraîchir les données pour mettre à jour l'affichage des icônes d'avertissement
+                fetchReceivables();
+              }}
+              reminderProfiles={reminderProfiles}
+              receivable={selectedReceivable}
+            />
+          )
+        }
 
-        {showImportModal && (
-          <CSVImportModal
-            onClose={() => setShowImportModal(false)}
-            onImportSuccess={handleImportSuccess}
-            receivables={receivables}
-          />
-        )}
+        {
+          showImportModal && (
+            <CSVImportModal
+              onClose={() => setShowImportModal(false)}
+              onImportSuccess={handleImportSuccess}
+              receivables={receivables}
+            />
+          )
+        }
 
-        {showConfirmSendReminder && selectedReceivable && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-medium text-gray-900">
-                  Confirmation d'envoi
-                </h3>
-                <button
-                  onClick={() => {
-                    setShowConfirmReminder(false);
-                    setSelectedReceivable(null);
-                    fetchReceivables();
-                  }}
-                  className="text-gray-400 hover:text-gray-500"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-
-              <p className="text-sm text-gray-500 mb-4">
-                Êtes-vous sûr de vouloir envoyer la relance manuelle ?
-              </p>
-
-              <form className="space-y-4">
-                <div>
-                  <label
-                    htmlFor="subject"
-                    className="block text-sm font-medium text-gray-700"
+        {
+          showConfirmSendReminder && selectedReceivable && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-medium text-gray-900">
+                    Confirmation d'envoi
+                  </h3>
+                  <button
+                    onClick={() => {
+                      setShowConfirmReminder(false);
+                      setSelectedReceivable(null);
+                      fetchReceivables();
+                    }}
+                    className="text-gray-400 hover:text-gray-500"
                   >
-                    Objet
-                  </label>
-                  <input
-                    type="text"
-                    id="subject"
-                    name="subject"
-                    value={subject}
-                    onChange={(e) => setSubject(e.target.value)}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    placeholder="Entrez l'objet"
-                  />
+                    <X className="h-5 w-5" />
+                  </button>
                 </div>
 
-                <div>
-                  <label
-                    htmlFor="message"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Message
-                  </label>
-                  <textarea
-                    id="message"
-                    name="message"
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                    rows={6}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    placeholder="Entrez votre message"
-                  ></textarea>
-                </div>
-                <div className="mb-4">
-                  <label
-                    htmlFor="signature"
-                    className="hidden block text-sm font-medium text-gray-700"
-                  >
-                    Signature (HTML)
-                  </label>
-                  <textarea
-                    id="signature"
-                    name="signature"
-                    value={signature}
-                    onChange={(e) => setSignature(e.target.value)}
-                    rows={6}
-                    className="hidden mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    placeholder="Entrez votre signature HTML"
-                  ></textarea>
-                </div>
+                <p className="text-sm text-gray-500 mb-4">
+                  Êtes-vous sûr de vouloir envoyer la relance manuelle ?
+                </p>
 
-                <div className="mt-4">
-                  <div className="flex justify-between items-center mb-1">
-                    <label className="block text-sm font-medium text-gray-700">
-                      Aperçu de la signature :
-                    </label>
-                    <button
-                      onClick={sendToSignatureSetting}
-                      className="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      title="Personnaliser la signature"
-                      type="button"
+                <form className="space-y-4">
+                  <div>
+                    <label
+                      htmlFor="subject"
+                      className="block text-sm font-medium text-gray-700"
                     >
-                      <PencilIcon className="h-5 w-5 mr-1" aria-hidden="true" />
-                      Modifier
-                    </button>
+                      Objet
+                    </label>
+                    <input
+                      type="text"
+                      id="subject"
+                      name="subject"
+                      value={subject}
+                      onChange={(e) => setSubject(e.target.value)}
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      placeholder="Entrez l'objet"
+                    />
                   </div>
-                  <div
-                    className="border p-4 rounded bg-white shadow"
-                    dangerouslySetInnerHTML={{ __html: signature }}
-                  />
+
+                  <div>
+                    <label
+                      htmlFor="message"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      Message
+                    </label>
+                    <textarea
+                      id="message"
+                      name="message"
+                      value={content}
+                      onChange={(e) => setContent(e.target.value)}
+                      rows={6}
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      placeholder="Entrez votre message"
+                    ></textarea>
+                  </div>
+                  <div className="mb-4">
+                    <label
+                      htmlFor="signature"
+                      className="hidden block text-sm font-medium text-gray-700"
+                    >
+                      Signature (HTML)
+                    </label>
+                    <textarea
+                      id="signature"
+                      name="signature"
+                      value={signature}
+                      onChange={(e) => setSignature(e.target.value)}
+                      rows={6}
+                      className="hidden mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      placeholder="Entrez votre signature HTML"
+                    ></textarea>
+                  </div>
+
+                  <div className="mt-4">
+                    <div className="flex justify-between items-center mb-1">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Aperçu de la signature :
+                      </label>
+                      <button
+                        onClick={sendToSignatureSetting}
+                        className="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        title="Personnaliser la signature"
+                        type="button"
+                      >
+                        <PencilIcon className="h-5 w-5 mr-1" aria-hidden="true" />
+                        Modifier
+                      </button>
+                    </div>
+                    <div
+                      className="border p-4 rounded bg-white shadow"
+                      dangerouslySetInnerHTML={{ __html: signature }}
+                    />
+                  </div>
+                </form>
+
+                {sendError && (
+                  <div className="mt-4 text-red-600 text-sm font-medium">
+                    Une erreur est survenue lors de l'envoi de la relance. Veuillez réessayer.
+                  </div>
+                )}
+                <div className="flex justify-end space-x-4 mt-6">
+                  <button
+                    onClick={() => {
+                      // Nettoyage supplémentaire de l'état de navigation lors de la fermeture manuelle de la popup
+                      window.history.replaceState({}, document.title, window.location.pathname);
+                      setShowConfirmReminder(false);
+                      setSelectedReceivable(null);
+                      fetchReceivables();
+                    }}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 border border-gray-300 rounded-md"
+                    disabled={sending}
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    onClick={async () => {
+                      setSendError(false);
+                      setSendSuccess(false);
+                      await handleSendReminder();
+                      setSendSuccess(true);
+                      setShowConfirmReminder(false);
+                      setSelectedReceivable(null);
+                      fetchReceivables();
+                    }}
+                    disabled={sending}
+                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md disabled:opacity-50"
+                  >
+                    {sending ? "Envoi..." : "Envoyer la relance"}
+                  </button>
                 </div>
-              </form>
+              </div >
+            </div >
+          )
+        }
+        {
+          sendSuccess && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 flex flex-col items-center">
+                <CheckIcon className="h-12 w-12 text-green-500 mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Relance envoyée avec succès !</h3>
+                <button
+                  onClick={() => setSendSuccess(false)}
+                  className="mt-4 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md"
+                >
+                  Fermer
+                </button>
+              </div>
+            </div>
+          )
+        }
 
-              {sendError && (
-                <div className="mt-4 text-red-600 text-sm font-medium">
-                  Une erreur est survenue lors de l'envoi de la relance. Veuillez réessayer.
+        {
+          showDeleteConfirm && receivableToDelete && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-medium text-gray-900">
+                    Confirmer la suppression
+                  </h3>
+                  <button
+                    onClick={() => {
+                      setShowDeleteConfirm(false);
+                      setReceivableToDelete(null);
+                    }}
+                    className="text-gray-400 hover:text-gray-500"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
                 </div>
-              )}
-              <div className="flex justify-end space-x-4 mt-6">
-                <button
-                  onClick={() => {
-                    // Nettoyage supplémentaire de l'état de navigation lors de la fermeture manuelle de la popup
-                    window.history.replaceState({}, document.title, window.location.pathname);
-                    setShowConfirmReminder(false);
-                    setSelectedReceivable(null);
-                    fetchReceivables();
-                  }}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 border border-gray-300 rounded-md"
-                  disabled={sending}
-                >
-                  Annuler
-                </button>
-                <button
-                  onClick={async () => {
-                    setSendError(false);
-                    setSendSuccess(false);
-                    await handleSendReminder();
-                    setSendSuccess(true);
-                    setShowConfirmReminder(false);
-                    setSelectedReceivable(null);
-                    fetchReceivables();
-                  }}
-                  disabled={sending}
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md disabled:opacity-50"
-                >
-                  {sending ? "Envoi..." : "Envoyer la relance"}
-                </button>
+
+                <p className="text-sm text-gray-500 mb-4">
+                  Êtes-vous sûr de vouloir supprimer la créance "
+                  {receivableToDelete.invoice_number}" pour le client "
+                  {receivableToDelete.client?.company_name || "inconnue"}" ? Cette
+                  action est irréversible.
+                </p>
+
+                <div className="flex justify-end space-x-4">
+                  <button
+                    onClick={() => {
+                      setShowDeleteConfirm(false);
+                      setReceivableToDelete(null);
+                    }}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 border border-gray-300 rounded-md"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    onClick={handleDeleteConfirm}
+                    disabled={deleting}
+                    className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md disabled:opacity-50"
+                  >
+                    {deleting ? "Suppression..." : "Supprimer"}
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        )}
-        {sendSuccess && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 flex flex-col items-center">
-              <CheckIcon className="h-12 w-12 text-green-500 mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Relance envoyée avec succès !</h3>
-              <button
-                onClick={() => setSendSuccess(false)}
-                className="mt-4 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md"
-              >
-                Fermer
-              </button>
-            </div>
-          </div>
-        )}
-
-        {showDeleteConfirm && receivableToDelete && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-medium text-gray-900">
-                  Confirmer la suppression
-                </h3>
-                <button
-                  onClick={() => {
-                    setShowDeleteConfirm(false);
-                    setReceivableToDelete(null);
-                  }}
-                  className="text-gray-400 hover:text-gray-500"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-
-              <p className="text-sm text-gray-500 mb-4">
-                Êtes-vous sûr de vouloir supprimer la créance "
-                {receivableToDelete.invoice_number}" pour le client "
-                {receivableToDelete.client?.company_name || "inconnue"}" ? Cette
-                action est irréversible.
-              </p>
-
-              <div className="flex justify-end space-x-4">
-                <button
-                  onClick={() => {
-                    setShowDeleteConfirm(false);
-                    setReceivableToDelete(null);
-                  }}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 border border-gray-300 rounded-md"
-                >
-                  Annuler
-                </button>
-                <button
-                  onClick={handleDeleteConfirm}
-                  disabled={deleting}
-                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md disabled:opacity-50"
-                >
-                  {deleting ? "Suppression..." : "Supprimer"}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-        {showReminderHistory && selectedReceivable && (
-          <ReminderHistory
-            receivableId={selectedReceivable?.id}
-            reminders={reminderHistroy}
-            onClose={handleOnClose}
-          />
-        )}
+          )
+        }
+        {
+          showReminderHistory && selectedReceivable && (
+            <ReminderHistory
+              receivableId={selectedReceivable?.id}
+              reminders={reminderHistroy}
+              onClose={handleOnClose}
+            />
+          )
+        }
         <style>
           {`
           [data-framer-motion-layout-id="activeTab"] {
@@ -2116,8 +2360,8 @@ export function ReceivablesList({ user }: { user: SupabaseUser }) {
           }
         `}
         </style>
-      </div>
-    </div>
+      </div >
+    </div >
   );
 }
 

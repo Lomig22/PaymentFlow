@@ -5,7 +5,7 @@ import { Dialog, Transition } from "@headlessui/react";
 import { Fragment } from "react";
 import ClientDetailModal from "../clients/ClientDetailModal";
 
-const OverdueInvoices = () => {
+const OverdueInvoices = ({ refreshKey }: { refreshKey: number }) => {
   const [topDebtors, setTopDebtors] = useState<{ id: string; name: string; code: string; amount: number }[]>([]);
   type Debtor = { id: string; name: string; code: string; amount: number } | null;
   const [selectedDebtor, setSelectedDebtor] = useState<Debtor>(null);
@@ -136,7 +136,7 @@ const OverdueInvoices = () => {
     };
 
     fetchOverdues();
-  }, []);
+  }, [refreshKey]);
 
   return (
     <div className="rounded-2xl p-6 max-h-[350px] overflow-y-auto">

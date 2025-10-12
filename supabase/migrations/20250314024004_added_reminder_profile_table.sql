@@ -12,18 +12,4 @@ CREATE TABLE IF NOT EXISTS reminder_profile (
 );
 
 ALTER TABLE clients ADD COLUMN IF NOT EXISTS reminder_profile uuid;
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1
-    FROM information_schema.table_constraints
-    WHERE table_name='clients'
-      AND constraint_name='fk_reminder_profiles'
-  ) THEN
-    ALTER TABLE clients
-    ADD CONSTRAINT fk_reminder_profiles
-    FOREIGN KEY (reminder_profile)
-    REFERENCES reminder_profile(id);
-  END IF;
-END
-$$;
+ALTER TABLE clients ADD CONSTRAINT fk_reminder_profile FOREIGN KEY (reminder_profile) REFERENCES reminder_profile(id);

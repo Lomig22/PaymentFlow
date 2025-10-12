@@ -14,7 +14,7 @@ const labelMapping: Record<string, string> = {
   promesse: "Promesse de paiement",
 };
 
-export default function ClientBalanceBar() {
+export default function ClientBalanceBar({ refreshKey }: { refreshKey: number }) {
   const [data, setData] = useState<
     { label: string; value: number; color: string }[]
   >([]);
@@ -73,7 +73,7 @@ export default function ClientBalanceBar() {
     }
 
     fetchData();
-  }, []);
+  }, [refreshKey]);
 
   const total = data.reduce((sum, d) => sum + Math.abs(d.value), 0);
 

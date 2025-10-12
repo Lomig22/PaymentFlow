@@ -1,3 +1,13 @@
 [functions]
 [functions.email-open-tracker]
 verify_jwt = false
+[functions.sync-external-payments]
+enabled = true
+verify_jwt = true
+import_map = "./functions/sync-external-payments/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/sync-external-payments/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/sync-external-payments/*.html" ]

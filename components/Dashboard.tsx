@@ -72,6 +72,7 @@ import OverdueInvoices from "./chart/OverdueInvoices";
 import DashboardLayout from "./chart/DashboardLayout";
 import BalanceAgeeChart from "./chart/BalanceAgeeChart";
 export default function Dashboard() {
+  const [refreshKey, setRefreshKey] = useState(0);
   const [stats, setStats] = useState<DashboardStats>({
     totalClients: 0,
     clientsNeedingReminder: 0,
@@ -158,13 +159,12 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchDashboardStats();
-
     // Mettre en place un écouteur pour les changements en temps réel
     const clientsSubscription = supabase
       .channel("clients-changes")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "clients" },
+        { event: "*", schema: "public", table: "clients", filter: "" },
         () => {
           fetchDashboardStats();
         }
@@ -176,11 +176,15 @@ export default function Dashboard() {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "receivables" },
-        () => {
+        (payload) => {
+          console.log("Realtime payload:", payload);
           fetchDashboardStats();
+          setRefreshKey(k => k + 1);
         }
       )
-      .subscribe();
+      .subscribe(status => {
+        console.log("Receivable channel status:", status);
+      });
 
     return () => {
       clientsSubscription.unsubscribe();
@@ -500,6 +504,17 @@ export default function Dashboard() {
   });
 
   const visibleNotifications = filteredNotifications.slice(0, visibleCount);
+  useEffect(() => {
+    console.log("FETCH API BANCAIRE")
+    const fetchApiBancaire = async () => {
+      fetch("/api/poc-api-bancaire", {
+        method: "GET"
+      }).then(res => res.json()).then(text => {
+        console.log("DASHBOARD POC BANCAIRE: ", text);
+      });
+    };
+    fetchApiBancaire();
+  }, []);
 
   if (loading) {
     return (
@@ -556,6 +571,9 @@ export default function Dashboard() {
 
     return null;
   };
+
+
+
   return (
     <>
       <div className="p-6">
@@ -644,7 +662,7 @@ export default function Dashboard() {
           <div className="xl:col-span-8 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="rounded-2xl shadow bg-white">
-                <ClientBalanceBar />
+                <ClientBalanceBar refreshKey={refreshKey} />
               </div>
               <div className="rounded-2xl shadow bg-white">
                 <DsoChart />
@@ -653,7 +671,7 @@ export default function Dashboard() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="rounded-2xl shadow bg-white">
-                <DashboardLayout />
+                <DashboardLayout refreshKey={refreshKey} />
               </div>
               <div className="rounded-2xl shadow bg-white">
                 <BalanceAgeeChart />
@@ -888,7 +906,7 @@ export default function Dashboard() {
                 <RemindersCard />
               </div>
               <div className="rounded-2xl shadow bg-white">
-                <OverdueInvoices />
+                <OverdueInvoices refreshKey={refreshKey} />
               </div>
             </div>
 

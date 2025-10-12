@@ -52,7 +52,7 @@ const formatEuro = (v: number) => {
   return `${v} €`;
 };
 
-export default function DashboardLayout() {
+export default function DashboardLayout({ refreshKey }: { refreshKey: number }) {
   const now = new Date();
   const defaultYear = now.getFullYear();
   const defaultMonth = monthOrderFull[now.getMonth()];
@@ -110,7 +110,7 @@ export default function DashboardLayout() {
       setDataByYear(grouped);
       setLoading(false);
     })();
-  }, []);
+  }, [refreshKey]);
 
   const filteredData = useMemo(() => {
     const startIdx = monthOrderFull.indexOf(selectedMonth);
@@ -256,7 +256,7 @@ export default function DashboardLayout() {
                                 </span>{" "}
                                 <span className="text-sm font-semibold text-gray-900 ml-2">
                                   {" "}
-                                  {entry.value ? formatEuro(Number(entry.value)) : ""}{" "}
+                                  {formatEuro(Number(entry.value) ?? 0)}{" "}
                                 </span>{" "}
                               </div>
                             ))}{" "}
