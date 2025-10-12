@@ -35,3 +35,4 @@ supabase-cli/
 
 # Edge Functions environment files (do not commit)
 supabase/functions/**/.env
+.vercel
