@@ -1,4 +1,4 @@
-import Head from "next/head";
+import type { Metadata } from "next";
 import {
   BarChart2,
   Mail,
@@ -17,16 +17,19 @@ import { Calendly } from "./Calendly";
 import { Testimonials } from "./Testimonials";
 import { ConfirmCalendarButton } from "./ConfirmCalendarButton";
 
+export const metadata: Metadata = {
+  title: "Logiciel de recouvrement | Payment Flow",
+  description: "Solution SaaS de relance client automatisée : améliorez votre trésorerie, réduisez votre DSO et optimisez votre relation client avec Payment Flow.",
+  robots: { index: true, follow: true },
+  alternates: {
+    canonical: "https://www.payment-flow.fr/"
+  }
+}
+
 export default function LandingPage() {
   return (
     <>
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-        <Head>
-          <title>Logiciel de recouvrement | Payment Flow</title>
-          <meta name="description" content="Solution SaaS de relance client automatisée : améliorez votre trésorerie, réduisez votre DSO et optimisez votre relation client avec Payment Flow." />
-          <meta name="robots" content="index, follow" />
-          <link rel="canonical" href="https://www.payment-flow.fr/" />
-        </Head>
         {/* Hero Section */}
         <main>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
