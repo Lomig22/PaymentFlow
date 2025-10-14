@@ -81,6 +81,7 @@ export const metadata: Metadata = {
 
 
 export default function Dashboard({ user }: { user: User }) {
+  const [refreshKey, setRefreshKey] = useState(0);
   const [stats, setStats] = useState<DashboardStats>({
     totalClients: 0,
     clientsNeedingReminder: 0,
@@ -187,6 +188,7 @@ export default function Dashboard({ user }: { user: User }) {
         { event: "*", schema: "public", table: "receivables" },
         () => {
           fetchDashboardStats();
+          setRefreshKey(k => k + 1);
         }
       )
       .subscribe();
@@ -646,7 +648,7 @@ export default function Dashboard({ user }: { user: User }) {
           <div className="xl:col-span-8 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="rounded-2xl shadow bg-white">
-                <ClientBalanceBar />
+                <ClientBalanceBar refreshKey={refreshKey} />
               </div>
               <div className="rounded-2xl shadow bg-white">
                 <DsoChart />
@@ -655,7 +657,7 @@ export default function Dashboard({ user }: { user: User }) {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="rounded-2xl shadow bg-white">
-                <DashboardLayout />
+                <DashboardLayout refreshKey={refreshKey} />
               </div>
               <div className="rounded-2xl shadow bg-white">
                 <BalanceAgeeChart />
@@ -890,7 +892,7 @@ export default function Dashboard({ user }: { user: User }) {
                 <RemindersCard />
               </div>
               <div className="rounded-2xl shadow bg-white">
-                <OverdueInvoices />
+                <OverdueInvoices refreshKey={refreshKey} />
               </div>
             </div>
 

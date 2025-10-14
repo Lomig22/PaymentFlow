@@ -7,7 +7,7 @@ import {
     Table,
     Group,
 } from "@mantine/core";
-import { supabase } from "../../lib/supabase";
+import { supabase } from "../../src/lib/supabase/supabase";
 import { Pencil, X } from "lucide-react";
 import ExternalPaymentForm from "./ExternalPaymentForm";
 
