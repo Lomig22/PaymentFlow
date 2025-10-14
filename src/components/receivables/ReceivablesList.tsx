@@ -427,22 +427,46 @@ function ReceivablesList() {
           // Récupérer le contenu et le niveau
 
           const result = await getReminderTemplate(
-            selectedReceivable.id,
-            newStatus
-          );
-          if (!cancelled && result) {
-            const subjectLine = `Relance facture ${selectedReceivable.invoice_number}`;
-            setSubject(subjectLine);
-            setContent(result.template); // ou formatté si le template est déjà rempli
-          }
+      selectedReceivable.id,
+      newStatus
+    );
+    // Overlay dynamique des templates depuis le profil si présent
+    let finalTemplate = result?.template || "";
+    try {
+      const effId = (selectedReceivable.client as any)?.reminder_profile || (selectedReceivable.client as any)?.reminder_profiles || null;
+      if (effId && result?.level) {
+        const { data: prof, error: pErr } = await supabase
+          .from('reminder_profile')
+          .select('email_template_1, email_template_2, email_template_3, email_template_4')
+          .eq('id', effId as string)
+          .maybeSingle();
+        if (!pErr && prof) {
+          const map: Record<string, string | null> = {
+            first: (prof as any).email_template_1 || null,
+            second: (prof as any).email_template_2 || null,
+            third: (prof as any).email_template_3 || null,
+            final: (prof as any).email_template_4 || null,
+          };
+          const override = map[result.level] || null;
+          if (override) finalTemplate = override;
         }
-      };
-
-      fetchData();
+      }
+    } catch (error) {
+      console.error("Erreur lors de l'overlay des templates:", error);
     }
-    return () => {
-      cancelled = true;
-    };
+    if (!cancelled && result) {
+      const subjectLine = `Relance facture ${selectedReceivable.invoice_number}`;
+      setSubject(subjectLine);
+      setContent(finalTemplate); // utiliser le template effectif
+    }
+          }
+        }; // fin fetchData
+
+        fetchData();
+      }
+      return () => {
+        cancelled = true;
+      };
   }, [selectedReceivable, showConfirmSendReminder]);
 
   // Fonction pour vérifier si un client a des créances impayées

@@ -274,6 +274,46 @@ if (updatedTotalAmount >= maxOverDues) {
       }
     }
 
+    // Synchroniser les délais/templates du profil de relance vers la fiche client (si un profil est assigné)
+    try {
+      if (clientId) {
+        const { data: clRow } = await supabase
+          .from("clients")
+          .select("id, reminder_profile, reminder_profiles")
+          .eq("id", clientId)
+          .single();
+        const profId = (clRow as any)?.reminder_profile || (clRow as any)?.reminder_profiles || null;
+        if (profId) {
+          const { data: prof } = await supabase
+            .from("reminder_profile")
+            .select(
+              "delay1, delay2, delay3, delay4, email_template_1, email_template_2, email_template_3, email_template_4"
+            )
+            .eq("id", profId as string)
+            .single();
+          if (prof) {
+            await supabase
+              .from("clients")
+              .update({
+                reminder_delay_1: (prof as any).delay1 ?? null,
+                reminder_delay_2: (prof as any).delay2 ?? null,
+                reminder_delay_3: (prof as any).delay3 ?? null,
+                reminder_delay_final: (prof as any).delay4 ?? null,
+                reminder_template_1: (prof as any).email_template_1 ?? null,
+                reminder_template_2: (prof as any).email_template_2 ?? null,
+                reminder_template_3: (prof as any).email_template_3 ?? null,
+                reminder_template_final: (prof as any).email_template_4 ?? null,
+                reminder_enable_1: true,
+                reminder_enable_2: true,
+                reminder_enable_3: true,
+                reminder_enable_final: true,
+              })
+              .eq("id", clientId);
+          }
+        }
+      }
+    } catch {}
+
     // Ajouter la nouvelle créance
       const { data, error } = await supabase
         .from("receivables")

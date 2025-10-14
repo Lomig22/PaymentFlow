@@ -191,11 +191,47 @@ export default function ReminderProfilesPage() {
           onClick: async () => {
             // UI optimiste
             setProfiles((prev) => prev.filter((p) => p.id !== id));
-            const { error } = await supabase.from("reminder_profile").delete().eq("id", id);
+            // Détacher tous les clients qui utilisent ce profil et remettre en mode manuel
+            const resetBase = {
+              pre_reminder_enable: false,
+              reminder_enable_1: false,
+              reminder_enable_2: false,
+              reminder_enable_3: false,
+              reminder_enable_final: false,
+              pre_reminder_template: null,
+              reminder_template_1: null,
+              reminder_template_2: null,
+              reminder_template_3: null,
+              reminder_template_final: null,
+              pre_reminder_date: null,
+              reminder_date_1: null,
+              reminder_date_2: null,
+              reminder_date_3: null,
+              reminder_date_final: null,
+            } as any;
+
+            try {
+              // Clients liés via reminder_profile
+              await supabase
+                .from("clients")
+                .update({ ...resetBase, reminder_profile: null })
+                .eq("reminder_profile", id);
+              // Clients liés via reminder_profiles (compat colonne alternative)
+              await supabase
+                .from("clients")
+                .update({ ...resetBase, reminder_profiles: null as any })
+                .eq("reminder_profiles", id);
+            } catch (e) {
+              console.error("Erreur détachement clients du profil:", e);
+            }
+
+            // Supprimer le profil ensuite
+            const { error } = await supabase
+              .from("reminder_profile")
+              .delete()
+              .eq("id", id);
             if (error) {
-              // Si référence côté clients empêche la suppression, on délient puis on réessaie
-              await supabase.from("clients").update({ reminder_profile: null }).eq("reminder_profile", id);
-              await supabase.from("reminder_profile").delete().eq("id", id);
+              console.error("Suppression profil échouée:", error);
             }
             fetchProfiles();
           },
