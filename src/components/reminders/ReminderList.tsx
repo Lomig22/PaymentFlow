@@ -13,7 +13,7 @@ const ReminderList = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [records, setRecords] = useState<
-    (Reminder & { receivable: Receivable & { client: Client } })[]
+    (Reminder & { receivable: (Receivable & { client: Client }) | null })[]
   >([]);
   const handleClick = () => {
     if (!checkAbonnement()) return;
@@ -34,22 +34,49 @@ const ReminderList = () => {
       } = await supabase.auth.getUser();
       if (!user) throw new Error("Utilisateur non authentifié");
 
-      const { data: clientsData, error } = await supabase
-        .from("reminders")
-        .select(
-          `
-			  *,
-			  receivable:receivables(
-				*,
-				client:clients(*)
-			  )
-			`
-        )
-        .eq("receivable.owner_id", user.id)
-        .order("reminder_date", { ascending: false });
+      // Essai: filtrer par owner_id directement sur reminders (permet de conserver l'historique si la créance est supprimée)
+      let recordsData: (Reminder & { receivable: (Receivable & { client: Client }) | null })[] | null = null;
+      let primaryErr: any = null;
+      try {
+        const { data, error } = await supabase
+          .from("reminders")
+          .select(
+            `
+              *,
+              receivable:receivables(
+                *,
+                client:clients(*)
+              )
+            `
+          )
+          .eq("owner_id", user.id)
+          .order("reminder_date", { ascending: false });
+        if (error) throw error;
+        recordsData = data || [];
+      } catch (e: any) {
+        primaryErr = e;
+      }
 
-      if (error) throw error;
-      setRecords(clientsData || []);
+      // Fallback legacy: certaines bases n'ont pas encore owner_id sur reminders
+      if (primaryErr) {
+        const { data, error } = await supabase
+          .from("reminders")
+          .select(
+            `
+              *,
+              receivable:receivables(
+                *,
+                client:clients(*)
+              )
+            `
+          )
+          .eq("receivable.owner_id", user.id)
+          .order("reminder_date", { ascending: false });
+        if (error) throw error;
+        recordsData = data || [];
+      }
+
+      setRecords(recordsData || []);
     } catch (error) {
       console.error("Erreur lors du chargement des clients:", error);
       showError("Impossible de charger la liste des clients");
@@ -141,7 +168,7 @@ const ReminderList = () => {
   return (
     <div className="p-6">
       <div className="flex gap-4 items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Relance</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Relances</h1>
         <Link to="/receivables" className="flex items-center h-16 px-4">
           <button className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2">
             <FileText className="h-5 w-5" />
