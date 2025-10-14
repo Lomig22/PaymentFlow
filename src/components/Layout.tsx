@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, Outlet, useNavigate } from "react-router-dom";
 import {
   TrendingUp,
@@ -10,6 +10,8 @@ import {
   Home,
   HelpCircle,
   UserCog,
+  Bell,
+  AlertTriangle,
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { AuthSessionMissingError } from "@supabase/supabase-js";
@@ -18,10 +20,14 @@ import useEnsureEmailSettings from "../lib/ensureEmailSettings";
 import OnboardingTour from "./onboarding/OnboardingTour";
 import OnboardingSurveyWizard from "./onboarding/OnboardingSurveyWizard";
 import OnboardingSpotlight, { SpotlightStep } from "./onboarding/OnboardingSpotlight";
+import { ActionGuardProvider } from "./Common/ActionGuard";
+import Swal from "sweetalert2";
 
 export default function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
+  const [unreadNotif, setUnreadNotif] = useState<number>(0);
+  const notifChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [logoutError, setLogoutError] = useState<string | null>(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -30,8 +36,173 @@ export default function Layout() {
   const [onboardingOpen, setOnboardingOpen] = useState(false);
   const [spotlightOpen, setSpotlightOpen] = useState(false);
   const [spotlightStep, setSpotlightStep] = useState(0);
+  // Alertes globales
+  const [emailAlert, setEmailAlert] = useState<string | null>(null);
 
   useEnsureEmailSettings();
+
+  // Realtime unread notifications count for sidebar badge
+  const refreshUnread = useCallback(async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    const uid = user?.id;
+    if (!uid) { setUnreadNotif(0); return; }
+    const { count } = await supabase
+      .from("notifications")
+      .select("id", { head: true, count: "exact" })
+      .eq("owner_id", uid)
+      .or('is_read.is.false,is_read.is.null');
+    setUnreadNotif(count || 0);
+  }, []);
+
+  useEffect(() => {
+    refreshUnread();
+    (async () => {
+      const { data: auth } = await supabase.auth.getUser();
+      const uid = auth?.user?.id;
+      if (!uid) return;
+      const ch = supabase
+        .channel("notifications-sidebar")
+        .on(
+          "postgres_changes",
+          { event: "INSERT", schema: "public", table: "notifications", filter: `owner_id=eq.${uid}` },
+          refreshUnread
+        )
+        .on(
+          "postgres_changes",
+          { event: "UPDATE", schema: "public", table: "notifications", filter: `owner_id=eq.${uid}` },
+          refreshUnread
+        )
+        .on(
+          "postgres_changes",
+          { event: "DELETE", schema: "public", table: "notifications", filter: `owner_id=eq.${uid}` },
+          refreshUnread
+        )
+        .subscribe();
+      notifChannelRef.current = ch;
+    })();
+    return () => { if (notifChannelRef.current) supabase.removeChannel(notifChannelRef.current); };
+  }, [refreshUnread]);
+
+  // Garde globale: si des changements non enregistrés existent sur /settings, prévenir lors d'une sortie
+  const routePrevRef = useRef(location.pathname);
+  useEffect(() => {
+    const prevPath = routePrevRef.current;
+    const nextPath = location.pathname;
+    const hasUnsaved = (() => {
+      try { return sessionStorage.getItem('unsaved:settings') === '1'; } catch { return false; }
+    })();
+    if (hasUnsaved && prevPath === '/settings' && nextPath !== '/settings') {
+      Swal.fire({
+        title: 'Modifications non enregistrées',
+        text: 'Vous avez des modifications non enregistrées. Voulez-vous vraiment quitter cette page ?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Continuer sans enregistrer',
+        cancelButtonText: 'Annuler',
+        reverseButtons: true,
+        customClass: {
+          confirmButton: 'bg-yellow-600 text-white px-4 py-2 rounded mr-2 hover:bg-yellow-700',
+          cancelButton: 'bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700',
+        },
+      }).then((result) => {
+        if (!result.isConfirmed) {
+          // Revenir immédiatement
+          navigate(prevPath, { replace: true });
+        } else {
+          // Valider le départ
+          try { sessionStorage.removeItem('unsaved:settings'); } catch {}
+        }
+      });
+    }
+    routePrevRef.current = nextPath;
+  }, [location.pathname]);
+
+  // Intercepter les clics sur <a> pour prévenir AVANT la navigation
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      const anchor = (e.target as HTMLElement).closest('a');
+      if (
+        anchor &&
+        anchor instanceof HTMLAnchorElement &&
+        anchor.href &&
+        anchor.origin === window.location.origin
+      ) {
+        const nextPath = anchor.pathname;
+        const prevPath = location.pathname;
+        let hasUnsaved = false;
+        try { hasUnsaved = sessionStorage.getItem('unsaved:settings') === '1'; } catch {}
+        if (hasUnsaved && prevPath === '/settings' && nextPath !== '/settings') {
+          e.preventDefault();
+          Swal.fire({
+            title: 'Modifications non enregistrées',
+            text: 'Vous avez des modifications non enregistrées. Voulez-vous vraiment quitter cette page ?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Continuer sans enregistrer',
+            cancelButtonText: 'Annuler',
+            reverseButtons: true,
+            customClass: {
+              confirmButton: 'bg-yellow-600 text-white px-4 py-2 rounded mr-2 hover:bg-yellow-700',
+              cancelButton: 'bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700',
+            },
+          }).then((result) => {
+            if (result.isConfirmed) {
+              try { sessionStorage.removeItem('unsaved:settings'); } catch {}
+              navigate(nextPath + anchor.search + anchor.hash);
+            }
+          });
+        }
+      }
+    };
+    document.addEventListener('click', handler, true);
+    return () => document.removeEventListener('click', handler, true);
+  }, [location.pathname, navigate]);
+
+  // Ecoute un événement local pour rafraîchir immédiatement après une action UI (mark read)
+  useEffect(() => {
+    const handler = () => { refreshUnread(); };
+    window.addEventListener('notifications:refresh', handler);
+    return () => window.removeEventListener('notifications:refresh', handler);
+  }, [refreshUnread]);
+
+  // Fallback: rafraîchir sur focus/visibilité + polling périodique
+  useEffect(() => {
+    const onFocus = () => { refreshUnread(); };
+    const onVis = () => { if (document.visibilityState === 'visible') refreshUnread(); };
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVis);
+    const id = window.setInterval(() => { refreshUnread(); }, 15000);
+    return () => {
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVis);
+      window.clearInterval(id);
+    };
+  }, [refreshUnread]);
+
+  // Vérification des prérequis email (affiche une alerte persistante + pastille sur Paramètres)
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      const uid = user?.id;
+      if (!uid) { setEmailAlert(null); return; }
+      const { data } = await supabase
+        .from("email_settings")
+        .select("provider_type,smtp_username,smtp_password,smtp_server")
+        .eq("user_id", uid)
+        .maybeSingle();
+      const provider = (data?.provider_type || 'platform').toLowerCase();
+      if (provider === 'platform') { setEmailAlert(null); return; }
+      const hasUser = !!data?.smtp_username;
+      const hasPass = !!data?.smtp_password && data?.smtp_password !== 'donthavetosaveit';
+      const server = (data?.smtp_server || '').toLowerCase();
+      const hasServer = !!server && server !== 'my.smtpserver.com';
+      if (!(hasUser && hasPass && hasServer)) {
+        setEmailAlert("Configuration email incomplète. Veuillez finaliser vos paramètres SMTP dans Paramètres > Email.");
+      } else {
+        setEmailAlert(null);
+      }
+    })();
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -113,6 +284,7 @@ export default function Layout() {
     { name: "Clients", href: "/clients", icon: Users },
     { name: "Créances", href: "/receivables", icon: FileText },
     { name: "Profils de relance", href: "/reminder-profiles", icon: UserCog },
+    { name: "Notifications", href: "/notifications", icon: Bell },
     { name: "Paramètres", href: "/settings", icon: Settings },
   ];
   const tourDataByHref: Record<string, string> = {
@@ -537,7 +709,7 @@ export default function Layout() {
                     key={item.name}
                     to={item.href}
                     data-tour={tourDataByHref[item.href]}
-                    className={`flex items-center ${
+                    className={`relative flex items-center ${
                       !isExpanded && "justify-center"
                     } px-4 py-3 my-2 text-sm font-medium rounded-md transition-all duration-300
                   ${
@@ -547,7 +719,15 @@ export default function Layout() {
                   }
                 `}
                   >
-                    <Icon className="h-5 w-5 flex-shrink-0 text-inherit" />
+                    <span className="relative">
+                      <Icon className="h-5 w-5 flex-shrink-0 text-inherit" />
+                      {item.href === "/notifications" && unreadNotif > 0 && (
+                        <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-red-600 ring-2 ring-white" />
+                      )}
+                      {item.href === "/settings" && !!emailAlert && (
+                        <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-red-600 ring-2 ring-white" />
+                      )}
+                    </span>
                     <span
                       className={`ml-3 whitespace-nowrap transition-opacity duration-300 ${
                         isExpanded ? "block opacity-100" : "hidden"
@@ -555,6 +735,14 @@ export default function Layout() {
                     >
                       {item.name}
                     </span>
+                    {isExpanded && item.href === "/notifications" && unreadNotif > 0 && (
+                      <span className="ml-auto inline-flex items-center justify-center text-[10px] leading-none font-semibold h-4 min-w-[16px] px-1 rounded-full bg-red-600 text-white shadow">
+                        {unreadNotif > 99 ? "99+" : unreadNotif}
+                      </span>
+                    )}
+                    {isExpanded && item.href === "/settings" && !!emailAlert && (
+                      <span className="ml-auto inline-flex items-center justify-center text-[10px] leading-none font-semibold h-4 min-w-[16px] px-1 rounded-full bg-red-600 text-white shadow">!</span>
+                    )}
                   </Link>
                 );
               })}
@@ -606,22 +794,37 @@ export default function Layout() {
             </div>
           </div>
           {/* Main content */}
-          <header className="p-4 border-b flex justify-end items-center gap-4">
-            <AbonnementInfo />
+          <ActionGuardProvider>
+            {emailAlert && (
+              <div className="bg-red-50 border-b border-red-200 text-red-700 px-4 py-2 flex items-center justify-center gap-2">
+                <AlertTriangle className="h-4 w-4" />
+                <span className="text-sm">{emailAlert}</span>
+                <Link to="/settings" className="underline font-medium">Corriger</Link>
+              </div>
+            )}
+            <header className="p-4 border-b flex justify-end items-center gap-4">
+              <Link
+                to="/notifications"
+                className="text-sm text-blue-600 bg-blue-50 px-3 py-1 rounded-full hover:bg-blue-100 transition font-medium shadow-sm"
+              >
+                Notifications
+              </Link>
+              <AbonnementInfo />
 
-            <a
-              href="/pricing"
-              className="text-sm text-blue-600 bg-blue-50 px-3 py-1 rounded-full hover:bg-blue-100 transition font-medium shadow-sm"
-            >
-              Voir les tarifs
-            </a>
-          </header>
+              <a
+                href="/pricing"
+                className="text-sm text-blue-600 bg-blue-50 px-3 py-1 rounded-full hover:bg-blue-100 transition font-medium shadow-sm"
+              >
+                Voir les tarifs
+              </a>
+            </header>
 
-          <div className={`transition-all duration-200 ${isExpanded ? 'pl-64' : 'pl-24'}`}>
-            <main>
-              <Outlet />
-            </main>
-          </div>
+            <div className={`transition-all duration-200 ${isExpanded ? 'pl-64' : 'pl-24'}`}>
+              <main>
+                <Outlet />
+              </main>
+            </div>
+          </ActionGuardProvider>
 
           {/* Modal de confirmation de déconnexion */}
           {showLogoutConfirm && (

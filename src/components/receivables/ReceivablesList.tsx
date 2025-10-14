@@ -39,6 +39,7 @@ import {
   getReminderTemplate,
   sendManualReminder,
   getEmailSettings,
+  sendOneReminder,
 } from "../../lib/reminderService";
 import CSVImportModal, { CSVMapping } from "./CSVImportModal";
 import ReminderHistory from "./ReminderHistory";
@@ -77,7 +78,7 @@ type SortColumnConfig = {
 
 function ReceivablesList() {
   const location = useLocation();
-  const [sendError, setSendError] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
   const { checkAbonnement } = useAbonnement();
   const [receivables, setReceivables] = useState<
     (Receivable & { client: Client })[]
@@ -115,7 +116,8 @@ function ReceivablesList() {
   function canPlayDirect(receivable: Receivable & { client: Client }) {
     const client = receivable.client;
     // Profil de relance enregistré + date d'échéance présente (date pièce non obligatoire)
-    return !!client?.reminder_profile && !!receivable.due_date;
+    const hasProfile = !!(client?.reminder_profile || (client as any)?.reminder_profiles);
+    return hasProfile && !!receivable.due_date;
   }
 
   const [hasConsumedReminderNavigation, setHasConsumedReminderNavigation] = useState(false);
@@ -283,12 +285,15 @@ function ReceivablesList() {
 
       if (receivablesError) throw receivablesError;
 
-      // 4. Profils de rappel
+      // 4. Profils de rappel (inclure publics + propriétaires liés)
+      const ownerConds = allOwnerIds.map((id) => `owner_id.eq.${id}`).join(',');
+      const orFilter = ownerConds ? `public.is.true,${ownerConds}` : 'public.is.true';
       const { data: reminderProfilesData, error: profilesError } =
         await supabase
           .from("reminder_profile")
-          .select()
-          .in("owner_id", allOwnerIds);
+          .select("*")
+          .or(orFilter)
+          .order('name');
 
       if (profilesError) throw profilesError;
 
@@ -334,6 +339,7 @@ function ReceivablesList() {
           reminder_enable_1: true,
           reminder_enable_2: true,
           reminder_enable_3: true,
+          reminder_enable_final: true,
         })
         .eq("id", selectedReceivable?.client?.id)
         .select()
@@ -343,7 +349,8 @@ function ReceivablesList() {
     };
 
     if (showConfirmSendReminder === true) {
-      if (selectedReceivable?.client?.reminder_profile) {
+      const hasProfile = !!(selectedReceivable?.client?.reminder_profile || (selectedReceivable?.client as any)?.reminder_profiles);
+      if (hasProfile) {
         //    alert('selectedRecevable?.client?.reminder_profile: ',selectedRecevable?.client?.reminder_profile)
         enableClientDelays();
       }
@@ -420,22 +427,46 @@ function ReceivablesList() {
           // Récupérer le contenu et le niveau
 
           const result = await getReminderTemplate(
-            selectedReceivable.id,
-            newStatus
-          );
-          if (!cancelled && result) {
-            const subjectLine = `Relance facture ${selectedReceivable.invoice_number}`;
-            setSubject(subjectLine);
-            setContent(result.template); // ou formatté si le template est déjà rempli
-          }
+      selectedReceivable.id,
+      newStatus
+    );
+    // Overlay dynamique des templates depuis le profil si présent
+    let finalTemplate = result?.template || "";
+    try {
+      const effId = (selectedReceivable.client as any)?.reminder_profile || (selectedReceivable.client as any)?.reminder_profiles || null;
+      if (effId && result?.level) {
+        const { data: prof, error: pErr } = await supabase
+          .from('reminder_profile')
+          .select('email_template_1, email_template_2, email_template_3, email_template_4')
+          .eq('id', effId as string)
+          .maybeSingle();
+        if (!pErr && prof) {
+          const map: Record<string, string | null> = {
+            first: (prof as any).email_template_1 || null,
+            second: (prof as any).email_template_2 || null,
+            third: (prof as any).email_template_3 || null,
+            final: (prof as any).email_template_4 || null,
+          };
+          const override = map[result.level] || null;
+          if (override) finalTemplate = override;
         }
-      };
-
-      fetchData();
+      }
+    } catch (error) {
+      console.error("Erreur lors de l'overlay des templates:", error);
     }
-    return () => {
-      cancelled = true;
-    };
+    if (!cancelled && result) {
+      const subjectLine = `Relance facture ${selectedReceivable.invoice_number}`;
+      setSubject(subjectLine);
+      setContent(finalTemplate); // utiliser le template effectif
+    }
+          }
+        }; // fin fetchData
+
+        fetchData();
+      }
+      return () => {
+        cancelled = true;
+      };
   }, [selectedReceivable, showConfirmSendReminder]);
 
   // Fonction pour vérifier si un client a des créances impayées
@@ -646,6 +677,146 @@ function ReceivablesList() {
       });
     }
   };
+
+  // Vérifie si une créance est éligible au "play" (bouton vert)
+  const isReceivablePlayEligible = (r: Receivable & { client: Client }) =>
+    (remindersEnabled(r.client) || canPlayDirect(r)) && !r.automatic_reminder;
+
+  // Activer en masse les relances pour la sélection courante (uniquement celles éligibles)
+  const handleBulkPlayActivate = async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    const eligible = receivables.filter(
+      (r) => selectedIds.includes(r.id) && isReceivablePlayEligible(r)
+    );
+
+    if (eligible.length === 0) {
+      showError(
+        "Aucune des créances sélectionnées n'est éligible à l'activation."
+      );
+      return;
+    }
+
+    const result = await Swal.fire({
+      title: "Activer les relances ?",
+      text: `Vous êtes sur le point d'activer les relances pour ${eligible.length} créance(s) sélectionnée(s).`,
+      showCancelButton: true,
+      buttonsStyling: false,
+      customClass: {
+        confirmButton:
+          "bg-green-600 text-white px-4 py-2 rounded mr-2 hover:bg-green-700",
+        cancelButton:
+          "bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700",
+      },
+      confirmButtonText: "Activer",
+      cancelButtonText: "Annuler",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      const ids = eligible.map((r) => r.id);
+      const { error } = await supabase
+        .from("receivables")
+        .update({ automatic_reminder: true })
+        .in("id", ids);
+      if (error) throw error;
+
+      if (user?.id) {
+        await saveNotification({
+          owner_id: user.id,
+          need_mail_notification: true,
+          is_read: false,
+          type: "info",
+          message: "Relances activées",
+          details: `${eligible.length} créance(s) activée(s)`,
+        });
+      }
+
+      // Tentative d'envoi immédiat pour chaque créance activée (si conditions réunies)
+      try {
+        await Promise.allSettled(
+          eligible.map((r) => sendOneReminder(r.id))
+        );
+      } catch (_) {}
+
+      // Rafraîchir et nettoyer la sélection
+      fetchReceivables();
+      setSelectedIds([]);
+      setSelectedAll(false);
+    } catch (e: any) {
+      console.error("Erreur activation groupée:", e);
+      showError(
+        e?.message || "Impossible d'activer les relances pour la sélection."
+      );
+    }
+  };
+
+  // Mettre en pause en masse les relances pour la sélection courante (uniquement celles actives)
+  const handleBulkPauseActivate = async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    const active = receivables.filter(
+      (r) => selectedIds.includes(r.id) && r.automatic_reminder === true
+    );
+
+    if (active.length === 0) {
+      showError(
+        "Aucune des créances sélectionnées n'est actuellement active."
+      );
+      return;
+    }
+
+    const result = await Swal.fire({
+      title: "Mettre en pause les relances ?",
+      text: `Vous êtes sur le point de mettre en pause ${active.length} créance(s) sélectionnée(s).`,
+      showCancelButton: true,
+      buttonsStyling: false,
+      customClass: {
+        confirmButton:
+          "bg-orange-600 text-white px-4 py-2 rounded mr-2 hover:bg-orange-700",
+        cancelButton:
+          "bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700",
+      },
+      confirmButtonText: "Mettre en pause",
+      cancelButtonText: "Annuler",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      const ids = active.map((r) => r.id);
+      const { error } = await supabase
+        .from("receivables")
+        .update({ automatic_reminder: false })
+        .in("id", ids);
+      if (error) throw error;
+
+      if (user?.id) {
+        await saveNotification({
+          owner_id: user.id,
+          need_mail_notification: true,
+          is_read: false,
+          type: "info",
+          message: "Relances mises en pause",
+          details: `${active.length} créance(s) mises en pause`,
+        });
+      }
+
+      fetchReceivables();
+      setSelectedIds([]);
+      setSelectedAll(false);
+    } catch (e: any) {
+      console.error("Erreur pause groupée:", e);
+      showError(
+        e?.message || "Impossible de mettre en pause la sélection."
+      );
+    }
+  };
   //fonction récursive de détection de statut activé
   function getNextEnabledReminderStatus(
     status: string,
@@ -672,7 +843,7 @@ function ReceivablesList() {
       "Relance 2": "reminder_enable_3",
       "Relance 3": "reminder_enable_final",
     };
-    //alert(statusToFlag[currentStatus])
+    //alert(statusToFlag[currentStatus))
     let currentIndex = allStatuses.indexOf(status);
     while (currentIndex < allStatuses.length) {
       const currentStatus = allStatuses[currentIndex];
@@ -695,9 +866,15 @@ function ReceivablesList() {
       } = await supabase.auth.getUser();
 
       if (!user) throw new Error("Utilisateur non authentifié");
+      // reset any previous success toast before sending
+      if (sendSuccessTimeoutRef.current) {
+        clearTimeout(sendSuccessTimeoutRef.current);
+        sendSuccessTimeoutRef.current = null;
+      }
+      setSendSuccess(false);
       try {
         setError(null);
-        if (selectedReceivable == null) return;
+        if (!selectedReceivable) return;
         setSending(true);
 
         const success = await sendManualReminder(
@@ -705,6 +882,7 @@ function ReceivablesList() {
           subject?.trim() || undefined,
           content || undefined
         );
+
         if (success) {
           setSendSuccess(true);
           if (user.id) {
@@ -718,7 +896,7 @@ function ReceivablesList() {
                 details: `Relance ${selectedReceivable.client.company_name}\nDestinataire : ${selectedReceivable.email}`,
               });
             } catch (error: any) {
-              showError(error);
+              console.error("Notification save failed after success:", error);
             }
           }
           // Masquer le message après 3 secondes
@@ -730,6 +908,11 @@ function ReceivablesList() {
             sendSuccessTimeoutRef.current = null;
           }, 3000);
           await fetchReceivables();
+          // Succès: fermer la fenêtre et réinitialiser
+          setSending(false);
+          setShowConfirmReminder(false);
+          setSelectedClient(null);
+          setSelectedReceivable(null);
         } else {
           if (selectedReceivable.status === "Relance finale") {
             await saveNotification({
@@ -745,13 +928,13 @@ function ReceivablesList() {
                 selectedReceivable.email +
                 "\nerreur: Le status de cette créance est déjà en relance finale",
             });
-            showError("Le status de cette créance est déjà en relance finale");
+            setSendError("Le statut de cette créance est déjà en relance finale");
           } else {
             await saveNotification({
               owner_id: user.id,
               is_read: false,
               type: "erreur",
-              message: "Relançe manuelle échouée",
+              message: "Relance manuelle échouée",
               need_mail_notification: true,
               details:
                 "client: " +
@@ -760,33 +943,39 @@ function ReceivablesList() {
                 selectedReceivable.email +
                 "\nerreur: Impossible d'envoyer la relance. Vérifiez les paramètres email, la signature et les templates.",
             });
-            showError(
+            setSendError(
               "Impossible d'envoyer la relance. Vérifiez les paramètres email, la signature et les templates."
             );
           }
+          // Échec logique: garder la fenêtre ouverte
+          setSending(false);
         }
-        setSending(false);
-        setShowConfirmReminder(false);
-        setSelectedClient(null);
       } catch (error: any) {
+        const errMsg = error?.message || "Erreur lors de l'envoi de la relance";
+        const invalidRecipientRegex = /(invalide|inexistante|user unknown|no such user|unknown user|550 5\.1\.1|5\.7\.1|recipient address rejected|mailbox unavailable|invalid recipient|unrouteable address|rbl blacklisted|blacklisted|blacklist|destinataire n'existe pas)/i;
+        const isInvalidRecipient = invalidRecipientRegex.test(errMsg);
         await saveNotification({
           owner_id: user.id,
           is_read: false,
-          type: "erreur",
+          type: isInvalidRecipient ? "warning" : "erreur",
           need_mail_notification: true,
-          message: "Relançe manuelle échouée",
+          message: isInvalidRecipient ? "Destinataire invalide" : "Relance manuelle échouée",
           details:
             "client: " +
               selectedReceivable?.client.company_name +
               "\ndestinataire: " +
-              selectedReceivable?.email +
-              "\nerreur:" +
-              error.message || "Erreur lors de l'envoi de la relance",
+              (selectedReceivable?.email || selectedReceivable?.client?.email || "") +
+              "\nerreur: " +
+              errMsg,
         });
-        showError(error.message || "Erreur lors de l'envoi de la relance");
+        if (sendSuccessTimeoutRef.current) {
+          clearTimeout(sendSuccessTimeoutRef.current);
+          sendSuccessTimeoutRef.current = null;
+        }
+        setSendSuccess(false);
+        // Affiche le message exact (ex: destinataire invalide) dans le modal et garder la fenêtre ouverte
+        setSendError(errMsg);
         setSending(false);
-        setShowConfirmReminder(false);
-        setSelectedClient(null);
       }
     };
   const sendToSignatureSetting = () => {
@@ -965,6 +1154,72 @@ function ReceivablesList() {
   const dropdownRefs = useRef<Record<string, HTMLDivElement | HTMLSpanElement | null>>({});
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  // Édition inline de l'email dans le tableau
+  const [editingEmailId, setEditingEmailId] = useState<string | null>(null);
+  const [emailDraft, setEmailDraft] = useState<string>("");
+  const [addEmailToClient, setAddEmailToClient] = useState<boolean>(true);
+  const [addingNewEmail, setAddingNewEmail] = useState<boolean>(false);
+  const startEditEmail = (r: any) => {
+    setEditingEmailId(r.id);
+    const current = r.email || (r?.client?.email?.split(',')[0] ?? "");
+    setEmailDraft(current);
+    setAddEmailToClient(true);
+    setAddingNewEmail(false);
+  };
+  const cancelEditEmail = () => {
+    setEditingEmailId(null);
+    setEmailDraft("");
+    setAddEmailToClient(true);
+    setAddingNewEmail(false);
+  };
+  const saveEmailInline = async (r: any, directEmail?: string) => {
+    try {
+      const newEmail = (directEmail ?? emailDraft ?? "").trim();
+      if (!newEmail || !newEmail.includes("@")) {
+        showError("Adresse email invalide");
+        return;
+      }
+      // Mise à jour de la créance
+      const { error: recErr } = await supabase
+        .from('receivables')
+        .update({ email: newEmail, updated_at: new Date().toISOString() })
+        .eq('id', r.id);
+      if (recErr) throw recErr;
+
+      // Option: ajouter aussi à la fiche client si absente
+      if (addEmailToClient && addingNewEmail && r?.client?.id) {
+        const currentEmails = (r.client.email || "").split(',').map((e: string) => e.trim()).filter(Boolean);
+        if (!currentEmails.includes(newEmail)) {
+          const updated = [...currentEmails, newEmail].join(',');
+          await supabase.from('clients').update({ email: updated }).eq('id', r.client.id);
+          r.client.email = updated;
+        }
+      }
+      // État local
+      setReceivables((prev) => prev.map((item) =>
+        item.id === r.id
+          ? {
+              ...item,
+              email: newEmail,
+              client: addEmailToClient
+                ? {
+                    ...item.client,
+                    email: (() => {
+                      const arr = (item.client?.email || "").split(',').map((e) => e.trim()).filter(Boolean);
+                      if (!arr.includes(newEmail)) arr.push(newEmail);
+                      return arr.join(',');
+                    })(),
+                  }
+                : item.client,
+            }
+          : item
+      ));
+      cancelEditEmail();
+    } catch (e: any) {
+      console.error('Erreur enregistrement email inline:', e);
+      showError("Impossible d'enregistrer l'email");
+    }
+  };
   useEffect(() => {
     if (!openDropdownId) return;
     const handleMouseMove = (event: MouseEvent) => {
@@ -1117,6 +1372,8 @@ function ReceivablesList() {
     const issues: string[] = [];
 
     const client = receivable.client || {};
+    // Profil assigné ou envoi direct via profil: pas d'avertissement de template
+    if (canPlayDirect(receivable) || client.reminder_profile) return "";
 
     if (client.pre_reminder_enable && !client.pre_reminder_template)
       issues.push("la pré-relance est activée sans template");
@@ -1286,6 +1543,8 @@ function ReceivablesList() {
 
     const client = receivable.client;
     if (!client) return "";
+    // Profil assigné ou envoi direct via profil: pas d'avertissement de template
+    if (canPlayDirect(receivable) || client.reminder_profile) return "";
 
     if (client.pre_reminder_enable && !client.pre_reminder_template)
       issues.push("la pré-relance est activée sans template");
@@ -1356,8 +1615,86 @@ return issues.join(", ");
         return r.client?.company_name ?? "Inconnu";
       case "client_code":
         return r.client?.client_code ?? "Inconnu";
-      case "email":
-        return r.email || r.client.email.split(",")[0];
+      case "email": {
+        const knownEmails = (r?.client?.email || "")
+          .split(',')
+          .map((e: string) => e.trim())
+          .filter(Boolean);
+        const currentEmail = r.email || (r?.client?.email?.split(',')[0] ?? "");
+        const showCurrentAsOption = !!currentEmail && !knownEmails.includes(currentEmail);
+        const selectValue = (editingEmailId === r.id && addingNewEmail)
+          ? "__new__"
+          : (currentEmail || "");
+        return (
+          <div className="flex flex-col gap-2" style={{ maxWidth: "280px" }}>
+            <select
+              value={selectValue}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (v === "__new__") {
+                  setEditingEmailId(r.id);
+                  setAddingNewEmail(true);
+                  setAddEmailToClient(true);
+                  setEmailDraft("");
+                } else {
+                  setEditingEmailId(null);
+                  setAddingNewEmail(false);
+                  setEmailDraft(v);
+                  // Auto-enregistrement sur sélection d'un email existant
+                  saveEmailInline(r, v);
+                }
+              }}
+              className="w-28 px-2 py-1 text-xs border border-gray-300 rounded bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">Sélectionner un email</option>
+              {showCurrentAsOption && (
+                <option value={currentEmail}>{currentEmail} (courant)</option>
+              )}
+              {knownEmails.map((e: string) => (
+                <option key={e} value={e}>{e}</option>
+              ))}
+              <option value="__new__">+ Ajouter un nouvel email…</option>
+            </select>
+
+            {addingNewEmail && editingEmailId === r.id && (
+              <>
+                <input
+                  type="email"
+                  value={emailDraft}
+                  onChange={(e) => setEmailDraft(e.target.value)}
+                  className="w-full px-2 py-1 text-xs border border-gray-300 rounded bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="nouveau@email.com"
+                />
+                <label className="inline-flex items-center gap-2 text-xs text-gray-600">
+                  <input
+                    type="checkbox"
+                    checked={addEmailToClient}
+                    onChange={(e) => setAddEmailToClient(e.target.checked)}
+                  />
+                  Ajouter aussi à la fiche client
+                </label>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    className="px-3 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
+                    onClick={() => saveEmailInline(r)}
+                    disabled={!emailDraft}
+                  >
+                    Enregistrer
+                  </button>
+                  <button
+                    type="button"
+                    className="px-3 py-1.5 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 text-sm"
+                    onClick={cancelEditEmail}
+                  >
+                    Annuler
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        );
+      }
       case "invoice_number":
         return r.invoice_number;
       case "amount":
@@ -1651,10 +1988,22 @@ return issues.join(", ");
                         
 <span
   className={`w-6 h-6 flex items-center justify-center relative z-0 ${!(remindersEnabled(receivable.client) || canPlayDirect(receivable)) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-  onClick={e => {
+  onClick={async (e) => {
     e.stopPropagation();
-    if (!(remindersEnabled(receivable.client) || canPlayDirect(receivable))) return;
+    const eligible = (remindersEnabled(receivable.client) || canPlayDirect(receivable));
     if (!handleClick()) return;
+    const isBulk = selectedIds.length > 0 && selectedIds.includes(receivable.id); // action groupée si une sélection existe et inclut la ligne
+    if (isBulk) {
+      if (receivable.automatic_reminder) {
+        await handleBulkPauseActivate();
+      } else {
+        if (!eligible) return;
+        await handleBulkPlayActivate();
+      }
+      return;
+    }
+    // Par défaut: toujours agir sur la ligne cliquée uniquement
+    if (!eligible && !receivable.automatic_reminder) return;
     handleAutomaticReminderToggle(receivable);
   }}
   aria-disabled={!(remindersEnabled(receivable.client) || canPlayDirect(receivable))}
@@ -1804,8 +2153,7 @@ return issues.join(", ");
                       {receivable.client?.client_code ?? "inconnu"}
                     </td>
                     <td className="px-4 py-3">
-                      {receivable.email ||
-                        receivable.client.email.split(",")[0]}
+                      {renderCell("email", receivable)}
                     </td>
                     <td className="px-4 py-3">{receivable.invoice_number}</td>
                     <td className="px-4 py-3">
@@ -2031,7 +2379,7 @@ return issues.join(", ");
 
       {sendError && (
         <div className="mt-4 text-red-600 text-sm font-medium">
-          Une erreur est survenue lors de l'envoi de la relance. Veuillez réessayer.
+          {sendError}
         </div>
       )}
               <div className="flex justify-end space-x-4 mt-6">
@@ -2050,12 +2398,11 @@ return issues.join(", ");
                 </button>
                 <button
           onClick={async () => {
-            setSendError(false);
+            setSendError(null);
             setSendSuccess(false);
             await handleSendReminder();
-            setSendSuccess(true);
-            setShowConfirmReminder(false);
-            setSelectedReceivable(null);
+            // Ne pas forcer le succès ni fermer la fenêtre ici;
+            // handleSendReminder gère succès/erreur et fermeture si succès.
             fetchReceivables();
                   }}
                   disabled={sending}

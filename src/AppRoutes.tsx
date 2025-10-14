@@ -37,6 +37,7 @@ import ReportingRecouvrement from "./pages/ReportingRecouvrement";
 import CrmPage from "./pages/CrmPage";
 import DSOSimulator from "./pages/DSOSimulator";
 import Personnalisation from "./pages/Personnalisation";
+import NotificationsPage from "./components/notifications/NotificationsPage";
 
 import { User } from "@supabase/supabase-js";
 import AuthMFA from "./components/AuthMFA";
@@ -132,6 +133,7 @@ export default function AppRoutes({ user, onMFASuccess }: AppRoutesProps) {
           <Route path="/reminder-profiles" element={<ReminderProfilesPage />} />
           <Route path="reminders" element={<ReminderList />} />
           <Route path="success" element={<Success />} />
+          <Route path="/notifications" element={<NotificationsPage />} />
         </Route>
 
         {/* Redirection par défaut */}

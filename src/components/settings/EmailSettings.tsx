@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { differenceInDays } from "date-fns";
 import { supabase } from "../../lib/supabase";
 import {
@@ -10,7 +10,8 @@ import {
   PencilIcon,
 } from "lucide-react";
 import { sendEmail } from "../../lib/email";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import Swal from "sweetalert2";
 import { useAbonnement } from "../context/AbonnementContext";
 
 const PROVIDER_PRESETS = {
@@ -53,7 +54,7 @@ const DEFAULT_FORM_DATA = {
   sender_display_name: "",
 };
 
-export default function EmailSettings() {
+export default function EmailSettings({ onDirtyChange }: { onDirtyChange?: (dirty: boolean) => void }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -64,6 +65,9 @@ export default function EmailSettings() {
   const [userId, setUserId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const { checkAbonnement } = useAbonnement();
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const initialRef = useRef<typeof DEFAULT_FORM_DATA | null>(null);
+  const location = useLocation();
   const showError = (message: string) => {
     setError(message);
     setTimeout(() => {
@@ -195,7 +199,7 @@ export default function EmailSettings() {
           else if (looksGmail) effectiveProvider = 'gmail';
         }
 
-        setFormData({
+        const newForm = {
           provider_type: effectiveProvider,
           smtp_username: (placeholderLike || savedAsCustomLooksPlatform) ? "" : (data.smtp_username || ""),
           smtp_password: (placeholderLike || savedAsCustomLooksPlatform) ? "" : (data.smtp_password || ""),
@@ -204,7 +208,16 @@ export default function EmailSettings() {
           smtp_encryption: (data.smtp_encryption || "tls").toLowerCase(),
           email_signature: data.email_signature || "",
           sender_display_name: data.sender_display_name || "",
-        });
+        } as typeof DEFAULT_FORM_DATA;
+        setFormData(newForm);
+        initialRef.current = newForm;
+        setHasUnsavedChanges(false);
+      } else {
+        // Aucun enregistrement: on initialise le snapshot au formulaire par défaut
+        const newForm = { ...DEFAULT_FORM_DATA } as typeof DEFAULT_FORM_DATA;
+        setFormData(newForm);
+        initialRef.current = newForm;
+        setHasUnsavedChanges(false);
       }
     } catch (error) {
       console.error("Erreur lors du chargement des paramètres:", error);
@@ -294,6 +307,7 @@ export default function EmailSettings() {
       }, 3000);
       // Recharger les paramètres pour confirmer la mise à jour
       await loadEmailSettings(userId);
+      // Snapshot mis à jour via loadEmailSettings
     } catch (error) {
       console.error("Erreur lors de la sauvegarde:", error);
       showError("Impossible de sauvegarder les paramètres");
@@ -302,11 +316,102 @@ export default function EmailSettings() {
     }
   };
   const navigate = useNavigate();
+  
+  // Met à jour automatiquement l'état dirty quand formData change
+  useEffect(() => {
+    if (!initialRef.current) return;
+    try {
+      setHasUnsavedChanges(
+        JSON.stringify(initialRef.current) !== JSON.stringify(formData)
+      );
+    } catch {}
+  }, [formData]);
+
+  // Informe le parent (Settings) de l'état dirty
+  useEffect(() => {
+    onDirtyChange?.(hasUnsavedChanges);
+  }, [hasUnsavedChanges, onDirtyChange]);
+
+  // Expose l’état dirty au niveau global (Layout) via sessionStorage
+  useEffect(() => {
+    try {
+      if (hasUnsavedChanges) sessionStorage.setItem('unsaved:settings', '1');
+      else sessionStorage.removeItem('unsaved:settings');
+    } catch {}
+  }, [hasUnsavedChanges]);
+
+  // Avertissement natif si on quitte l’onglet ou recharge avec des modifications non enregistrées
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [hasUnsavedChanges]);
+
+  // Intercepte les clics sur les liens internes pour demander confirmation si nécessaire
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      const anchor = (e.target as HTMLElement).closest("a");
+      if (
+        anchor &&
+        anchor instanceof HTMLAnchorElement &&
+        anchor.href &&
+        anchor.origin === window.location.origin &&
+        anchor.pathname !== location.pathname &&
+        !anchor.href.startsWith("mailto:") &&
+        !anchor.href.startsWith("tel:")
+      ) {
+        if (hasUnsavedChanges) {
+          e.preventDefault();
+          Swal.fire({
+            title: 'Modifications non enregistrées',
+            text: 'Vous avez des modifications non enregistrées. Voulez-vous vraiment quitter cette page ?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Continuer sans enregistrer',
+            cancelButtonText: 'Annuler',
+            reverseButtons: true,
+            customClass: {
+              confirmButton: 'bg-yellow-600 text-white px-4 py-2 rounded mr-2 hover:bg-yellow-700',
+              cancelButton: 'bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700',
+            },
+          }).then((result) => {
+            if (result.isConfirmed) {
+              const a = anchor as HTMLAnchorElement;
+              navigate(a.pathname + a.search + a.hash);
+            }
+          });
+        }
+      }
+    };
+    document.addEventListener('click', handleClick, true);
+    return () => document.removeEventListener('click', handleClick, true);
+  }, [hasUnsavedChanges, location.pathname, navigate]);
 
   const sendToSignatureSetting = () => {
-    // alert("send")
-    navigate("/settings", {
-      state: { initialSectionId: "reminders", initialSubTabId: "sender" },
+    const doNav = () => navigate("/settings", { state: { initialSectionId: "reminders", initialSubTabId: "sender" } });
+    if (!hasUnsavedChanges) {
+      doNav();
+      return;
+    }
+    Swal.fire({
+      title: 'Modifications non enregistrées',
+      text: 'Vous avez des modifications non enregistrées. Voulez-vous vraiment quitter cette page ?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Continuer sans enregistrer',
+      cancelButtonText: 'Annuler',
+      reverseButtons: true,
+      customClass: {
+        confirmButton: 'bg-yellow-600 text-white px-4 py-2 rounded mr-2 hover:bg-yellow-700',
+        cancelButton: 'bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700',
+      },
+    }).then((result) => {
+      if (result.isConfirmed) doNav();
     });
   };
   const handleTestEmail = async () => {

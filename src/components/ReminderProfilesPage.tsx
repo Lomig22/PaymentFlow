@@ -25,6 +25,39 @@ export default function ReminderProfilesPage() {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const navigate = useNavigate();
   const menuRefs = useRef<Record<string, HTMLElement | null>>({});
+  // Variables supportées dans les templates (remplacées lors de l'envoi)
+  const TOKENS = [
+    { token: "{company}", name: "Nom du client" },
+    { token: "{amount}", name: "Montant" },
+    { token: "{invoice_number}", name: "Numéro de facture" },
+    { token: "{due_date}", name: "Date d'échéance" },
+    { token: "{days_late}", name: "Jours de retard" },
+    { token: "{days_left}", name: "Jours restants" },
+  ];
+  // Refs vers les 4 textareas pour insertion au curseur
+  const templateRefs = useRef<Record<number, HTMLTextAreaElement | null>>({});
+  const insertToken = (num: number, token: string) => {
+    setForm((f) => {
+      const key = `email_template_${num}` as const;
+      const current = (f as any)[key] || "";
+      const el = templateRefs.current[num];
+      if (!el) {
+        return { ...f, [key]: `${current}${token}` } as any;
+      }
+      const start = el.selectionStart ?? current.length;
+      const end = el.selectionEnd ?? start;
+      const next = current.slice(0, start) + token + current.slice(end);
+      // Replacer le curseur après mise à jour
+      setTimeout(() => {
+        try {
+          el.focus();
+          const pos = start + token.length;
+          el.setSelectionRange(pos, pos);
+        } catch {}
+      }, 0);
+      return { ...f, [key]: next } as any;
+    });
+  };
 
   useEffect(() => {
     fetchProfiles();
@@ -158,11 +191,47 @@ export default function ReminderProfilesPage() {
           onClick: async () => {
             // UI optimiste
             setProfiles((prev) => prev.filter((p) => p.id !== id));
-            const { error } = await supabase.from("reminder_profile").delete().eq("id", id);
+            // Détacher tous les clients qui utilisent ce profil et remettre en mode manuel
+            const resetBase = {
+              pre_reminder_enable: false,
+              reminder_enable_1: false,
+              reminder_enable_2: false,
+              reminder_enable_3: false,
+              reminder_enable_final: false,
+              pre_reminder_template: null,
+              reminder_template_1: null,
+              reminder_template_2: null,
+              reminder_template_3: null,
+              reminder_template_final: null,
+              pre_reminder_date: null,
+              reminder_date_1: null,
+              reminder_date_2: null,
+              reminder_date_3: null,
+              reminder_date_final: null,
+            } as any;
+
+            try {
+              // Clients liés via reminder_profile
+              await supabase
+                .from("clients")
+                .update({ ...resetBase, reminder_profile: null })
+                .eq("reminder_profile", id);
+              // Clients liés via reminder_profiles (compat colonne alternative)
+              await supabase
+                .from("clients")
+                .update({ ...resetBase, reminder_profiles: null as any })
+                .eq("reminder_profiles", id);
+            } catch (e) {
+              console.error("Erreur détachement clients du profil:", e);
+            }
+
+            // Supprimer le profil ensuite
+            const { error } = await supabase
+              .from("reminder_profile")
+              .delete()
+              .eq("id", id);
             if (error) {
-              // Si référence côté clients empêche la suppression, on délient puis on réessaie
-              await supabase.from("clients").update({ reminder_profile: null }).eq("reminder_profile", id);
-              await supabase.from("reminder_profile").delete().eq("id", id);
+              console.error("Suppression profil échouée:", error);
             }
             fetchProfiles();
           },
@@ -278,7 +347,7 @@ export default function ReminderProfilesPage() {
                         value={form.name}
                         onChange={handleInputChange}
                         placeholder="Saisir le nom du profil"
-                        className="mt-2 block w-full rounded-md px-2.5 py-1.5 bg-white border border-transparent text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                        className="mt-2 block w-full rounded-md px-2.5 py-1.5 bg-gray-100 ring-1 ring-inset ring-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
                         maxLength={50}
                         required
                       />
@@ -341,11 +410,33 @@ export default function ReminderProfilesPage() {
                     {[1, 2, 3, 4].map((num) => (
                       <div key={num + 10} className="p-0">
                         <label className="block text-sm font-medium text-gray-800 mb-1">Corps de l'email {num}</label>
+                        <div className="flex items-center gap-2 mb-2">
+                          <select
+                            defaultValue=""
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              if (v) {
+                                insertToken(num, v);
+                                e.currentTarget.value = "";
+                              }
+                            }}
+                            className="p-1.5 border border-gray-300 rounded text-xs"
+                          >
+                            <option value="">Insérer une variable…</option>
+                            {TOKENS.map((t) => (
+                              <option key={`${num}-${t.token}`} value={t.token}>
+                                {t.token} — {t.name}
+                              </option>
+                            ))}
+                          </select>
+                          <span className="text-xs text-gray-500">Les variables seront remplacées lors de l’envoi.</span>
+                        </div>
                         <textarea
+                          ref={(el) => (templateRefs.current[num] = el)}
                           name={`email_template_${num}`}
                           value={(form as any)[`email_template_${num}`]}
                           onChange={handleInputChange}
-                          placeholder="Contenu de l’email (placeholders: {company}, {amount}, {invoice_number}, {due_date}, {days_late})"
+                          placeholder="Contenu de l’email (placeholders: {company}, {amount}, {invoice_number}, {due_date}, {days_late}, {days_left})"
                           className="mt-2 block w-full rounded-md px-2.5 py-2 bg-gray-100 ring-1 ring-inset ring-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm font-mono"
                           rows={4}
                         />

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "../../lib/supabase";
 import { Client, Receivable } from "../../types/database";
-import { X, Upload, FileUp } from "lucide-react";
+import { X, Upload, FileUp, Plus } from "lucide-react";
 import Swal from "sweetalert2";
 import { sendEmail } from "../../lib/email";
 import Settings from "../settings/Settings";
@@ -23,9 +23,11 @@ export default function ReceivableEditForm({
   const [success, setSuccess] = useState<string | null>(null);
   const errorTimeoutRef = useRef<number | null>(null);
   const successTimeoutRef = useRef<number | null>(null);
-  const [clientEmails] = useState<string[]>(
-    receivable.client.email.split(",") || []
+  const [clientEmails, setClientEmails] = useState<string[]>(
+    receivable.client.email?.split(",").map(e => e.trim()).filter(Boolean) || []
   );
+  const [showNewEmailInput, setShowNewEmailInput] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [formData, setFormData] = useState({
     invoice_number: receivable.invoice_number,
@@ -228,6 +230,22 @@ export default function ReceivableEditForm({
         invoicePath = `${supabaseUrl}/storage/v1/object/public/invoices/${filePath}`;
       }
       // Whitelist stricte des colonnes de la table receivables
+      // Déterminer l'email à utiliser (nouveau champ prioritaire, sinon valeur sélectionnée)
+      const emailToUse = newEmail.trim() ? newEmail.trim() : (formData.email || "").trim();
+
+      // Si une nouvelle adresse a été saisie, l'ajouter à la fiche client si absente
+      if (newEmail.trim()) {
+        const oldEmails = clientEmails || [];
+        if (!oldEmails.includes(newEmail.trim())) {
+          const updatedEmails = [...oldEmails, newEmail.trim()].join(",");
+          await supabase
+            .from("clients")
+            .update({ email: updatedEmails })
+            .eq("id", receivable.client.id);
+          setClientEmails([...oldEmails, newEmail.trim()]);
+        }
+      }
+
       const receivableUpdatePayload = {
         invoice_number: formData.invoice_number,
         amount: parseFloat(formData.amount),
@@ -238,7 +256,7 @@ export default function ReceivableEditForm({
         status: formData.status,
         invoice_pdf_url: invoicePath ? invoicePath : undefined,
         notes: formData.notes,
-        email: formData.email,
+        email: emailToUse,
         updated_at: new Date().toISOString(),
       } as const;
 
@@ -365,6 +383,7 @@ export default function ReceivableEditForm({
                   setFormData({ ...formData, email: e.target.value })
                 }
                 className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                disabled={showNewEmailInput}
               >
                 <option value="">Sélectionner un email</option>
 
@@ -379,6 +398,38 @@ export default function ReceivableEditForm({
                   </option>
                 ))}
               </select>
+              {!showNewEmailInput && (
+                <button
+                  type="button"
+                  onClick={() => setShowNewEmailInput(true)}
+                  className="mt-2 px-4 py-2 text-blue-600 border border-blue-600 rounded-md hover:bg-blue-50 transition-colors flex items-center gap-2 w-fit"
+                >
+                  <Plus className="h-4 w-4" />
+                  Ajouter un email
+                </button>
+              )}
+              {showNewEmailInput && (
+                <div className="mt-2 flex gap-2 items-center">
+                  <input
+                    type="email"
+                    placeholder="Nouvelle adresse email"
+                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    value={newEmail}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    className="px-3 py-2 bg-gray-100 rounded hover:bg-gray-200"
+                    onClick={() => {
+                      setShowNewEmailInput(false);
+                      setNewEmail("");
+                    }}
+                    title="Annuler"
+                  >
+                    Annuler
+                  </button>
+                </div>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">

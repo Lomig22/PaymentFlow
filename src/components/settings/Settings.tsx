@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Mail, User, Bell, Shield, Users } from "lucide-react";
 import { Elements } from "@stripe/react-stripe-js"; // Importer Elements
 import { loadStripe } from "@stripe/stripe-js"; // Importer loadStripe
@@ -29,7 +29,8 @@ import NotificationSettings from "./NotificationSettings";
 import UnsavedChangesModal from "./UnsavedChangesModal"; // Modal pour changements non enregistrés
 import ProfileSettings from "./ProfileSettings";
 import SignatureSettings from "./SenderSettings";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
 import DeleteAccount from "./DeleteAccount";
 import MemberList from "./MemberList";
 /* 
@@ -140,7 +141,11 @@ export default function Settings() {
   const isUnsavedTrackedActive = () => {
     return (
       (activeSectionId === "reminders" && activeSubTabId === "sender") ||
-      (activeSectionId === "account" && activeSubTabId === "account")
+      (activeSectionId === "account" && activeSubTabId === "account") ||
+      (activeSectionId === "account" && activeSubTabId === "email") ||
+      (activeSectionId === "account" && activeSubTabId === "password") ||
+      (activeSectionId === "notifications" && activeSubTabId === "email_sms") ||
+      (activeSectionId === "billing" && activeSubTabId === "billing_info")
     );
   };
   // Callback pour forcer la sauvegarde ou quitter
@@ -168,7 +173,7 @@ export default function Settings() {
     initialSubTabId || sections[0]?.subTabs[0].id
   );
   const activeSection = sections.find(
-    (section?) => section?.id === activeSectionId
+    (section) => section?.id === activeSectionId
   );
   const activeSubTab = activeSection?.subTabs.find(
     (tab) => tab.id === activeSubTabId
@@ -176,7 +181,7 @@ export default function Settings() {
   const ActiveComponent =
     activeSubTab?.component || (() => <div>Aucun composant</div>);
  // À chaque changement de location, mettre à jour les états
- useEffect(() => {
+  useEffect(() => {
     if (location.state?.initialSectionId) {
       setActiveSectionId(location.state.initialSectionId);
     }
@@ -184,6 +189,56 @@ export default function Settings() {
       setActiveSubTabId(location.state.initialSubTabId);
     }
   }, [location]);
+
+  // Miroir global pour Layout: expose l'état dirty dans sessionStorage
+  useEffect(() => {
+    try {
+      if (unsavedChanges && isUnsavedTrackedActive()) {
+        sessionStorage.setItem('unsaved:settings', '1');
+      } else {
+        sessionStorage.removeItem('unsaved:settings');
+      }
+    } catch {}
+  }, [unsavedChanges, activeSectionId, activeSubTabId]);
+
+  // Garde de navigation: si on quitte /settings avec des changements non sauvegardés
+  const prevPathRef = useRef(location.pathname);
+  const navigate = useNavigate();
+  useEffect(() => {
+    const prevPath = prevPathRef.current;
+    const nextPath = location.pathname;
+    // On détecte un départ depuis /settings
+    if (
+      prevPath === "/settings" &&
+      nextPath !== "/settings" &&
+      unsavedChanges &&
+      isUnsavedTrackedActive()
+    ) {
+      // Afficher l’alerte et, si annulé, revenir sur /settings
+      Swal.fire({
+        title: 'Modifications non enregistrées',
+        text: 'Vous avez des modifications non enregistrées. Voulez-vous vraiment quitter cette page ?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Continuer sans enregistrer',
+        cancelButtonText: 'Annuler',
+        reverseButtons: true,
+        customClass: {
+          confirmButton: 'bg-yellow-600 text-white px-4 py-2 rounded mr-2 hover:bg-yellow-700',
+          cancelButton: 'bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700',
+        },
+      }).then((result) => {
+        if (!result.isConfirmed) {
+          // Revenir immédiatement sur /settings
+          navigate(prevPath, { replace: true });
+        } else {
+          // L’utilisateur confirme le départ: on peut réinitialiser l’état
+          setUnsavedChanges(false);
+        }
+      });
+    }
+    prevPathRef.current = nextPath;
+  }, [location.pathname]);
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Paramètres</h1>
@@ -191,7 +246,7 @@ export default function Settings() {
         {/* Menu latéral */}
         <div className="w-64 border-r border-gray-200 p-4">
           <nav className="flex flex-col space-y-2">
-            {sections.map((section?) => {
+            {sections.map((section) => {
               const Icon = section?.icon;
               return (
                 <button
@@ -225,7 +280,7 @@ export default function Settings() {
         <div className="flex-1 p-6">
           {/* Sous-onglets */}
           <div className="flex space-x-4 border-b border-gray-200 mb-6">
-            {activeSection?.subTabs.map((tab) => (
+            {activeSection?.subTabs.map((tab: any) => (
               <button
                 key={tab.id}
                 onClick={() => {
@@ -260,6 +315,14 @@ export default function Settings() {
               <SignatureSettings onDirtyChange={handleReminderProfileDirty} />
             ) : activeSectionId === "account" && activeSubTabId === "account" ? (
               <ProfileSettings onDirtyChange={handleReminderProfileDirty} />
+            ) : activeSectionId === "account" && activeSubTabId === "email" ? (
+              <EmailSettings onDirtyChange={handleReminderProfileDirty} />
+            ) : activeSectionId === "account" && activeSubTabId === "password" ? (
+              <SecuritySettings onDirtyChange={handleReminderProfileDirty} />
+            ) : activeSectionId === "notifications" && activeSubTabId === "email_sms" ? (
+              <NotificationSettings onDirtyChange={handleReminderProfileDirty} />
+            ) : activeSectionId === "billing" && activeSubTabId === "billing_info" ? (
+              <BillingInfoSettings onDirtyChange={handleReminderProfileDirty} />
             ) : (
               <ActiveComponent />
             )
