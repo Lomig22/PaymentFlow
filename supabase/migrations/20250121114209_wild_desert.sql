@@ -47,19 +47,19 @@ DO $$
 BEGIN
     -- Délais de relance
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'clients' AND column_name = 'reminder_delay_1') THEN
-        ALTER TABLE clients ADD COLUMN reminder_delay_1 integer DEFAULT 15;
+        ALTER TABLE clients ADD COLUMN reminder_delay_1 jsonb;
     END IF;
 
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'clients' AND column_name = 'reminder_delay_2') THEN
-        ALTER TABLE clients ADD COLUMN reminder_delay_2 integer DEFAULT 30;
+        ALTER TABLE clients ADD COLUMN reminder_delay_2 jsonb;
     END IF;
 
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'clients' AND column_name = 'reminder_delay_3') THEN
-        ALTER TABLE clients ADD COLUMN reminder_delay_3 integer DEFAULT 45;
+        ALTER TABLE clients ADD COLUMN reminder_delay_3 jsonb;
     END IF;
 
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'clients' AND column_name = 'reminder_delay_final') THEN
-        ALTER TABLE clients ADD COLUMN reminder_delay_final integer DEFAULT 60;
+        ALTER TABLE clients ADD COLUMN reminder_delay_final jsonb;
     END IF;
 
     -- Templates d'email

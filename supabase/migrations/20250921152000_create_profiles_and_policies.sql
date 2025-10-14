@@ -35,15 +35,15 @@ for each row execute function public.set_updated_at();
 -- RLS and policies for profiles
 alter table public.profiles enable row level security;
 
-create policy if not exists profiles_select_own
+create policy profiles_select_own
 on public.profiles for select
 using (auth.uid() = id);
 
-create policy if not exists profiles_insert_own
+create policy profiles_insert_own
 on public.profiles for insert
 with check (auth.uid() = id);
 
-create policy if not exists profiles_update_own
+create policy profiles_update_own
 on public.profiles for update
 using (auth.uid() = id)
 with check (auth.uid() = id);
@@ -64,11 +64,11 @@ create table if not exists public.subscriptions (
 
 alter table public.subscriptions enable row level security;
 
-create policy if not exists subscriptions_select_own
+create policy subscriptions_select_own
 on public.subscriptions for select
 using (auth.uid() = user_id);
 
-create policy if not exists subscriptions_insert_own
+create policy subscriptions_insert_own
 on public.subscriptions for insert
 with check (auth.uid() = user_id);
 
@@ -88,7 +88,7 @@ create table if not exists public.pending_profiles (
 
 alter table public.pending_profiles enable row level security;
 
-create policy if not exists pending_profiles_select_by_email
+create policy pending_profiles_select_by_email
 on public.pending_profiles for select
 using ((auth.jwt() ->> 'email') = email);
 

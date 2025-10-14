@@ -11,7 +11,6 @@ import { SecuritySettings } from "../../../components/settings/SecuritySettings"
 import {
   BillingInfoSettings,
   SubscriptionSettings,
-  PaymentMethodSettings,
 } from "../../../components/settings/Billing";
 
 /*
@@ -30,7 +29,7 @@ import NotificationSettings from "../../../components/settings/NotificationSetti
 import UnsavedChangesModal from "../../../components/settings/UnsavedChangesModal"; // Modal pour changements non enregistrés
 import ProfileSettings from "../../../components/settings/ProfileSettings";
 import SignatureSettings from "../../../components/settings/SenderSettings";
-import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import DeleteAccount from "../../../components/settings/DeleteAccount";
 import MemberList from "../../../components/settings/MemberList";
 /* 
@@ -152,9 +151,9 @@ export default function Settings() {
     setPendingSubTabId(null);
   };
 
-  const router = useRouter();
-  const initialSectionId = router.query?.initialSectionId;
-  const initialSubTabId = router.query?.initialSubTabId
+  const searchParams = useSearchParams();
+  const initialSectionId = searchParams?.get("initialSectionId");
+  const initialSubTabId = searchParams?.get("initialSubTabId");
   const [activeSectionId, setActiveSectionId] = useState(
     initialSectionId || sections[0]?.id
   );
@@ -171,13 +170,13 @@ export default function Settings() {
     activeSubTab?.component || (() => <div>Aucun composant</div>);
   // À chaque changement de location, mettre à jour les états
   useEffect(() => {
-    if (router.query?.initialSectionId) {
-      setActiveSectionId(router.query.initialSectionId);
+    if (initialSectionId) {
+      setActiveSectionId(initialSectionId);
     }
-    if (router.query?.initialSubTabId) {
-      setActiveSubTabId(router.query.initialSubTabId);
+    if (initialSubTabId) {
+      setActiveSubTabId(initialSubTabId);
     }
-  }, [router.query]);
+  }, [searchParams]);
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Paramètres</h1>

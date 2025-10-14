@@ -11,11 +11,18 @@ export default function SupabaseProvider({ children, initialSession }) {
     const [client] = useState(supabase);
 
     useEffect(() => {
-        if (initialSession) {
-            // Hydrate session on client load
-            client.auth.setSession(initialSession);
-        }
+        let mounted = true;
 
+        const hydrate = async () => {
+            const { data: { session } } = await client.auth.getSession();
+
+            if (!session && initialSession && mounted) {
+                // Force hydration
+                await client.auth.setSession(initialSession);
+            }
+        };
+
+        hydrate();
         // Optionally keep client updated with session changes
         const { data: listener } = client.auth.onAuthStateChange((_event, session) => {
             if (!session) {
@@ -24,7 +31,10 @@ export default function SupabaseProvider({ children, initialSession }) {
             client.auth.setSession(session);
         });
 
-        return () => listener.subscription.unsubscribe();
+        return () => {
+            mounted = false;
+            listener.subscription.unsubscribe();
+        }
     }, [client, initialSession]);
 
     return (

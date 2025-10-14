@@ -6,7 +6,6 @@ import {
   Navigate,
 } from "react-router-dom";
 import ReceivableForm from "../components/receivables/ReceivableForm";
-import ReminderList from "../pages/reminders";
 import AppHeader from "../components/AppHeader";
 
 import { User } from "@supabase/supabase-js";

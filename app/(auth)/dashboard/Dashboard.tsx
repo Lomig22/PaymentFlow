@@ -66,13 +66,20 @@ interface NotificationType {
 
 interface NotificationList extends Array<NotificationType> { }
 
-import { Helmet } from "react-helmet";
 import DsoChart from "../../../components/chart/DsoChart";
 import RemindersCard from "../../../components/chart/RemindersCard";
 import OverdueInvoices from "../../../components/chart/OverdueInvoices";
 import DashboardLayout from "../../../components/chart/DashboardLayout";
 import BalanceAgeeChart from "../../../components/chart/BalanceAgeeChart";
 import { User } from "@supabase/supabase-js";
+
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: "Tableau de bord"
+};
+
+
 export default function Dashboard({ user }: { user: User }) {
   const [stats, setStats] = useState<DashboardStats>({
     totalClients: 0,
@@ -558,9 +565,6 @@ export default function Dashboard({ user }: { user: User }) {
     <>
       <div className="p-6">
         <div className="mb-8">
-          <Helmet>
-            <title>Tableau de bord</title>
-          </Helmet>
           <h1 className="text-3xl font-bold text-gray-900">Tableau de bord</h1>
           <p className="mt-2 text-gray-600">
             Vue d'ensemble de vos relances clients
