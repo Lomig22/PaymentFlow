@@ -55,7 +55,6 @@ $$ LANGUAGE plpgsql;
 alter publication supabase_realtime
 add table receivables;
 
-
 select
   cron.schedule(
     'invoke-function-every-5-minutes',

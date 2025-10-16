@@ -1,12 +1,12 @@
 import { Helmet } from "react-helmet";
 import { motion, useInView } from "framer-motion";
 import { CheckCircle, TrendingUp } from "lucide-react";
-import { supabase } from "../../src/lib/supabase/supabase";
+import { supabase } from "../../../src/lib/supabase/supabase";
 import { useEffect, useState } from "react";
-import Footer from "../../components/Footer";
+import Footer from "../../../components/Footer";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { useRouter } from "next/router";
+import { usePathname, useRouter } from "next/navigation";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
@@ -39,8 +39,9 @@ const PricingPage = ({ setShowContact, setDefaultSubject }: Props) => {
   const [message, setMessage] = useState<string | null>(null);
 
   const router = useRouter();
-  const isPricingPage = router.pathname === "/pricing";
-  const isSettingsPage = router.pathname === "/settings";
+  const pathname = usePathname();
+  const isPricingPage = pathname === "/pricing";
+  const isSettingsPage = pathname === "/settings";
 
   const navigate = (page: string) => {
     router.push(page);

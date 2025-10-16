@@ -8,7 +8,7 @@ import {
 } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import { supabase } from '../../src/lib/supabase/supabase';
-import PricingPage from "../../pages/pricing/index"
+import PricingPage from '../../app/(public)/pricing/page';
 
 // Composant 1 : Informations de facturation
 export function BillingInfoSettings({ onDirtyChange }: { onDirtyChange?: (dirty: boolean) => void }) {
@@ -46,7 +46,7 @@ export function BillingInfoSettings({ onDirtyChange }: { onDirtyChange?: (dirty:
         .from("facturation_settings")
         .select("*")
         .eq("owner_id", user?.id)
-        .single(); // on suppose un seul enregistrement par utilisateur
+        .maybeSingle(); // on suppose un seul enregistrement par utilisateur
 
       if (error) {
         console.error("Erreur chargement données :", error);
@@ -114,6 +114,7 @@ export function BillingInfoSettings({ onDirtyChange }: { onDirtyChange?: (dirty:
 
 
     if (error) {
+      console.error(error)
       showError('Erreur lors de la mise à jour :' + error);
     } else {
       showSuccess('Mise à jour réussie !');
