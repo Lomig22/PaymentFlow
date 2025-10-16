@@ -9,11 +9,9 @@ import {
 import { loadStripe } from '@stripe/stripe-js';
 import { supabase } from '../../src/lib/supabase/supabase';
 import PricingPage from "../../pages/pricing/index"
-import { useAbonnement } from "../context/AbonnementContext";
 
 // Composant 1 : Informations de facturation
 export function BillingInfoSettings({ onDirtyChange }: { onDirtyChange?: (dirty: boolean) => void }) {
-  const { checkAbonnement } = useAbonnement();
   const [company, setCompany] = useState('');
   const [address, setAddress] = useState('');
   const [siret, setSiret] = useState('');
@@ -21,11 +19,6 @@ export function BillingInfoSettings({ onDirtyChange }: { onDirtyChange?: (dirty:
   const [error, setError] = useState<string | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const initialRef = React.useRef<{ company: string; address: string; siret: string }>({ company: '', address: '', siret: '' });
-  const handleClick = () => {
-    if (!checkAbonnement()) return;
-    console.log("Action autorisée !");
-    return true;
-  };
   const showError = (message: string) => {
     setError(message);
     setTimeout(() => {
@@ -99,8 +92,6 @@ export function BillingInfoSettings({ onDirtyChange }: { onDirtyChange?: (dirty:
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const allowed = handleClick();
-    if (!allowed) return;
     console.log({ company, address, siret });
 
     const {

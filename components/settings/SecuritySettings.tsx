@@ -219,7 +219,6 @@ export function MfaSettings() {
 
 
 export function PasswordSettings({ onDirtyChange }: { onDirtyChange?: (dirty: boolean) => void }) {
-  const { checkAbonnement } = useAbonnement();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -235,11 +234,6 @@ export function PasswordSettings({ onDirtyChange }: { onDirtyChange?: (dirty: bo
     newPassword: "",
     confirmPassword: "",
   });
-  const handleClick = () => {
-    if (!checkAbonnement()) return;
-    console.log("Action autorisée !");
-    return true;
-  };
   const showError = (message: string) => {
     setError(message);
     setTimeout(() => {
@@ -299,8 +293,6 @@ export function PasswordSettings({ onDirtyChange }: { onDirtyChange?: (dirty: bo
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const allowed = handleClick();
-    if (!allowed) return;
     if (formData.newPassword !== formData.confirmPassword) {
       showError("Les nouveaux mots de passe ne correspondent pas");
       return;

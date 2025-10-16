@@ -10,9 +10,8 @@ import {
   PencilIcon,
 } from "lucide-react";
 import { sendEmail } from "../../../src/lib/email";
-import { useNavigate, useLocation } from "react-router-dom";
+import { usePathname, useRouter } from "next/navigation";
 import Swal from "sweetalert2";
-import { useAbonnement } from "../../../components/context/AbonnementContext";
 
 const PROVIDER_PRESETS = {
   platform: {
@@ -55,6 +54,8 @@ const DEFAULT_FORM_DATA = {
 };
 
 export default function EmailSettings({ onDirtyChange }: { onDirtyChange?: (dirty: boolean) => void }) {
+  const router = useRouter();
+  const pathname = usePathname();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -64,20 +65,13 @@ export default function EmailSettings({ onDirtyChange }: { onDirtyChange?: (dirt
   const [formData, setFormData] = useState(DEFAULT_FORM_DATA);
   const [userId, setUserId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
-  const { checkAbonnement } = useAbonnement();
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const initialRef = useRef<typeof DEFAULT_FORM_DATA | null>(null);
-  const location = useLocation();
   const showError = (message: string) => {
     setError(message);
     setTimeout(() => {
       setError(null);
     }, 3000);
-  };
-  const handleClick = () => {
-    if (!checkAbonnement()) return;
-    console.log("Action autorisée !");
-    return true;
   };
   useEffect(() => {
     const initializeSettings = async () => {
@@ -103,7 +97,7 @@ export default function EmailSettings({ onDirtyChange }: { onDirtyChange?: (dirt
     const navigateInfo = localStorage.getItem("navigateAfterPayment");
     if (navigateInfo) {
       const { pathname, state } = JSON.parse(navigateInfo);
-      navigate(pathname, { state });
+      router.push(`${pathname}?${new URLSearchParams(state)}`);
       localStorage.removeItem("navigateAfterPayment");
     }
   }, []);
@@ -255,8 +249,6 @@ export default function EmailSettings({ onDirtyChange }: { onDirtyChange?: (dirt
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const allowed = handleClick();
-    if (!allowed) return;
     if (!userId) {
       showError("Utilisateur non authentifié");
       return;
@@ -315,7 +307,6 @@ export default function EmailSettings({ onDirtyChange }: { onDirtyChange?: (dirt
       setSaving(false);
     }
   };
-  const navigate = useNavigate();
 
   // Met à jour automatiquement l'état dirty quand formData change
   useEffect(() => {
@@ -361,7 +352,7 @@ export default function EmailSettings({ onDirtyChange }: { onDirtyChange?: (dirt
         anchor instanceof HTMLAnchorElement &&
         anchor.href &&
         anchor.origin === window.location.origin &&
-        anchor.pathname !== location.pathname &&
+        anchor.pathname !== pathname &&
         !anchor.href.startsWith("mailto:") &&
         !anchor.href.startsWith("tel:")
       ) {
@@ -382,7 +373,7 @@ export default function EmailSettings({ onDirtyChange }: { onDirtyChange?: (dirt
           }).then((result) => {
             if (result.isConfirmed) {
               const a = anchor as HTMLAnchorElement;
-              navigate(a.pathname + a.search + a.hash);
+              router.push(a.pathname + a.search + a.hash);
             }
           });
         }
@@ -390,10 +381,10 @@ export default function EmailSettings({ onDirtyChange }: { onDirtyChange?: (dirt
     };
     document.addEventListener('click', handleClick, true);
     return () => document.removeEventListener('click', handleClick, true);
-  }, [hasUnsavedChanges, location.pathname, navigate]);
+  }, [hasUnsavedChanges, pathname]);
 
   const sendToSignatureSetting = () => {
-    const doNav = () => navigate("/settings", { state: { initialSectionId: "reminders", initialSubTabId: "sender" } });
+    const doNav = () => router.push(`/settings?initialSectionId=reminders&initialSubTabId=sender`);
     if (!hasUnsavedChanges) {
       doNav();
       return;
@@ -683,8 +674,6 @@ export default function EmailSettings({ onDirtyChange }: { onDirtyChange?: (dirt
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                const allowed = handleClick();
-                if (!allowed) return;
                 sendToSignatureSetting();
               }}
               className="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -706,8 +695,6 @@ export default function EmailSettings({ onDirtyChange }: { onDirtyChange?: (dirt
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-              const allowed = handleClick();
-              if (!allowed) return;
               handleTestEmail();
             }}
             disabled={

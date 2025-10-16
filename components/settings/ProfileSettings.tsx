@@ -1,10 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { AlertCircle, Save } from 'lucide-react';
-import { useAbonnement } from "../context/AbonnementContext";
 import { supabase } from '../../src/lib/supabase/supabase';
 
 export default function ProfileSettings({ onDirtyChange }: { onDirtyChange?: (dirty: boolean) => void }) {
-  const { checkAbonnement } = useAbonnement();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -17,11 +15,6 @@ export default function ProfileSettings({ onDirtyChange }: { onDirtyChange?: (di
   });
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const initialRef = useRef<{ email: string; name: string; company: string; phone: string } | null>(null);
-  const handleClick = () => {
-    if (!checkAbonnement()) return;
-    console.log("Action autorisée !");
-    return true;
-  };
   const showError = (message: string) => {
     setError(message);
     setTimeout(() => {
@@ -104,8 +97,6 @@ export default function ProfileSettings({ onDirtyChange }: { onDirtyChange?: (di
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const allowed = handleClick();
-    if (!allowed) return;
     setSaving(true);
     setError(null);
     setSuccess(false);

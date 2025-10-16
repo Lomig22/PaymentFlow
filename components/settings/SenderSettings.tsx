@@ -14,7 +14,7 @@ import {
   X,
 } from "lucide-react";
 import Swal from "sweetalert2";
-import { useRouter } from "next/router";
+import { usePathname, useRouter } from "next/navigation";
 
 type SignatureSettingsProps = {
   onDirtyChange?: (dirty: boolean) => void;
@@ -22,6 +22,7 @@ type SignatureSettingsProps = {
 
 export default function SignatureSettings({ onDirtyChange }: SignatureSettingsProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [pendingNavigation, setPendingNavigation] = useState<string | null>(null);
   const [showUnsavedWarning, setShowUnsavedWarning] = useState(false);
@@ -39,7 +40,7 @@ export default function SignatureSettings({ onDirtyChange }: SignatureSettingsPr
         anchor instanceof HTMLAnchorElement &&
         anchor.href &&
         anchor.origin === window.location.origin &&
-        anchor.pathname + anchor.search + anchor.hash !== router.asPath &&
+        anchor.pathname + anchor.search + anchor.hash !== pathname &&
         !anchor.href.startsWith("mailto:") &&
         !anchor.href.startsWith("tel:")
       ) {
@@ -68,7 +69,7 @@ export default function SignatureSettings({ onDirtyChange }: SignatureSettingsPr
 
     document.addEventListener("click", handleClick);
     return () => document.removeEventListener("click", handleClick);
-  }, [hasUnsavedChanges, router.asPath, router]);
+  }, [hasUnsavedChanges, pathname, router]);
 
   // Function to continue navigation programmatically
   const handleContinue = () => {
