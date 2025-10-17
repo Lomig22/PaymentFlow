@@ -1,3 +1,4 @@
+'use client';
 import { Helmet } from "react-helmet";
 import { motion, useInView } from "framer-motion";
 import { CheckCircle, TrendingUp } from "lucide-react";
