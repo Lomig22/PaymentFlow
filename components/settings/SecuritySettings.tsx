@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../../src/lib/supabase/supabase";
 import { AlertCircle, Save, Lock } from "lucide-react";
-import { useAbonnement } from "../context/AbonnementContext";
 import SecretKeyDisplay from "./SecretKeyDisplay";
 export function SecuritySettings({ onDirtyChange }: { onDirtyChange?: (dirty: boolean) => void }) {
   return (

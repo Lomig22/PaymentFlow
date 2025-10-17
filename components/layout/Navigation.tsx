@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 export function Navigation() {
+    const pathname = usePathname();
     const navigation = [
         { name: "Tableau de bord", href: "/dashboard", icon: Home },
         { name: "Clients", href: "/clients", icon: Users },
@@ -23,7 +24,7 @@ export function Navigation() {
 
     return <>{navigation.map((item) => {
         const Icon = item.icon;
-        const isActive = usePathname()?.startsWith(item.href);
+        const isActive = pathname?.startsWith(item.href);
 
         return (
             <Link

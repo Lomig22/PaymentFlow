@@ -8,7 +8,7 @@ import {
 } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import { supabase } from '../../src/lib/supabase/supabase';
-import PricingPage from '../../app/(public)/pricing/page';
+import PricingPage from '../../app/(public)/pricing/PricingPage';
 
 // Composant 1 : Informations de facturation
 export function BillingInfoSettings({ onDirtyChange }: { onDirtyChange?: (dirty: boolean) => void }) {

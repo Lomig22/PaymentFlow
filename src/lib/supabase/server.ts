@@ -144,9 +144,8 @@ export async function verifySubscription(): Promise<{ subscribed: boolean, onboa
         } catch { }
     } catch (e) {
         console.error("🔥 Erreur globale dans verifySubscription :", e);
-    } finally {
-        return { subscribed: true, onboard };
     }
+    return { subscribed: true, onboard };
 };
 
 export async function syncPendingProfile() {

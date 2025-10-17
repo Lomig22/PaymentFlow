@@ -77,6 +77,7 @@ type SortColumnConfig = {
 
 export function ReceivablesList({ user }: { user: SupabaseUser }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [sendError, setSendError] = useState(false);
   const [receivables, setReceivables] = useState<
     (Receivable & { client: Client })[]
@@ -141,7 +142,6 @@ export function ReceivablesList({ user }: { user: SupabaseUser }) {
         setSelectedReceivable(receivable);
         setShowConfirmReminder(true);
         // Vide l'état React Router pour éviter toute réouverture
-        const pathname = usePathname();
         if (pathname) {
           router.replace(`${pathname}/${searchParams.toString()}`);
         }
