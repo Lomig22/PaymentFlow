@@ -114,7 +114,8 @@ export function ReceivablesList({ user }: { user: SupabaseUser }) {
   function canPlayDirect(receivable: Receivable & { client: Client }) {
     const client = receivable.client;
     // Profil de relance enregistré + date d'échéance présente (date pièce non obligatoire)
-    return !!client?.reminder_profile && !!receivable.due_date;
+    const hasProfile = !!(client?.reminder_profile || (client as any)?.reminder_profiles);
+    return hasProfile && !!receivable.due_date;
   }
 
   const [hasConsumedReminderNavigation, setHasConsumedReminderNavigation] = useState(false);
@@ -286,12 +287,15 @@ export function ReceivablesList({ user }: { user: SupabaseUser }) {
 
       if (receivablesError) throw receivablesError;
 
-      // 4. Profils de rappel
+      // 4. Profils de rappel (inclure publics + propriétaires liés)
+      const ownerConds = allOwnerIds.map((id) => `owner_id.eq.${id}`).join(',');
+      const orFilter = ownerConds ? `public.is.true,${ownerConds}` : 'public.is.true';
       const { data: reminderProfilesData, error: profilesError } =
         await supabase
           .from("reminder_profile")
-          .select()
-          .in("owner_id", allOwnerIds);
+          .select("*")
+          .or(orFilter)
+          .order('name');
 
       if (profilesError) throw profilesError;
 
@@ -350,6 +354,7 @@ export function ReceivablesList({ user }: { user: SupabaseUser }) {
           reminder_enable_1: true,
           reminder_enable_2: true,
           reminder_enable_3: true,
+          reminder_enable_final: true,
         })
         .eq("id", selectedReceivable?.client?.id)
         .select()
@@ -359,7 +364,8 @@ export function ReceivablesList({ user }: { user: SupabaseUser }) {
     };
 
     if (showConfirmSendReminder === true) {
-      if (selectedReceivable?.client?.reminder_profile) {
+      const hasProfile = !!(selectedReceivable?.client?.reminder_profile || (selectedReceivable?.client as any)?.reminder_profiles);
+      if (hasProfile) {
         //    alert('selectedRecevable?.client?.reminder_profile: ',selectedRecevable?.client?.reminder_profile)
         enableClientDelays();
       }
@@ -823,7 +829,7 @@ export function ReceivablesList({ user }: { user: SupabaseUser }) {
       "Relance 2": "reminder_enable_3",
       "Relance 3": "reminder_enable_final",
     };
-    //alert(statusToFlag[currentStatus])
+    //alert(statusToFlag[currentStatus))
     let currentIndex = allStatuses.indexOf(status);
     while (currentIndex < allStatuses.length) {
       const currentStatus = allStatuses[currentIndex];
@@ -871,6 +877,8 @@ export function ReceivablesList({ user }: { user: SupabaseUser }) {
           } catch (error: any) {
             showError(error);
           }
+          // Échec logique: garder la fenêtre ouverte
+          setSending(false);
         }
         // Masquer le message après 3 secondes
         if (sendSuccessTimeoutRef.current) {
@@ -1326,6 +1334,8 @@ export function ReceivablesList({ user }: { user: SupabaseUser }) {
     const issues: string[] = [];
 
     const client = receivable.client || {};
+    // Profil assigné ou envoi direct via profil: pas d'avertissement de template
+    if (canPlayDirect(receivable) || client.reminder_profile) return "";
 
     if (client.pre_reminder_enable && !client.pre_reminder_template)
       issues.push("la pré-relance est activée sans template");
@@ -1495,6 +1505,8 @@ export function ReceivablesList({ user }: { user: SupabaseUser }) {
 
     const client = receivable.client;
     if (!client) return "";
+    // Profil assigné ou envoi direct via profil: pas d'avertissement de template
+    if (canPlayDirect(receivable) || client.reminder_profile) return "";
 
     if (client.pre_reminder_enable && !client.pre_reminder_template)
       issues.push("la pré-relance est activée sans template");
@@ -1565,8 +1577,86 @@ export function ReceivablesList({ user }: { user: SupabaseUser }) {
         return r.client?.company_name ?? "Inconnu";
       case "client_code":
         return r.client?.client_code ?? "Inconnu";
-      case "email":
-        return r.email || r.client.email.split(",")[0];
+      case "email": {
+        const knownEmails = (r?.client?.email || "")
+          .split(',')
+          .map((e: string) => e.trim())
+          .filter(Boolean);
+        const currentEmail = r.email || (r?.client?.email?.split(',')[0] ?? "");
+        const showCurrentAsOption = !!currentEmail && !knownEmails.includes(currentEmail);
+        const selectValue = (editingEmailId === r.id && addingNewEmail)
+          ? "__new__"
+          : (currentEmail || "");
+        return (
+          <div className="flex flex-col gap-2" style={{ maxWidth: "280px" }}>
+            <select
+              value={selectValue}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (v === "__new__") {
+                  setEditingEmailId(r.id);
+                  setAddingNewEmail(true);
+                  setAddEmailToClient(true);
+                  setEmailDraft("");
+                } else {
+                  setEditingEmailId(null);
+                  setAddingNewEmail(false);
+                  setEmailDraft(v);
+                  // Auto-enregistrement sur sélection d'un email existant
+                  saveEmailInline(r, v);
+                }
+              }}
+              className="w-28 px-2 py-1 text-xs border border-gray-300 rounded bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">Sélectionner un email</option>
+              {showCurrentAsOption && (
+                <option value={currentEmail}>{currentEmail} (courant)</option>
+              )}
+              {knownEmails.map((e: string) => (
+                <option key={e} value={e}>{e}</option>
+              ))}
+              <option value="__new__">+ Ajouter un nouvel email…</option>
+            </select>
+
+            {addingNewEmail && editingEmailId === r.id && (
+              <>
+                <input
+                  type="email"
+                  value={emailDraft}
+                  onChange={(e) => setEmailDraft(e.target.value)}
+                  className="w-full px-2 py-1 text-xs border border-gray-300 rounded bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="nouveau@email.com"
+                />
+                <label className="inline-flex items-center gap-2 text-xs text-gray-600">
+                  <input
+                    type="checkbox"
+                    checked={addEmailToClient}
+                    onChange={(e) => setAddEmailToClient(e.target.checked)}
+                  />
+                  Ajouter aussi à la fiche client
+                </label>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    className="px-3 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
+                    onClick={() => saveEmailInline(r)}
+                    disabled={!emailDraft}
+                  >
+                    Enregistrer
+                  </button>
+                  <button
+                    type="button"
+                    className="px-3 py-1.5 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 text-sm"
+                    onClick={cancelEditEmail}
+                  >
+                    Annuler
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        );
+      }
       case "invoice_number":
         return r.invoice_number;
       case "amount":
@@ -2005,8 +2095,7 @@ export function ReceivablesList({ user }: { user: SupabaseUser }) {
                       {receivable.client?.client_code ?? "inconnu"}
                     </td>
                     <td className="px-4 py-3">
-                      {receivable.email ||
-                        receivable.client.email.split(",")[0]}
+                      {renderCell("email", receivable)}
                     </td>
                     <td className="px-4 py-3">{receivable.invoice_number}</td>
                     <td className="px-4 py-3">

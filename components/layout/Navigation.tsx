@@ -1,5 +1,5 @@
 'use client';
-import { FileText, Home, Settings, UserCog, Users } from "lucide-react";
+import { Bell, FileText, Home, Settings, UserCog, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -9,6 +9,7 @@ export function Navigation() {
         { name: "Clients", href: "/clients", icon: Users },
         { name: "Créances", href: "/receivables", icon: FileText },
         { name: "Profils de relance", href: "/reminder-profiles", icon: UserCog },
+        { name: "Notifications", href: "/notifications", icon: Bell },
         { name: "Paramètres", href: "/settings", icon: Settings },
     ];
 

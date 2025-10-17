@@ -13,8 +13,8 @@ serve(async (req) => {
   }
 
   // Appel HTTP direct à l'API REST Supabase (table email_opens)
-  const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
-  const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || url.origin;
+  const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || Deno.env.get("SERVICE_ROLE_KEY");
 
   if (debug) console.log("[tracker] hit", { email_id, hasUA: !!user_agent, hasIP: !!ip_address, isTest });
 

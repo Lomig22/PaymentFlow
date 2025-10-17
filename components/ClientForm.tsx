@@ -209,7 +209,6 @@ export default function ClientForm({
 
           await AddReceivableToClient(newReceivable as Receivable);
         }
-
         if (data && onClientAdded) {
           onClientAdded(data);
         }
@@ -220,15 +219,18 @@ export default function ClientForm({
           .eq("id", client?.id)
           .single();
         /*   setFormData({
-        ...formData,
-        reminder_profile: reminder_profile? reminder_profile : ""
-        }); */
-        if (formData.reminder_profile === "") {
-          formData.reminder_profile = "";
-        }
-
+          ...formData,
+          reminder_profile: reminder_profile? reminder_profile : ""
+            }); */
         // Build update payload and apply selected profile values if any
         const updatePayload: any = { ...formData };
+        // IMPORTANT: if reminder_profile is an empty string, send null instead of ""
+        // to avoid PostgreSQL invalid UUID (22P02) errors
+        if (formData.reminder_profile === "") {
+          updatePayload.reminder_profile = null;
+        } else if (formData.reminder_profile) {
+          updatePayload.reminder_profile = formData.reminder_profile;
+        }
         if (selectedProfile) {
           updatePayload.reminder_delay_1 = selectedProfile.delay1;
           updatePayload.reminder_delay_2 = selectedProfile.delay2;

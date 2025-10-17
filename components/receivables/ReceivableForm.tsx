@@ -400,42 +400,46 @@ export default function ReceivableForm({
                         </option>
                       ))}
                     </select>
-                    {!showNewEmailInput && (
-                      <button
-                        type="button"
-                        className="mt-2 text-blue-600 hover:underline text-sm"
-                        onClick={() => setShowNewEmailInput(true)}
-                      >
-                        + Ajouter une nouvelle adresse email
-                      </button>
-                    )}
-                    {showNewEmailInput && (
-                      <div className="mt-2 flex gap-2 items-center">
-                        <input
-                          type="email"
-                          placeholder="Nouvelle adresse email"
-                          className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          value={newEmail}
-                          onChange={e => setNewEmail(e.target.value)}
-                        />
+                    {
+                      !showNewEmailInput && (
                         <button
                           type="button"
-                          className="px-3 py-2 bg-gray-100 rounded hover:bg-gray-200"
-                          onClick={() => {
-                            setShowNewEmailInput(false);
-                            setNewEmail("");
-                          }}
-                          title="Annuler"
+                          className="mt-2 text-blue-600 hover:underline text-sm"
+                          onClick={() => setShowNewEmailInput(true)}
                         >
-                          Annuler
+                          + Ajouter une nouvelle adresse email
                         </button>
-                      </div>
-                    )}
+                      )
+                    }
+                    {
+                      showNewEmailInput && (
+                        <div className="mt-2 flex gap-2 items-center">
+                          <input
+                            type="email"
+                            placeholder="Nouvelle adresse email"
+                            className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            value={newEmail}
+                            onChange={e => setNewEmail(e.target.value)}
+                          />
+                          <button
+                            type="button"
+                            className="px-3 py-2 bg-gray-100 rounded hover:bg-gray-200"
+                            onClick={() => {
+                              setShowNewEmailInput(false);
+                              setNewEmail("");
+                            }}
+                            title="Annuler"
+                          >
+                            Annuler
+                          </button>
+                        </div>
+                      )
+                    }
                     <p className="text-xs text-gray-500 mt-1">
                       L'email renseigné ici sera utilisé pour la créance, même si différent de celui enregistré dans la fiche client.
                     </p>
-                  </div>
-                </div>
+                  </div >
+                </div >
               ) : (
                 <div className="space-y-4">
                   <div>
@@ -556,8 +560,9 @@ export default function ReceivableForm({
                     </div>
                   </div>
                 </div>
-              )}
-            </div>
+              )
+              }
+            </div >
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -739,9 +744,9 @@ export default function ReceivableForm({
                 {loading ? "Enregistrement..." : "Enregistrer"}
               </button>
             </div>
-          </form>
-        </div>
-      </div>
-    </div>
+          </form >
+        </div >
+      </div >
+    </div >
   );
 }

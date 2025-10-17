@@ -16,13 +16,13 @@ export function getReminderStatus(receivable: any): { title: string, icon: "info
   if (receivable.client?.reminder_enable_final && !receivable.client?.reminder_template_final)
     issues.push("la relance finale est activée sans template");
 
-  // Vérifie si une date est dépassée
+  // Vérifie si une date est dépassée (les dates appartiennent au client)
   const datesToCheck = [
-    receivable.pre_reminder_date,
-    receivable.reminder_date_1,
-    receivable.reminder_date_2,
-    receivable.reminder_date_3,
-    receivable.reminder_date_final
+    receivable.client?.pre_reminder_date,
+    receivable.client?.reminder_date_1,
+    receivable.client?.reminder_date_2,
+    receivable.client?.reminder_date_3,
+    receivable.client?.reminder_date_final,
   ];
 
   const hasPastDate = datesToCheck.some(date => date && isBefore(new Date(date), now));

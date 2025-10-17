@@ -3,7 +3,6 @@ import { supabase } from '../../src/lib/supabase/supabase';
 import { AlertCircle, Save } from 'lucide-react';
 
 export default function NotificationSettings({ onDirtyChange }: { onDirtyChange?: (dirty: boolean) => void }) {
-
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);

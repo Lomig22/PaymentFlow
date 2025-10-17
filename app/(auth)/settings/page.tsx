@@ -197,7 +197,7 @@ export default function Settings() {
     initialSubTabId || sections[0]?.subTabs[0].id
   );
   const activeSection = sections.find(
-    (section?) => section?.id === activeSectionId
+    (section) => section?.id === activeSectionId
   );
   const activeSubTab = activeSection?.subTabs.find(
     (tab) => tab.id === activeSubTabId
@@ -267,73 +267,74 @@ export default function Settings() {
         {/* Menu latéral */}
         <div className="w-64 border-r border-gray-200 p-4">
           <nav className="flex flex-col space-y-2">
-            {sections.map((section?) => {
-              const Icon = section?.icon;
-              return (
-                <button
-                  key={section?.id}
-                  onClick={() => {
-                    // Si on quitte "Paramètres d’envoi de relances" avec des changements non enregistrés
-                    if (activeSectionId === "reminders" && unsavedChanges && section?.id !== "reminders") {
-                      setShowUnsavedModal(true);
-                      setPendingSectionId(section?.id ?? null);
-                      setPendingSubTabId(section?.subTabs[0]?.id ?? null);
-                      return;
-                    }
-                    if (section) {
-                      setActiveSectionId(section?.id);
-                      setActiveSubTabId(section?.subTabs[0].id);
-                    }
-                  }}
-                  className={`flex items-center px-4 py-2 rounded-md text-left ${activeSectionId === section?.id
-                    ? "bg-blue-100 text-blue-700 font-semibold"
-                    : "text-gray-600 hover:bg-gray-100"
-                    }`}
-                >
-                  {Icon ? <Icon className="h-5 w-5 mr-3" /> : null}
-                  {section?.name}
-                </button>
-              );
-            })}
-          </nav>
-        </div>
+            {
+              sections.map((section?) => {
+                const Icon = section?.icon;
+                return (
+                  <button
+                    key={section?.id}
+                    onClick={() => {
+                      // Si on quitte "Paramètres d’envoi de relances" avec des changements non enregistrés
+                      if (activeSectionId === "reminders" && unsavedChanges && section?.id !== "reminders") {
+                        setShowUnsavedModal(true);
+                        setPendingSectionId(section?.id ?? null);
+                        setPendingSubTabId(section?.subTabs[0]?.id ?? null);
+                        return;
+                      }
+                      if (section) {
+                        setActiveSectionId(section?.id);
+                        setActiveSubTabId(section?.subTabs[0].id);
+                      }
+                    }}
+                    className={`flex items-center px-4 py-2 rounded-md text-left ${activeSectionId === section?.id
+                      ? "bg-blue-100 text-blue-700 font-semibold"
+                      : "text-gray-600 hover:bg-gray-100"
+                      }`}
+                  >
+                    {Icon ? <Icon className="h-5 w-5 mr-3" /> : null}
+                    {section?.name}
+                  </button>
+                );
+              })
+            }
+          </nav >
+        </div >
 
         {/* Zone de contenu */}
         < div className="flex-1 p-6" >
           {/* Sous-onglets */}
-          <div className="flex space-x-4 border-b border-gray-200 mb-6">
-            {activeSection?.subTabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => {
-                  // Si on quitte un sous-menu de "Paramètres d’envoi de relances" avec des changements non enregistrés
-                  if (activeSectionId === "reminders" && unsavedChanges && tab.id !== activeSubTabId) {
-                    setShowUnsavedModal(true);
-                    setPendingSectionId(activeSectionId);
-                    setPendingSubTabId(tab.id);
-                    return;
-                  }
-                  setActiveSubTabId(tab.id);
-                }}
-                className={`pb-2 border-b-2 text-sm ${activeSubTabId === tab.id
-                  ? "border-blue-600 text-blue-600 font-semibold"
-                  : "border-transparent text-gray-600 hover:text-gray-800"
-                  }`}
-              >
-                {tab.name}
-              </button>
-            ))}
-          </div>
+          < div className="flex space-x-4 border-b border-gray-200 mb-6" >
+            {
+              activeSection?.subTabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => {
+                    // Si on quitte un sous-menu de "Paramètres d’envoi de relances" avec des changements non enregistrés
+                    if (activeSectionId === "reminders" && unsavedChanges && tab.id !== activeSubTabId) {
+                      setShowUnsavedModal(true);
+                      setPendingSectionId(activeSectionId);
+                      setPendingSubTabId(tab.id);
+                      return;
+                    }
+                    setActiveSubTabId(tab.id);
+                  }}
+                  className={`pb-2 border-b-2 text-sm ${activeSubTabId === tab.id
+                    ? "border-blue-600 text-blue-600 font-semibold"
+                    : "border-transparent text-gray-600 hover:text-gray-800"
+                    }`}
+                >
+                  {tab.name}
+                </button>
+              ))
+            }
+          </div >
 
           {/* Encapsuler le composant avec le provider Elements de Stripe */}
-          {activeSubTabId === "payment_method" ? (
-            <Elements stripe={stripePromise}>
-              <ActiveComponent />
-            </Elements>
-          ) : (
-            // Injection du callback dans ReminderProfileSettings et SignatureSettings
-            activeSectionId === "reminders" && activeSubTabId === "sender" ? (
-              <SignatureSettings onDirtyChange={handleReminderProfileDirty} />
+          {
+            activeSubTabId === "payment_method" ? (
+              <Elements stripe={stripePromise}>
+                <ActiveComponent />
+              </Elements>
             ) : (
               // Injection du callback dans SenderSettings (relances) et ProfileSettings (compte)
               activeSectionId === "reminders" && activeSubTabId === "sender" ? (
@@ -352,7 +353,6 @@ export default function Settings() {
                 <ActiveComponent />
               )
             )
-          )
           }
           {/* Modal pour changements non enregistrés */}
           <UnsavedChangesModal

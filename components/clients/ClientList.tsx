@@ -136,11 +136,23 @@ function ClientList({
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
+        // Inclure les profils du propriétaire courant, des propriétaires qui l'ont invité et les profils publics
+        const { data: invitedByData, error: invitedByError } = await supabase
+          .from('invited_users')
+          .select('invited_by')
+          .eq('invited_email', user.email);
+        if (invitedByError) throw invitedByError;
+        const invitedByIds = (invitedByData || []).map((r: any) => r.invited_by);
+        const allOwnerIds = [user.id, ...invitedByIds];
+
+        // Construire un filtre OR dynamique: public=true OU owner_id=un des allOwnerIds
+        const ownerConds = allOwnerIds.map((id) => `owner_id.eq.${id}`).join(',');
+        const orFilter = ownerConds ? `public.is.true,${ownerConds}` : 'public.is.true';
+
         const { data, error } = await supabase
           .from('reminder_profile')
           .select('*')
-          .eq('owner_id', user.id)
-          .eq('public', false)
+          .or(orFilter)
           .order('name');
         if (error) throw error;
         setReminderProfiles(data || []);
@@ -149,6 +161,55 @@ function ClientList({
       }
     })();
   }, []);
+
+  // Complément: s'assurer que les profils référencés par des clients existent dans la liste (sinon le select n'a pas d'option correspondante)
+  useEffect(() => {
+    (async () => {
+      try {
+        if (!clients || clients.length === 0) return;
+        const assignedIds = Array.from(new Set(
+          clients
+            .map((c) => (c as any).reminder_profiles || (c as any).reminder_profile || (c as any).reminderProfile?.id)
+            .filter(Boolean)
+        ));
+        if (assignedIds.length === 0) return;
+        const existingIds = new Set(reminderProfiles.map((rp) => rp.id as string));
+        const missingIds = (assignedIds as string[]).filter((id) => !existingIds.has(id));
+        if (missingIds.length === 0) return;
+
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        const { data: invitedByData } = await supabase
+          .from('invited_users')
+          .select('invited_by')
+          .eq('invited_email', user.email);
+        const invitedByIds = (invitedByData || []).map((r: any) => r.invited_by);
+        const allOwnerIds = [user.id, ...invitedByIds];
+        const ownerConds = allOwnerIds.map((id) => `owner_id.eq.${id}`).join(',');
+        const orFilter = ownerConds ? `public.is.true,${ownerConds}` : 'public.is.true';
+
+        const { data, error } = await supabase
+          .from('reminder_profile')
+          .select('*')
+          .in('id', missingIds)
+          .or(orFilter);
+        if (!error && data && data.length) {
+          const merged = [...reminderProfiles];
+          const seen = new Set(merged.map((rp) => rp.id as string));
+          for (const rp of data) {
+            const idStr = rp.id as string;
+            if (!seen.has(idStr)) {
+              merged.push(rp as any);
+              seen.add(idStr);
+            }
+          }
+          setReminderProfiles(merged);
+        }
+      } catch (e) {
+        console.error('Complément profils de relance:', e);
+      }
+    })();
+  }, [clients]);
 
   useEffect(() => {
     if (importSuccess) {
@@ -504,9 +565,7 @@ function ClientList({
     if (!profile || selectedClientIds.length === 0) return;
     try {
       setError(null);
-      const updatePayload: any = {
-        reminder_profile: profile.id,
-      };
+      const updatePayload: any = {};
       if (profile.delay1) updatePayload.reminder_delay_1 = profile.delay1;
       if (profile.delay2) updatePayload.reminder_delay_2 = profile.delay2;
       if (profile.delay3) updatePayload.reminder_delay_3 = profile.delay3;
@@ -516,16 +575,31 @@ function ClientList({
       if (profile.email_template_3) updatePayload.reminder_template_3 = profile.email_template_3;
       if (profile.email_template_4) updatePayload.reminder_template_final = profile.email_template_4;
 
-      const { error } = await supabase
-        .from('clients')
-        .update(updatePayload)
-        .in('id', selectedClientIds);
-      if (error) throw error;
+      // Tentative 1: nouvelle colonne 'reminder_profiles'
+      let assignErr: any = null;
+      try {
+        const { error } = await supabase
+          .from('clients')
+          .update({ ...updatePayload, reminder_profiles: profile.id })
+          .in('id', selectedClientIds);
+        if (error) assignErr = error;
+      } catch (e) {
+        assignErr = e;
+      }
+
+      // Fallback: ancienne colonne 'reminder_profile'
+      if (assignErr) {
+        const { error } = await supabase
+          .from('clients')
+          .update({ ...updatePayload, reminder_profile: profile.id })
+          .in('id', selectedClientIds);
+        if (error) throw error;
+      }
 
       // MAJ locale des clients
       setClients((prev) => prev.map((c) => (
         selectedClientIds.includes(c.id)
-          ? { ...c, reminderProfile: profile }
+          ? { ...c, reminderProfile: profile, ...({ reminder_profiles: profile.id } as any), ...({ reminder_profile: profile.id } as any) }
           : c
       )));
 
@@ -545,13 +619,31 @@ function ClientList({
       setProfileUpdating((prev) => ({ ...prev, [clientRow.id]: true }));
       // Si aucun profil sélectionné → seulement déréférencer le profil
       if (!profileId) {
-        const { error } = await supabase
-          .from('clients')
-          .update({ reminder_profile: null })
-          .eq('id', clientRow.id);
-        if (error) throw error;
+        let clearErr: any = null;
+        // Tenter d'abord la nouvelle colonne
+        try {
+          const { error } = await supabase
+            .from('clients')
+            .update({ reminder_profiles: null })
+            .eq('id', clientRow.id);
+          if (error) clearErr = error;
+        } catch (e) {
+          clearErr = e;
+        }
+        // Fallback ancienne colonne
+        if (clearErr) {
+          const { error } = await supabase
+            .from('clients')
+            .update({ reminder_profile: null })
+            .eq('id', clientRow.id);
+          if (error) throw error;
+        }
         // Mettre à jour l'état local
-        setClients((prev) => prev.map((c) => c.id === clientRow.id ? { ...c, reminderProfile: undefined } : c));
+        setClients((prev) => prev.map((c) =>
+          c.id === clientRow.id
+            ? { ...c, reminderProfile: undefined, ...({ reminder_profiles: null } as any), ...({ reminder_profile: null } as any) }
+            : c
+        ));
         return;
       }
 
@@ -559,9 +651,12 @@ function ClientList({
       const selected = reminderProfiles.find((p) => (p.id as string) === profileId);
       if (!selected) return;
 
-      // Construire la payload de mise à jour: pointer le profil et appliquer délais/templates si fournis
+      // Construire la payload de mise à jour: pointer le profil, appliquer délais/templates si fournis, et activer les flags
       const updatePayload: any = {
-        reminder_profile: profileId,
+        reminder_enable_1: true,
+        reminder_enable_2: true,
+        reminder_enable_3: true,
+        reminder_enable_final: true,
       };
       if (selected.delay1) updatePayload.reminder_delay_1 = selected.delay1;
       if (selected.delay2) updatePayload.reminder_delay_2 = selected.delay2;
@@ -571,15 +666,53 @@ function ClientList({
       if (selected.email_template_2) updatePayload.reminder_template_2 = selected.email_template_2;
       if (selected.email_template_3) updatePayload.reminder_template_3 = selected.email_template_3;
       if (selected.email_template_4) updatePayload.reminder_template_final = selected.email_template_4;
+      // Nettoyer les anciennes dates planifiées pour forcer un recalcul par profil côté modal
+      updatePayload.reminder_date_1 = null;
+      updatePayload.reminder_date_2 = null;
+      updatePayload.reminder_date_3 = null;
+      updatePayload.reminder_date_final = null;
+      updatePayload.pre_reminder_date = null;
 
-      const { error } = await supabase
-        .from('clients')
-        .update(updatePayload)
-        .eq('id', clientRow.id);
-      if (error) throw error;
+      // Tentative 1: nouvelle colonne 'reminder_profiles'
+      let upErr: any = null;
+      try {
+        const { error } = await supabase
+          .from('clients')
+          .update({ ...updatePayload, reminder_profiles: profileId })
+          .eq('id', clientRow.id);
+        if (error) upErr = error;
+      } catch (e) {
+        upErr = e;
+      }
+      // Fallback ancienne colonne 'reminder_profile'
+      if (upErr) {
+        const { error } = await supabase
+          .from('clients')
+          .update({ ...updatePayload, reminder_profile: profileId })
+          .eq('id', clientRow.id);
+        if (error) throw error;
+      }
 
-      // Mettre à jour l'état local: changer le nom du profil affiché
-      setClients((prev) => prev.map((c) => c.id === clientRow.id ? { ...c, reminderProfile: selected } : c));
+      // Mettre à jour l'état local: changer le nom du profil affiché + stocker l'ID de FK
+      setClients((prev) => prev.map((c) =>
+        c.id === clientRow.id
+          ? {
+            ...c,
+            reminderProfile: selected,
+            ...({ reminder_profiles: profileId } as any),
+            ...({ reminder_profile: profileId } as any),
+            reminder_enable_1: true,
+            reminder_enable_2: true,
+            reminder_enable_3: true,
+            reminder_enable_final: true,
+            reminder_date_1: null,
+            reminder_date_2: null,
+            reminder_date_3: null,
+            reminder_date_final: null,
+            pre_reminder_date: null,
+          }
+          : c
+      ));
     } catch (e) {
       console.error('Erreur lors de la mise à jour du profil de rappel:', e);
       showError("Impossible de mettre à jour le profil de rappel");
@@ -941,7 +1074,12 @@ function ClientList({
                   >
                     <div className="flex items-center gap-1">
                       <select
-                        value={client.reminderProfile?.id ?? ''}
+                        value={
+                          (client.reminderProfile?.id as string) ??
+                          ((client as any).reminder_profiles as string) ??
+                          ((client as any).reminder_profile as string) ??
+                          ''
+                        }
                         onChange={(e) => handleInlineProfileChange(client as Client & { reminderProfile?: ReminderProfile }, e.target.value)}
                         className="w-28 px-2 py-1 text-xs border border-gray-300 rounded bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                       >

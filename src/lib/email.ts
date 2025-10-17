@@ -13,6 +13,49 @@ import { supabase } from './supabase/supabase';
 const supabaseUrl: string = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 const supabaseAnonKey: string = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
 
+function extractFailureMessage(failures: any): string {
+  try {
+    if (!failures) return "";
+    if (typeof failures === 'string') return failures;
+    if (Array.isArray(failures)) {
+      const parts = failures.map((f) => (f?.message || f?.response || f?.error || JSON.stringify(f))).filter(Boolean);
+      return parts.join('; ');
+    }
+    if (typeof failures === 'object') {
+      return failures.message || failures.response || failures.error || JSON.stringify(failures);
+    }
+    return String(failures);
+  } catch {
+    return "Échec de l'envoi (raison inconnue)";
+  }
+}
+
+function toFriendlyRecipientMessage(msg: string): string {
+  const lower = (msg || '').toLowerCase();
+  const invalidRecipientPatterns = [
+    'user unknown',
+    'no such user',
+    'unknown user',
+    '550 5.1.1',
+    'recipient address rejected',
+    'mailbox unavailable',
+    'invalid recipient',
+    'unrouteable address',
+    // Cas de blocage/blacklist fréquemment renvoyés par certains serveurs
+    'rbl blacklisted',
+    'blacklisted',
+    'blacklist',
+    '554 5.7.1',
+    '5.7.1',
+  ];
+  const isInvalidRecipient = invalidRecipientPatterns.some((p) => lower.includes(p));
+  if (isInvalidRecipient) {
+    // Message demandé par le produit
+    return "L'adresse email du destinataire n'existe pas";
+  }
+  return msg || "Échec de l'envoi de l'email";
+}
+
 export const sendEmail = async (
 	settings: EmailSettings,
 	to: string,
@@ -102,14 +145,17 @@ export const sendEmail = async (
 		}));
 
 		const data = await res.json();
-		const error = data?.failures;
-		if (error) {
-			console.error('Erreur Supabase Edge Function:', error);
-			throw error;
+		const failures = data?.failures;
+		if (failures) {
+			const raw = extractFailureMessage(failures);
+			const friendly = toFriendlyRecipientMessage(raw);
+			console.error('Erreur Supabase Edge Function:', failures);
+			throw new Error(friendly);
 		}
 
 		if (!data?.success) {
-			throw new Error(data?.error || "Échec de l'envoi de l'email");
+			const friendly = toFriendlyRecipientMessage(data?.error || "Échec de l'envoi de l'email");
+			throw new Error(friendly);
 		}
 
 		return true;

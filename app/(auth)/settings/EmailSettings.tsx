@@ -307,7 +307,6 @@ export default function EmailSettings({ onDirtyChange }: { onDirtyChange?: (dirt
       setSaving(false);
     }
   };
-
   // Met à jour automatiquement l'état dirty quand formData change
   useEffect(() => {
     if (!initialRef.current) return;

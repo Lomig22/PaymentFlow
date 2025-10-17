@@ -36,10 +36,9 @@ export default function ReminderSettingsModal({
     receivable.automatic_reminder ?? false
   );
 
-  // Récupérer le profil de rappel associé au client
-  const reminderProfile = reminderProfiles.find(
-    (p) => p.id === client.reminder_profile
-  );
+  // Récupérer le profil de rappel associé au client (gère reminder_profile et reminder_profiles)
+  const effectiveProfileId = (client as any).reminder_profile || (client as any).reminder_profiles || (client as any).reminderProfile?.id || null;
+  const reminderProfile = reminderProfiles.find((p) => p.id === effectiveProfileId);
 
   // État local pour les templates d'email
   const [emailTemplates, setEmailTemplates] = useState({
@@ -92,16 +91,36 @@ export default function ReminderSettingsModal({
   const delayFinal = client.reminder_delay_final || { j: 1, h: 0, m: 0 };
 
   // Calcul des dates à partir des délais
-  const reminder_date_1 =
-    client.reminder_date_1 ?? addJHMToDate(new Date().toISOString(), delay1);
-  const reminder_date_2 =
-    client.reminder_date_2 ?? addJHMToDate(reminder_date_1, delay2);
-  const reminder_date_3 =
-    client.reminder_date_3 ?? addJHMToDate(reminder_date_2, delay3);
-  const reminder_date_final =
-    client.reminder_date_final ?? addJHMToDate(reminder_date_3, delayFinal);
-  const pre_reminder_date =
-    client.pre_reminder_date ?? new Date().toISOString();
+  // Base = date d'échéance (fallback now si absente)
+  const baseDueIso = receivable?.due_date
+    ? new Date(receivable.due_date).toISOString()
+    : new Date().toISOString();
+  const useProfile = !!effectiveProfileId;
+  const reminder_date_1 = useProfile
+    ? addJHMToDate(baseDueIso, delay1)
+    : (client.reminder_date_1 ?? addJHMToDate(baseDueIso, delay1));
+  const reminder_date_2 = useProfile
+    ? addJHMToDate(reminder_date_1, delay2)
+    : (client.reminder_date_2 ?? addJHMToDate(reminder_date_1, delay2));
+  const reminder_date_3 = useProfile
+    ? addJHMToDate(reminder_date_2, delay3)
+    : (client.reminder_date_3 ?? addJHMToDate(reminder_date_2, delay3));
+  const reminder_date_final = useProfile
+    ? addJHMToDate(reminder_date_3, delayFinal)
+    : (client.reminder_date_final ?? addJHMToDate(reminder_date_3, delayFinal));
+  // Pré-relance: avant l'échéance selon le pré-délai
+  const preDelay = client.pre_reminder_delay || { j: 0, h: 0, m: 0 };
+  const pre_reminder_date = useProfile
+    ? addJHMToDate(baseDueIso, {
+      j: -(preDelay.j || 0),
+      h: -(preDelay.h || 0),
+      m: -(preDelay.m || 0),
+    })
+    : (client.pre_reminder_date ?? addJHMToDate(baseDueIso, {
+      j: -(preDelay.j || 0),
+      h: -(preDelay.h || 0),
+      m: -(preDelay.m || 0),
+    }));
 
 
   // Initialisation du formData
@@ -116,21 +135,21 @@ export default function ReminderSettingsModal({
     reminder_template_3: reminderProfile?.email_template_3 || client.reminder_template_3 || "",
     reminder_template_final: reminderProfile?.email_template_4 || client.reminder_template_final || "",
 
-    reminder_enable_1: client.reminder_profile
+    reminder_enable_1: effectiveProfileId
       ? true
       : client.reminder_enable_1,
-    reminder_enable_2: client.reminder_profile
+    reminder_enable_2: effectiveProfileId
       ? true
       : client.reminder_enable_2,
-    reminder_enable_3: client.reminder_profile
+    reminder_enable_3: effectiveProfileId
       ? true
       : client.reminder_enable_3,
-    reminder_enable_final: client.reminder_profile
+    reminder_enable_final: effectiveProfileId
       ? true
       : client.reminder_enable_final,
     pre_reminder_enable: client.pre_reminder_enable,
 
-    reminder_profile: client.reminder_profile || null,
+    reminder_profile: effectiveProfileId,
 
     reminder_date_1,
     reminder_date_2,
@@ -277,11 +296,12 @@ export default function ReminderSettingsModal({
         console.error('Erreur lors de la récupération de l’utilisateur', userError);
         return;
       }
-      if (!client.reminder_profile) return
+      const profileId = effectiveProfileId;
+      if (!profileId) return;
       const { data: reminderProfile, error } = await supabase
         .from('reminder_profile')
         .select('name')
-        .eq('id', client.reminder_profile)
+        .eq('id', profileId)
         .single(); // pour récupérer un seul objet au lieu d'un tableau
 
       if (error) {
@@ -296,7 +316,7 @@ export default function ReminderSettingsModal({
     return () => {
       cancelled = true;
     };
-  }, [client.id]);
+  }, [client.id, effectiveProfileId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -383,15 +403,16 @@ export default function ReminderSettingsModal({
         });
 
         if (result.isConfirmed) {
-          // Supprimer les rappels
-          const { error: deleteError } = await supabase
+          // Archiver les rappels existants (ne pas perdre l'historique)
+          const { error: archiveError } = await supabase
             .from("reminders")
-            .delete()
-            .eq("receivable_id", receivable.id);
+            .update({ archived_at: new Date().toISOString() })
+            .eq("receivable_id", receivable.id)
+            .is("archived_at", null);
 
-          if (deleteError) throw deleteError;
+          if (archiveError) throw archiveError;
 
-          // Mettre à jour le receivable
+          // Mettre à jour le receivable (remise à zéro du process sans perte d'historique)
           const { error: updateError } = await supabase
             .from("receivables")
             .update({
@@ -434,7 +455,6 @@ export default function ReminderSettingsModal({
           reminder_date_3: formData.reminder_date_3,
           reminder_date_final: formData.reminder_date_final,
           pre_reminder_date: formData.pre_reminder_date,
-          reminder_profile: formData.reminder_profile,
           pre_reminder_delay: formData.pre_reminder_delay,
           pre_reminder_template: formData.pre_reminder_template,
         })
@@ -593,7 +613,7 @@ export default function ReminderSettingsModal({
               )}
             </div>
           </form>
-          {!client.reminder_profile && (
+          {!effectiveProfileId && (
             <div className="bg-blue-50 p-4 rounded-md">
               <p className="text-blue-800 font-medium mb-2">Information:</p>
               <p className="text-blue-700 text-sm">
@@ -679,8 +699,8 @@ export default function ReminderSettingsModal({
                       label="Date/Heure d’envoi – Première relance"
                       value={new Date(formData.reminder_date_1)}
                       onChange={(date) => {
-                        client.reminder_profile
-                          ? setFormData({
+                        if (effectiveProfileId) {
+                          setFormData({
                             ...formData,
                             reminder_date_1: date.toISOString(),
                             reminder_date_2: addJHMToDate(
@@ -704,11 +724,13 @@ export default function ReminderSettingsModal({
                               ),
                               client.reminder_delay_final
                             ),
-                          })
-                          : setFormData({
+                          });
+                        } else {
+                          setFormData({
                             ...formData,
                             reminder_date_1: date.toISOString(),
                           });
+                        }
                       }}
                       optional={formData.reminder_enable_1}
                       onToggleOptional={(checked) =>
@@ -726,7 +748,7 @@ export default function ReminderSettingsModal({
                   <div className="relative min-h-[124px]">
                     <fieldset
                       // disabled={client.reminder_profile}
-                      className={client.reminder_profile ? "opacity-50" : ""}
+                      className={effectiveProfileId ? "opacity-50" : ""}
                     >
                       <DateTimeInput
                         label="Date/Heure d’envoi – Deuxième relance"
@@ -756,8 +778,8 @@ export default function ReminderSettingsModal({
                   {/* Relance 3 */}
                   <div className="relative min-h-[124px]">
                     <fieldset
-                      // disabled={client.reminder_profile}
-                      className={client.reminder_profile ? "opacity-50" : ""}
+                      // disabled={effectiveProfileId}
+                      className={effectiveProfileId ? "opacity-50" : ""}
                     >
                       <DateTimeInput
                         label="Date/Heure d’envoi – Troisième relance"
@@ -787,8 +809,8 @@ export default function ReminderSettingsModal({
                   {/* Relance finale */}
                   <div className="relative min-h-[124px]">
                     <fieldset
-                      // disabled={client.reminder_profile}
-                      className={client.reminder_profile ? "opacity-50" : ""}
+                      // disabled={effectiveProfileId}
+                      className={effectiveProfileId ? "opacity-50" : ""}
                     >
                       <DateTimeInput
                         label="Date/Heure d’envoi – Relance finale"

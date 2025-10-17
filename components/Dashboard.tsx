@@ -71,6 +71,7 @@ import RemindersCard from "./chart/RemindersCard";
 import OverdueInvoices from "./chart/OverdueInvoices";
 import DashboardLayout from "./chart/DashboardLayout";
 import BalanceAgeeChart from "./chart/BalanceAgeeChart";
+import EmailOpenRate from "./chart/EmailOpenRate";
 export default function Dashboard() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [stats, setStats] = useState<DashboardStats>({
@@ -679,7 +680,10 @@ export default function Dashboard() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="rounded-2xl shadow bg-white p-6 max-h-[300px] min-h-[270px] overflow-y-auto">
+              <div className="rounded-2xl shadow bg-white">
+                <EmailOpenRate />
+              </div>
+              <div className="rounded-2xl shadow bg-white p-6 max-h-[300px] min-h-[270px] overflow-y-auto" style={{ display: "none" }}>
                 <div className="flex items-center space-x-2 mb-2">
                   <div className="bg-yellow-100 p-3 rounded-lg">
                     <Bell className="h-6 w-6 text-yellow-600" />
