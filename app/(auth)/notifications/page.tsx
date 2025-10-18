@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { formatDistanceToNow } from "date-fns/formatDistanceToNow";
 import { fr } from "date-fns/locale";
 import { Bell, Mail, CreditCard, Clock, AlertTriangle, Trash2 } from "lucide-react";
-import { supabase } from "../../../src/lib/supabase/supabase";
+import { useSupabase } from "../../providers/supabase-provider";
 
 interface NotificationRow {
   id: string;
@@ -26,6 +26,7 @@ const categoryMeta: Record<string, { icon: JSX.Element; label: string }> = {
 };
 
 export default function NotificationsPage() {
+  const supabase = useSupabase();
   const [items, setItems] = useState<NotificationRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string | null>(null);

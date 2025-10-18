@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Bell } from "lucide-react";
-import { supabase } from "../../lib/supabase/supabase";
+import { useSupabase } from "../../../app/providers/supabase-provider";
 
 export default function NotificationsBell() {
+  const supabase = useSupabase();
   const [count, setCount] = useState<number>(0);
   const nav = useNavigate();
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);

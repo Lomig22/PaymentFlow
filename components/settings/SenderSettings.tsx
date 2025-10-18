@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import SignatureImageCropper from "./SignatureImageCropper";
 import { renderToStaticMarkup } from "react-dom/server";
-import { supabase } from "../../src/lib/supabase/supabase";
 import ThemeCustomizer from "./ThemeCustomizer";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -15,6 +14,7 @@ import {
 } from "lucide-react";
 import Swal from "sweetalert2";
 import { usePathname, useRouter } from "next/navigation";
+import { useSupabase } from "../../app/providers/supabase-provider";
 
 type SignatureSettingsProps = {
   onDirtyChange?: (dirty: boolean) => void;
@@ -22,6 +22,7 @@ type SignatureSettingsProps = {
 
 export default function SignatureSettings({ onDirtyChange }: SignatureSettingsProps) {
   const router = useRouter();
+  const supabase = useSupabase();
   const pathname = usePathname();
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [pendingNavigation, setPendingNavigation] = useState<string | null>(null);

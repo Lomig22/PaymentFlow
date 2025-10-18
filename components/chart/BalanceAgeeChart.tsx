@@ -9,11 +9,11 @@ import {
 } from "recharts";
 import { Card } from "../ui/card";
 import { useEffect, useState } from "react";
-import { supabase } from "../../src/lib/supabase/supabase";
 import dayjs from "dayjs";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { AlertCircle } from "lucide-react";
+import { useSupabase } from "../../app/providers/supabase-provider";
 
 type BalanceData = {
   periode: string;
@@ -21,6 +21,7 @@ type BalanceData = {
 };
 
 export default function BalanceAgeeChart() {
+  const supabase = useSupabase();
   const [data, setData] = useState<BalanceData[]>([]);
   const [referenceDate, setReferenceDate] = useState<Date>(new Date());
   const [loading, setLoading] = useState<boolean>(true);

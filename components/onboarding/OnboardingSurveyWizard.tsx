@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { supabase } from "../../src/lib/supabase/supabase";
 import OnboardingLayout from "./OnboardingLayout";
 import OnboardingStep from "./OnboardingStep";
 import {
@@ -24,6 +23,7 @@ import {
   Stethoscope,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useSupabase } from "../../app/providers/supabase-provider";
 
 export type SurveyWizardData = {
   role?: string;
@@ -85,6 +85,7 @@ const REFERRERS = [
 ];
 
 export default function OnboardingSurveyWizard({ onDone }: OnboardingSurveyWizardProps) {
+  const supabase = useSupabase();
   const [step, setStep] = useState(0); // 0..2
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);

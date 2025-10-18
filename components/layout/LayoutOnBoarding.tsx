@@ -3,9 +3,10 @@ import { useMemo, useState } from "react";
 import OnboardingSpotlight, { SpotlightStep } from "../onboarding/OnboardingSpotlight";
 import OnboardingTour from "../onboarding/OnboardingTour";
 import OnboardingSurveyWizard from "../onboarding/OnboardingSurveyWizard";
-import { supabase } from "../../src/lib/supabase/supabase";
+import { useSupabase } from "../../app/providers/supabase-provider";
 
 export function LayoutOnboarding() {
+    const supabase = useSupabase();
     // État onboarding
     const [onboardingOpen, setOnboardingOpen] = useState(false);
     const [spotlightOpen, setSpotlightOpen] = useState(false);

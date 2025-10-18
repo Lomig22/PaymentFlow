@@ -1,6 +1,5 @@
 'use client';
 import React, { useEffect, useState, useRef } from "react";
-import { supabase } from "../../../src/lib/supabase/supabase";
 import {
   BarChart3,
   Users,
@@ -74,6 +73,7 @@ import BalanceAgeeChart from "../../../components/chart/BalanceAgeeChart";
 import { User } from "@supabase/supabase-js";
 
 import { Metadata } from 'next';
+import { useSupabase } from "../../providers/supabase-provider";
 
 export const metadata: Metadata = {
   title: "Tableau de bord"
@@ -81,6 +81,7 @@ export const metadata: Metadata = {
 
 
 export default function Dashboard({ user }: { user: User }) {
+  const supabase = useSupabase();
   const [refreshKey, setRefreshKey] = useState(0);
   const [stats, setStats] = useState<DashboardStats>({
     totalClients: 0,

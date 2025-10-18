@@ -1,6 +1,5 @@
 'use client';
 import React, { useState } from "react";
-import { supabase } from "../../../src/lib/supabase/supabase";
 import { Lock, Mail, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";

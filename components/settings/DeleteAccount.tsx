@@ -1,11 +1,12 @@
 'use client';
 import { useState, useEffect } from "react";
-import { supabase } from "../../src/lib/supabase/supabase";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
+import { useSupabase } from "../../app/providers/supabase-provider";
 
 const DeleteAccount = () => {
   const router = useRouter();
+  const supabase = useSupabase();
 
   const [password, setPassword] = useState("");
   const [mfaCode, setMfaCode] = useState("");

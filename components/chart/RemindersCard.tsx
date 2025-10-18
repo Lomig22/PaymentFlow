@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { supabase } from "../../src/lib/supabase/supabase";
+import { useSupabase } from "../../app/providers/supabase-provider";
 
 const RemindersCard = () => {
   type Receivable = { amount: number; paid_amount: number };
+  const supabase = useSupabase();
   const [receivables, setReceivables] = useState<Receivable[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalAmount, setTotalAmount] = useState(0);

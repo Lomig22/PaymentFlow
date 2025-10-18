@@ -1,8 +1,8 @@
 import Papa from 'papaparse';
 import { useEffect, useRef, useState } from 'react';
-import { supabase } from '../../src/lib/supabase/supabase';
 import { UnknownClient } from '../../src/types/database';
 import { AlertCircle, Info, Loader2, Upload, X } from 'lucide-react';
+import { useSupabase } from '../../app/providers/supabase-provider';
 
 type CSVImportProps = {
 	onClose: () => void;
@@ -73,6 +73,7 @@ const CSVImport = ({
 	userId,
 	unknownClientData,
 }: CSVImportProps) => {
+	const supabase = useSupabase();
 	const [file, setFile] = useState<File | null>(null);
 	const [error, setError] = useState<string | null>(null);
 	const [data, setData] = useState<any[]>([]);

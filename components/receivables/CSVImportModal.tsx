@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
-import { supabase } from "../../src/lib/supabase/supabase";
 import { X, Upload, AlertCircle, Info, Loader2 } from "lucide-react";
 import { Receivable, Client } from "../../src/types/database";
 import Papa from "papaparse";
 import { toast } from "react-toastify";
+import { useSupabase } from "../../app/providers/supabase-provider";
 
 interface CSVImportModalProps {
   onClose: () => void;
@@ -177,6 +177,7 @@ export default function CSVImportModal({
   onImportSuccess,
   receivables,
 }: CSVImportModalProps) {
+  const supabase = useSupabase();
   const [file, setFile] = useState<File | null>(null);
   const [data, setData] = useState<any[]>([]);
   const [planError, setPlanError] = useState<string | null>(null);
@@ -976,8 +977,8 @@ export default function CSVImportModal({
               "owner_id",
               batch.map((r) => r.owner_id)
             );
-          const existingTotalAmount =
-            existing?.reduce((sum, item) => sum + (item.amount || 0), 0) || 0;
+          const existingTotalAmount: number =
+            existing?.reduce((sum, item) => sum + ((item.amount) || 0), 0) || 0;
           console.log("Montant totale avant mise à jour: ", existingTotalAmount)
           if (fetchError) {
             console.error("Erreur de récupération:", fetchError);
@@ -998,7 +999,7 @@ export default function CSVImportModal({
               //console.log(record);
 
               // On garde le status actuel
-              const existingStatus = existingMap.get(key)?.status;
+              const existingStatus: string = existingMap.get(key)?.["status"];
               toUpdate.push({ ...record, status: existingStatus });
             } else {
               toInsert.push(record);
@@ -1021,9 +1022,9 @@ export default function CSVImportModal({
 
           // 4. Recalculer la somme des amount après mises à jour et insertions
           const updatedTotalAmount = Array.from(updatedMap.values()).reduce(
-            (sum, item) => sum + (item.amount || 0),
+            (sum: number, item: { amount?: number }) => sum + (item?.amount as number || 0),
             0
-          );
+          ) as number;
 
           console.log(
             "Montant total après update + insert:",

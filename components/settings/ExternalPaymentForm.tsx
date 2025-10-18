@@ -1,7 +1,7 @@
 import { FormEventHandler, useState } from "react";
 import { ExternalPayment } from "./PaymentSync";
 import { startOfToday } from "date-fns";
-import { supabase } from "../../src/lib/supabase/supabase";
+import { useSupabase } from "../../app/providers/supabase-provider";
 
 function localToUTC(datetimeLocal: string): string {
     const date = new Date(datetimeLocal);
@@ -16,6 +16,7 @@ function utcToLocal(datetimeUTC: string): string {
 }
 
 export default function ExternalPaymentForm({ payment, mode, onSubmit }: { payment: ExternalPayment, mode: "update", onSubmit: () => void } | { payment: null, mode: "create", onSubmit: () => void }) {
+    const supabase = useSupabase();
     //soumission
 
     const handleSubmit: FormEventHandler = async (e) => {

@@ -1,12 +1,13 @@
 'use client';
 import { useState } from "react";
-import { supabase } from "../../../src/lib/supabase/supabase";
 import Swal from "sweetalert2";
 import Link from "next/link";
 import { AlertCircle, Eye, FileText, Trash2, File } from "lucide-react";
 import { decodeReminderStatus } from "../../../src/lib/decodeReminderStatus";
+import { useSupabase } from "../../providers/supabase-provider";
 
 export default function RemindersClient({ records }: { records: any[] }) {
+    const supabase = useSupabase();
     const [error, setError] = useState<string | null>(null);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [selectedAll, setSelectedAll] = useState(false);

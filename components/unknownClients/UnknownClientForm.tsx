@@ -1,7 +1,7 @@
 import { X } from 'lucide-react';
 import { useState } from 'react';
 import { UnknownClient } from '../../src/types/database';
-import { supabase } from '../../src/lib/supabase/supabase';
+import { useSupabase } from '../../app/providers/supabase-provider';
 
 type UnknownClientFormProps = {
 	onClose: () => void;
@@ -20,6 +20,7 @@ const UnknownClientForm = ({
 	mode = 'create',
 	ownerId,
 }: UnknownClientFormProps) => {
+	const supabase = useSupabase();
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [formData, setFormData] = useState<UnknownClient>({

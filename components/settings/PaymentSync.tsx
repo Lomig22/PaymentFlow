@@ -7,9 +7,9 @@ import {
     Table,
     Group,
 } from "@mantine/core";
-import { supabase } from "../../src/lib/supabase/supabase";
 import { Pencil, X } from "lucide-react";
 import ExternalPaymentForm from "./ExternalPaymentForm";
+import { useSupabase } from "../../app/providers/supabase-provider";
 
 export type ExternalPayment = {
     id: string;
@@ -29,6 +29,7 @@ interface FieldProps {
 }
 
 export function PaymentSync() {
+    const supabase = useSupabase();
     const [payments, setPayments] = useState<ExternalPayment[]>([]);
     const [modalOpened, setModalOpened] = useState(false);
     const [editingPayment, setEditingPayment] = useState<ExternalPayment | null>(null);

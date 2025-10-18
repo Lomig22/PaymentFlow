@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { supabase } from "../../src/lib/supabase/supabase";
 import { AlertCircle, Save, Lock } from "lucide-react";
 import SecretKeyDisplay from "./SecretKeyDisplay";
+import { useSupabase } from "../../app/providers/supabase-provider";
 export function SecuritySettings({ onDirtyChange }: { onDirtyChange?: (dirty: boolean) => void }) {
   return (
     <div className="space-y-10 max-w-2xl mx-auto">
@@ -24,6 +24,7 @@ export type Factor = {
 };
 
 export function MfaSettings() {
+  const supabase = useSupabase();
   const [factorId, setFactorId] = useState<string | null>(null);
   const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
   const [code, setCode] = useState("");
@@ -218,6 +219,7 @@ export function MfaSettings() {
 
 
 export function PasswordSettings({ onDirtyChange }: { onDirtyChange?: (dirty: boolean) => void }) {
+  const supabase = useSupabase();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);

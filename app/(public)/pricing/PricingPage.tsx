@@ -2,7 +2,7 @@
 import { Helmet } from "react-helmet";
 import { motion, useInView } from "framer-motion";
 import { CheckCircle, TrendingUp } from "lucide-react";
-import { supabase } from "../../../src/lib/supabase/supabase";
+import { useSupabase } from "../../providers/supabase-provider";
 import React, { useEffect, useState } from "react";
 import Footer from "../../../components/Footer";
 import Link from "next/link";
@@ -33,6 +33,7 @@ type Props = {
     setDefaultSubject: React.Dispatch<React.SetStateAction<string>>;
 };
 export default function PricingPage({ setShowContact, setDefaultSubject }: Props) {
+    const supabase = useSupabase();
     const [billingInterval, setBillingInterval] = useState<"monthly" | "yearly">(
         "monthly"
     );

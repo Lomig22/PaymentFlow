@@ -3,10 +3,10 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { registerLocale } from "react-datepicker";
 import { fr } from "date-fns/locale/fr";
-import { supabase } from "../../src/lib/supabase/supabase";
 import { Clock } from "lucide-react";
 import { YearPicker } from "../../components/ui/year-picker";
 import { dateDiff } from "../../src/lib/dateDiff";
+import { useSupabase } from "../../app/providers/supabase-provider";
 registerLocale("fr", fr as any);
 
 const monthLabels = [
@@ -25,6 +25,7 @@ const monthLabels = [
 ];
 
 const DsoChart = () => {
+  const supabase = useSupabase();
   const today = new Date();
   const currentMonth = today.getMonth();
   const currentYear = today.getFullYear();

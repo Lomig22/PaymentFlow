@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { supabase } from "../../src/lib/supabase/supabase";
 import { sendEmail } from "../../src/lib/email";
 import { getEmailSettings } from "../../app/(public)/reminderService";
 import Swal from "sweetalert2";
+import { useSupabase } from "../../app/providers/supabase-provider";
 
 function MemberList() {
   type Member = {
@@ -10,6 +10,7 @@ function MemberList() {
     invited_email: string;
     created_at: string;
   };
+  const supabase = useSupabase();
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState("");

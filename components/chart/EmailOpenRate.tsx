@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
-import { supabase } from "../../src/lib/supabase/supabase";
+import { useSupabase } from "../../app/providers/supabase-provider";
 
 export default function EmailOpenRate() {
+  const supabase = useSupabase();
   const [totalSent, setTotalSent] = useState<number>(0);
   const [opened, setOpened] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);

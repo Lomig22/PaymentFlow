@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from "react";
-import { supabase } from "../../src/lib/supabase/supabase";
 import { saveNotification } from "../../src/lib/notification";
 import { Client, Receivable, ReminderProfile } from "../../src/types/database";
 import { X, AlertCircle, Play, Pause } from "lucide-react";
@@ -11,6 +10,7 @@ import DateTimeInput from "../Common/DateTimeInput";
 import { isBefore, startOfMinute } from "date-fns";
 import Swal from "sweetalert2";
 import ReminderInfo from "./reminderInfo";
+import { useSupabase } from "../../app/providers/supabase-provider";
 
 interface ReminderSettingsModalProps {
   client: Client;
@@ -26,6 +26,7 @@ export default function ReminderSettingsModal({
   receivable,
   reminderProfiles,
 }: ReminderSettingsModalProps) {
+  const supabase = useSupabase();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);

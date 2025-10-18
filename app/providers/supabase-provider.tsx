@@ -1,40 +1,72 @@
-"use client";
+'use client';
 
-import { useEffect, createContext, useContext, useState } from "react";
-import { supabase } from "../../src/lib/supabase/supabase";
+import { useEffect, createContext, useContext, useState } from 'react';
+import { createBrowserClient } from '@supabase/ssr';
+import { Session } from '@supabase/supabase-js';
 
-const SupabaseContext = createContext(supabase);
+type SupabaseContextType = ReturnType<typeof createBrowserClient>;
 
-export const useSupabase = () => useContext(SupabaseContext);
+const SupabaseContext = createContext<SupabaseContextType | null>(null);
 
-export default function SupabaseProvider({ children, initialSession }) {
-    const [client] = useState(supabase);
+export const useSupabase = () => {
+    const ctx = useContext(SupabaseContext);
+    if (!ctx) throw new Error('useSupabase must be used within SupabaseProvider');
+    return ctx;
+};
+
+type Props = {
+    children: React.ReactNode;
+    initialSession: Session | null;
+};
+
+export default function SupabaseProvider({ children, initialSession }: Props) {
+    const [client] = useState(() =>
+        createBrowserClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        )
+    );
 
     useEffect(() => {
         let mounted = true;
 
-        const hydrate = async () => {
+        const syncSession = async () => {
             const { data: { session } } = await client.auth.getSession();
 
+            // If client has no session but the server sent one → set it
             if (!session && initialSession && mounted) {
-                // Force hydration
-                await client.auth.setSession(initialSession);
+                await client.auth.setSession({
+                    access_token: initialSession.access_token,
+                    refresh_token: initialSession.refresh_token!,
+                });
+            }
+
+            // If both exist but differ (e.g., refreshed token), prefer server
+            if (
+                session?.access_token &&
+                initialSession?.access_token &&
+                session.access_token !== initialSession.access_token
+            ) {
+                await client.auth.setSession({
+                    access_token: initialSession.access_token,
+                    refresh_token: initialSession.refresh_token!,
+                });
             }
         };
 
-        hydrate();
-        // Optionally keep client updated with session changes
-        const { data: listener } = client.auth.onAuthStateChange((_event, session) => {
-            if (!session) {
-                return;
-            }
-            client.auth.setSession(session);
+        syncSession();
+
+        // Optional: listen for session updates and persist them
+        const { data: subscription } = client.auth.onAuthStateChange((event, session) => {
+            if (!session) return;
+            // You could sync to localStorage or trigger an API route update here
+            // console.log('Session changed:', event, session);
         });
 
         return () => {
             mounted = false;
-            listener.subscription.unsubscribe();
-        }
+            subscription.subscription.unsubscribe();
+        };
     }, [client, initialSession]);
 
     return (

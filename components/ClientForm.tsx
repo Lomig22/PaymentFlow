@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { supabase } from "../src/lib/supabase/supabase";
 import { Client, Receivable, ReminderProfile } from "../src/types/database";
 import { confirmAlert } from "react-confirm-alert";
 import { Minus, Plus, X } from "lucide-react";
 import "react-confirm-alert/src/react-confirm-alert.css";
+import { useSupabase } from "../app/providers/supabase-provider";
 
 interface ClientFormProps {
   onClose: () => void;
@@ -20,6 +20,7 @@ export default function ClientForm({
   client,
   mode = "create",
 }: ClientFormProps) {
+  const supabase = useSupabase();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

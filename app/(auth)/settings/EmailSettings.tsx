@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
 import { differenceInDays } from "date-fns";
-import { supabase } from "../../../src/lib/supabase/supabase";
 import {
   AlertCircle,
   Save,
@@ -12,6 +11,7 @@ import {
 import { sendEmail } from "../../../src/lib/email";
 import { usePathname, useRouter } from "next/navigation";
 import Swal from "sweetalert2";
+import { useSupabase } from "../../providers/supabase-provider";
 
 const PROVIDER_PRESETS = {
   platform: {
@@ -56,6 +56,7 @@ const DEFAULT_FORM_DATA = {
 export default function EmailSettings({ onDirtyChange }: { onDirtyChange?: (dirty: boolean) => void }) {
   const router = useRouter();
   const pathname = usePathname();
+  const supabase = useSupabase();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);

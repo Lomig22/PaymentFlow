@@ -12,9 +12,9 @@ import {
   AreaChart,
 } from "recharts";
 import { Card } from "../ui/card";
-import { supabase } from "../../src/lib/supabase/supabase";
 import { Activity } from "lucide-react";
 import { YearPicker } from "../../components/ui/year-picker";
+import { useSupabase } from "../../app/providers/supabase-provider";
 
 const monthLabelsShort = [
   "Janv.",
@@ -53,6 +53,7 @@ const formatEuro = (v: number) => {
 };
 
 export default function DashboardLayout({ refreshKey }: { refreshKey: number }) {
+  const supabase = useSupabase();
   const now = new Date();
   const defaultYear = now.getFullYear();
   const defaultMonth = monthOrderFull[now.getMonth()];

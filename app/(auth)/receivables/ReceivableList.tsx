@@ -1,6 +1,5 @@
 'use client';
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { supabase } from "../../../src/lib/supabase/supabase";
 import {
   Receivable,
   Client,
@@ -69,6 +68,7 @@ function remindersEnabled(client: any): boolean {
 
 import { motion, AnimatePresence } from "framer-motion";
 import { User as SupabaseUser } from "@supabase/supabase-js";
+import { useSupabase } from "../../providers/supabase-provider";
 
 type SortColumnConfig = {
   key: keyof CSVMapping | "client" | "email" | "Delay in Days";
@@ -76,6 +76,7 @@ type SortColumnConfig = {
 };
 
 export function ReceivablesList({ user }: { user: SupabaseUser }) {
+  const supabase = useSupabase();
   const router = useRouter();
   const pathname = usePathname();
   const [sendError, setSendError] = useState(false);
@@ -606,7 +607,7 @@ export function ReceivablesList({ user }: { user: SupabaseUser }) {
 
     // Extraire les client_id uniques
     const clientIds = [
-      ...new Set(receivablesToDelete.map((r: any) => r.client_id)),
+      ...new Set(receivablesToDelete.map((r: any) => r.client_id) as string[]),
     ];
 
     // Étape 2 : Supprimer les receivables

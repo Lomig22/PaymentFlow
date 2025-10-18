@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
-import { supabase } from "../../src/lib/supabase/supabase";
 import { Client, Receivable } from "../../src/types/database";
 import { X, Upload, FileUp, Plus } from "lucide-react";
 import Swal from "sweetalert2";
 import { sendEmail } from "../../src/lib/email";
 import Settings from "../../app/(auth)/settings/page";
 import { getEmailSettings } from "../../app/(public)/reminderService";
+import { useSupabase } from "../../app/providers/supabase-provider";
 
 interface ReceivableEditFormProps {
   onClose: () => void;
@@ -18,6 +18,7 @@ export default function ReceivableEditForm({
   onReceivableUpdated,
   receivable,
 }: ReceivableEditFormProps) {
+  const supabase = useSupabase();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);

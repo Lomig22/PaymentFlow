@@ -1,6 +1,5 @@
 'use client;'
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { supabase } from "../../src/lib/supabase/supabase";
 import { Client, ReminderProfile } from "../../src/types/database";
 import {
   Search,
@@ -30,6 +29,7 @@ import Swal from "sweetalert2";
 import * as motion from "motion/react-client";
 import { AnimatePresence } from "motion/react";
 import Link from "next/link";
+import { useSupabase } from "../../app/providers/supabase-provider";
 
 type ClientListProps = {
   showForm: boolean;
@@ -60,6 +60,7 @@ function ClientList({
   const [clients, setClients] = useState<
     (Client & { reminderProfile?: ReminderProfile })[]
   >([]);
+  const supabase = useSupabase();
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);

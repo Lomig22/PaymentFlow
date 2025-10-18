@@ -1,12 +1,13 @@
 'use client';
 import React, { useEffect, useRef, useState } from "react";
-import { supabase } from "../../../src/lib/supabase/supabase";
 import { confirmAlert } from "react-confirm-alert";
 import "react-confirm-alert/src/react-confirm-alert.css";
 import { Plus, MoreHorizontal, Copy, UserPlus, Pencil, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useSupabase } from "../../providers/supabase-provider";
 
 export default function ReminderProfilesClient({ profiles }: { profiles: any[] }) {
+    const supabase = useSupabase();
     const [showForm, setShowForm] = useState(false);
     const [form, setForm] = useState({
         name: "Nouveau profil",

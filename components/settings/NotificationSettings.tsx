@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../../src/lib/supabase/supabase';
 import { AlertCircle, Save } from 'lucide-react';
+import { useSupabase } from '../../app/providers/supabase-provider';
 
 export default function NotificationSettings({ onDirtyChange }: { onDirtyChange?: (dirty: boolean) => void }) {
+  const supabase = useSupabase();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);

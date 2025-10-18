@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { supabase } from "../../src/lib/supabase/supabase";
+import { useSupabase } from "../../app/providers/supabase-provider";
 
 export type OnboardingSurveyData = {
   role: string;
@@ -63,6 +63,7 @@ const REFERRERS = [
 ];
 
 export default function OnboardingSurvey({ onSaved, onSkip }: OnboardingSurveyProps) {
+  const supabase = useSupabase();
   const [form, setForm] = useState<OnboardingSurveyData>({
     role: "",
     department: "",

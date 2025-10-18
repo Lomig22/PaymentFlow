@@ -7,11 +7,12 @@ import {
   Elements,
 } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
-import { supabase } from '../../src/lib/supabase/supabase';
 import PricingPage from '../../app/(public)/pricing/PricingPage';
+import { useSupabase } from '../../app/providers/supabase-provider';
 
 // Composant 1 : Informations de facturation
 export function BillingInfoSettings({ onDirtyChange }: { onDirtyChange?: (dirty: boolean) => void }) {
+  const supabase = useSupabase();
   const [company, setCompany] = useState('');
   const [address, setAddress] = useState('');
   const [siret, setSiret] = useState('');
@@ -176,6 +177,7 @@ export function BillingInfoSettings({ onDirtyChange }: { onDirtyChange?: (dirty:
 
 // Composant 2 : Choix de l’abonnement
 export function SubscriptionSettings() {
+  const supabase = useSupabase();
   const [plan, setPlan] = useState('starter');
   const fetchSubscription = async () => {
     const {

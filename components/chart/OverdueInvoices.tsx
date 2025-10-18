@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { supabase } from "../../src/lib/supabase/supabase";
 import { Users } from "lucide-react";
 import { Dialog, Transition } from "@headlessui/react";
 import { Fragment } from "react";
 import ClientDetailModal from "../clients/ClientDetailModal";
+import { useSupabase } from "../../app/providers/supabase-provider";
 
 const OverdueInvoices = ({ refreshKey }: { refreshKey: number }) => {
+  const supabase = useSupabase();
   const [topDebtors, setTopDebtors] = useState<{ id: string; name: string; code: string; amount: number }[]>([]);
   type Debtor = { id: string; name: string; code: string; amount: number } | null;
   const [selectedDebtor, setSelectedDebtor] = useState<Debtor>(null);

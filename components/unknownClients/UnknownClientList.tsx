@@ -1,11 +1,11 @@
 import { Edit, Search, Trash2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { UnknownClient, Notification } from '../../src/types/database';
-import { supabase } from '../../src/lib/supabase/supabase';
 import UnknownClientForm from './UnknownClientForm';
 import CSVImport, { CSVMapping } from './CSVImport';
 import { dateCompare, numberCompare, stringCompare } from '../../src/lib/comparers';
 import SortableColHead from '../Common/SortableColHead';
+import { useSupabase } from '../../app/providers/supabase-provider';
 
 type UnknownClientListProps = {
 	setError: (error: string | null) => void;
@@ -29,6 +29,7 @@ const UnknownClientList = ({
 	showForm,
 	setShowForm,
 }: UnknownClientListProps) => {
+	const supabase = useSupabase();
 	const [isLoading, setIsLoading] = useState(true);
 	const [searchTerm, setSearchTerm] = useState('');
 	const [clients, setClients] = useState<UnknownClient[]>([]);
