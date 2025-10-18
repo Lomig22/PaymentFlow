@@ -15,8 +15,6 @@ const fadeInUp = {
 
 export function StorylaneDemo({ children }: { children: React.ReactNode }) {
     return <>
-
-        <StorylaneDemoEmbed></StorylaneDemoEmbed>
         {/* Intégration de la démo Storylane */}
         <motion.div
             className="mt-16"
