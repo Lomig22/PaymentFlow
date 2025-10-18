@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useSupabase } from "../../providers/supabase-provider";
 
 export default function ReminderProfilesClient({ profiles }: { profiles: any[] }) {
+    const [localProfiles, setLocalProfiles] = useState(profiles);
     const supabase = useSupabase();
     const [showForm, setShowForm] = useState(false);
     const [form, setForm] = useState({
@@ -93,8 +94,15 @@ export default function ReminderProfilesClient({ profiles }: { profiles: any[] }
         };
         if (editingId) {
             await supabase.from("reminder_profile").update(dataToSave).eq("id", editingId);
+            setLocalProfiles((prev) =>
+                prev.map((p) => (p.id === editingId ? { ...p, ...dataToSave } : p))
+            );
         } else {
-            await supabase.from("reminder_profile").insert(dataToSave);
+            const { data, error } = await supabase.from("reminder_profile").insert(dataToSave).select();
+            if (!error && data) {
+                console.log(data);
+                setLocalProfiles((prev) => [...prev, data]);
+            }
         }
         setShowForm(false);
         setEditingId(null);
@@ -138,11 +146,13 @@ export default function ReminderProfilesClient({ profiles }: { profiles: any[] }
                     onClick: async () => {
                         // UI optimiste
                         const { error } = await supabase.from("reminder_profile").delete().eq("id", id);
+
                         if (error) {
                             // Si référence côté clients empêche la suppression, on délient puis on réessaie
                             await supabase.from("clients").update({ reminder_profile: null }).eq("reminder_profile", id);
                             await supabase.from("reminder_profile").delete().eq("id", id);
                         }
+                        setLocalProfiles(prev => prev.filter(p => p.id !== id));
                     },
                 },
                 {
@@ -174,7 +184,8 @@ export default function ReminderProfilesClient({ profiles }: { profiles: any[] }
                 public: false,
             };
 
-            await supabase.from("reminder_profile").insert(copy);
+            const { data } = await supabase.from("reminder_profile").insert(copy).select().single();
+            setLocalProfiles(prev => [...prev, data]);
         } catch (e) {
             console.error("Erreur duplication profil:", e);
         }
@@ -192,9 +203,9 @@ export default function ReminderProfilesClient({ profiles }: { profiles: any[] }
                 {!showForm && (
                     <div className="flex items-center gap-3">
                         <button
-                            disabled={profiles.length >= 3}
+                            disabled={localProfiles.length >= 3}
                             onClick={() => {
-                                if (profiles.length >= 3) return;
+                                if (localProfiles.length >= 3) return;
                                 setForm({
                                     name: "Nouveau profil",
                                     delay1: { j: 1, h: 0, m: 0 },
@@ -209,12 +220,12 @@ export default function ReminderProfilesClient({ profiles }: { profiles: any[] }
                                 setEditingId(null);
                                 setShowForm(true);
                             }}
-                            className={`flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-white font-medium shadow-md hover:bg-blue-700 transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 ${profiles.length >= 3 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            className={`flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-white font-medium shadow-md hover:bg-blue-700 transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 ${localProfiles.length >= 3 ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
                             <Plus className="h-5 w-5" />
                             Créer un profil
                         </button>
-                        {profiles.length >= 3 && (
+                        {localProfiles.length >= 3 && (
                             <span className="text-xs text-gray-500">Limite de 3 profils atteinte.</span>
                         )}
                     </div>
@@ -339,7 +350,7 @@ export default function ReminderProfilesClient({ profiles }: { profiles: any[] }
                         </div>
                     )}
                     <div className="flex flex-wrap items-stretch gap-6 w-full">
-                        {profiles.map((profile) => (
+                        {localProfiles.map((profile) => (
                             <div
                                 key={profile.id}
                                 className="bg-white shadow rounded-lg p-4 w-full sm:w-1/2 lg:w-1/3 flex flex-col gap-3 relative"
