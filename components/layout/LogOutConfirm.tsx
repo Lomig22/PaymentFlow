@@ -73,11 +73,11 @@ export function LogOutConfirm() {
         <div className="border-t border-gray-200">
             <button
                 onClick={() => setShowLogoutConfirm(true)}
-                className={`flex items-center justify-center hover:justify-start w-full px-4 py-6 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-md transition-all duration-300`}
+                className="flex items-center justify-center group-hover/sidebar:justify-start w-full px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-md transition-all duration-300"
             >
                 <LogOut className="h-5 w-5 flex-shrink-0 text-inherit" />
                 <span
-                    className="ml-3 whitespace-nowrap transition-opacity duration-300 hover:block hover:opacity-100 hidden"
+                    className="ml-3 whitespace-nowrap w-0 opacity-0 overflow-hidden pointer-events-none transition-opacity group-hover/sidebar:w-auto group-hover/sidebar:opacity-100 group-hover/sidebar:pointer-events-auto"
                 >
                     Déconnexion
                 </span>

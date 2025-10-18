@@ -8,18 +8,16 @@ import AbonnementInfo from "../settings/AbonnementInfo";
 import { LogOutConfirm } from "./LogOutConfirm";
 import { LayoutOnboarding } from "./LayoutOnBoarding";
 import { Navigation } from "./Navigation";
-import "./style.css";
 
 interface LayoutProps {
   children: ReactNode;
 }
 export default async function Layout({ children }: LayoutProps) {
 
-  return <div className="min-h-screen bg-gray-100">
+  return <div className="group min-h-screen bg-gray-100">
     {/* Sidebar */}
-    <div id="sidebar"
-      className="fixed inset-y-0 left-0 bg-white shadow-lg transition-all duration-200 z-40 hover:w-64 w-24"
-    >
+    <div
+      className="group/sidebar peer flex flex-col fixed inset-y-0 left-0 bg-white shadow-lg transition-all z-40 w-20 hover:w-64"    >
       {/* Logo */}
 
       <div className="px-4">
@@ -36,16 +34,15 @@ export default async function Layout({ children }: LayoutProps) {
       </div>
 
       {/* Pied du menu */}
-      <div className="absolute bottom-0 w-full left-0 hover:px-6 px-0">
+      <div className="mt-auto w-full left-0 group-hover/sidebar:px-6 px-0">
         <div className=" border-gray-200">
           <Link
             href="/help"
             target="_blank"
             rel="noopener noreferrer"
-            className={`flex items-center justify-center hover:justify-start w-full px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-md transition-all duration-300`}
-          >
+            className="flex items-center justify-center group-hover/sidebar:justify-start w-full px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-md transition-all">
             <HelpCircle className="h-5 w-5 flex-shrink-0 text-inherit" />
-            <span className="ml-3 whitespace-nowrap transition-opacity duration-300 opacity-0 hover:block hover:opacity-100">
+            <span className="ml-3 whitespace-nowrap w-0 opacity-0 overflow-hidden pointer-events-none transition-opacity group-hover/sidebar:w-auto group-hover/sidebar:opacity-100 group-hover/sidebar:pointer-events-auto">
               Aides et support
             </span>
           </Link>
@@ -55,25 +52,27 @@ export default async function Layout({ children }: LayoutProps) {
       </div>
     </div>
     {/* Main content */}
-    <header className="p-4 border-b flex justify-end items-center gap-4">
-      <Suspense fallback={
-        <p className="text-sm text-gray-500 animate-pulse">
-          Chargement de l’abonnement…
-        </p>
-      }><AbonnementInfo /></Suspense>
+    <div className="flex-1 ml-20 peer-hover:ml-64 transition-all">
+      <header className="p-4 border-b flex justify-end items-center gap-4">
+        <Suspense fallback={
+          <p className="text-sm text-gray-500 animate-pulse">
+            Chargement de l’abonnement…
+          </p>
+        }><AbonnementInfo /></Suspense>
 
-      <Link
-        href="/pricing"
-        className="text-sm text-blue-600 bg-blue-50 px-3 py-1 rounded-full hover:bg-blue-100 transition font-medium shadow-sm"
-      >
-        Voir les tarifs
-      </Link>
-    </header>
+        <Link
+          href="/pricing"
+          className="text-sm text-blue-600 bg-blue-50 px-3 py-1 rounded-full hover:bg-blue-100 transition font-medium shadow-sm"
+        >
+          Voir les tarifs
+        </Link>
+      </header>
 
-    <main className="transition-all duration-200">
-      {children}
-    </main>
-    <LayoutOnboarding />
+      <main className="transition-all">
+        {children}
+      </main>
+      <LayoutOnboarding />
+    </div>
   </div>
     ;
 }

@@ -31,15 +31,15 @@ export function Navigation() {
                 key={item.name}
                 href={item.href}
                 data-tour={tourDataByHref[item.href]}
-                className={`flex items-center px-4 py-3 my-2 text-sm font-medium rounded-md transition-all duration-300
-                  ${isActive
+                className={`flex items-center px-4 py-3 my-2 text-sm font-medium rounded-md transition-colors duration-300    
+                                  ${isActive
                         ? "bg-blue-50 text-blue-700"
                         : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                     }
                 `}
             >
                 <Icon className="h-5 w-5 flex-shrink-0 text-inherit" />
-                <span className="ml-3 whitespace-nowrap transition-opacity duration-300">
+                <span className="ml-3 whitespace-nowrap opacity-0 pointer-events-none transition-opacity duration-300 group-hover/sidebar:opacity-100 group-hover/sidebar:pointer-events-auto">
                     {item.name}
                 </span>
             </Link>
