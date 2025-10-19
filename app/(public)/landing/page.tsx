@@ -16,6 +16,7 @@ import UseCaseServer from "./UseCaseServer";
 import { Calendly } from "./Calendly";
 import { Testimonials } from "./Testimonials";
 import { ConfirmCalendarButton } from "./ConfirmCalendarButton";
+import CalendlyAndChatlingLoader from "../../../components/CalendlyAndChatlingLoader";
 
 export const metadata: Metadata = {
   title: "Logiciel de recouvrement | Payment Flow",
@@ -191,6 +192,7 @@ export default function LandingPage() {
             <Calendly />
           </div>
           <ConfirmCalendarButton />
+          <CalendlyAndChatlingLoader />
         </main>
 
 

@@ -74,6 +74,7 @@ import { User } from "@supabase/supabase-js";
 
 import { Metadata } from 'next';
 import { useSupabase } from "../../providers/supabase-provider";
+import { removeChatlingElements } from "../../../components/CalendlyAndChatlingLoader";
 
 export const metadata: Metadata = {
   title: "Tableau de bord"
@@ -508,6 +509,10 @@ export default function Dashboard({ user }: { user: User }) {
   });
 
   const visibleNotifications = filteredNotifications.slice(0, visibleCount);
+  useEffect(() => {
+
+    removeChatlingElements();
+  });
 
   if (loading) {
     return (
@@ -564,6 +569,7 @@ export default function Dashboard({ user }: { user: User }) {
 
     return null;
   };
+
   return (
     <>
       <div className="p-6">
