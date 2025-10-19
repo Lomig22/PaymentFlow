@@ -8,8 +8,8 @@ const themeClasses: Record<string, string> = {
   red: "border-red-400 bg-red-100 text-red-800",
   black: "border-gray-800 bg-black text-white",
 };
-  
-  interface TooltipProps {
+
+interface TooltipProps {
   label: ReactNode;
   children: ReactNode;
   theme?: keyof typeof themeClasses;
@@ -17,20 +17,20 @@ const themeClasses: Record<string, string> = {
 }
 
 const Tooltip: React.FC<TooltipProps> = ({ label, children, theme = "yellow", className = "" }) => {
-    return (
-      <div className="relative group inline-block z-[51]">
-        {children}
-        <div
-          className={`absolute bottom-full mt-1 left-0
+  return (
+    <div className="relative inline-block z-[51]">
+      <span className="peer">{children}</span>
+      <div
+        className={`absolute bottom-full mt-1 left-0
          text-xs rounded px-2 py-1 
-          opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-[51]
+          opacity-0 peer-hover:opacity-100 transition-opacity pointer-events-none z-[51]
           ${themeClasses[theme] || themeClasses.yellow} ${className}`}
-          style={{width: "170px"}}
-        >
-          {label}
-        </div>
+        style={{ width: "170px" }}
+      >
+        {label}
       </div>
-    );
-  };
-  
-  export default Tooltip;
+    </div>
+  );
+};
+
+export default Tooltip;

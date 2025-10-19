@@ -1901,256 +1901,260 @@ export function ReceivablesList({ user }: { user: SupabaseUser }) {
               </thead>
 
               <tbody className="bg-white divide-y divide-gray-100">
-                {filteredReceivables.map((receivable) => (
-                  <tr
-                    key={receivable.id}
-                    className="hover:bg-gray-50 transition"
-                  >
-                    <td className="px-4 py-3">
-                      <input
-                        type="checkbox"
-                        checked={selectedIds.includes(receivable.id)}
-                        onChange={() => handleSelectRow(receivable.id)}
-                        className="h-4 w-4 text-blue-600 border-gray-300 rounded"
-                      />
-                    </td>
+                {filteredReceivables.map((receivable) => {
+                  const reminderIssues = getReminderIssues(receivable);
+                  return (
 
-                    {/* Actions */}
-                    <td className="px-4 py-3 relative">
-                      <div className="flex gap-2 items-center relative z-0">
-                        <Tooltip label="Options supplémentaires">
+                    <tr
+                      key={receivable.id}
+                      className="hover:bg-gray-50 transition"
+                    >
+                      <td className="px-4 py-3">
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.includes(receivable.id)}
+                          onChange={() => handleSelectRow(receivable.id)}
+                          className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+                        />
+                      </td>
+
+                      {/* Actions */}
+                      <td className="px-4 py-3 relative">
+                        <div className="flex gap-2 items-center relative z-0">
+                          <Tooltip key={`option-${receivable.id}`} label="Options supplémentaires">
+                            <span
+                              ref={(el) => {
+                                buttonRefs.current[receivable.id] = el;
+                              }}
+                              className="w-6 h-6 flex items-center justify-center cursor-pointer relative z-0"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setOpenDropdownId(
+                                  openDropdownId === receivable.id
+                                    ? null
+                                    : receivable.id
+                                );
+                              }}
+                            >
+                              <MoreHorizontal className="w-5 h-5 text-gray-600 hover:text-gray-900" />
+                            </span>
+                          </Tooltip>
+
+
                           <span
-                            ref={(el) => {
-                              buttonRefs.current[receivable.id] = el;
-                            }}
-                            className="w-6 h-6 flex items-center justify-center cursor-pointer relative z-0"
-                            onClick={(e) => {
+                            className={`w-6 h-6 flex items-center justify-center relative z-0 ${!(remindersEnabled(receivable.client) || canPlayDirect(receivable)) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                            onClick={e => {
                               e.stopPropagation();
-                              setOpenDropdownId(
-                                openDropdownId === receivable.id
-                                  ? null
-                                  : receivable.id
-                              );
+                              if (!(remindersEnabled(receivable.client) || canPlayDirect(receivable))) return;
+                              handleAutomaticReminderToggle(receivable);
                             }}
+                            aria-disabled={!(remindersEnabled(receivable.client) || canPlayDirect(receivable))}
                           >
-                            <MoreHorizontal className="w-5 h-5 text-gray-600 hover:text-gray-900" />
+                            <AnimatePresence mode="wait" initial={false}>
+                              {!receivable.automatic_reminder ? (
+                                <Tooltip
+                                  label={(remindersEnabled(receivable.client) || canPlayDirect(receivable)) ? 'Activer les relances' : "Aucune relance n'est activée pour ce client"}
+                                  theme="orange"
+                                  key={`play-${receivable.id}`}
+                                >
+                                  <button
+                                    type="button"
+                                    className={`flex items-center justify-center rounded-full w-8 h-8 transition focus:outline-none ${(remindersEnabled(receivable.client) || canPlayDirect(receivable)) ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-gray-300 text-gray-400 cursor-not-allowed'}`}
+                                    disabled={!(remindersEnabled(receivable.client) || canPlayDirect(receivable))}
+                                    aria-label="Activer les relances"
+                                    style={{ fontSize: '1.2rem' }}
+                                  >
+                                    <motion.span
+                                      key={`play-icon-${receivable.id}`}
+                                      initial={{ opacity: 0, y: 8 }}
+                                      animate={{ opacity: 1, y: 0 }}
+                                      exit={{ opacity: 0, y: -8 }}
+                                      transition={{ duration: 0.09 }}
+                                      style={{ fontWeight: 'bold', fontFamily: 'inherit', fontSize: '1.3rem', marginLeft: '2px' }}
+                                    >
+                                      ▶
+                                    </motion.span>
+                                  </button>
+                                </Tooltip>
+                              ) : (
+                                <Tooltip label="Mettre en pause" theme="green" key={`pause-${receivable.id}`}>
+                                  <button
+                                    type="button"
+                                    className="flex items-center justify-center rounded-full w-8 h-8 bg-orange-500 hover:bg-orange-600 text-white transition focus:outline-none"
+                                    aria-label="Mettre en pause"
+                                    style={{ fontSize: '1.2rem' }}
+                                  >
+                                    <motion.span
+                                      key={`pause-icon-${receivable.id}`}
+                                      initial={{ opacity: 0, y: 8 }}
+                                      animate={{ opacity: 1, y: 0 }}
+                                      exit={{ opacity: 0, y: -8 }}
+                                      transition={{ duration: 0.09 }}
+                                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '1.3rem', width: '1.3rem' }}
+                                    >
+                                      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <rect x="4" y="3" width="3" height="12" rx="1.2" fill="currentColor" />
+                                        <rect x="11" y="3" width="3" height="12" rx="1.2" fill="currentColor" />
+                                      </svg>
+                                    </motion.span>
+                                  </button>
+                                </Tooltip>
+                              )}
+                            </AnimatePresence>
                           </span>
-                        </Tooltip>
 
 
-                        <span
-                          className={`w-6 h-6 flex items-center justify-center relative z-0 ${!(remindersEnabled(receivable.client) || canPlayDirect(receivable)) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                          onClick={e => {
-                            e.stopPropagation();
-                            if (!(remindersEnabled(receivable.client) || canPlayDirect(receivable))) return;
-                            handleAutomaticReminderToggle(receivable);
-                          }}
-                          aria-disabled={!(remindersEnabled(receivable.client) || canPlayDirect(receivable))}
-                        >
-                          <AnimatePresence mode="wait" initial={false}>
-                            {!receivable.automatic_reminder ? (
-                              <Tooltip
-                                label={(remindersEnabled(receivable.client) || canPlayDirect(receivable)) ? 'Activer les relances' : "Aucune relance n'est activée pour ce client"}
-                                theme="orange"
-                                key={`play-${receivable.id}`}
-                              >
-                                <button
-                                  type="button"
-                                  className={`flex items-center justify-center rounded-full w-8 h-8 transition focus:outline-none ${(remindersEnabled(receivable.client) || canPlayDirect(receivable)) ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-gray-300 text-gray-400 cursor-not-allowed'}`}
-                                  disabled={!(remindersEnabled(receivable.client) || canPlayDirect(receivable))}
-                                  aria-label="Activer les relances"
-                                  style={{ fontSize: '1.2rem' }}
-                                >
-                                  <motion.span
-                                    key={`play-icon-${receivable.id}`}
-                                    initial={{ opacity: 0, y: 8 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -8 }}
-                                    transition={{ duration: 0.09 }}
-                                    style={{ fontWeight: 'bold', fontFamily: 'inherit', fontSize: '1.3rem', marginLeft: '2px' }}
-                                  >
-                                    ▶
-                                  </motion.span>
-                                </button>
+                          {
+                            reminderIssues && (
+                              <Tooltip key={`issue-${receivable.id}`} label={reminderIssues}>
+                                <Info className="w-5 h-5 text-yellow-500 relative z-0" />
                               </Tooltip>
-                            ) : (
-                              <Tooltip label="Mettre en pause" theme="green" key={`pause-${receivable.id}`}>
-                                <button
-                                  type="button"
-                                  className="flex items-center justify-center rounded-full w-8 h-8 bg-orange-500 hover:bg-orange-600 text-white transition focus:outline-none"
-                                  aria-label="Mettre en pause"
-                                  style={{ fontSize: '1.2rem' }}
-                                >
-                                  <motion.span
-                                    key={`pause-icon-${receivable.id}`}
-                                    initial={{ opacity: 0, y: 8 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -8 }}
-                                    transition={{ duration: 0.09 }}
-                                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '1.3rem', width: '1.3rem' }}
-                                  >
-                                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                      <rect x="4" y="3" width="3" height="12" rx="1.2" fill="currentColor" />
-                                      <rect x="11" y="3" width="3" height="12" rx="1.2" fill="currentColor" />
-                                    </svg>
-                                  </motion.span>
-                                </button>
-                              </Tooltip>
-                            )}
-                          </AnimatePresence>
-                        </span>
+                            )
+                          }
+                        </div >
 
-
+                        {/* Dropdown */}
                         {
-                          getReminderIssues(receivable) && (
-                            <Tooltip label={getReminderIssues(receivable)}>
-                              <Info className="w-5 h-5 text-yellow-500 relative z-0" />
-                            </Tooltip>
-                          )
-                        }
-                      </div >
-
-                      {/* Dropdown */}
-                      {
-                        openDropdownId === receivable.id && (
-                          <div
-                            ref={(el) => {
-                              dropdownRefs.current[receivable.id] = el;
-                            }}
-                            className="fixed z-[51] w-48 origin-top-left rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-10 ml-2"
-                            style={{
-                              top: `${dropdownPosition.top}px`,
-                              left: `${dropdownPosition.left}px`,
-                            }}
-                          >
-                            <div className="py-1">
-                              <button
-                                onClick={() => {
-                                  setShowEditForm(true);
-                                  setSelectedReceivable(receivable);
-                                  setOpenDropdownId(null);
-                                }}
-                                className="flex  w-full px-2 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                              >
-                                <Edit className="w-4 h-4 mr-2" /> Modifier
-                              </button>
-                              {receivable.status !== "paid" && (
+                          openDropdownId === receivable.id && (
+                            <div
+                              ref={(el) => {
+                                dropdownRefs.current[receivable.id] = el;
+                              }}
+                              className="fixed z-[51] w-48 origin-top-left rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-10 ml-2"
+                              style={{
+                                top: `${dropdownPosition.top}px`,
+                                left: `${dropdownPosition.left}px`,
+                              }}
+                            >
+                              <div className="py-1">
+                                <button
+                                  onClick={() => {
+                                    setShowEditForm(true);
+                                    setSelectedReceivable(receivable);
+                                    setOpenDropdownId(null);
+                                  }}
+                                  className="flex  w-full px-2 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                >
+                                  <Edit className="w-4 h-4 mr-2" /> Modifier
+                                </button>
+                                {receivable.status !== "paid" && (
+                                  <button
+                                    onClick={() => {
+                                      setSelectedReceivable(receivable);
+                                      setShowConfirmReminder(true);
+                                      setOpenDropdownId(null);
+                                    }}
+                                    className="flex  w-full px-2 py-2 text-sm text-yellow-600 hover:bg-yellow-100"
+                                  >
+                                    <Mail className="w-4 h-4 mr-2" /> Envoyer une
+                                    relance
+                                  </button>
+                                )}
+                                <button
+                                  onClick={() => {
+                                    setSelectedClient(receivable.client);
+                                    setSelectedReceivable(receivable);
+                                    setShowSettings(true);
+                                    setOpenDropdownId(null);
+                                  }}
+                                  className="flex  w-full px-2 py-2 text-sm text-gray-600 hover:bg-gray-100"
+                                >
+                                  <Clock className="w-4 h-4 mr-2" /> Paramètres de
+                                  relance
+                                </button>
                                 <button
                                   onClick={() => {
                                     setSelectedReceivable(receivable);
-                                    setShowConfirmReminder(true);
+                                    setShowReminderHistory(true);
                                     setOpenDropdownId(null);
                                   }}
-                                  className="flex  w-full px-2 py-2 text-sm text-yellow-600 hover:bg-yellow-100"
+                                  className="flex  w-full px-2 py-2 text-sm text-gray-600 hover:bg-gray-100"
                                 >
-                                  <Mail className="w-4 h-4 mr-2" /> Envoyer une
-                                  relance
+                                  <ListRestart className="w-4 h-4 mr-2" />{" "}
+                                  Historique des relances
                                 </button>
-                              )}
-                              <button
-                                onClick={() => {
-                                  setSelectedClient(receivable.client);
-                                  setSelectedReceivable(receivable);
-                                  setShowSettings(true);
-                                  setOpenDropdownId(null);
-                                }}
-                                className="flex  w-full px-2 py-2 text-sm text-gray-600 hover:bg-gray-100"
-                              >
-                                <Clock className="w-4 h-4 mr-2" /> Paramètres de
-                                relance
-                              </button>
-                              <button
-                                onClick={() => {
-                                  setSelectedReceivable(receivable);
-                                  setShowReminderHistory(true);
-                                  setOpenDropdownId(null);
-                                }}
-                                className="flex  w-full px-2 py-2 text-sm text-gray-600 hover:bg-gray-100"
-                              >
-                                <ListRestart className="w-4 h-4 mr-2" />{" "}
-                                Historique des relances
-                              </button>
-                              <button
-                                onClick={() => {
-                                  handleDeleteClick(receivable);
-                                  setOpenDropdownId(null);
-                                }}
-                                className="flex  w-full px-2 py-2 text-sm text-red-600 hover:bg-red-100"
-                              >
-                                <Trash2 className="w-4 h-4 mr-2" /> Supprimer
-                              </button>
+                                <button
+                                  onClick={() => {
+                                    handleDeleteClick(receivable);
+                                    setOpenDropdownId(null);
+                                  }}
+                                  className="flex  w-full px-2 py-2 text-sm text-red-600 hover:bg-red-100"
+                                >
+                                  <Trash2 className="w-4 h-4 mr-2" /> Supprimer
+                                </button>
+                              </div>
                             </div>
-                          </div>
-                        )
-                      }
-                    </td >
+                          )
+                        }
+                      </td >
 
-                    {/* Données */}
-                    < td className="px-4 py-3" >
-                      <ReceivableStatusBadge receivable={receivable} />
-                    </td >
-                    <td className="px-4 py-3">
-                      {receivable.client?.company_name ?? "Client inconnu"}
-                    </td>
-                    <td className="px-4 py-3">
-                      {receivable.client?.client_code ?? "inconnu"}
-                    </td>
-                    <td className="px-4 py-3">
-                      {renderCell("email", receivable)}
-                    </td>
-                    <td className="px-4 py-3">{receivable.invoice_number}</td>
-                    <td className="px-4 py-3">
-                      {new Intl.NumberFormat("fr-FR", {
-                        style: "currency",
-                        currency: "EUR",
-                      }).format(receivable.amount)}
-                    </td>
-                    <td className="px-4 py-3">
-                      {receivable.paid_amount
-                        ? new Intl.NumberFormat("fr-FR", {
+                      {/* Données */}
+                      < td className="px-4 py-3" >
+                        <ReceivableStatusBadge receivable={receivable} />
+                      </td >
+                      <td className="px-4 py-3">
+                        {receivable.client?.company_name ?? "Client inconnu"}
+                      </td>
+                      <td className="px-4 py-3">
+                        {receivable.client?.client_code ?? "inconnu"}
+                      </td>
+                      <td className="px-4 py-3">
+                        {renderCell("email", receivable)}
+                      </td>
+                      <td className="px-4 py-3">{receivable.invoice_number}</td>
+                      <td className="px-4 py-3">
+                        {new Intl.NumberFormat("fr-FR", {
                           style: "currency",
                           currency: "EUR",
-                        }).format(receivable.paid_amount)
-                        : "-"}
-                    </td>
-                    <td className="px-4 py-3 text-gray-500">
-                      {formatDate(receivable.document_date)}
-                    </td>
-                    <td className="px-4 py-3 text-gray-500">
-                      {new Date(receivable.due_date).toLocaleDateString(
-                        "fr-FR"
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-gray-500">
-                      {Math.max(
-                        0,
-                        dateDiff(new Date(receivable.due_date), new Date())
-                      )}
-                    </td>
+                        }).format(receivable.amount)}
+                      </td>
+                      <td className="px-4 py-3">
+                        {receivable.paid_amount
+                          ? new Intl.NumberFormat("fr-FR", {
+                            style: "currency",
+                            currency: "EUR",
+                          }).format(receivable.paid_amount)
+                          : "-"}
+                      </td>
+                      <td className="px-4 py-3 text-gray-500">
+                        {formatDate(receivable.document_date)}
+                      </td>
+                      <td className="px-4 py-3 text-gray-500">
+                        {new Date(receivable.due_date).toLocaleDateString(
+                          "fr-FR"
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-gray-500">
+                        {Math.max(
+                          0,
+                          dateDiff(new Date(receivable.due_date), new Date())
+                        )}
+                      </td>
 
-                    <td className="px-4 py-3 text-gray-500">
-                      {receivable.installment_number || "-"}
-                    </td>
-                    <td className="px-4 py-3 text-gray-500">
-                      {receivable.notes || "-"}
-                    </td>
-                    <td className="px-4 py-3">
-                      {receivable.invoice_pdf_url ? (
-                        <a
-                          href={receivable.invoice_pdf_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          title="Voir la facture"
-                          className="text-blue-600 hover:text-blue-800"
-                        >
-                          <File className="w-5 h-5" />
-                        </a>
-                      ) : (
-                        "-"
-                      )}
-                    </td>
-                  </tr >
-                ))
+                      <td className="px-4 py-3 text-gray-500">
+                        {receivable.installment_number || "-"}
+                      </td>
+                      <td className="px-4 py-3 text-gray-500">
+                        {receivable.notes || "-"}
+                      </td>
+                      <td className="px-4 py-3">
+                        {receivable.invoice_pdf_url ? (
+                          <a
+                            href={receivable.invoice_pdf_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title="Voir la facture"
+                            className="text-blue-600 hover:text-blue-800"
+                          >
+                            <File className="w-5 h-5" />
+                          </a>
+                        ) : (
+                          "-"
+                        )}
+                      </td>
+                    </tr >
+                  );
+                })
                 }
                 {
                   filteredReceivables.length === 0 && (
