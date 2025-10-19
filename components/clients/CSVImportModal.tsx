@@ -1,10 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Upload, AlertCircle, HelpCircle, Loader2 } from 'lucide-react';
-import { Client, Notification } from '../../src/types/database';
-import { toast } from 'react-toastify';
+import { X, Upload, HelpCircle, Loader2 } from 'lucide-react';
+import { Client } from '../../src/types/database';
 import 'react-toastify/dist/ReactToastify.css'; // Importer les styles
-import { saveNotification } from '../../src/lib/notification';
 import { useSupabase } from '../../app/providers/supabase-provider';
+import { saveNotificationServer } from '../../app/actions/saveNotification';
 
 interface CSVImportModalProps {
 	onClose: () => void;
@@ -723,7 +722,7 @@ export default function CSVImportModal({
 			showSuccess("Le mapping a été enregistré avec succès.");
 			if (user.id) {
 				try {
-					await saveNotification({
+					await saveNotificationServer({
 						owner_id: user.id,
 						is_read: false,
 						type: 'info',
@@ -741,7 +740,7 @@ export default function CSVImportModal({
 			console.error('Erreur lors de l\'enregistrement du mapping:', err);
 			if (user.id) {
 				try {
-					await saveNotification({
+					await saveNotificationServer({
 						owner_id: user.id,
 						is_read: false,
 						type: 'erreur',

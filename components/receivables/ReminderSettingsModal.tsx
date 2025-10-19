@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { saveNotification } from "../../src/lib/notification";
+import { saveNotificationServer } from "../../app/actions/saveNotification";
 import { Client, Receivable, ReminderProfile } from "../../src/types/database";
 import { X, AlertCircle, Play, Pause } from "lucide-react";
 import "react-datetime-picker/dist/DateTimePicker.css";
@@ -486,7 +486,7 @@ export default function ReminderSettingsModal({
           2
         );
         try {
-          await saveNotification({
+          await saveNotificationServer({
             owner_id: user.id,
             need_mail_notification: true,
             is_read: false,
@@ -547,7 +547,7 @@ export default function ReminderSettingsModal({
         })
         .eq("id", receivable.id);
       if (error) throw error;
-      await saveNotification({
+      await saveNotificationServer({
         owner_id: user?.id ?? null,
         need_mail_notification: true,
         is_read: false,
@@ -562,7 +562,7 @@ export default function ReminderSettingsModal({
     } catch (error: any) {
       console.error("Erreur lors de la mise à jour des paramètres:", error);
       if (user?.id) {
-        await saveNotification({
+        await saveNotificationServer({
           owner_id: user?.id ?? null,
           is_read: false,
           need_mail_notification: true,

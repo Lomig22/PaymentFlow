@@ -48,7 +48,7 @@ import { useParams, usePathname, useRouter, useSearchParams } from "next/navigat
 import { dateCompare, numberCompare, stringCompare } from "../../../src/lib/comparers";
 import SortableColHead from "../../../components/Common/SortableColHead";
 import { dateDiff } from "../../../src/lib/dateDiff";
-import { saveNotification } from "../../../src/lib/notification";
+import { saveNotificationServer } from "../../actions/saveNotification";
 import Swal from "sweetalert2";
 import { getReminderStatus } from "../../../src/lib/function";
 import { isBefore } from "date-fns";
@@ -712,7 +712,7 @@ export function ReceivablesList({ user }: { user: SupabaseUser }) {
       if (error) throw error;
 
       if (user?.id) {
-        await saveNotification({
+        await saveNotificationServer({
           owner_id: user.id,
           need_mail_notification: true,
           is_read: false,
@@ -784,7 +784,7 @@ export function ReceivablesList({ user }: { user: SupabaseUser }) {
       if (error) throw error;
 
       if (user?.id) {
-        await saveNotification({
+        await saveNotificationServer({
           owner_id: user.id,
           need_mail_notification: true,
           is_read: false,
@@ -867,7 +867,7 @@ export function ReceivablesList({ user }: { user: SupabaseUser }) {
         setSendSuccess(true);
         if (user.id) {
           try {
-            await saveNotification({
+            await saveNotificationServer({
               owner_id: user.id,
               is_read: false,
               type: "info",
@@ -892,7 +892,7 @@ export function ReceivablesList({ user }: { user: SupabaseUser }) {
         await fetchReceivables();
       } else {
         if (selectedReceivable.status === "Relance finale") {
-          await saveNotification({
+          await saveNotificationServer({
             owner_id: user.id,
             is_read: false,
             type: "erreur",
@@ -907,7 +907,7 @@ export function ReceivablesList({ user }: { user: SupabaseUser }) {
           });
           showError("Le status de cette créance est déjà en relance finale");
         } else {
-          await saveNotification({
+          await saveNotificationServer({
             owner_id: user.id,
             is_read: false,
             type: "erreur",
@@ -929,7 +929,7 @@ export function ReceivablesList({ user }: { user: SupabaseUser }) {
       setShowConfirmReminder(false);
       setSelectedClient(null);
     } catch (error: any) {
-      await saveNotification({
+      await saveNotificationServer({
         owner_id: user.id,
         is_read: false,
         type: "erreur",
@@ -957,7 +957,7 @@ export function ReceivablesList({ user }: { user: SupabaseUser }) {
   const handleImportSuccess = async (importedCount: number) => {
     setImportSuccess(`${importedCount} créance(s) importée(s) avec succès`);
 
-    await saveNotification({
+    await saveNotificationServer({
       owner_id: user?.id ?? "",
       need_mail_notification: true,
       is_read: false,
@@ -1075,7 +1075,7 @@ export function ReceivablesList({ user }: { user: SupabaseUser }) {
         })
         .eq("id", receivable.id);
       if (error) throw error;
-      await saveNotification({
+      await saveNotificationServer({
         owner_id: user?.id ?? "",
         need_mail_notification: true,
         is_read: false,
@@ -1089,7 +1089,7 @@ export function ReceivablesList({ user }: { user: SupabaseUser }) {
     } catch (error: any) {
       console.error("Erreur lors de la mise à jour des paramètres:", error);
       if (user?.id) {
-        await saveNotification({
+        await saveNotificationServer({
           owner_id: user?.id,
           is_read: false,
           need_mail_notification: true,
