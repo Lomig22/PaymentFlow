@@ -1,6 +1,5 @@
 import * as motion from "motion/react-client";
 import Link from "next/link";
-import { useState, useEffect } from "react";
 import {
   BarChart2,
   Mail,
