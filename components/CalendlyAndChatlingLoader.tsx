@@ -1,3 +1,4 @@
+'use client';
 import { useEffect, useState } from "react";
 import { supabase } from "../src/lib/supabase/supabase";
 import { User } from "@supabase/supabase-js";
@@ -7,6 +8,23 @@ declare global {
     chtlConfig?: any;
   }
 }
+const CHATLING_SCRIPT_ID = "chatling-embed-script";
+
+export const removeChatlingElements = () => {
+  const script = document.getElementById(CHATLING_SCRIPT_ID);
+  if (script) script.remove();
+  delete window.chtlConfig;
+  const iframe = document.querySelector("iframe[src*='chatling']");
+  if (iframe) iframe.remove();
+  const chatlingButtonContainer = Array.from(
+    document.querySelectorAll("div")
+  ).find(
+    (div) =>
+      div.style.position === "fixed" &&
+      div.innerHTML.includes("chtl-open-chat-icon")
+  );
+  if (chatlingButtonContainer) chatlingButtonContainer.remove();
+};
 
 export default function CalendlyAndChatlingLoader() {
   const [user, setUser] = useState<User | null>(null);
@@ -26,25 +44,9 @@ export default function CalendlyAndChatlingLoader() {
 
   // 2) Gérer le chargement / suppression de Chatling selon l'état utilisateur
   useEffect(() => {
-    const CHATLING_SCRIPT_ID = "chatling-embed-script";
     let t1: number | null = null;
     let t2: number | null = null;
 
-    const removeChatlingElements = () => {
-      const script = document.getElementById(CHATLING_SCRIPT_ID);
-      if (script) script.remove();
-      delete window.chtlConfig;
-      const iframe = document.querySelector("iframe[src*='chatling']");
-      if (iframe) iframe.remove();
-      const chatlingButtonContainer = Array.from(
-        document.querySelectorAll("div")
-      ).find(
-        (div) =>
-          div.style.position === "fixed" &&
-          div.innerHTML.includes("chtl-open-chat-icon")
-      );
-      if (chatlingButtonContainer) chatlingButtonContainer.remove();
-    };
 
     if (!user) {
       if (!document.getElementById(CHATLING_SCRIPT_ID)) {

@@ -109,16 +109,36 @@ function ClientList({
   }; */
   const fetchClients = async () => {
     try {
-      const response = await fetch("api/clients", {
-        method: "GET",
-        headers: { "Content-Type": "application/json" }
-      })
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-      const { clients: clientsData, error: clientsError } = await response.json();
+      if (!user) throw new Error("Utilisateur non authentifié");
 
+      const userEmail = user.email;
+
+      // 1. Récupérer les IDs des utilisateurs qui ont invité l'utilisateur courant
+      const { data: invitedByData, error: invitedByError } = await supabase
+        .from("invited_users")
+        .select("invited_by")
+        .eq("invited_email", userEmail);
+
+      if (invitedByError) throw invitedByError;
+
+      const invitedByIds = invitedByData.map((entry) => entry.invited_by);
+
+      // 2. Inclure l'utilisateur actuel dans les IDs à filtrer
+      const allOwnerIds = [user.id, ...invitedByIds];
+
+      // 3. Récupérer les clients pour ces propriétaires
+      const { data: clients, error: clientsError } = await supabase
+        .from("clients")
+        .select("*, reminderProfile:reminder_profile(*)")
+        .in("owner_id", allOwnerIds)
+        .order("company_name");
       if (clientsError) throw clientsError;
 
-      setClients(clientsData || []);
+      setClients(clients || []);
     } catch (error) {
       console.error("Erreur lors du chargement des clients:", error);
       showError("Impossible de charger la liste des clients");

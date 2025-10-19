@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { BanknoteIcon } from "lucide-react";
+import { useSupabase } from "../../app/providers/supabase-provider";
 const statusColors: Record<string, string> = {
   late: "#FF7F50",
   pending: "#4D6DFF",
@@ -18,17 +19,34 @@ export default function ClientBalanceBar({ refreshKey }: { refreshKey: number })
   const [data, setData] = useState<
     { label: string; value: number; color: string }[]
   >([]);
+  const supabase = useSupabase();
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
-      const response = await fetch("api/receivables", {
-        method: "GET",
-        headers: { "Content-Type": "application/json" }
-      })
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-      const { receivables, error } = await response.json();
+      if (!user) throw new Error("Utilisateur non authentifié");
+
+      const userEmail = user.email;
+
+      const { data: invitedByData, error: invitedByError } = await supabase
+        .from("invited_users")
+        .select("invited_by")
+        .eq("invited_email", userEmail);
+
+      if (invitedByError) throw invitedByError;
+
+      const invitedByIds = invitedByData.map((entry) => entry.invited_by);
+      const allOwnerIds = [user.id, ...invitedByIds];
+
+      const { data: receivables, error } = await supabase
+        .from("receivables")
+        .select("status, amount, paid_amount, due_date")
+        .in("owner_id", allOwnerIds);
 
       if (error) {
         console.error("Erreur Supabase :", error.message);
@@ -73,7 +91,7 @@ export default function ClientBalanceBar({ refreshKey }: { refreshKey: number })
     }
 
     fetchData();
-  }, [refreshKey]);
+  }, [supabase, refreshKey]);
 
   const total = data.reduce((sum, d) => sum + Math.abs(d.value), 0);
 
