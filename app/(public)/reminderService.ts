@@ -203,7 +203,7 @@ export async function getReminderTemplate(
 			.from('receivables')
 			.select('*, client:clients(*)')
 			.eq('id', receivableId)
-			.single();
+			.maybeSingle();
 
 		if (receivableError) throw receivableError;
 		if (!receivable) return null;
