@@ -281,7 +281,11 @@ function ReceivablesList() {
         .from("receivables")
         .select("*, client:clients(*)")
         .in("owner_id", allOwnerIds)
-        .order("due_date", { ascending: false });
+        // Ordre par défaut quand aucun filtrage/tri UI n'est demandé:
+        // - préserver l'ordre d'import/ajout => created_at croissant
+        // - stabiliser sur id croissant en second critère
+        .order("created_at", { ascending: true })
+        .order("id", { ascending: true });
 
       if (receivablesError) throw receivablesError;
 
@@ -553,7 +557,16 @@ function ReceivablesList() {
       setReceivables(receivables.filter((r) => r.id !== receivableToDelete.id));
       setShowDeleteConfirm(false);
       setReceivableToDelete(null);
-      await updateClientReminderStatus(clientId, false);
+
+      // Ne mettre needs_reminder à false que si le client n'a plus aucune créance
+      const { data: remaining, error: remainErr } = await supabase
+        .from("receivables")
+        .select("id")
+        .eq("client_id", clientId)
+        .limit(1);
+      if (!remainErr && (!remaining || remaining.length === 0)) {
+        await updateClientReminderStatus(clientId, false);
+      }
 
       // Vérifier si le client a encore des créances impayées
       //  const noUnpaidReceivables = await checkClientUnpaidReceivables(clientId);
@@ -636,7 +649,15 @@ function ReceivablesList() {
 
     // Étape 3 : Mettre à jour les statuts de relance des clients
     for (const clientId of clientIds) {
-      await updateClientReminderStatus(clientId, false); // ou true selon ta logique
+      // Ne mettre needs_reminder à false que si le client n'a plus aucune créance restante
+      const { data: remaining, error: remainErr } = await supabase
+        .from("receivables")
+        .select("id")
+        .eq("client_id", clientId)
+        .limit(1);
+      if (!remainErr && (!remaining || remaining.length === 0)) {
+        await updateClientReminderStatus(clientId, false);
+      }
     }
 
     // Étape 4 : Rafraîchir l'état local
@@ -1141,16 +1162,17 @@ function ReceivablesList() {
     }
   };
 
-  const filteredReceivables = receivables
-    .filter((receivable) => {
-      const searchLower = searchTerm.toLowerCase();
-      return (
-        receivable.client?.company_name.toLowerCase().includes(searchLower) ||
-        receivable.invoice_number.toLowerCase().includes(searchLower) ||
-        receivable.amount.toString().includes(searchLower)
-      );
-    })
-    .sort(applySorting);
+  const baseFiltered = receivables.filter((receivable) => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      receivable.client?.company_name.toLowerCase().includes(searchLower) ||
+      receivable.invoice_number.toLowerCase().includes(searchLower) ||
+      receivable.amount.toString().includes(searchLower)
+    );
+  });
+  // Appliquer un tri uniquement si l'utilisateur a explicitement choisi un tri.
+  // Sinon, conserver l'ordre naturel renvoyé par la base (stable avec due_date desc, id asc)
+  const filteredReceivables = sortConfig ? [...baseFiltered].sort(applySorting) : baseFiltered;
   const dropdownRefs = useRef<Record<string, HTMLDivElement | HTMLSpanElement | null>>({});
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -2017,10 +2039,13 @@ return issues.join(", ");
       >
         <button
           type="button"
-          className={`flex items-center justify-center rounded-full w-8 h-8 transition focus:outline-none ${(remindersEnabled(receivable.client) || canPlayDirect(receivable)) ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-gray-300 text-gray-400 cursor-not-allowed'}`}
+          className={`flex items-center justify-center rounded-lg w-8 h-8 transition-transform duration-300 ease-in-out focus:outline-none ${
+            (remindersEnabled(receivable.client) || canPlayDirect(receivable))
+              ? 'bg-blue-100 text-blue-600 hover:-translate-y-1 hover:shadow-md hover:bg-blue-200'
+              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+          }`}
           disabled={!(remindersEnabled(receivable.client) || canPlayDirect(receivable))}
           aria-label="Activer les relances"
-          style={{ fontSize: '1.2rem' }}
         >
           <motion.span
             key={`play-icon-${receivable.id}`}
@@ -2028,9 +2053,8 @@ return issues.join(", ");
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.09 }}
-            style={{ fontWeight: 'bold', fontFamily: 'inherit', fontSize: '1.3rem', marginLeft: '2px' }}
           >
-            ▶
+            <Play className="h-4 w-4" strokeWidth={3} />
           </motion.span>
         </button>
       </Tooltip>
@@ -2038,9 +2062,8 @@ return issues.join(", ");
       <Tooltip label="Mettre en pause" theme="green" key={`pause-${receivable.id}`}>
         <button
           type="button"
-          className="flex items-center justify-center rounded-full w-8 h-8 bg-orange-500 hover:bg-orange-600 text-white transition focus:outline-none"
+          className="flex items-center justify-center rounded-lg w-8 h-8 bg-blue-100 text-blue-600 hover:-translate-y-1 hover:shadow-md hover:bg-blue-200 transition-transform duration-300 ease-in-out focus:outline-none"
           aria-label="Mettre en pause"
-          style={{ fontSize: '1.2rem' }}
         >
           <motion.span
             key={`pause-icon-${receivable.id}`}

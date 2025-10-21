@@ -16,7 +16,7 @@ import {
 import { sendContactForm } from "../lib/contactService";
 import { supabase } from "../lib/supabase";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation, Pagination } from "swiper/modules";
+import { Navigation, Pagination, Autoplay, FreeMode } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
@@ -353,6 +353,27 @@ const staggerContainer = {
     navigate("/signup");
   };
 
+  // Logos clients (placer les fichiers manquants dans public/images)
+  const clientLogos: { src: string; alt: string }[] = [
+    { src: "/images/bretagne-logo.jpg", alt: "Bretagne" },
+    { src: "/images/sohoa-logo.png", alt: "Sohoa" },
+    { src: "/images/CRGC-logo.png", alt: "CRGC" },
+    { src: "/images/ouestelio.png", alt: "Ouestélio" },
+    { src: "/images/image-de-marque.webp", alt: "Image de Marque" },
+    { src: "/images/foyai-logo.png", alt: "Foyai" },
+  ];
+
+  // Étend la liste pour un défilement continu plus long
+  const clientLogosLoop = [
+    ...clientLogos,
+    ...clientLogos,
+    ...clientLogos,
+    ...clientLogos,
+  ];
+
+  // Liste doublée pour un marquee CSS en boucle parfaite
+  const clientLogosMarquee = [...clientLogos, ...clientLogos];
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       <Helmet>
@@ -422,6 +443,25 @@ const staggerContainer = {
     Noté&nbsp;<span className="font-semibold" style={{ color: '#2563eb' }}>4,93/5</span>&nbsp;sur Capterra, Trustpilot, GetApp, Appvizer & Google
   </div>
 </div>
+  <div className="mt-4 text-left inline-block">
+    <div
+      className="trustpilot-widget"
+      data-locale="fr-FR"
+      data-template-id="56278e9abfbbba0bdcd568bc"
+      data-businessunit-id="685b0b9f257a8efcadffa636"
+      data-style-height="52px"
+      data-style-width="240px"
+      data-token="42912aec-66d4-4c4a-bbfd-eb389f93e620"
+    >
+      <a
+        href="https://fr.trustpilot.com/review/payment-flow.fr"
+        target="_blank"
+        rel="noopener"
+      >
+        Trustpilot
+      </a>
+    </div>
+  </div>
             </div>
             {/* Right Column - Image */}
             <div>
@@ -516,6 +556,52 @@ const staggerContainer = {
             </motion.div>
           </motion.div>
 
+          {/* Logos défilants - Ils nous font confiance */}
+          <motion.div
+            className="mt-16"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.2 }}
+            variants={fadeInUp}
+          >
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <h2 className="text-2xl font-bold text-center mb-12">
+                +3 000 entreprises automatisent déjà leurs relances clients
+                <br />
+                avec Payment Flow
+              </h2>
+              <div className="relative overflow-hidden">
+                <style>{`.logos-swiper .swiper-wrapper { transition-timing-function: linear !important; }`}</style>
+                <Swiper
+                  className="logos-swiper"
+                  modules={[Autoplay, FreeMode]}
+                  autoplay={{ delay: 0, disableOnInteraction: false, pauseOnMouseEnter: false, waitForTransition: false }}
+                  speed={30000}
+                  loop
+                  loopAdditionalSlides={clientLogos.length * 4}
+                  loopPreventsSliding={false}
+                  freeMode={{ enabled: true, momentum: false }}
+                  slidesPerView="auto"
+                  spaceBetween={120}
+                  allowTouchMove={false}
+                >
+                  {clientLogosLoop.map((logo, idx) => (
+                    <SwiperSlide key={idx} style={{ width: "auto" }}>
+                      <img
+                        src={logo.src}
+                        alt={logo.alt}
+                        className="h-10 md:h-12 object-contain filter grayscale opacity-80 hover:grayscale-0 hover:opacity-100 transition duration-300"
+                      />
+                    </SwiperSlide>
+                  ))}
+                </Swiper>
+                {/* Effets d'effacement aux extrémités */}
+                <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-10 sm:w-14 lg:w-20 bg-gradient-to-r from-gray-50 to-transparent z-10"></div>
+                <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-10 sm:w-14 lg:w-20 bg-gradient-to-l from-gray-50 to-transparent z-10"></div>
+              </div>
+            </div>
+          </motion.div>
+
           {/* Intégration de la démo Storylane */}
           <motion.div
             className="mt-16"
@@ -528,7 +614,7 @@ const staggerContainer = {
             variants={fadeInUp}
           >
             <h2 className="text-2xl font-bold text-center mb-8">Découvrez PaymentFlow en action</h2>
-            <div className="max-w-4xl mx-auto">
+            <div className="w-full">
               <StorylaneDemoEmbed />
             </div>
           </motion.div>
@@ -549,17 +635,17 @@ const staggerContainer = {
     <div className="relative w-full max-w-[950px] mx-auto">
       {/* Flèches Swiper custom hors cadre */}
       <div className="absolute -left-10 top-1/2 z-10 hidden md:block">
-        <div className="swiper-button-prev custom-swiper-arrow left-0 text-blue-600 hover:text-blue-800 transition-colors" />
+        <div className="swiper-button-prev usecases-prev custom-swiper-arrow left-0 text-blue-600 hover:text-blue-800 transition-colors" />
       </div>
       <div className="absolute -right-10 top-1/2 z-10 hidden md:block">
-        <div className="swiper-button-next custom-swiper-arrow right-0 text-blue-600 hover:text-blue-800 transition-colors" />
+        <div className="swiper-button-next usecases-next custom-swiper-arrow right-0 text-blue-600 hover:text-blue-800 transition-colors" />
       </div>
       <div className="bg-white rounded-2xl shadow-xl border border-blue-100 px-0 md:px-4 py-8 md:py-10 flex flex-col md:flex-row items-stretch gap-0 md:gap-8">
         <Swiper
           modules={[Navigation, Pagination]}
           navigation={{
-            prevEl: '.swiper-button-prev',
-            nextEl: '.swiper-button-next',
+            prevEl: '.usecases-prev',
+            nextEl: '.usecases-next',
           }}
           pagination={{ clickable: true }}
           spaceBetween={0}

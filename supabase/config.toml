@@ -1,3 +1,6 @@
 [functions]
 [functions.email-open-tracker]
 verify_jwt = false
+
+[functions.reconcile-reminder-status]
+verify_jwt = false
