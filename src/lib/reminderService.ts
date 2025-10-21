@@ -327,14 +327,35 @@ export async function sendManualReminder(
 		);
 		if (emailSent) {
 			// Enregistrer la relance (toujours), afin d'activer le suivi d'ouverture via email_id
-			const { error: insertReminderError } = await supabase.from('reminders').insert({
-				receivable_id: receivableId,
-				reminder_type: level,
-				reminder_date: new Date().toISOString(),
-				email_sent: true,
-				email_content: finalContent,
-				email_id: emailTrackingId,
-			});
+			let insertReminderError: any = null;
+try {
+  const { error } = await supabase.from('reminders').insert({
+    receivable_id: receivableId,
+    owner_id: (receivable as any).owner_id || user.id,
+    reminder_type: level,
+    reminder_date: new Date().toISOString(),
+    email_sent: true,
+    email_content: finalContent,
+    email_id: emailTrackingId,
+  });
+  insertReminderError = error || null;
+  if (insertReminderError && (insertReminderError as any).code === '42703') {
+    const { error: e2 } = await supabase.from('reminders').insert({
+      receivable_id: receivableId,
+      reminder_type: level,
+      reminder_date: new Date().toISOString(),
+      email_sent: true,
+      email_content: finalContent,
+      email_id: emailTrackingId,
+    });
+    insertReminderError = e2 || null;
+  }
+} catch (e) {
+  insertReminderError = e;
+}
+if (insertReminderError) {
+  console.error('Insertion reminder avec email_id a échoué:', (insertReminderError as any).message || insertReminderError);
+}
 			if (insertReminderError) {
 				console.error('Insertion reminder avec email_id a échoué:', insertReminderError.message);
 			}
@@ -485,14 +506,35 @@ export async function sendOneReminder(receivableId: string): Promise<boolean> {
 		);
 
 		if (emailSent) {
-			const { error: insertReminderError } = await supabase.from('reminders').insert({
-				receivable_id: receivableId,
-				reminder_type: level,
-				reminder_date: new Date().toISOString(),
-				email_sent: true,
-				email_content: emailContent,
-				email_id: autoEmailTrackingId,
-			});
+			let insertReminderError: any = null;
+try {
+  const { error } = await supabase.from('reminders').insert({
+    receivable_id: receivableId,
+    owner_id: (receivable as any).owner_id || user.id,
+    reminder_type: level,
+    reminder_date: new Date().toISOString(),
+    email_sent: true,
+    email_content: emailContent,
+    email_id: autoEmailTrackingId,
+  });
+  insertReminderError = error || null;
+  if (insertReminderError && (insertReminderError as any).code === '42703') {
+    const { error: e2 } = await supabase.from('reminders').insert({
+      receivable_id: receivableId,
+      reminder_type: level,
+      reminder_date: new Date().toISOString(),
+      email_sent: true,
+      email_content: emailContent,
+      email_id: autoEmailTrackingId,
+    });
+    insertReminderError = e2 || null;
+  }
+} catch (e) {
+  insertReminderError = e;
+}
+if (insertReminderError) {
+  console.error('Insertion reminder auto avec email_id a échoué:', (insertReminderError as any).message || insertReminderError);
+}
 			if (insertReminderError) {
 				console.error('Insertion reminder auto avec email_id a échoué:', insertReminderError.message);
 			}

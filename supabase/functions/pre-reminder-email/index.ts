@@ -4,6 +4,8 @@
 
 import { createClient } from '@supabase/supabase-js';
 import nodemailer from 'nodemailer';
+// Supabase Edge runtime provides Deno; declare it for TS tooling
+declare const Deno: any;
 
 const formatEmailTemplateWrapper = (
 	content: string,
@@ -90,19 +92,21 @@ const formatTemplate = (
 
 // Update reminder table
 const updateReminderTable = async (
-	supabaseClient: any,
-	receivableId: string,
-	action: 'pre' | 'first' | 'second' | 'third' | 'final',
-	emailContent: string
+    supabaseClient: any,
+    receivableId: string,
+    ownerId: string,
+    action: 'pre' | 'first' | 'second' | 'third' | 'final',
+    emailContent: string
 ) => {
 	// update the receivable status with the reminder type
-	const { data, error } = await supabaseClient.from('reminders').insert({
-		receivable_id: receivableId,
-		reminder_type: action,
-		reminder_date: new Date().toISOString(),
-		email_sent: true,
-		email_content: emailContent,
-	});
+	    const { data, error } = await supabaseClient.from('reminders').insert({
+        receivable_id: receivableId,
+        owner_id: ownerId,
+        reminder_type: action,
+        reminder_date: new Date().toISOString(),
+        email_sent: true,
+        email_content: emailContent,
+    });
 
 	if (error) {
 		throw new Error(error.message);
@@ -195,6 +199,7 @@ const sendDueEmails = async (
 		await updateReminderTable(
 			supabaseClient,
 			receivable.id,
+			receivable.owner_id,
 			'pre',
 			emailContent
 		);
@@ -269,6 +274,7 @@ const sendFirstReminders = async (
 		await updateReminderTable(
 			supabaseClient,
 			receivable.id,
+			receivable.owner_id,
 			'first',
 			emailContent
 		);
@@ -345,6 +351,7 @@ const secondReminders = async (
 		await updateReminderTable(
 			supabaseClient,
 			receivable.id,
+			receivable.owner_id,
 			'second',
 			emailContent
 		);
@@ -420,6 +427,7 @@ const thirdReminders = async (
 		await updateReminderTable(
 			supabaseClient,
 			receivable.id,
+			receivable.owner_id,
 			'third',
 			emailContent
 		);
@@ -496,6 +504,7 @@ const finalReminders = async (
 		await updateReminderTable(
 			supabaseClient,
 			receivable.id,
+			receivable.owner_id,
 			'final',
 			emailContent
 		);
@@ -531,6 +540,8 @@ export const setupMailTransporter = () => {
 	});
 };
 
+Deno.serve(async (req) => {
+	try {
 		const supabaseClient = createClient(
 		process.env.SUPABASE_URL ?? '',
 		process.env.SUPABASE_SERVICE_ROLE_KEY ?? ''
@@ -629,11 +640,12 @@ export const setupMailTransporter = () => {
 			}
 		);
 	} catch (error) {
-		return new Response(JSON.stringify({ error: error.message }), {
+		return new Response(JSON.stringify({ error: (error as any)?.message || 'Unknown error' }), {
 			status: 500,
 			headers: { 'Content-Type': 'application/json' },
 		});
 	}
+});
 
 
 /* To invoke locally:

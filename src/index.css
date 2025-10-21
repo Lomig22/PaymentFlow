@@ -61,3 +61,7 @@
     background-color: #c82333; /* Rouge plus foncé au survol */
   }
   
+  /* Logos carousel: force linear easing for uniform, pause-free scrolling */
+  .logos-swiper .swiper-wrapper {
+    transition-timing-function: linear !important;
+  }

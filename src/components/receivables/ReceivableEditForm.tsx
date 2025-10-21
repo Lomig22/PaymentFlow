@@ -284,17 +284,16 @@ export default function ReceivableEditForm({
           return false;
         }
         if (data && data.client) {
-          data.client.needs_reminder = false;
-          const { data: notification_settings, error } = await supabase
+          // Réflecter localement l'état: needs_reminder = il reste d'autres impayées ?
+          data.client.needs_reminder = !noOtherUnpaidReceivables;
+          const { data: notification_settings, error: notificationSettingsError } = await supabase
             .from("notification_settings")
             .select("payment_notifications")
             .eq("user_id", user.id)
             .maybeSingle();
-          if (error) throw error;
-          const payment_notifications =
-            notification_settings?.payment_notifications;
-          console.log(payment_notifications);
-          if (payment_notifications === true) {
+          if (notificationSettingsError) {
+            console.error("Erreur lecture notification_settings:", notificationSettingsError);
+          } else if (notification_settings?.payment_notifications === true) {
             const emailSent = sendEmail(
               emailSettings,
               user.email ?? "",
@@ -305,22 +304,36 @@ export default function ReceivableEditForm({
                 data.invoice_number +
                 ", a été marquée comme payée."
             );
-
             if (!emailSent) {
               showError("La notification par email a échouée!");
             }
           }
-        }/* 
-        if (noOtherUnpaidReceivables) {
-          await updateClientReminderStatus(receivable.client.id, false);
-          //Jet notification
-        } */
+        }
+        
+        // rien ici, recalcul global effectué après le bloc conditionnel
       }
-    //  if (receivable.status === "pending") {
-        await updateClientReminderStatus(receivable.client.id, true);
-    //  }
+      // Recalcul global: needs_reminder = true s'il reste au moins une créance non payée pour ce client (toujours)
+      try {
+        const { data: remainingUnpaid, error: remainingErr } = await supabase
+          .from("receivables")
+          .select("id")
+          .eq("client_id", receivable.client.id)
+          .not("status", "eq", "paid")
+          .limit(1);
+        if (!remainingErr) {
+          const needsReminderNow = !!(remainingUnpaid && remainingUnpaid.length > 0);
+          await updateClientReminderStatus(receivable.client.id, needsReminderNow);
+          if (data && data.client) {
+            data.client.needs_reminder = needsReminderNow;
+          }
+        }
+      } catch (e) {
+        console.error(
+          "Erreur lors de la mise à jour du statut de relance après édition:",
+          e
+        );
+      }
       if (data) {
-        showSuccess("Mise à jour complète.");
         onReceivableUpdated({
           ...data,
           client: data.client as Client,

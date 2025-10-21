@@ -1,11 +1,9 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { supabase } from "../../lib/supabase";
-import { X, Upload, AlertCircle, Info, Loader2, CheckCircle, AlertTriangle, XCircle } from "lucide-react";
+import { X, Upload, AlertCircle, Info, Loader2 } from "lucide-react";
 import { Receivable, Client } from "../../types/database";
 import Papa from "papaparse";
 import { toast } from "react-toastify";
-import Tooltip from "../Common/Tooltip";
-import Swal from "sweetalert2";
 
 interface CSVImportModalProps {
   onClose: () => void;
@@ -232,18 +230,6 @@ export default function CSVImportModal({
   const [pendingToInsert, setPendingToInsert] = useState<any[]>([]);
   const [pendingToUpdate, setPendingToUpdate] = useState<any[]>([]);
   const [conflictDecisions, setConflictDecisions] = useState<Record<string, "overwrite" | "keep">>({});
-  // États pour les lignes absentes du nouvel import (paiement implicite potentiel)
-  const [missingExisting, setMissingExisting] = useState<any[]>([]);
-  const [missingDecisions, setMissingDecisions] = useState<Record<string, "markPaid" | "keep">>({});
-  const [lastReminderByReceivable, setLastReminderByReceivable] = useState<Record<string, string | null>>({});
-  // Pré-indication en étape "preview": nombre de lignes manquantes détectables avant import
-  const [preMissingCount, setPreMissingCount] = useState<number>(0);
-  const [preMissingLoading, setPreMissingLoading] = useState<boolean>(false);
-  // Progression et résumé lors de la confirmation
-  const [totalTasks, setTotalTasks] = useState<number>(0);
-  const [plannedInsertCount, setPlannedInsertCount] = useState<number>(0);
-  const [plannedUpdateCount, setPlannedUpdateCount] = useState<number>(0);
-  const [plannedMarkPaidCount, setPlannedMarkPaidCount] = useState<number>(0);
   const isDirtyComputed = useMemo(() => {
     try {
       return JSON.stringify(mapping) !== JSON.stringify(originalMapping);
@@ -274,37 +260,6 @@ export default function CSVImportModal({
   useEffect(() => {
     fetchClients();
   }, []);
-
-  // Pré-calcul: nombre de lignes existantes absentes du nouveau CSV (indication dans le bouton Importer)
-  useEffect(() => {
-    const run = async () => {
-      try {
-        setPreMissingLoading(true);
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) { setPreMissingCount(0); return; }
-        const invoiceIndex = csvHeaders.findIndex((h) => mapping[h] === "invoice_number");
-        if (invoiceIndex === -1) { setPreMissingCount(0); return; }
-        const incomingKeys = new Set(
-          data
-            .map((row) => `${user.id}-${normalizeInvoice(row?.[invoiceIndex] ?? "")}`)
-            .filter((k) => k && !k.endsWith('-'))
-        );
-        const { data: existing, error } = await supabase
-          .from('receivables')
-          .select('owner_id, invoice_number')
-          .eq('owner_id', user.id);
-        if (error) { setPreMissingCount(0); return; }
-        const missing = (existing || []).filter((item: any) => !incomingKeys.has(`${item.owner_id}-${normalizeInvoice(item.invoice_number)}`));
-        setPreMissingCount(missing.length);
-      } catch (e) {
-        console.error('Pré-détection missing (aperçu) échouée:', e);
-        setPreMissingCount(0);
-      } finally {
-        setPreMissingLoading(false);
-      }
-    };
-    if (step === 'preview') run(); else setPreMissingCount(0);
-  }, [step, csvHeaders, mapping, data]);
 
   
 const getClientIdByName = (name: string): string | null => {
@@ -778,7 +733,8 @@ const fetchClients = async () => {
             const newClient: Client = {
               id: tempId,
               company_name: clientName,
-              client_code: clientCode || String(Math.floor(Math.random() * (150000 - 100000)) + 100000),
+              client_code:
+                clientCode || String(Math.floor(Math.random() * (150000 - 100000) + 100000)) * (100000 - 150000) + 100000),
               email: email,
               needs_reminder: true,
               created_at: new Date().toISOString(),
@@ -1082,7 +1038,7 @@ const fetchClients = async () => {
           const { data: existingConflicts, error: exErr } = await supabase
             .from("receivables")
             .select(
-              "id, owner_id, client_id, invoice_number, status, amount, paid_amount, due_date, email, installment_number, client:clients(company_name)"
+              "id, owner_id, invoice_number, status, amount, paid_amount, client:clients(company_name)"
             )
             .eq("owner_id", user.id)
             ;
@@ -1091,39 +1047,6 @@ const fetchClients = async () => {
           const existMap = new Map(
             (existingConflicts || []).map((r: any) => [normalizeInvoice(r.invoice_number), r])
           );
-          // Détecter les lignes ABSENTES dans le nouvel import (candidates à suppression)
-          const incomingKeys = new Set(
-            receivablesToImport.map((r: any) => `${user.id}-${normalizeInvoice(r.invoice_number)}`)
-          );
-          const missing = (existingConflicts || []).filter(
-            (item: any) => !incomingKeys.has(`${item.owner_id}-${normalizeInvoice(item.invoice_number)}`)
-          );
-          setMissingExisting(missing);
-          const md: Record<string, "markPaid" | "keep"> = {};
-          for (const m of missing) {
-            md[`${m.owner_id}-${m.invoice_number}`] = "markPaid";
-          }
-          setMissingDecisions(md);
-          // Charger la dernière date de relance pour ces créances manquantes
-          try {
-            const ids = missing.map((m: any) => m.id).filter(Boolean);
-            if (ids.length > 0) {
-              const { data: lastRem } = await supabase
-                .from('reminders')
-                .select('receivable_id, reminder_date')
-                .in('receivable_id', ids)
-                .order('reminder_date', { ascending: false });
-              const map: Record<string, string | null> = {};
-              (lastRem || []).forEach((r: any) => {
-                if (!map[r.receivable_id]) map[r.receivable_id] = r.reminder_date;
-              });
-              setLastReminderByReceivable(map);
-            } else {
-              setLastReminderByReceivable({});
-            }
-          } catch (e) {
-            setLastReminderByReceivable({});
-          }
           const toInsertPre: any[] = [];
           const toUpdatePre: any[] = [];
           const conflictItems: ConflictItem[] = [];
@@ -1133,44 +1056,35 @@ const fetchClients = async () => {
             const ex = existMap.get(normalizeInvoice(rec.invoice_number));
             if (ex) {
               const key = `${user.id}-${rec.invoice_number}`;
-              // Ne considérer en conflit que les lignes réellement modifiées
-              const isDifferent =
-                Number(ex.amount ?? 0) !== Number(rec.amount ?? 0) ||
-                Number(ex.paid_amount ?? 0) !== Number(rec.paid_amount ?? 0) ||
-                String(ex.due_date ?? '') !== String(rec.due_date ?? '') ||
-                String(ex.email ?? '') !== String(rec.email ?? '') ||
-                (ex.installment_number ?? null) !== (rec.installment_number ?? null);
-              if (isDifferent) {
-                const fullyPaid = ex.status === "paid" || (ex.paid_amount ?? 0) >= (ex.amount ?? 0);
-                toUpdatePre.push({ ...rec, status: ex.status });
-                conflictItems.push({
-                  key,
-                  existing: {
-                    id: ex.id,
-                    invoice_number: ex.invoice_number,
-                    amount: ex.amount ?? 0,
-                    paid_amount: ex.paid_amount ?? 0,
-                    status: ex.status ?? null,
-                    client_name: (ex as any)?.client?.company_name,
-                  },
-                  incoming: {
-                    amount: rec.amount ?? 0,
-                    paid_amount: rec.paid_amount ?? null,
-                    due_date: rec.due_date,
-                    email: rec.email,
-                    installment_number: rec.installment_number ?? null,
-                  },
-                  fullyPaid,
-                });
-                decisions[key] = fullyPaid ? "overwrite" : "keep";
-              }
-              // sinon: ligne inchangée → ne pas remonter en conflit ni en mise à jour
+              const fullyPaid =
+                ex.status === "paid" || (ex.paid_amount ?? 0) >= (ex.amount ?? 0);
+              toUpdatePre.push({ ...rec, status: ex.status });
+              conflictItems.push({
+                key,
+                existing: {
+                  id: ex.id,
+                  invoice_number: ex.invoice_number,
+                  amount: ex.amount ?? 0,
+                  paid_amount: ex.paid_amount ?? 0,
+                  status: ex.status ?? null,
+                  client_name: (ex as any)?.client?.company_name,
+                },
+                incoming: {
+                  amount: rec.amount ?? 0,
+                  paid_amount: rec.paid_amount ?? null,
+                  due_date: rec.due_date,
+                  email: rec.email,
+                  installment_number: rec.installment_number ?? null,
+                },
+                fullyPaid,
+              });
+              decisions[key] = fullyPaid ? "overwrite" : "keep";
             } else {
               toInsertPre.push(rec);
             }
           }
 
-          if (conflictItems.length > 0 || (missing && missing.length > 0)) {
+          if (conflictItems.length > 0) {
             setPendingReceivables(receivablesToImport);
             setPendingToInsert(toInsertPre);
             setPendingToUpdate(toUpdatePre);
@@ -1406,28 +1320,6 @@ if (updatedTotalAmount >= maxOverDues) {
         }
       }
 
-      // Mettre à jour l'état "relance" des clients (needs_reminder) si aucun reliquat de créance
-      try {
-        const affectedClientIds = Array.from(new Set([
-          ...receivablesToImport.map((r: any) => r.client_id),
-          ...receivables.map((r) => r.client_id),
-        ]));
-        if (affectedClientIds.length > 0) {
-          const { data: remainingAfter } = await supabase
-            .from("receivables")
-            .select("client_id")
-            .eq("owner_id", user.id)
-            .in("client_id", affectedClientIds);
-          const stillHas = new Set((remainingAfter || []).map((r: any) => r.client_id));
-          const toDisable = affectedClientIds.filter((id) => !stillHas.has(id));
-          for (const id of toDisable) {
-            await supabase.from("clients").update({ needs_reminder: false }).eq("id", id);
-          }
-        }
-      } catch (e) {
-        console.error("Erreur MAJ needs_reminder après import:", e);
-      }
-
       if (successCount > 0) {
         onImportSuccess(successCount);
       } else {
@@ -1489,60 +1381,14 @@ if (updatedTotalAmount >= maxOverDues) {
     for (const c of conflicts) all[c.key] = decision;
     setConflictDecisions(all);
   };
-  // Missing decisions helpers
-  const updateMissingDecision = (key: string, decision: "markPaid" | "keep") => {
-    setMissingDecisions((prev) => ({ ...prev, [key]: decision }));
-  };
-  const setAllMissingDecisions = (decision: "markPaid" | "keep") => {
-    const all: Record<string, "markPaid" | "keep"> = {};
-    for (const m of missingExisting) all[`${m.owner_id}-${m.invoice_number}`] = decision;
-    setMissingDecisions(all);
-  };
-  // Confirm dialogs per missing item
-  const handleConfirmMarkPaid = async (m: any) => {
-    const name = (m as any)?.client?.company_name || 'client inconnu';
-    const amount = Number((m as any)?.amount ?? 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    const last = lastReminderByReceivable[m.id] ? new Date(lastReminderByReceivable[m.id] as string).toLocaleDateString('fr-FR') : '—';
-    const res = await Swal.fire({
-      title: 'Marquer comme payée ? ✅',
-      html: `Nous avons détecté que le client <b>${name}</b> n’apparaît plus dans votre dernier import.<br/>Cela signifie probablement qu’il a réglé sa créance (${amount}).<br/>Dernière relance: ${last}.<br/><br/>Souhaitez-vous marquer cette créance comme payée ?`,
-      showCancelButton: true,
-      confirmButtonText: 'Oui, marquer comme payée',
-      cancelButtonText: 'Annuler',
-      buttonsStyling: false,
-      customClass: { confirmButton: 'bg-green-600 text-white px-4 py-2 rounded mr-2 hover:bg-green-700', cancelButton: 'bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300' }
-    });
-    if (res.isConfirmed) updateMissingDecision(`${m.owner_id}-${m.invoice_number}`, 'markPaid');
-  };
-  const handleConfirmKeep = async (m: any) => {
-    const res = await Swal.fire({
-      title: 'Conserver comme impayée ⚠️',
-      text: 'Cette créance restera dans la table en tant qu’impayée. Vous pourrez la traiter plus tard.',
-      showCancelButton: true,
-      confirmButtonText: 'Oui, conserver impayée',
-      cancelButtonText: 'Annuler',
-      buttonsStyling: false,
-      customClass: { confirmButton: 'bg-orange-600 text-white px-4 py-2 rounded mr-2 hover:bg-orange-700', cancelButton: 'bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300' }
-    });
-    if (res.isConfirmed) updateMissingDecision(`${m.owner_id}-${m.invoice_number}`, 'keep');
-  };
   const confirmImportWithDecisions = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Utilisateur non authentifié");
-      // Préparer les plans et la progression
-      const toInsert = pendingToInsert;
-      const toUpdateSelected = pendingToUpdate.filter((r: any) => conflictDecisions[`${user.id}-${r.invoice_number}`] === "overwrite");
-      const toMarkPaid = (missingExisting || []).filter(
-        (item: any) => (missingDecisions[`${item.owner_id}-${item.invoice_number}`] || "markPaid") === "markPaid"
-      );
-      setPlannedInsertCount(toInsert.length);
-      setPlannedUpdateCount(toUpdateSelected.length);
-      setPlannedMarkPaidCount(toMarkPaid.length);
-      setTotalTasks(toInsert.length + toUpdateSelected.length + toMarkPaid.length);
-      setImportedCount(0);
       setStep("importing");
       setImporting(true);
+      const toInsert = pendingToInsert;
+      const toUpdateSelected = pendingToUpdate.filter((r: any) => conflictDecisions[`${user.id}-${r.invoice_number}`] === "overwrite");
       const { data: subscription, error: subscriptionError } = await supabase.from("subscriptions").select("plan").eq("user_id", user.id).limit(1).single();
       if (subscriptionError || !subscription) { showError("Impossible de récupérer le type d'abonnement."); return; }
       const planLimits = { free: 25000, basic: 50000, pro: 200000, company: Infinity } as const;
@@ -1558,12 +1404,12 @@ if (updatedTotalAmount >= maxOverDues) {
       for (let i = 0; i < toInsert.length; i += 20) {
         const batch = toInsert.slice(i, i + 20);
         const { error: insertError } = await supabase.from("receivables").insert(batch);
-        if (!insertError) { successCount += batch.length; setImportedCount((c) => c + batch.length); }
+        if (!insertError) successCount += batch.length;
       }
       for (let i = 0; i < toUpdateSelected.length; i += 20) {
         const batch = toUpdateSelected.slice(i, i + 20);
         const { error: updateError } = await supabase.from("receivables").upsert(batch, { onConflict: "owner_id, invoice_number", ignoreDuplicates: false });
-        if (!updateError) { successCount += batch.length; setImportedCount((c) => c + batch.length); }
+        if (!updateError) successCount += batch.length;
       }
       const clientIds = [...new Set(pendingReceivables.map((r: any) => r.client_id))];
       if (clientIds.length > 0) {
@@ -1586,57 +1432,10 @@ if (updatedTotalAmount >= maxOverDues) {
           }
         }
       }
-      // Marquer comme PAYÉ uniquement les lignes absentes pour lesquelles la décision = "markPaid"
-      let markedPaidCount = 0;
-      if (toMarkPaid.length > 0) {
-        // Mettre status='paid' et paid_amount=amount PAR CRÉANCE (update ciblé, pas d'upsert)
-        for (let i = 0; i < toMarkPaid.length; i += 50) {
-          const batch = toMarkPaid.slice(i, i + 50);
-          const results = await Promise.all(
-            batch.map((b: any) =>
-              supabase
-                .from('receivables')
-                .update({ status: 'paid', paid_amount: b.amount })
-                .eq('id', b.id)
-            )
-          );
-          const ok = results.filter((r) => !r.error).length;
-          if (ok > 0) {
-            markedPaidCount += ok;
-            setImportedCount((c) => c + ok);
-          }
-        }
-      }
-
-      // Mettre à jour l'état "relance" (needs_reminder) pour les clients sans créance IMPAYÉE restante
-      try {
-        const affectedClientIds = Array.from(new Set([
-          ...pendingReceivables.map((r: any) => r.client_id),
-          ...missingExisting.map((r: any) => r.client_id),
-        ]));
-        if (affectedClientIds.length > 0) {
-          const { data: remainingAfter } = await supabase
-            .from("receivables")
-            .select("client_id, status")
-            .eq("owner_id", user.id)
-            .in("client_id", affectedClientIds);
-          const unpaidMap = new Map<string, boolean>();
-          (remainingAfter || []).forEach((r: any) => {
-            if (r.status !== 'paid') unpaidMap.set(r.client_id, true);
-          });
-          const toDisable = affectedClientIds.filter((id) => !unpaidMap.get(id));
-          for (const id of toDisable) {
-            await supabase.from("clients").update({ needs_reminder: false }).eq("id", id);
-          }
-        }
-      } catch (e) {
-        console.error("Erreur MAJ needs_reminder après confirmation:", e);
-      }
-      // Feedback succès (résumé)
-      const summaryMsg = `Import terminé: ${toInsert.length} ajoutée(s), ${toUpdateSelected.length} mise(s) à jour, ${markedPaidCount} marquée(s) payée(s).`;
-      showSuccess(summaryMsg);
-      toast.success(summaryMsg);
-      if (successCount > 0 || markedPaidCount > 0) onImportSuccess(successCount + markedPaidCount); else throw new Error("Aucune modification n'a pu être appliquée!");
+      const prevItems = new Set(pendingReceivables.map((item: any) => `${item.owner_id}-${item.invoice_number}`));
+      const missingReceivables = receivables.filter((item) => !prevItems.has(`${item.owner_id}-${item.invoice_number}`));
+      if (missingReceivables.length > 0) { await supabase.from("receivables").delete().in("id", missingReceivables.map((item) => item.id)); }
+      if (successCount > 0) onImportSuccess(successCount); else throw new Error("Aucune créance n'a pu être importée!");
     } catch (error: any) {
       console.error("Erreur confirmation d'import:", error);
       showError(error.message || "Erreur lors de l'import des créances");
@@ -1976,7 +1775,7 @@ if (updatedTotalAmount >= maxOverDues) {
                 </table>
               </div>
 
-              <div className="flex justify-end items-center space-x-4">
+              <div className="flex justify-end space-x-4">
                 <button
                   onClick={() => setStep("mapping")}
                   className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
@@ -1989,20 +1788,6 @@ if (updatedTotalAmount >= maxOverDues) {
                 >
                   Importer {data.length} créances
                 </button>
-                {!preMissingLoading && preMissingCount > 0 && (
-                  <Tooltip
-                    label={
-                      `${preMissingCount} créance${preMissingCount > 1 ? 's' : ''} n'appara${preMissingCount > 1 ? 'issent' : 'ît'} plus dans votre import, ` +
-                      `${preMissingCount > 1 ? 'ces clients vous ont-ils payés ?' : 'ce client vous a-t-il payé ?'}`
-                    }
-                    theme="yellow"
-                  >
-                    <div className="flex items-center px-2 py-1 rounded-md text-sm bg-yellow-50 text-yellow-800 border border-yellow-300">
-                      <AlertCircle className="w-4 h-4 mr-1" />
-                      {preMissingCount}
-                    </div>
-                  </Tooltip>
-                )}
               </div>
             </div>
           )}
@@ -2010,63 +1795,54 @@ if (updatedTotalAmount >= maxOverDues) {
 
           {step === "conflicts" && (
             <div className="space-y-6">
-              {/* Section: Lignes absentes du nouvel import */}
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">Lignes absentes du nouvel import</h3>
+                <h3 className="text-lg font-semibold">Conflits d'écrasement détectés</h3>
                 <div className="flex gap-2">
-                  <button onClick={() => setAllMissingDecisions('markPaid')} className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700">Tout marquer payées</button>
-                  <button onClick={() => setAllMissingDecisions('keep')} className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50">Tout conserver impayées</button>
+                  <button onClick={() => setAllDecisions("overwrite")} className="px-3 py-1 text-sm bg-orange-600 text-white rounded hover:bg-orange-700">Tout écraser</button>
+                  <button onClick={() => setAllDecisions("keep")} className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50">Tout conserver</button>
                 </div>
               </div>
-              {missingExisting.length === 0 ? (
-                <div className="text-sm text-gray-500">Aucune ligne manquante détectée</div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {missingExisting.map((m: any) => {
-                    const key = `${m.owner_id}-${m.invoice_number}`;
-                    const decision = missingDecisions[key] || 'markPaid';
-                    const amount = Number((m as any)?.amount ?? 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                    const last = lastReminderByReceivable[m.id] ? new Date(lastReminderByReceivable[m.id] as string).toLocaleDateString('fr-FR') : '—';
-                    const name = (m as any)?.client?.company_name || '-';
-                    return (
-                      <div key={key} className="border rounded-md p-4 bg-white shadow-sm">
-                        <div className="flex items-start gap-3">
-                          {decision === 'markPaid' ? (
-                            <CheckCircle className="w-5 h-5 text-green-600 mt-1" />
-                          ) : (
-                            <AlertTriangle className="w-5 h-5 text-orange-600 mt-1" />
-                          )}
-                          <div className="flex-1">
-                            <div className="font-semibold mb-1">Possible paiement détecté</div>
-                            <p className="text-sm text-gray-700">
-                              Nous avons détecté que le client <b>{name}</b> n’apparaît plus dans votre dernier import.<br/>
-                              Cela signifie probablement qu’il a réglé sa créance.
-                            </p>
-                            <div className="mt-2 text-sm text-gray-600">
-                              <div>Facture: <b>{m.invoice_number}</b></div>
-                              <div>Montant: <b>{amount} €</b></div>
-                              <div>Dernière relance: <b>{last}</b></div>
-                            </div>
-                            <div className="mt-3 flex gap-2">
-                              <button onClick={() => handleConfirmMarkPaid(m)} className={`px-3 py-1.5 rounded text-sm ${decision === 'markPaid' ? 'bg-green-600 text-white' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}>
-                                Oui, marquer comme payée
-                              </button>
-                              <button onClick={() => handleConfirmKeep(m)} className={`px-3 py-1.5 rounded text-sm ${decision === 'keep' ? 'bg-gray-800 text-white' : 'border border-gray-300 text-gray-700 hover:bg-gray-50'}`}>
-                                Non, conserver impayée
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-              <div className="mt-3 text-sm text-gray-700">
-                <div className="mb-1">🧾 {Object.values(missingDecisions).filter((d) => d === 'markPaid').length} créance(s) détectée(s) comme réglée(s)</div>
-                <div>💡 Pensez à vérifier vos écritures avant validation.</div>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Facture</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Existant</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nouveau</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Décision</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {conflicts.map((c) => (
+                      <tr key={c.key}>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{c.existing.invoice_number}</td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{c.existing.client_name || '-'}</td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                          <div>Montant: {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(c.existing.amount)}</div>
+                          <div>Réglé: {c.existing.paid_amount ? new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(c.existing.paid_amount) : '-'}</div>
+                          <div>Statut: {c.existing.status || '-'}</div>
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                          <div>Montant: {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(c.incoming.amount)}</div>
+                          <div>Réglé: {c.incoming.paid_amount ? new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(c.incoming.paid_amount) : '-'}</div>
+                          <div>Echéance: {new Date(c.incoming.due_date).toLocaleDateString('fr-FR')}</div>
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                          <select
+                            value={conflictDecisions[c.key] || (c.fullyPaid ? 'overwrite' : 'keep')}
+                            onChange={(e) => updateConflictDecision(c.key, e.target.value as any)}
+                            className="p-2 border border-gray-300 rounded-md"
+                          >
+                            <option value="overwrite">Écraser</option>
+                            <option value="keep">Conserver</option>
+                          </select>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-
               <div className="flex justify-end gap-3">
                 <button onClick={() => setStep('preview')} className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Retour</button>
                 <button onClick={confirmImportWithDecisions} className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">Confirmer et importer</button>
@@ -2076,18 +1852,9 @@ if (updatedTotalAmount >= maxOverDues) {
           {step === "importing" && (
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-lg font-medium">Importation en cours...</p>
-              <div className="w-full max-w-xl mx-auto mt-4">
-                <div className="w-full bg-gray-200 rounded h-2 overflow-hidden">
-                  <div className="h-2 bg-blue-600" style={{ width: `${totalTasks > 0 ? Math.min(100, Math.round((importedCount / totalTasks) * 100)) : 0}%` }}></div>
-                </div>
-                <div className="mt-2 text-sm text-gray-600">
-                  Avancement: {importedCount} / {totalTasks}
-                </div>
-                <div className="mt-1 text-sm text-gray-700">
-                  Prévu • Ajouts: {plannedInsertCount} • Mises à jour: {plannedUpdateCount} • Marquées payées: {plannedMarkPaidCount}
-                </div>
-              </div>
+              <p className="text-lg font-medium">
+                Importation en cours... {importedCount} / {data.length}
+              </p>
             </div>
           )}
         </div>
