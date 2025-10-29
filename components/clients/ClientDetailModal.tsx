@@ -18,7 +18,7 @@ import {
   Wrench,
   FileText,
 } from "lucide-react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 interface ClientDetailModalProps {
   client: any;
@@ -26,7 +26,7 @@ interface ClientDetailModalProps {
   onClose: () => void;
 }
 
-const ClientDetailModal: React.FC<ClientDetailModalProps> = ({ client, isOpen, onClose }) => {
+export default function ClientDetailModal({ client, isOpen, onClose }: ClientDetailModalProps) {
   const router = useRouter();
   const [showReminderModal, setShowReminderModal] = React.useState(false);
   const [sending, setSending] = React.useState(false);
@@ -249,10 +249,9 @@ const ClientDetailModal: React.FC<ClientDetailModalProps> = ({ client, isOpen, o
             <button
               className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-md shadow transition-colors text-lg"
               onClick={() => {
-                router.push({
-                  pathname: '/receivables',
-                  query: { openReminderForClient: client.id }
-                });
+                const params = new URLSearchParams();
+                params.set('openReminderForClient', client.id);
+                router.push(`/receivables?${params.toString()}`);
               }}
               type="button"
             >
@@ -280,6 +279,4 @@ const ClientDetailModal: React.FC<ClientDetailModalProps> = ({ client, isOpen, o
       </div>
     </div>
   );
-};
-
-export default ClientDetailModal;
+}
