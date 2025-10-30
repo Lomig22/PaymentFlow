@@ -32,9 +32,8 @@ export async function createClient() {
     return supabase;
 }
 
-export async function verifySubscription(): Promise<{ subscribed: boolean, onboard: boolean }> {
+export async function verifySubscription(): Promise<{ subscribed: false, onboard: false } | { subscribed: true, onboard: boolean }> {
     const supabase = await createClient();
-    let onboard: boolean = false;
     try {
         console.log("⏳ Vérification de la session utilisateur...");
 
@@ -72,7 +71,7 @@ export async function verifySubscription(): Promise<{ subscribed: boolean, onboa
         // 2. Si aucune session valide → ne pas forcer de redirection ici (AppRoutes gère la protection)
         if (!user) {
             console.warn("🔒 Aucune session valide (Layout). On laisse le routeur supérieur gérer.");
-            return { subscribed: false, onboard };
+            return { subscribed: false, onboard: false };
         }
 
         const userId = user.id as string;
@@ -145,7 +144,7 @@ export async function verifySubscription(): Promise<{ subscribed: boolean, onboa
     } catch (e) {
         console.error("🔥 Erreur globale dans verifySubscription :", e);
     }
-    return { subscribed: true, onboard };
+    return { subscribed: true, onboard: true };
 };
 
 export async function syncPendingProfile() {
@@ -295,79 +294,69 @@ export async function fetchAbonnementInfo(): Promise<{ isExpired: boolean, abonn
             rawExpiryDate = null;
             expiryDate = `${essaiDuration - daysSinceCreation} jour(s)`;
             isExpired = false;
-        } else {
-            // Étape 2 : Vérifier abonnement actif
-            const { data: abonnementData, error: abonnementError } = await supabase
-                .from("subscriptions")
-                .select("plan, status, subscription_expiry")
-                .eq("user_id", user.id);
+            return { isExpired, abonnement, expiryDate, rawExpiryDate, resteEmail };
+        }
+        // Étape 2 : Vérifier abonnement actif
+        const { data: abonnementData, error: abonnementError } = await supabase
+            .from("subscriptions")
+            .select("plan, status, subscription_expiry")
+            .eq("user_id", user.id);
 
-            if (abonnementError) {
-                console.error("Erreur récupération abonnement:", abonnementError);
-                return Promise.reject("Erreur récupération abonnement: " + abonnementError.message);
-            }
-
-            if (abonnementData && abonnementData.length > 0) {
-                // 2.a: plan 'free' actif sans expiration -> considérer comme non expiré
-                const hasActiveFree = abonnementData.some(
-                    (row: any) => (row.plan === "free" || row.plan === "gratuit") && (row.status ?? "active") === "active"
-                );
-                if (hasActiveFree) {
-                    return { isExpired: false, abonnement: "free", expiryDate: "illimité", rawExpiryDate: null, resteEmail };
-                }
-
-                // 2.b: sinon, on regarde la dernière date d'expiration disponible
-                const latest = abonnementData
-                    .filter((row: any) => row.subscription_expiry)
-                    .sort(
-                        (a: any, b: any) =>
-                            new Date(b.subscription_expiry).getTime() -
-                            new Date(a.subscription_expiry).getTime()
-                    )[0];
-
-                if (latest?.subscription_expiry) {
-                    const expiry = new Date(latest.subscription_expiry);
-                    const expired = isBefore(expiry, now);
-
-                    abonnement = latest.plan || null;
-                    rawExpiryDate = expiry;
-                    expiryDate = new Intl.DateTimeFormat('fr-FR', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                    }).format(expiry);
-                    isExpired = expired;
-                    return { isExpired, abonnement, expiryDate, rawExpiryDate, resteEmail };
-                } else {
-                    return {
-                        isExpired: true,
-                        abonnement: null,
-                        expiryDate: null,
-                        rawExpiryDate: null,
-                        resteEmail
-                    };
-                }
-            } else {
-                console.log("No active subscription found for user:", user.id);
-                return {
-                    isExpired: true,
-                    abonnement: null,
-                    expiryDate,
-                    rawExpiryDate,
-                    resteEmail
-                };
-            }
+        if (abonnementError) {
+            console.error("Erreur récupération abonnement:", abonnementError);
+            return Promise.reject("Erreur récupération abonnement: " + abonnementError.message);
         }
 
-        // Étape 3 : Récupérer compteur d'emails
-        // const { data: userProfile } = await supabase
-        //   .from("profiles")
-        //   .select("email_counter")
-        //   .eq("id", user.id)
-        //   .maybeSingle();
+        if (!abonnementData.length) {
+            console.log("No active subscription found for user:", user.id);
+            return {
+                isExpired: true,
+                abonnement: null,
+                expiryDate,
+                rawExpiryDate,
+                resteEmail
+            };
+        }
+        // 2.a: plan 'free' actif sans expiration -> considérer comme non expiré
+        const hasActiveFree = abonnementData.some(
+            (row: any) => (row.plan === "free" || row.plan === "gratuit") && (row.status ?? "active") === "active"
+        );
+        if (hasActiveFree) {
+            return { isExpired: false, abonnement: "free", expiryDate: "illimité", rawExpiryDate: null, resteEmail };
+        }
 
-        // setResteEmail(userProfile?.email_counter ?? 0);
+        // 2.b: sinon, on regarde la dernière date d'expiration disponible
+        const latest = abonnementData
+            .filter((row: any) => row.subscription_expiry)
+            .sort(
+                (a: any, b: any) =>
+                    new Date(b.subscription_expiry).getTime() -
+                    new Date(a.subscription_expiry).getTime()
+            )[0];
+
+        if (!latest?.subscription_expiry) {
+            return {
+                isExpired: true,
+                abonnement: null,
+                expiryDate: null,
+                rawExpiryDate: null,
+                resteEmail
+            };
+        }
+
+        const expiry = new Date(latest.subscription_expiry);
+        const expired = isBefore(expiry, now);
+
+        abonnement = latest.plan || null;
+        rawExpiryDate = expiry;
+        expiryDate = new Intl.DateTimeFormat('fr-FR', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+        }).format(expiry);
+        isExpired = expired;
         return { isExpired, abonnement, expiryDate, rawExpiryDate, resteEmail };
+
     } catch (err: any) {
         console.error("Erreur inattendue dans useAbonnementCheck:", err);
         return Promise.reject("Erreur inattendue: " + (err.message || JSON.stringify(err)));

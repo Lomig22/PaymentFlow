@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Layout from "../../components/layout/Layout";
-import { createClient, ensureEmailSettings, syncPendingProfile, verifySubscription } from "../../src/lib/supabase/server";
+import { createClient, ensureEmailSettings, fetchAbonnementInfo, syncPendingProfile, verifySubscription } from "../../src/lib/supabase/server";
 import { Suspense } from "react";
 import { VerifySubscription } from "../../components/layout/VerifySubscription";
 
@@ -16,6 +16,10 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
     await syncPendingProfile();
     await ensureEmailSettings();
     await verifySubscription();
+    const { isExpired } = await fetchAbonnementInfo();
+    if (isExpired) {
+        redirect("/pricing");
+    }
 
     return <main><Suspense fallback={<VerifySubscription />}><Layout>{children}</Layout></Suspense></main>;
 }
