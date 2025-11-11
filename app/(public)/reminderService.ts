@@ -1,17 +1,7 @@
 import { supabase } from '../../src/lib/supabase/supabase';
 import { Receivable, Client } from '../../src/types/database';
-import { sendEmail } from '../../src/lib/email';
+import { EmailSettings, sendEmail } from '../../src/lib/email';
 import { v4 as uuidv4 } from 'uuid';
-
-interface EmailSettings {
-	provider_type: string;
-	smtp_username: string;
-	smtp_password: string;
-	smtp_server: string;
-	smtp_port: number;
-	smtp_encryption: string;
-	email_signature?: string;
-}
 
 // Retourne la première adresse email valide trouvée dans une chaîne potentiellement séparée par des virgules
 function pickFirstValidEmail(raw?: string | null): string | null {
@@ -36,7 +26,7 @@ function convertJHMToMinutes(jhm: { j: number; h: number; m: number } | undefine
 	return joursEnMinutes + heuresEnMinutes + minutes;
 }
 // Fonction pour récupérer les paramètres email de l'utilisateur
-export async function getEmailSettings(userId: string): Promise<EmailSettings | null> {
+export async function getEmailSettings(userId: string): Promise< EmailSettings | null> {
 	try {
 		const { data, error } = await supabase
 			.from('email_settings')
@@ -53,9 +43,8 @@ export async function getEmailSettings(userId: string): Promise<EmailSettings | 
 					smtp_password: '',
 					smtp_server: '',
 					smtp_port: 0 as unknown as number,
-					smtp_encryption: '',
-					email_signature: undefined,
-				} as EmailSettings;
+					smtp_encryption: ''
+				};
 			}
 			throw error;
 		}
@@ -69,7 +58,7 @@ export async function getEmailSettings(userId: string): Promise<EmailSettings | 
 				smtp_port: 0 as unknown as number,
 				smtp_encryption: '',
 				email_signature: undefined,
-			} as EmailSettings;
+			} ;
 		}
 		return data as unknown as EmailSettings;
 	} catch (error) {
@@ -127,7 +116,7 @@ function determineReminderLevel(
 	status: string,
 	content?: string | null
 ): {
-	level: 'pre' | 'first' | 'second' | 'third' | 'final' | null;
+	level: number | null;
 	template: string | null;
 } {
 	// Si aucun client n'est fourni, on retourne null
@@ -139,16 +128,16 @@ function determineReminderLevel(
 	// Si une relance a déjà été faite avec un certain niveau,
 	// on renvoie directement le niveau suivant avec le template correspondant
 	if (status === 'Relance 3' && (client.reminder_template_final || content))
-		return { level: 'final', template: (client.reminder_template_final ?? content) ?? null };
+		return { level: 4, template: (client.reminder_template_final ?? content) ?? null };
 	if (status === 'Relance 2' && (client.reminder_template_3 || content))
-		return { level: 'third', template: (client.reminder_template_3 ?? content) ?? null };
+		return { level: 3, template: (client.reminder_template_3 ?? content) ?? null };
 	if (status === 'Relance 1' && (client.reminder_template_2 || content))
-		return { level: 'second', template: (client.reminder_template_2 ?? content) ?? null };
+		return { level: 2, template: (client.reminder_template_2 ?? content) ?? null };
 	if (status === 'Relance préventive' && (client.reminder_template_1 || content))
-		return { level: 'first', template: (client.reminder_template_1 ?? content) ?? null };
+		return { level: 1, template: (client.reminder_template_1 ?? content) ?? null };
 	if (status === 'pending' && client.pre_reminder_template) {
 		//	alert("pending")
-		return { level: 'pre', template: (client.pre_reminder_template ?? content) ?? null };
+		return { level: 0, template: (client.pre_reminder_template ?? content) ?? null };
 	}
 	// Si aucun statut de relance encore, on peut proposer un pré-reminder
 	/*  	if (status==="pending" && client.reminder_template_1 && daysLate>0){
@@ -166,37 +155,37 @@ function determineReminderLevel(
 		daysLateMinutes >= (convertJHMToMinutes(client.reminder_delay_final)) &&
 		client.reminder_template_final
 	) {
-		return { level: 'final', template: client.reminder_template_final };
+		return { level: 4, template: client.reminder_template_final };
 	}
 
 	if (
 		daysLateMinutes >= (convertJHMToMinutes(client.reminder_delay_3)) &&
 		client.reminder_template_3
 	) {
-		return { level: 'third', template: client.reminder_template_3 };
+		return { level: 3, template: client.reminder_template_3 };
 	}
 
 	if (
 		daysLateMinutes >= (convertJHMToMinutes(client.reminder_delay_2)) &&
 		client.reminder_template_2
 	) {
-		return { level: 'second', template: client.reminder_template_2 };
+		return { level: 2, template: client.reminder_template_2 };
 	}
 
 	if (
 		daysLateMinutes >= (convertJHMToMinutes(client.reminder_delay_1) || 15) &&
 		client.reminder_template_1
 	) {
-		return { level: 'first', template: client.reminder_template_1 };
+		return { level: 1, template: client.reminder_template_1 };
 	}
 
 	// Si aucun des cas ci-dessus ne s'applique, on retourne une relance préventive si disponible
-	return { level: 'pre', template: client.pre_reminder_template || null };
+	return { level: 0, template: client.pre_reminder_template || null };
 }
 export async function getReminderTemplate(
 	receivableId: string,
 	status?: string
-): Promise<{ level: string; template: string } | null> {
+): Promise<{ level: number; template: string } | null> {
 	try {
 		// Récupérer la créance avec les détails du client
 		const { data: receivable, error: receivableError } = await supabase
@@ -355,15 +344,15 @@ export async function sendManualReminder(
 					.update({
 						email_id: emailTrackingId,
 						status:
-							level === 'first'
+							level === 1
 								? 'Relance 1'
-								: level === 'second'
+								: level === 2
 									? 'Relance 2'
-									: level === 'third'
+									: level === 3
 										? 'Relance 3'
-										: level === 'final'
+										: level === 4
 											? 'Relance finale'
-											: level === 'pre'
+											: level === 0
 												? 'Relance préventive'
 												: 'Relance',
 						updated_at: new Date().toISOString(),
@@ -438,11 +427,11 @@ export async function sendOneReminder(receivableId: string): Promise<boolean> {
 
 		let shouldSend = true;
 
-		if (level === 'pre') {
+		if (level === 0) {
 			// Prérelance uniquement si on est AVANT la date d’échéance
 			if (now.getTime() >= dueDate.getTime()) return false;
 
-			if (lastReminder && lastReminder.reminder_type === 'pre') {
+			if (lastReminder && lastReminder.reminder_type === 0) {
 				const delayMinutes = 1; // 1 minute pour la prérelance
 				const nextAllowed = new Date(lastReminder.reminder_date);
 				nextAllowed.setMinutes(nextAllowed.getMinutes() + delayMinutes);
@@ -511,15 +500,15 @@ export async function sendOneReminder(receivableId: string): Promise<boolean> {
 					.from('receivables')
 					.update({
 						status:
-							level === 'first'
+							level === 1
 								? 'Relance 1'
-								: level === 'second'
+								: level === 2
 									? 'Relance 2'
-									: level === 'third'
+									: level === 3
 										? 'Relance 3'
-										: level === 'final'
+										: level === 4
 											? 'Relance finale'
-											: level === 'pre'
+											: level === 0
 												? 'Relance préventive'
 												: 'Relance',
 						email_id: autoEmailTrackingId,

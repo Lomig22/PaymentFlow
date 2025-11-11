@@ -97,6 +97,7 @@ export interface Reminder {
   email_sent: boolean;
   email_content?: string;
   created_at: string;
+  owner_id?: string; // propriétaire de l'historique (pour persister même si la créance est supprimée)
 }
 
 export interface UnknownClient {

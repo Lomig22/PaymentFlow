@@ -284,7 +284,11 @@ export function ReceivablesList({ user }: { user: SupabaseUser }) {
         .from("receivables")
         .select("*, client:clients(*)")
         .in("owner_id", allOwnerIds)
-        .order("due_date", { ascending: false });
+        // Ordre par défaut quand aucun filtrage/tri UI n'est demandé:
+        // - préserver l'ordre d'import/ajout => created_at croissant
+        // - stabiliser sur id croissant en second critère
+        .order("created_at", { ascending: true })
+        .order("id", { ascending: true });
 
       if (receivablesError) throw receivablesError;
 
@@ -438,22 +442,46 @@ export function ReceivablesList({ user }: { user: SupabaseUser }) {
           // Récupérer le contenu et le niveau
 
           const result = await getReminderTemplate(
-            selectedReceivable.id,
-            newStatus
-          );
-          if (!cancelled && result) {
-            const subjectLine = `Relance facture ${selectedReceivable.invoice_number}`;
-            setSubject(subjectLine);
-            setContent(result.template); // ou formatté si le template est déjà rempli
-          }
+      selectedReceivable.id,
+      newStatus
+    );
+    // Overlay dynamique des templates depuis le profil si présent
+    let finalTemplate = result?.template || "";
+    try {
+      const effId = (selectedReceivable.client as any)?.reminder_profile || (selectedReceivable.client as any)?.reminder_profiles || null;
+      if (effId && result?.level) {
+        const { data: prof, error: pErr } = await supabase
+          .from('reminder_profile')
+          .select('email_template_1, email_template_2, email_template_3, email_template_4')
+          .eq('id', effId as string)
+          .maybeSingle();
+        if (!pErr && prof) {
+          const map: Record<string, string | null> = {
+            first: (prof as any).email_template_1 || null,
+            second: (prof as any).email_template_2 || null,
+            third: (prof as any).email_template_3 || null,
+            final: (prof as any).email_template_4 || null,
+          };
+          const override = map[result.level] || null;
+          if (override) finalTemplate = override;
         }
-      };
-
-      fetchData();
+      }
+    } catch (error) {
+      console.error("Erreur lors de l'overlay des templates:", error);
     }
-    return () => {
-      cancelled = true;
-    };
+    if (!cancelled && result) {
+      const subjectLine = `Relance facture ${selectedReceivable.invoice_number}`;
+      setSubject(subjectLine);
+      setContent(finalTemplate); // utiliser le template effectif
+    }
+          }
+        }; // fin fetchData
+
+        fetchData();
+      }
+      return () => {
+        cancelled = true;
+      };
   }, [selectedReceivable, showConfirmSendReminder]);
 
   // Fonction pour vérifier si un client a des créances impayées
@@ -540,7 +568,16 @@ export function ReceivablesList({ user }: { user: SupabaseUser }) {
       setReceivables(receivables.filter((r) => r.id !== receivableToDelete.id));
       setShowDeleteConfirm(false);
       setReceivableToDelete(null);
-      await updateClientReminderStatus(clientId, false);
+
+      // Ne mettre needs_reminder à false que si le client n'a plus aucune créance
+      const { data: remaining, error: remainErr } = await supabase
+        .from("receivables")
+        .select("id")
+        .eq("client_id", clientId)
+        .limit(1);
+      if (!remainErr && (!remaining || remaining.length === 0)) {
+        await updateClientReminderStatus(clientId, false);
+      }
 
       // Vérifier si le client a encore des créances impayées
       //  const noUnpaidReceivables = await checkClientUnpaidReceivables(clientId);
@@ -623,7 +660,15 @@ export function ReceivablesList({ user }: { user: SupabaseUser }) {
 
     // Étape 3 : Mettre à jour les statuts de relance des clients
     for (const clientId of clientIds) {
-      await updateClientReminderStatus(clientId, false); // ou true selon ta logique
+      // Ne mettre needs_reminder à false que si le client n'a plus aucune créance restante
+      const { data: remaining, error: remainErr } = await supabase
+        .from("receivables")
+        .select("id")
+        .eq("client_id", clientId)
+        .limit(1);
+      if (!remainErr && (!remaining || remaining.length === 0)) {
+        await updateClientReminderStatus(clientId, false);
+      }
     }
 
     // Étape 4 : Rafraîchir l'état local
@@ -1104,16 +1149,17 @@ export function ReceivablesList({ user }: { user: SupabaseUser }) {
     }
   };
 
-  const filteredReceivables = receivables
-    .filter((receivable) => {
-      const searchLower = searchTerm.toLowerCase();
-      return (
-        receivable.client?.company_name.toLowerCase().includes(searchLower) ||
-        receivable.invoice_number.toLowerCase().includes(searchLower) ||
-        receivable.amount.toString().includes(searchLower)
-      );
-    })
-    .sort(applySorting);
+  const baseFiltered = receivables.filter((receivable) => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      receivable.client?.company_name.toLowerCase().includes(searchLower) ||
+      receivable.invoice_number.toLowerCase().includes(searchLower) ||
+      receivable.amount.toString().includes(searchLower)
+    );
+  });
+  // Appliquer un tri uniquement si l'utilisateur a explicitement choisi un tri.
+  // Sinon, conserver l'ordre naturel renvoyé par la base (stable avec due_date desc, id asc)
+  const filteredReceivables = sortConfig ? [...baseFiltered].sort(applySorting) : baseFiltered;
   const dropdownRefs = useRef<Record<string, HTMLDivElement | HTMLSpanElement | null>>({});
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });

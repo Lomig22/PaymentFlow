@@ -1,9 +1,11 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
-import { X, Upload, AlertCircle, Info, Loader2 } from "lucide-react";
+import { supabase } from "../../src/lib/supabase/supabase";
+import { X, Upload, AlertCircle, Info, Loader2, CheckCircle, AlertTriangle, XCircle } from "lucide-react";
 import { Receivable, Client } from "../../src/types/database";
 import Papa from "papaparse";
 import { toast } from "react-toastify";
-import { useSupabase } from "../../app/providers/supabase-provider";
+import Tooltip from "../Common/Tooltip";
+import Swal from "sweetalert2";
 
 interface CSVImportModalProps {
   onClose: () => void;
@@ -31,6 +33,27 @@ export interface CSVMapping {
   created_at: string | null;
   updated_at: string | null;
 }
+
+// Conflit d'écrasement lors de l'import
+type ConflictItem = {
+  key: string;
+  existing: {
+    id: string;
+    invoice_number: string;
+    amount: number;
+    paid_amount: number | null;
+    status: string | null;
+    client_name?: string;
+  };
+  incoming: {
+    amount: number;
+    paid_amount: number | null;
+    due_date: string;
+    email: string;
+    installment_number: number | null;
+  };
+  fullyPaid: boolean;
+};
 
 const mappingFields: MappingField[] = [
   { field: "client", label: "Client", required: false },
@@ -177,7 +200,6 @@ export default function CSVImportModal({
   onImportSuccess,
   receivables,
 }: CSVImportModalProps) {
-  const supabase = useSupabase();
   const [file, setFile] = useState<File | null>(null);
   const [data, setData] = useState<any[]>([]);
   const [planError, setPlanError] = useState<string | null>(null);
@@ -186,7 +208,7 @@ export default function CSVImportModal({
   const [csvHeaders, setCsvHeaders] = useState<string[]>([]);
   //Shanaka (Finish)
   const [step, setStep] = useState<
-    "upload" | "preview" | "importing" | "mapping"
+    "upload" | "preview" | "importing" | "mapping" | "conflicts"
   >("upload");
   const [error, setError] = useState<string | null>(null);
   const [preview, setPreview] = useState<(Receivable & { client: Client })[]>(
@@ -203,7 +225,25 @@ export default function CSVImportModal({
   const [dirty, setDirty] = useState(false);
   const [savingSchema, setSavingSchema] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
-  let planMessage = "";
+  let planMessage="";
+  // Etats pour la gestion des conflits
+  const [conflicts, setConflicts] = useState<ConflictItem[]>([]);
+  const [pendingReceivables, setPendingReceivables] = useState<any[]>([]);
+  const [pendingToInsert, setPendingToInsert] = useState<any[]>([]);
+  const [pendingToUpdate, setPendingToUpdate] = useState<any[]>([]);
+  const [conflictDecisions, setConflictDecisions] = useState<Record<string, "overwrite" | "keep">>({});
+  // États pour les lignes absentes du nouvel import (paiement implicite potentiel)
+  const [missingExisting, setMissingExisting] = useState<any[]>([]);
+  const [missingDecisions, setMissingDecisions] = useState<Record<string, "markPaid" | "keep">>({});
+  const [lastReminderByReceivable, setLastReminderByReceivable] = useState<Record<string, string | null>>({});
+  // Pré-indication en étape "preview": nombre de lignes manquantes détectables avant import
+  const [preMissingCount, setPreMissingCount] = useState<number>(0);
+  const [preMissingLoading, setPreMissingLoading] = useState<boolean>(false);
+  // Progression et résumé lors de la confirmation
+  const [totalTasks, setTotalTasks] = useState<number>(0);
+  const [plannedInsertCount, setPlannedInsertCount] = useState<number>(0);
+  const [plannedUpdateCount, setPlannedUpdateCount] = useState<number>(0);
+  const [plannedMarkPaidCount, setPlannedMarkPaidCount] = useState<number>(0);
   const isDirtyComputed = useMemo(() => {
     try {
       return JSON.stringify(mapping) !== JSON.stringify(originalMapping);
@@ -220,6 +260,8 @@ export default function CSVImportModal({
     }, 3000);
   };
 
+  const normalizeInvoice = (v: unknown): string => String(v ?? "").trim().toLowerCase();
+
   // Désactiver le défilement du body quand la modale est ouverte
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -233,7 +275,51 @@ export default function CSVImportModal({
     fetchClients();
   }, []);
 
-  const fetchClients = async () => {
+  // Pré-calcul: nombre de lignes existantes absentes du nouveau CSV (indication dans le bouton Importer)
+  useEffect(() => {
+    const run = async () => {
+      try {
+        setPreMissingLoading(true);
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) { setPreMissingCount(0); return; }
+        const invoiceIndex = csvHeaders.findIndex((h) => mapping[h] === "invoice_number");
+        if (invoiceIndex === -1) { setPreMissingCount(0); return; }
+        const incomingKeys = new Set(
+          data
+            .map((row) => `${user.id}-${normalizeInvoice(row?.[invoiceIndex] ?? "")}`)
+            .filter((k) => k && !k.endsWith('-'))
+        );
+        const { data: existing, error } = await supabase
+          .from('receivables')
+          .select('owner_id, invoice_number')
+          .eq('owner_id', user.id);
+        if (error) { setPreMissingCount(0); return; }
+        const missing = (existing || []).filter((item: any) => !incomingKeys.has(`${item.owner_id}-${normalizeInvoice(item.invoice_number)}`));
+        setPreMissingCount(missing.length);
+      } catch (e) {
+        console.error('Pré-détection missing (aperçu) échouée:', e);
+        setPreMissingCount(0);
+      } finally {
+        setPreMissingLoading(false);
+      }
+    };
+    if (step === 'preview') run(); else setPreMissingCount(0);
+  }, [step, csvHeaders, mapping, data]);
+
+  
+const getClientIdByName = (name: string): string | null => {
+  const key = (name || "").toLowerCase().trim();
+  const client = clientMap[key] || clients.find((c) => c.company_name.toLowerCase().trim() == key);
+  return client ? client.id : null;
+};
+
+const getClientIdByCode = (code: string): string | null => {
+  const key = (code || "").toLowerCase().trim();
+  if (!key) return null;
+  const client = clients.find((c) => (c?.client_code || "").toLowerCase().trim() === key);
+  return client ? client.id : null;
+};
+const fetchClients = async () => {
     try {
       const {
         data: { user },
@@ -270,74 +356,98 @@ export default function CSVImportModal({
     }, 3000);
   };
   const handleMapping = async (header: string[]) => {
-    const headerMap = new Map(
-      header.map((item) => [columnMapping[item], true])
-    );
+    // Vérifier d'éventuels en-têtes requis (actuellement vide)
+    const headerMap = new Map(header.map((item) => [columnMapping[item], true]));
     const missingHeaders: string[] = [];
     for (const expected of expectedHeaders) {
       if (!headerMap.has(columnMapping[expected.toLowerCase().trim()])) {
         missingHeaders.push(expected);
       }
     }
-
     if (missingHeaders.length > 0) {
       showError(
-        `Le fichier CSV doit contenir une colonne "${missingHeaders.join(
-          ","
-        )}" pour importer les données`
+        `Le fichier CSV doit contenir une colonne "${missingHeaders.join(',')}" pour importer les données`
       );
       return;
     }
 
-    const autoMapping: Record<string, keyof CSVMapping> = {};
+    const normalizedHeaders = header.map((h) => h.trim().toLowerCase());
+    let finalMapping: Record<string, keyof CSVMapping> = {};
+    const used = new Set<string>();
+
     const {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) throw new Error("Utilisateur non authentifié");
-    const { data: savedMapping } = await supabase
-      .from("profiles")
-      .select("receivables_mapping")
-      .eq("id", user.id);
-    if (
-      savedMapping !== null &&
-      savedMapping[0].receivables_mapping !== undefined &&
-      savedMapping[0].receivables_mapping !== null
-    ) {
-      const decodedMapping = JSON.parse(savedMapping[0].receivables_mapping);
 
-      Object.entries(decodedMapping).forEach(([key, value]) => {
-        autoMapping[key] = value as keyof CSVMapping;
-      });
-    } else {
-      // columnMapping
-      for (const col of header) {
-        const mappedColumn = columnMapping[col.trim().toLowerCase()];
-        if (mappedColumn !== undefined && mappedColumn !== null) {
-          autoMapping[col.trim().toLowerCase()] =
-            mappedColumn as keyof CSVMapping;
+    const { data: savedMapping } = await supabase
+      .from('profiles')
+      .select('receivables_mapping')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    if (savedMapping && savedMapping.receivables_mapping) {
+      try {
+        const decoded = JSON.parse(savedMapping.receivables_mapping);
+        for (const [key, value] of Object.entries(decoded)) {
+          const k = String(key).trim().toLowerCase();
+          const v = value as keyof CSVMapping;
+          if (normalizedHeaders.includes(k) && v && !used.has(v as string)) {
+            finalMapping[k] = v;
+            used.add(v as string);
+          }
+        }
+      } catch {}
+    }
+
+    // Fallback auto-mapping si rien de sauvegardé ou incomplet
+    if (Object.keys(finalMapping).length === 0) {
+      for (const col of normalizedHeaders) {
+        const mapped = columnMapping[col] as keyof CSVMapping | undefined;
+        if (mapped && !used.has(mapped as string)) {
+          finalMapping[col] = mapped;
+          used.add(mapped as string);
         }
       }
     }
-    setMapping(autoMapping);
-    setOriginalMapping(autoMapping);
+
+    setMapping(finalMapping);
+    setOriginalMapping(finalMapping);
     setDirty(false);
-    setStep("mapping");
+    setStep('mapping');
   };
 
   const handleMappingChange = (
     header: string,
-    field: keyof CSVMapping | ""
+    field: keyof CSVMapping | ''
   ) => {
-    if (field === "") {
+    const hKey = header.trim().toLowerCase();
+    if (field === '') {
       const newMapping = { ...mapping };
-      delete newMapping[header];
+      delete newMapping[hKey];
       setMapping(newMapping);
     } else {
-      setMapping({ ...mapping, [header]: field });
+      // Unicité: ce champ ne peut être sélectionné que par une seule colonne CSV
+      const newMapping: Record<string, keyof CSVMapping> = { ...mapping } as any;
+      for (const [h, f] of Object.entries(newMapping)) {
+        if (h !== hKey && f === field) {
+          delete newMapping[h];
+        }
+      }
+      newMapping[hKey] = field as keyof CSVMapping;
+      const sanitized = Object.keys(newMapping).reduce(
+        (obj: Record<string, keyof CSVMapping>, key) => {
+          if (csvHeaders.includes(key)) {
+            obj[key] = newMapping[key];
+          }
+          return obj;
+        },
+        {} as Record<string, keyof CSVMapping>
+      );
+      setMapping(sanitized);
     }
     setDirty(true);
   };
-
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
     if (!selectedFile) return;
@@ -642,7 +752,8 @@ export default function CSVImportModal({
             formatDate(dueDateStr) || new Date().toISOString().split("T")[0];
 
           const status = mapStatus(statusStr);
-          const clientCode = clientCodeIndex !== -1 ? (row[clientCodeIndex] || "") : "";
+          const clientCodeRaw = clientCodeIndex !== -1 ? row[clientCodeIndex] : "";
+          const clientCode = clientCodeRaw ? String(clientCodeRaw).trim() : "";
           // Trouver le client correspondant en utilisant le nom du client
 
           const clientId = getClientId(clientName);
@@ -667,8 +778,7 @@ export default function CSVImportModal({
             const newClient: Client = {
               id: tempId,
               company_name: clientName,
-              client_code:
-                clientCode || Math.floor(Math.random() * (100000 - 150000) + 100000),
+              client_code: clientCode || String(Math.floor(Math.random() * (150000 - 100000)) + 100000),
               email: email,
               needs_reminder: true,
               created_at: new Date().toISOString(),
@@ -843,7 +953,7 @@ export default function CSVImportModal({
           // Trimmed clientName
           const clientName = row[clientIndex].trim() || "";
           //Shanaka(Finish)
-          const invoiceNumber = row[invoiceIndex] || "";
+          const invoiceNumber = (row[invoiceIndex] ?? "").toString().trim();
           const amountStr = row[amountIndex] || "0";
           const paidAmountStr =
             paidAmountIndex !== -1 ? row[paidAmountIndex] : "";
@@ -868,11 +978,12 @@ export default function CSVImportModal({
           const dueDate =
             formatDate(dueDateStr) || new Date().toISOString().split("T")[0];
           const status = mapStatus(statusStr);
-          const clientCode = clientCodeIndex !== -1 ? (row[clientCodeIndex] || "") : "";
+          const clientCodeRaw = clientCodeIndex !== -1 ? row[clientCodeIndex] : "";
+          const clientCode = clientCodeRaw ? String(clientCodeRaw).trim() : "";
           //Jetemail
-          const email = row[emailIndex];
+          const email = emailIndex !== -1 ? String(row[emailIndex] || "").trim() : "";
           // Trouver le client correspondant
-          let clientId = getClientId(clientName);
+          let clientId = clientCode ? getClientIdByCode(clientCode) : getClientIdByName(clientName);
 
           // Si le client n'est pas trouvé, vérifier s'il a été créé
           if (!clientId) {
@@ -898,7 +1009,7 @@ export default function CSVImportModal({
                     [
                       {
                         company_name: clientName,
-                        client_code: clientCode,
+                        client_code: clientCode || null,
                         email: `${clientName
                           .toLowerCase()
                           .replace(/\s+/g, ".")}@example.com`,
@@ -962,6 +1073,117 @@ export default function CSVImportModal({
         }
       }
       //Jet1
+      // Pré-détection des conflits d'écrasement (par invoice_number pour l'owner courant)
+      try {
+        const invoiceNumbers = Array.from(
+          new Set(receivablesToImport.map((r: any) => r.invoice_number))
+        );
+        if (invoiceNumbers.length > 0) {
+          const { data: existingConflicts, error: exErr } = await supabase
+            .from("receivables")
+            .select(
+              "id, owner_id, client_id, invoice_number, status, amount, paid_amount, due_date, email, installment_number, client:clients(company_name)"
+            )
+            .eq("owner_id", user.id)
+            ;
+          if (exErr) throw exErr;
+
+          const existMap = new Map(
+            (existingConflicts || []).map((r: any) => [normalizeInvoice(r.invoice_number), r])
+          );
+          // Détecter les lignes ABSENTES dans le nouvel import (candidates à suppression)
+          const incomingKeys = new Set(
+            receivablesToImport.map((r: any) => `${user.id}-${normalizeInvoice(r.invoice_number)}`)
+          );
+          const missing = (existingConflicts || []).filter(
+            (item: any) => !incomingKeys.has(`${item.owner_id}-${normalizeInvoice(item.invoice_number)}`)
+          );
+          setMissingExisting(missing);
+          const md: Record<string, "markPaid" | "keep"> = {};
+          for (const m of missing) {
+            md[`${m.owner_id}-${m.invoice_number}`] = "markPaid";
+          }
+          setMissingDecisions(md);
+          // Charger la dernière date de relance pour ces créances manquantes
+          try {
+            const ids = missing.map((m: any) => m.id).filter(Boolean);
+            if (ids.length > 0) {
+              const { data: lastRem } = await supabase
+                .from('reminders')
+                .select('receivable_id, reminder_date')
+                .in('receivable_id', ids)
+                .order('reminder_date', { ascending: false });
+              const map: Record<string, string | null> = {};
+              (lastRem || []).forEach((r: any) => {
+                if (!map[r.receivable_id]) map[r.receivable_id] = r.reminder_date;
+              });
+              setLastReminderByReceivable(map);
+            } else {
+              setLastReminderByReceivable({});
+            }
+          } catch (e) {
+            setLastReminderByReceivable({});
+          }
+          const toInsertPre: any[] = [];
+          const toUpdatePre: any[] = [];
+          const conflictItems: ConflictItem[] = [];
+          const decisions: Record<string, "overwrite" | "keep"> = {};
+
+          for (const rec of receivablesToImport) {
+            const ex = existMap.get(normalizeInvoice(rec.invoice_number));
+            if (ex) {
+              const key = `${user.id}-${rec.invoice_number}`;
+              // Ne considérer en conflit que les lignes réellement modifiées
+              const isDifferent =
+                Number(ex.amount ?? 0) !== Number(rec.amount ?? 0) ||
+                Number(ex.paid_amount ?? 0) !== Number(rec.paid_amount ?? 0) ||
+                String(ex.due_date ?? '') !== String(rec.due_date ?? '') ||
+                String(ex.email ?? '') !== String(rec.email ?? '') ||
+                (ex.installment_number ?? null) !== (rec.installment_number ?? null);
+              if (isDifferent) {
+                const fullyPaid = ex.status === "paid" || (ex.paid_amount ?? 0) >= (ex.amount ?? 0);
+                toUpdatePre.push({ ...rec, status: ex.status });
+                conflictItems.push({
+                  key,
+                  existing: {
+                    id: ex.id,
+                    invoice_number: ex.invoice_number,
+                    amount: ex.amount ?? 0,
+                    paid_amount: ex.paid_amount ?? 0,
+                    status: ex.status ?? null,
+                    client_name: (ex as any)?.client?.company_name,
+                  },
+                  incoming: {
+                    amount: rec.amount ?? 0,
+                    paid_amount: rec.paid_amount ?? null,
+                    due_date: rec.due_date,
+                    email: rec.email,
+                    installment_number: rec.installment_number ?? null,
+                  },
+                  fullyPaid,
+                });
+                decisions[key] = fullyPaid ? "overwrite" : "keep";
+              }
+              // sinon: ligne inchangée → ne pas remonter en conflit ni en mise à jour
+            } else {
+              toInsertPre.push(rec);
+            }
+          }
+
+          if (conflictItems.length > 0 || (missing && missing.length > 0)) {
+            setPendingReceivables(receivablesToImport);
+            setPendingToInsert(toInsertPre);
+            setPendingToUpdate(toUpdatePre);
+            setConflicts(conflictItems);
+            setConflictDecisions(decisions);
+            setStep("conflicts");
+            setImporting(false);
+            return;
+          }
+        }
+      } catch (preErr) {
+        console.error("Erreur pré-détection conflits:", preErr);
+      }
       const batchSize = 20;
       let successCount = 0;
 
@@ -986,7 +1208,7 @@ export default function CSVImportModal({
           }
 
           const existingMap = new Map(
-            existing.map((r) => [`${r.owner_id}-${r.invoice_number}`, r])
+            existing.map((r) => [`${r.owner_id}-${normalizeInvoice(r.invoice_number)}`, r])
           );
 
           const toInsert: any[] = [];
@@ -994,7 +1216,7 @@ export default function CSVImportModal({
 
           for (const record of batch) {
             //Jetemail
-            const key = `${record.owner_id}-${record.invoice_number}`;
+            const key = `${record.owner_id}-${normalizeInvoice(record.invoice_number)}`;
             if (existingMap.has(key)) {
               //console.log(record);
 
@@ -1010,13 +1232,13 @@ export default function CSVImportModal({
 
           // 2. Appliquer les mises à jour
           for (const record of toUpdate) {
-            const key = `${record.owner_id}-${record.invoice_number}`;
+            const key = `${record.owner_id}-${normalizeInvoice(record.invoice_number)}`;
             updatedMap.set(key, { ...record });
           }
 
           // 3. Appliquer les nouvelles insertions
           for (const record of toInsert) {
-            const key = `${record.owner_id}-${record.invoice_number}`;
+            const key = `${record.owner_id}-${normalizeInvoice(record.invoice_number)}`;
             updatedMap.set(key, { ...record });
           }
 
@@ -1188,6 +1410,28 @@ export default function CSVImportModal({
         }
       }
 
+      // Mettre à jour l'état "relance" des clients (needs_reminder) si aucun reliquat de créance
+      try {
+        const affectedClientIds = Array.from(new Set([
+          ...receivablesToImport.map((r: any) => r.client_id),
+          ...receivables.map((r) => r.client_id),
+        ]));
+        if (affectedClientIds.length > 0) {
+          const { data: remainingAfter } = await supabase
+            .from("receivables")
+            .select("client_id")
+            .eq("owner_id", user.id)
+            .in("client_id", affectedClientIds);
+          const stillHas = new Set((remainingAfter || []).map((r: any) => r.client_id));
+          const toDisable = affectedClientIds.filter((id) => !stillHas.has(id));
+          for (const id of toDisable) {
+            await supabase.from("clients").update({ needs_reminder: false }).eq("id", id);
+          }
+        }
+      } catch (e) {
+        console.error("Erreur MAJ needs_reminder après import:", e);
+      }
+
       if (successCount > 0) {
         onImportSuccess(successCount);
       } else {
@@ -1238,6 +1482,172 @@ export default function CSVImportModal({
     setNewClients({});
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
+    }
+  };
+
+  // Conflict decisions helpers
+  const updateConflictDecision = (key: string, decision: "overwrite" | "keep") => {
+    setConflictDecisions((prev) => ({ ...prev, [key]: decision }));
+  };
+  const setAllDecisions = (decision: "overwrite" | "keep") => {
+    const all: Record<string, "overwrite" | "keep"> = {};
+    for (const c of conflicts) all[c.key] = decision;
+    setConflictDecisions(all);
+  };
+  // Missing decisions helpers
+  const updateMissingDecision = (key: string, decision: "markPaid" | "keep") => {
+    setMissingDecisions((prev) => ({ ...prev, [key]: decision }));
+  };
+  const setAllMissingDecisions = (decision: "markPaid" | "keep") => {
+    const all: Record<string, "markPaid" | "keep"> = {};
+    for (const m of missingExisting) all[`${m.owner_id}-${m.invoice_number}`] = decision;
+    setMissingDecisions(all);
+  };
+  // Confirm dialogs per missing item
+  const handleConfirmMarkPaid = async (m: any) => {
+    const name = (m as any)?.client?.company_name || 'client inconnu';
+    const amount = Number((m as any)?.amount ?? 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const last = lastReminderByReceivable[m.id] ? new Date(lastReminderByReceivable[m.id] as string).toLocaleDateString('fr-FR') : '—';
+    const res = await Swal.fire({
+      title: 'Marquer comme payée ? ✅',
+      html: `Nous avons détecté que le client <b>${name}</b> n’apparaît plus dans votre dernier import.<br/>Cela signifie probablement qu’il a réglé sa créance (${amount}).<br/>Dernière relance: ${last}.<br/><br/>Souhaitez-vous marquer cette créance comme payée ?`,
+      showCancelButton: true,
+      confirmButtonText: 'Oui, marquer comme payée',
+      cancelButtonText: 'Annuler',
+      buttonsStyling: false,
+      customClass: { confirmButton: 'bg-green-600 text-white px-4 py-2 rounded mr-2 hover:bg-green-700', cancelButton: 'bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300' }
+    });
+    if (res.isConfirmed) updateMissingDecision(`${m.owner_id}-${m.invoice_number}`, 'markPaid');
+  };
+  const handleConfirmKeep = async (m: any) => {
+    const res = await Swal.fire({
+      title: 'Conserver comme impayée ⚠️',
+      text: 'Cette créance restera dans la table en tant qu’impayée. Vous pourrez la traiter plus tard.',
+      showCancelButton: true,
+      confirmButtonText: 'Oui, conserver impayée',
+      cancelButtonText: 'Annuler',
+      buttonsStyling: false,
+      customClass: { confirmButton: 'bg-orange-600 text-white px-4 py-2 rounded mr-2 hover:bg-orange-700', cancelButton: 'bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300' }
+    });
+    if (res.isConfirmed) updateMissingDecision(`${m.owner_id}-${m.invoice_number}`, 'keep');
+  };
+  const confirmImportWithDecisions = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Utilisateur non authentifié");
+      // Préparer les plans et la progression
+      const toInsert = pendingToInsert;
+      const toUpdateSelected = pendingToUpdate.filter((r: any) => conflictDecisions[`${user.id}-${r.invoice_number}`] === "overwrite");
+      const toMarkPaid = (missingExisting || []).filter(
+        (item: any) => (missingDecisions[`${item.owner_id}-${item.invoice_number}`] || "markPaid") === "markPaid"
+      );
+      setPlannedInsertCount(toInsert.length);
+      setPlannedUpdateCount(toUpdateSelected.length);
+      setPlannedMarkPaidCount(toMarkPaid.length);
+      setTotalTasks(toInsert.length + toUpdateSelected.length + toMarkPaid.length);
+      setImportedCount(0);
+      setStep("importing");
+      setImporting(true);
+      const { data: subscription, error: subscriptionError } = await supabase.from("subscriptions").select("plan").eq("user_id", user.id).limit(1).single();
+      if (subscriptionError || !subscription) { showError("Impossible de récupérer le type d'abonnement."); return; }
+      const planLimits = { free: 25000, basic: 50000, pro: 200000, company: Infinity } as const;
+      const maxOverDues = Number(planLimits[subscription.plan as keyof typeof planLimits]);
+      const { data: existingAll } = await supabase.from("receivables").select("owner_id, invoice_number, amount").eq("owner_id", user.id);
+      const updatedMap = new Map<string, number>();
+      (existingAll || []).forEach((r: any) => { updatedMap.set(`${r.owner_id}-${r.invoice_number}`, r.amount || 0); });
+      toUpdateSelected.forEach((r: any) => { updatedMap.set(`${user.id}-${r.invoice_number}`, r.amount || 0); });
+      toInsert.forEach((r: any) => { updatedMap.set(`${user.id}-${r.invoice_number}`, r.amount || 0); });
+      const updatedTotalAmount = Array.from(updatedMap.values()).reduce((sum, a) => sum + (a || 0), 0);
+      if (updatedTotalAmount >= maxOverDues) { planMessage = `Limite atteinte : votre plan "${subscription.plan}" permet de gérer jusqu'à ${maxOverDues} Euro d'encours`; setPlanError(planMessage); throw new Error(planMessage); }
+      let successCount = 0;
+      for (let i = 0; i < toInsert.length; i += 20) {
+        const batch = toInsert.slice(i, i + 20);
+        const { error: insertError } = await supabase.from("receivables").insert(batch);
+        if (!insertError) { successCount += batch.length; setImportedCount((c) => c + batch.length); }
+      }
+      for (let i = 0; i < toUpdateSelected.length; i += 20) {
+        const batch = toUpdateSelected.slice(i, i + 20);
+        const { error: updateError } = await supabase.from("receivables").upsert(batch, { onConflict: "owner_id, invoice_number", ignoreDuplicates: false });
+        if (!updateError) { successCount += batch.length; setImportedCount((c) => c + batch.length); }
+      }
+      const clientIds = [...new Set(pendingReceivables.map((r: any) => r.client_id))];
+      if (clientIds.length > 0) {
+        const { data: existingClients, error } = await supabase.from("clients").select("id, email").in("id", clientIds);
+        if (!error) {
+          const updates: any[] = [];
+          for (const r of pendingReceivables) {
+            const client = existingClients?.find((c: any) => c.id === r.client_id);
+            if (!client) continue;
+            const existingEmails = client.email ? client.email.split(",").map((e: string) => e.trim()) : [];
+            if (!existingEmails.includes(r.email)) {
+              const newEmails = [...existingEmails, r.email].join(", ");
+              updates.push({ id: r.client_id, email: newEmails, needs_reminder: true });
+            } else {
+              updates.push({ id: r.client_id, email: client.email, needs_reminder: true });
+            }
+          }
+          for (const update of updates) {
+            await supabase.from("clients").update({ email: update.email, needs_reminder: update.needs_reminder }).eq("id", update.id);
+          }
+        }
+      }
+      // Marquer comme PAYÉ uniquement les lignes absentes pour lesquelles la décision = "markPaid"
+      let markedPaidCount = 0;
+      if (toMarkPaid.length > 0) {
+        // Mettre status='paid' et paid_amount=amount PAR CRÉANCE (update ciblé, pas d'upsert)
+        for (let i = 0; i < toMarkPaid.length; i += 50) {
+          const batch = toMarkPaid.slice(i, i + 50);
+          const results = await Promise.all(
+            batch.map((b: any) =>
+              supabase
+                .from('receivables')
+                .update({ status: 'paid', paid_amount: b.amount })
+                .eq('id', b.id)
+            )
+          );
+          const ok = results.filter((r) => !r.error).length;
+          if (ok > 0) {
+            markedPaidCount += ok;
+            setImportedCount((c) => c + ok);
+          }
+        }
+      }
+
+      // Mettre à jour l'état "relance" (needs_reminder) pour les clients sans créance IMPAYÉE restante
+      try {
+        const affectedClientIds = Array.from(new Set([
+          ...pendingReceivables.map((r: any) => r.client_id),
+          ...missingExisting.map((r: any) => r.client_id),
+        ]));
+        if (affectedClientIds.length > 0) {
+          const { data: remainingAfter } = await supabase
+            .from("receivables")
+            .select("client_id, status")
+            .eq("owner_id", user.id)
+            .in("client_id", affectedClientIds);
+          const unpaidMap = new Map<string, boolean>();
+          (remainingAfter || []).forEach((r: any) => {
+            if (r.status !== 'paid') unpaidMap.set(r.client_id, true);
+          });
+          const toDisable = affectedClientIds.filter((id) => !unpaidMap.get(id));
+          for (const id of toDisable) {
+            await supabase.from("clients").update({ needs_reminder: false }).eq("id", id);
+          }
+        }
+      } catch (e) {
+        console.error("Erreur MAJ needs_reminder après confirmation:", e);
+      }
+      // Feedback succès (résumé)
+      const summaryMsg = `Import terminé: ${toInsert.length} ajoutée(s), ${toUpdateSelected.length} mise(s) à jour, ${markedPaidCount} marquée(s) payée(s).`;
+      showSuccess(summaryMsg);
+      toast.success(summaryMsg);
+      if (successCount > 0 || markedPaidCount > 0) onImportSuccess(successCount + markedPaidCount); else throw new Error("Aucune modification n'a pu être appliquée!");
+    } catch (error: any) {
+      console.error("Erreur confirmation d'import:", error);
+      showError(error.message || "Erreur lors de l'import des créances");
+      setStep("preview");
+    } finally {
+      setImporting(false);
     }
   };
 
@@ -1576,7 +1986,7 @@ export default function CSVImportModal({
                 </table>
               </div>
 
-              <div className="flex justify-end space-x-4">
+              <div className="flex justify-end items-center space-x-4">
                 <button
                   onClick={() => setStep("mapping")}
                   className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
@@ -1589,16 +1999,105 @@ export default function CSVImportModal({
                 >
                   Importer {data.length} créances
                 </button>
+                {!preMissingLoading && preMissingCount > 0 && (
+                  <Tooltip
+                    label={
+                      `${preMissingCount} créance${preMissingCount > 1 ? 's' : ''} n'appara${preMissingCount > 1 ? 'issent' : 'ît'} plus dans votre import, ` +
+                      `${preMissingCount > 1 ? 'ces clients vous ont-ils payés ?' : 'ce client vous a-t-il payé ?'}`
+                    }
+                    theme="yellow"
+                  >
+                    <div className="flex items-center px-2 py-1 rounded-md text-sm bg-yellow-50 text-yellow-800 border border-yellow-300">
+                      <AlertCircle className="w-4 h-4 mr-1" />
+                      {preMissingCount}
+                    </div>
+                  </Tooltip>
+                )}
               </div>
             </div>
           )}
 
+
+          {step === "conflicts" && (
+            <div className="space-y-6">
+              {/* Section: Lignes absentes du nouvel import */}
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">Lignes absentes du nouvel import</h3>
+                <div className="flex gap-2">
+                  <button onClick={() => setAllMissingDecisions('markPaid')} className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700">Tout marquer payées</button>
+                  <button onClick={() => setAllMissingDecisions('keep')} className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50">Tout conserver impayées</button>
+                </div>
+              </div>
+              {missingExisting.length === 0 ? (
+                <div className="text-sm text-gray-500">Aucune ligne manquante détectée</div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {missingExisting.map((m: any) => {
+                    const key = `${m.owner_id}-${m.invoice_number}`;
+                    const decision = missingDecisions[key] || 'markPaid';
+                    const amount = Number((m as any)?.amount ?? 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    const last = lastReminderByReceivable[m.id] ? new Date(lastReminderByReceivable[m.id] as string).toLocaleDateString('fr-FR') : '—';
+                    const name = (m as any)?.client?.company_name || '-';
+                    return (
+                      <div key={key} className="border rounded-md p-4 bg-white shadow-sm">
+                        <div className="flex items-start gap-3">
+                          {decision === 'markPaid' ? (
+                            <CheckCircle className="w-5 h-5 text-green-600 mt-1" />
+                          ) : (
+                            <AlertTriangle className="w-5 h-5 text-orange-600 mt-1" />
+                          )}
+                          <div className="flex-1">
+                            <div className="font-semibold mb-1">Possible paiement détecté</div>
+                            <p className="text-sm text-gray-700">
+                              Nous avons détecté que le client <b>{name}</b> n’apparaît plus dans votre dernier import.<br/>
+                              Cela signifie probablement qu’il a réglé sa créance.
+                            </p>
+                            <div className="mt-2 text-sm text-gray-600">
+                              <div>Facture: <b>{m.invoice_number}</b></div>
+                              <div>Montant: <b>{amount} €</b></div>
+                              <div>Dernière relance: <b>{last}</b></div>
+                            </div>
+                            <div className="mt-3 flex gap-2">
+                              <button onClick={() => handleConfirmMarkPaid(m)} className={`px-3 py-1.5 rounded text-sm ${decision === 'markPaid' ? 'bg-green-600 text-white' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}>
+                                Oui, marquer comme payée
+                              </button>
+                              <button onClick={() => handleConfirmKeep(m)} className={`px-3 py-1.5 rounded text-sm ${decision === 'keep' ? 'bg-gray-800 text-white' : 'border border-gray-300 text-gray-700 hover:bg-gray-50'}`}>
+                                Non, conserver impayée
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+              <div className="mt-3 text-sm text-gray-700">
+                <div className="mb-1">🧾 {Object.values(missingDecisions).filter((d) => d === 'markPaid').length} créance(s) détectée(s) comme réglée(s)</div>
+                <div>💡 Pensez à vérifier vos écritures avant validation.</div>
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <button onClick={() => setStep('preview')} className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Retour</button>
+                <button onClick={confirmImportWithDecisions} className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">Confirmer et importer</button>
+              </div>
+            </div>
+          )}
           {step === "importing" && (
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-lg font-medium">
-                Importation en cours... {importedCount} / {data.length}
-              </p>
+              <p className="text-lg font-medium">Importation en cours...</p>
+              <div className="w-full max-w-xl mx-auto mt-4">
+                <div className="w-full bg-gray-200 rounded h-2 overflow-hidden">
+                  <div className="h-2 bg-blue-600" style={{ width: `${totalTasks > 0 ? Math.min(100, Math.round((importedCount / totalTasks) * 100)) : 0}%` }}></div>
+                </div>
+                <div className="mt-2 text-sm text-gray-600">
+                  Avancement: {importedCount} / {totalTasks}
+                </div>
+                <div className="mt-1 text-sm text-gray-700">
+                  Prévu • Ajouts: {plannedInsertCount} • Mises à jour: {plannedUpdateCount} • Marquées payées: {plannedMarkPaidCount}
+                </div>
+              </div>
             </div>
           )}
         </div>

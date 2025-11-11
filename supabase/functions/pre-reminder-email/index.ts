@@ -4,6 +4,8 @@
 
 import { createClient } from '@supabase/supabase-js';
 import nodemailer from 'nodemailer';
+// Supabase Edge runtime provides Deno; declare it for TS tooling
+declare const Deno: any;
 
 const formatEmailTemplateWrapper = (
 	content: string,
@@ -89,19 +91,21 @@ const formatTemplate = (
 
 // Update reminder table
 const updateReminderTable = async (
-	supabaseClient: any,
-	receivableId: string,
-	action: 'pre' | 'first' | 'second' | 'third' | 'final',
-	emailContent: string
+    supabaseClient: any,
+    receivableId: string,
+    ownerId: string,
+    action: 'pre' | 'first' | 'second' | 'third' | 'final',
+    emailContent: string
 ) => {
 	// update the receivable status with the reminder type
-	const { data, error } = await supabaseClient.from('reminders').insert({
-		receivable_id: receivableId,
-		reminder_type: action,
-		reminder_date: new Date().toISOString(),
-		email_sent: true,
-		email_content: emailContent,
-	});
+	    const { data, error } = await supabaseClient.from('reminders').insert({
+        receivable_id: receivableId,
+        owner_id: ownerId,
+        reminder_type: action,
+        reminder_date: new Date().toISOString(),
+        email_sent: true,
+        email_content: emailContent,
+    });
 
 	if (error) {
 		throw new Error(error.message);
@@ -194,6 +198,7 @@ const sendDueEmails = async (
 		await updateReminderTable(
 			supabaseClient,
 			receivable.id,
+			receivable.owner_id,
 			'pre',
 			emailContent
 		);
@@ -268,6 +273,7 @@ const sendFirstReminders = async (
 		await updateReminderTable(
 			supabaseClient,
 			receivable.id,
+			receivable.owner_id,
 			'first',
 			emailContent
 		);
@@ -344,6 +350,7 @@ const secondReminders = async (
 		await updateReminderTable(
 			supabaseClient,
 			receivable.id,
+			receivable.owner_id,
 			'second',
 			emailContent
 		);
@@ -419,6 +426,7 @@ const thirdReminders = async (
 		await updateReminderTable(
 			supabaseClient,
 			receivable.id,
+			receivable.owner_id,
 			'third',
 			emailContent
 		);
@@ -495,6 +503,7 @@ const finalReminders = async (
 		await updateReminderTable(
 			supabaseClient,
 			receivable.id,
+			receivable.owner_id,
 			'final',
 			emailContent
 		);
@@ -530,9 +539,9 @@ export const setupMailTransporter = () => {
 	});
 };
 
-export const reminderEmail = async (request: Request) => {
-
-	const supabaseClient = createClient(
+Deno.serve(async (req) => {
+	try {
+		const supabaseClient = createClient(
 		process.env.SUPABASE_URL ?? '',
 		process.env.SUPABASE_SERVICE_ROLE_KEY ?? ''
 	);
@@ -564,73 +573,78 @@ export const reminderEmail = async (request: Request) => {
 		.eq('automatic_reminder', true)
 		.not('email', 'is', null);
 
-	if (error) {
-		return new Response(JSON.stringify({ error: error.message }), {
+		if (error) {
+			return new Response(JSON.stringify({ error: error.message }), {
+				status: 500,
+				headers: { 'Content-Type': 'application/json' },
+			});
+		}
+
+		const notifiedIds1 = await sendDueEmails(
+			supabaseClient,
+			clientMap,
+			transporter,
+			data
+		);
+		// Filter all the records that an emai was not sent to and pass them to the next function
+		const notifiedIds2 = await sendFirstReminders(
+			supabaseClient,
+			clientMap,
+			transporter,
+			data.filter((record) => !notifiedIds1?.includes(record.id))
+		);
+		// Filter all the records that an emai was not sent to and pass them to the next function
+		const notifiedIds3 = await secondReminders(
+			supabaseClient,
+			clientMap,
+			transporter,
+			data.filter(
+				(record) => ![...notifiedIds1, ...notifiedIds2]?.includes(record.id)
+			)
+		);
+		// Filter all the records that an emai was not sent to and pass them to the next function
+		const notifiedIds4 = await thirdReminders(
+			supabaseClient,
+			clientMap,
+			transporter,
+			data.filter(
+				(record) =>
+					![...notifiedIds1, ...notifiedIds2, ...notifiedIds3]?.includes(
+						record.id
+					)
+			)
+		);
+		// Filter all the records that an emai was not sent to and pass them to the next function
+		await finalReminders(
+			supabaseClient,
+			clientMap,
+			transporter,
+			data.filter(
+				(record) =>
+					![
+						...notifiedIds1,
+						...notifiedIds2,
+						...notifiedIds3,
+						...notifiedIds4,
+					]?.includes(record.id)
+			)
+		);
+
+		return new Response(
+			JSON.stringify({
+				message: 'job ran successfully',
+			}),
+			{
+				headers: { 'Content-Type': 'application/json' },
+			}
+		);
+	} catch (error) {
+		return new Response(JSON.stringify({ error: (error as any)?.message || 'Unknown error' }), {
 			status: 500,
 			headers: { 'Content-Type': 'application/json' },
 		});
 	}
-
-	const notifiedIds1 = await sendDueEmails(
-		supabaseClient,
-		clientMap,
-		transporter,
-		data
-	);
-	// Filter all the records that an emai was not sent to and pass them to the next function
-	const notifiedIds2 = await sendFirstReminders(
-		supabaseClient,
-		clientMap,
-		transporter,
-		data.filter((record) => !notifiedIds1?.includes(record.id))
-	);
-	// Filter all the records that an emai was not sent to and pass them to the next function
-	const notifiedIds3 = await secondReminders(
-		supabaseClient,
-		clientMap,
-		transporter,
-		data.filter(
-			(record) => ![...notifiedIds1, ...notifiedIds2]?.includes(record.id)
-		)
-	);
-	// Filter all the records that an emai was not sent to and pass them to the next function
-	const notifiedIds4 = await thirdReminders(
-		supabaseClient,
-		clientMap,
-		transporter,
-		data.filter(
-			(record) =>
-				![...notifiedIds1, ...notifiedIds2, ...notifiedIds3]?.includes(
-					record.id
-				)
-		)
-	);
-	// Filter all the records that an emai was not sent to and pass them to the next function
-	await finalReminders(
-		supabaseClient,
-		clientMap,
-		transporter,
-		data.filter(
-			(record) =>
-				![
-					...notifiedIds1,
-					...notifiedIds2,
-					...notifiedIds3,
-					...notifiedIds4,
-				]?.includes(record.id)
-		)
-	);
-
-	return new Response(
-		JSON.stringify({
-			message: 'job ran successfully',
-		}),
-		{
-			headers: { 'Content-Type': 'application/json' },
-		}
-	);
-}
-
+});
 
 /* To invoke locally:
 

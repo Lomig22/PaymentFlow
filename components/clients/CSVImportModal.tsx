@@ -1,8 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { X, Upload, HelpCircle, Loader2 } from 'lucide-react';
-import { Client } from '../../src/types/database';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { supabase } from '../../src/lib/supabase/supabase';
+import { X, Upload, AlertCircle, HelpCircle, Loader2 } from 'lucide-react';
+import { Client,Notification } from '../../src/types/database';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css'; // Importer les styles
-import { useSupabase } from '../../app/providers/supabase-provider';
 import { saveNotificationServer } from '../../app/actions/saveNotification';
 
 interface CSVImportModalProps {
@@ -53,18 +54,25 @@ export function InfoIcon(props: React.SVGProps<SVGSVGElement>) {
 			<path d='M12 16v-4' />
 			<path d='M12 8h.01' />
 		</svg>
-	);
+  );
 }
 
 export default function CSVImportModal({
 	onClose,
 	onImportSuccess,
-}: CSVImportModalProps) {
-	const supabase = useSupabase();
+}:	CSVImportModalProps) {
 	const [file, setFile] = useState<File | null>(null);
 	const [csvData, setCsvData] = useState<string[][]>([]);
 	const [headers, setHeaders] = useState<string[]>([]);
 	const [mapping, setMapping] = useState<Record<string, keyof CSVMapping>>({});
+	const [originalMapping, setOriginalMapping] = useState<Record<string, keyof CSVMapping>>({});
+	const isDirty = useMemo(() => {
+		try {
+			return JSON.stringify(mapping) !== JSON.stringify(originalMapping);
+		} catch {
+			return false;
+		}
+	}, [mapping, originalMapping]);
 	const [step, setStep] = useState<
 		'upload' | 'mapping' | 'preview' | 'importing'
 	>('upload');
@@ -391,6 +399,7 @@ export default function CSVImportModal({
 				}
 
 				setMapping(autoMapping);
+								setOriginalMapping(autoMapping);
 				setStep('mapping');
 			} catch (error) {
 				console.error('Erreur lors de la lecture du fichier CSV:', error);
@@ -849,7 +858,7 @@ export default function CSVImportModal({
 									Fichier : <span className='font-medium'>{file?.name}</span>
 								</p>
 								<button
-									onClick={resetForm}
+									onClick={() => setStep('mapping')}
 									className='text-blue-600 hover:text-blue-800 text-sm'
 								>
 									Changer de fichier
@@ -951,7 +960,7 @@ export default function CSVImportModal({
 							<div className='flex justify-between space-x-4'>
 								<button
 									onClick={saveMapping}
-									className='px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors flex'
+									className={`px-4 py-2 rounded-md transition-colors flex ${isDirty ? 'bg-blue-600 text-white hover:bg-blue-700' : 'border border-gray-300 text-gray-700 hover:bg-gray-50'}`}
 									disabled={savingSchema}
 								>
 									{savingSchema && <Loader2 className='animate-spin' />}
@@ -959,10 +968,10 @@ export default function CSVImportModal({
 								</button>
 								<div className='flex space-x-4'>
 									<button
-										onClick={resetForm}
+										onClick={() => setStep('mapping')}
 										className='px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors'
 									>
-										Annuler
+										Précédent
 									</button>
 									<button
 										onClick={generatePreview}
@@ -1079,10 +1088,10 @@ export default function CSVImportModal({
 
 							<div className='flex justify-end space-x-4'>
 								<button
-									onClick={resetForm}
+									onClick={() => setStep('mapping')}
 									className='px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors'
 								>
-									Annuler
+									Précédent
 								</button>
 								<button
 									onClick={importClients}

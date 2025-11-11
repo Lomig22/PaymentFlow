@@ -92,14 +92,16 @@ export default function NotificationSettings({ onDirtyChange }: { onDirtyChange?
       if (error && error.code !== 'PGRST116') throw error;
 
       if (data) {
-        setFormData(data);
-        initialRef.current = {
+        // Ne garder que les champs suivis pour éviter des faux positifs de diff
+        const sanitized = {
           email_notifications: !!data.email_notifications,
           reminder_notifications: !!data.reminder_notifications,
           payment_notifications: !!data.payment_notifications,
           daily_summary: !!data.daily_summary,
           weekly_summary: !!data.weekly_summary,
         };
+        setFormData(sanitized);
+        initialRef.current = sanitized;
         setHasUnsavedChanges(false);
       } else {
         // Aucun enregistrement existant: snapshot sur les valeurs par défaut
