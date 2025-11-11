@@ -28,6 +28,26 @@ export const metadata: Metadata = {
 }
 
 export default function LandingPage() {
+  // Logos clients (placer les fichiers manquants dans public/images)
+  const clientLogos: { src: string; alt: string }[] = [
+    { src: "/images/bretagne-logo.jpg", alt: "Bretagne" },
+    { src: "/images/sohoa-logo.png", alt: "Sohoa" },
+    { src: "/images/CRGC-logo.png", alt: "CRGC" },
+    { src: "/images/ouestelio.png", alt: "Ouestélio" },
+    { src: "/images/image-de-marque.webp", alt: "Image de Marque" },
+    { src: "/images/foyai-logo.png", alt: "Foyai" },
+  ];
+
+  // Étend la liste pour un défilement continu plus long
+  const clientLogosLoop = [
+    ...clientLogos,
+    ...clientLogos,
+    ...clientLogos,
+    ...clientLogos,
+  ];
+
+  // Liste doublée pour un marquee CSS en boucle parfaite
+  const clientLogosMarquee = [...clientLogos, ...clientLogos];
   return (
     <>
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
@@ -83,8 +103,26 @@ export default function LandingPage() {
                     <div className="text-xs text-gray-500 mt-1 text-left">
                       Noté&nbsp;<span className="font-semibold" style={{ color: '#2563eb' }}>4,93/5</span>&nbsp;sur Capterra, Trustpilot, GetApp, Appvizer & Google
                     </div>
+                    <div
+                      className="trustpilot-widget"
+                      data-locale="fr-FR"
+                      data-template-id="56278e9abfbbba0bdcd568bc"
+                      data-businessunit-id="685b0b9f257a8efcadffa636"
+                      data-style-height="52px"
+                      data-style-width="240px"
+                      data-token="42912aec-66d4-4c4a-bbfd-eb389f93e620"
+                    >
+                      <a
+                        href="https://fr.trustpilot.com/review/payment-flow.fr"
+                        target="_blank"
+                        rel="noopener"
+                      >
+                        Trustpilot
+                      </a>
+                    </div>
                   </div>
-                </div>}
+                </div>
+              }
               rightColumn={
                 <>
                   <img
@@ -151,6 +189,7 @@ export default function LandingPage() {
                   </p>
                 </>
               }
+              clientLogos={clientLogos}
             >
 
             </AnimatedLandingSection>

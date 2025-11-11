@@ -3,6 +3,8 @@
 import * as motion from "motion/react-client";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Autoplay, FreeMode } from "swiper/modules";
+import { Swiper, SwiperSlide } from "swiper/react";
 
 const fadeInUp = {
     hidden: { opacity: 0, y: 20 },
@@ -31,7 +33,7 @@ const staggerContainer = {
     },
 };
 
-export function AnimatedLandingSection({ leftColumn, rightColumn, target, email, chart }: { leftColumn: React.ReactNode, rightColumn: React.ReactNode, target: React.ReactNode, email: React.ReactNode, chart: React.ReactNode }) {
+export function AnimatedLandingSection({ leftColumn, rightColumn, target, email, chart, clientLogos }: { leftColumn: React.ReactNode, rightColumn: React.ReactNode, target: React.ReactNode, email: React.ReactNode, chart: React.ReactNode, clientLogos: { src: string; alt: string }[] }) {
     const router = useRouter();
     const [viewport, setViewport] = useState<{ once: boolean; margin: string; amount: number }>({
         once: true,
@@ -114,6 +116,53 @@ export function AnimatedLandingSection({ leftColumn, rightColumn, target, email,
             >
                 {chart}
             </motion.div>
+
+            {/* Logos défilants - Ils nous font confiance */}
+          <motion.div
+            className="mt-16"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.2 }}
+            variants={fadeInUp}
+          >
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <h2 className="text-2xl font-bold text-center mb-12">
+                +3 000 entreprises automatisent déjà leurs relances clients
+                <br />
+                avec Payment Flow
+              </h2>
+              <div className="relative overflow-hidden">
+                <style>{`.logos-swiper .swiper-wrapper { transition-timing-function: linear !important; }`}</style>
+                <Swiper
+                  className="logos-swiper"
+                  modules={[Autoplay, FreeMode]}
+                  autoplay={{ delay: 0, disableOnInteraction: false, pauseOnMouseEnter: false, waitForTransition: false }}
+                  speed={30000}
+                  loop
+                  loopAdditionalSlides={clientLogos.length * 4}
+                  loopPreventsSliding={false}
+                  freeMode={{ enabled: true, momentum: false }}
+                  slidesPerView="auto"
+                  spaceBetween={120}
+                  allowTouchMove={false}
+                >
+                  {clientLogos.map((logo, idx) => (
+                    <SwiperSlide key={idx} style={{ width: "auto" }}>
+                      <img
+                        src={logo.src}
+                        alt={logo.alt}
+                        className="h-10 md:h-12 object-contain filter grayscale opacity-80 hover:grayscale-0 hover:opacity-100 transition duration-300"
+                      />
+                    </SwiperSlide>
+                  ))}
+                </Swiper>
+                {/* Effets d'effacement aux extrémités */}
+                <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-10 sm:w-14 lg:w-20 bg-gradient-to-r from-gray-50 to-transparent z-10"></div>
+                <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-10 sm:w-14 lg:w-20 bg-gradient-to-l from-gray-50 to-transparent z-10"></div>
+              </div>
+            </div>
+          </motion.div>
+
         </motion.div>
     </>
 }

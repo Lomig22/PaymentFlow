@@ -27,13 +27,13 @@ export default function UseCaseClient({ desktop, mobile }: UseCaseClientDesktopM
                     <div className="relative w-full max-w-[950px] mx-auto">
                         {/* Flèches Swiper custom hors cadre */}
                         <div className="absolute -left-10 top-1/2 z-10 hidden md:block">
-                            <div className="swiper-button-prev custom-swiper-arrow left-0 text-blue-600 hover:text-blue-800 transition-colors" />
+                            <div className="swiper-button-prev usecases-prev custom-swiper-arrow left-0 text-blue-600 hover:text-blue-800 transition-colors" />
                         </div>
                         <div className="absolute -right-10 top-1/2 z-10 hidden md:block">
-                            <div className="swiper-button-next custom-swiper-arrow right-0 text-blue-600 hover:text-blue-800 transition-colors" />
+                            <div className="swiper-button-next usecases-prev custom-swiper-arrow right-0 text-blue-600 hover:text-blue-800 transition-colors" />
                         </div>
                         <div className="bg-white rounded-2xl shadow-xl border border-blue-100 px-0 md:px-4 py-8 md:py-10 flex flex-col md:flex-row items-stretch gap-0 md:gap-8">
-                            <Swiper modules={[Navigation, Pagination]} navigation={{ prevEl: '.swiper-button-prev', nextEl: '.swiper-button-next', }} pagination={{ clickable: true }} spaceBetween={0} slidesPerView={1} className="flex-1" style={{ minWidth: 0 }} >
+                            <Swiper modules={[Navigation, Pagination]} navigation={{ prevEl: '.usecases-prev', nextEl: '.usecases-next', }} pagination={{ clickable: true }} spaceBetween={0} slidesPerView={1} className="flex-1" style={{ minWidth: 0 }} >
                                 <SwiperSlide>
                                     <div className="w-full flex flex-col">
                                         <h3 className="text-2xl md:text-3xl font-bold mb-6 text-blue-700 text-center"> Automatisez vos relances et gagnez du temps </h3>

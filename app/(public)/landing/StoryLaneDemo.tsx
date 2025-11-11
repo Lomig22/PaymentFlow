@@ -27,7 +27,7 @@ export function StorylaneDemo({ children }: { children: React.ReactNode }) {
             variants={fadeInUp}
         >
             {children}
-            <div className="max-w-4xl mx-auto">
+            <div className="w-full">
                 <StorylaneDemoEmbed />
             </div>
         </motion.div>

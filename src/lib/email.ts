@@ -1,4 +1,4 @@
-interface EmailSettings {
+export interface EmailSettings {
 	provider_type: string;
 	smtp_username: string;
 	smtp_password: string;
