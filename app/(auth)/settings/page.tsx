@@ -33,6 +33,8 @@ import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import DeleteAccount from "../../../components/settings/DeleteAccount";
 import MemberList from "../../../components/settings/MemberList";
 import { PaymentSync } from "../../../components/settings/PaymentSync";
+import SageSettings from "../../../components/settings/SageSettings";
+import { useLocation, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 
 /* 

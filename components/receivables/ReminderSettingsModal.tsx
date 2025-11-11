@@ -405,13 +405,36 @@ export default function ReminderSettingsModal({
 
         if (result.isConfirmed) {
           // Archiver les rappels existants (ne pas perdre l'historique)
-          const { error: archiveError } = await supabase
-            .from("reminders")
-            .update({ archived_at: new Date().toISOString() })
-            .eq("receivable_id", receivable.id)
-            .is("archived_at", null);
-
-          if (archiveError) throw archiveError;
+          // Bases legacy: la colonne archived_at peut ne pas exister => ignorer proprement l'erreur
+          try {
+            const { error: archiveError } = await supabase
+              .from("reminders")
+              .update({ archived_at: new Date().toISOString() })
+              .eq("receivable_id", receivable.id)
+              .is("archived_at", null);
+            if (archiveError) {
+              // PostgREST code quand la colonne n'est pas dans le cache de schéma
+              const msg = archiveError?.message || "";
+              const code = (archiveError as any)?.code || "";
+              const hint = (archiveError as any)?.hint || "";
+              if (
+                code === "PGRST204" ||
+                msg.includes("archived_at") ||
+                hint?.includes?.("archived_at")
+              ) {
+                // Ignorer et poursuivre (aucun archivage possible sur cette base)
+              } else {
+                throw archiveError;
+              }
+            }
+          } catch (e) {
+            const err: any = e;
+            const m = err?.message || "";
+            const c = err?.code || "";
+            if (!(c === "PGRST204" || m.includes("archived_at"))) {
+              throw e;
+            }
+          }
 
           // Mettre à jour le receivable (remise à zéro du process sans perte d'historique)
           const { error: updateError } = await supabase

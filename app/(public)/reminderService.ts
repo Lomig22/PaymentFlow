@@ -336,36 +336,79 @@ export async function sendManualReminder(
 		);
 		if (emailSent) {
 			// Enregistrer la relance (toujours), afin d'activer le suivi d'ouverture via email_id
-			const { error: insertReminderError } = await supabase.from('reminders').insert({
+			let insertReminderError: any = null;
+			const basePayload = {
 				receivable_id: receivableId,
 				reminder_type: level,
 				reminder_date: new Date().toISOString(),
 				email_sent: true,
 				email_content: finalContent,
 				email_id: emailTrackingId,
-			});
+			};
+			try {
+				// 1) Essayer avec owner_id = utilisateur courant (RLS standard)
+				let { error } = await supabase
+					.from('reminders')
+					.insert({ ...basePayload, owner_id: user.id });
+				insertReminderError = error || null;
+				// 2) Si la colonne owner_id n'existe pas (legacy), réessayer sans owner_id
+				if (
+					insertReminderError &&
+					((insertReminderError as any).code === '42703' ||
+						(insertReminderError as any).message?.includes?.('owner_id'))
+				) {
+					const { error: e2 } = await supabase
+						.from('reminders')
+						.insert(basePayload);
+					insertReminderError = e2 || null;
+				}
+				// 3) Ultime fallback: tenter avec le owner_id de la créance si différent
+				if (
+					insertReminderError &&
+					(receivable as any)?.owner_id &&
+					(receivable as any).owner_id !== user.id
+				) {
+					const { error: e3 } = await supabase
+						.from('reminders')
+						.insert({ ...basePayload, owner_id: (receivable as any).owner_id });
+					insertReminderError = e3 || null;
+				}
+			} catch (e) {
+				insertReminderError = e;
+			}
 			if (insertReminderError) {
-				console.error('Insertion reminder avec email_id a échoué:', insertReminderError.message);
+				console.error(
+					'Insertion reminder avec email_id a échoué:',
+					(insertReminderError as any).message || insertReminderError
+				);
 			}
 
 			// Mettre à jour le statut
 			{
+				// Résoudre un statut explicite pour l'UI même si la pré‑relance est désactivée
+				let resolvedStatus =
+					level === 'first'
+						? 'Relance 1'
+						: level === 'second'
+						? 'Relance 2'
+						: level === 'third'
+						? 'Relance 3'
+						: level === 'final'
+						? 'Relance finale'
+						: 'Relance préventive';
+				if (level === 'pre' && !(receivable as any)?.client?.pre_reminder_enable) {
+					const c = (receivable as any)?.client || {};
+					if (c.reminder_enable_1) resolvedStatus = 'Relance 1';
+					else if (c.reminder_enable_2) resolvedStatus = 'Relance 2';
+					else if (c.reminder_enable_3) resolvedStatus = 'Relance 3';
+					else if (c.reminder_enable_final) resolvedStatus = 'Relance finale';
+					else resolvedStatus = 'reminded';
+				}
 				const { error: updateRecError } = await supabase
 					.from('receivables')
 					.update({
 						email_id: emailTrackingId,
-						status:
-							level === 'first'
-								? 'Relance 1'
-								: level === 'second'
-									? 'Relance 2'
-									: level === 'third'
-										? 'Relance 3'
-										: level === 'final'
-											? 'Relance finale'
-											: level === 'pre'
-												? 'Relance préventive'
-												: 'Relance',
+						status: resolvedStatus,
 						updated_at: new Date().toISOString(),
 					})
 					.eq('id', receivableId);
@@ -429,18 +472,15 @@ export async function sendOneReminder(receivableId: string): Promise<boolean> {
 			receivable.client,
 			receivable.status
 		);
-
 		if (!level || !template) return false;
 
-		// ⏳ Vérifie si le délai d’attente est respecté
 		const lastReminder = await getLastReminder(receivableId);
 		const now = new Date();
-
 		let shouldSend = true;
 
 		if (level === 'pre') {
 			// Prérelance uniquement si on est AVANT la date d’échéance
-			if (now.getTime() >= dueDate.getTime()) return false;
+			if (now.getTime() >= new Date(receivable.due_date).getTime()) return false;
 
 			if (lastReminder && lastReminder.reminder_type === 'pre') {
 				const delayMinutes = 1; // 1 minute pour la prérelance
@@ -450,12 +490,13 @@ export async function sendOneReminder(receivableId: string): Promise<boolean> {
 			}
 		} else {
 			// Pour les autres types, on vérifie le délai personnalisé
+			const lvl = level as 'first' | 'second' | 'third' | 'final';
 			const reminderDelayField = {
 				first: receivable.client.reminder_delay_1,
 				second: receivable.client.reminder_delay_2,
 				third: receivable.client.reminder_delay_3,
 				final: receivable.client.reminder_delay_final,
-			}[level];
+			}[lvl];
 
 			const delayMinutes = convertJHMToMinutes(reminderDelayField);
 
