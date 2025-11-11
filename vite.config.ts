@@ -35,7 +35,14 @@ export default defineConfig({
   server: {
     port: 5173,
     strictPort: true,
-    host: true
+    host: true,
+    proxy: {
+      '/api': {
+        target: process.env.VITE_SAGE_BACKEND_URL || 'http://localhost:3001',
+        changeOrigin: true,
+        secure: false,
+      },
+    }
   },
   optimizeDeps: {
     include: ['react', 'react-dom', '@mantine/core'],

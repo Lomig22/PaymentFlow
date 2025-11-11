@@ -34,7 +34,17 @@ const ReminderList = () => {
       } = await supabase.auth.getUser();
       if (!user) throw new Error("Utilisateur non authentifié");
 
-      // Essai: filtrer par owner_id directement sur reminders (permet de conserver l'historique si la créance est supprimée)
+      // Déterminer les propriétaires accessibles (workspace): moi + ceux qui m'ont invité
+      const userEmail = user.email;
+      const { data: invitedByData, error: invitedByError } = await supabase
+        .from("invited_users")
+        .select("invited_by")
+        .eq("invited_email", userEmail);
+      if (invitedByError) throw invitedByError;
+      const invitedByIds = (invitedByData || []).map((e: any) => e.invited_by);
+      const ownerIds = Array.from(new Set([user.id, ...invitedByIds]));
+
+      // Filtrer par owner_id (primaires) pour conserver l'historique même si la créance est supprimée
       let recordsData: (Reminder & { receivable: (Receivable & { client: Client }) | null })[] | null = null;
       let primaryErr: any = null;
       try {
@@ -49,7 +59,7 @@ const ReminderList = () => {
               )
             `
           )
-          .eq("owner_id", user.id)
+          .in("owner_id", ownerIds)
           .order("reminder_date", { ascending: false });
         if (error) throw error;
         recordsData = data || [];
@@ -57,7 +67,8 @@ const ReminderList = () => {
         primaryErr = e;
       }
 
-      // Fallback legacy: certaines bases n'ont pas encore owner_id sur reminders
+      // Fallback legacy: si la colonne owner_id n'existe pas,
+      // filtrer côté receivable pour limiter au même périmètre
       if (primaryErr) {
         const { data, error } = await supabase
           .from("reminders")
@@ -70,7 +81,7 @@ const ReminderList = () => {
               )
             `
           )
-          .eq("receivable.owner_id", user.id)
+          .in("receivable.owner_id", ownerIds)
           .order("reminder_date", { ascending: false });
         if (error) throw error;
         recordsData = data || [];

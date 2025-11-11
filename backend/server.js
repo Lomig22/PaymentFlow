@@ -12,7 +12,19 @@ const CORS_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:5173';
 const SYNC_INTERVAL_MS = Number(process.env.SYNC_INTERVAL_MS || 15 * 60 * 1000);
 
 // Middlewares
-app.use(cors({ origin: CORS_ORIGIN, credentials: true }));
+// CORS avec liste d'origines autorisées (séparées par des virgules)
+const allowedOrigins = (CORS_ORIGIN || '').split(',').map((s) => s.trim()).filter(Boolean);
+app.use(cors({
+  origin: (origin, callback) => {
+    // Autoriser les requêtes sans header Origin (curl, serveurs, etc.)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+}));
 app.use(express.json({ limit: '2mb' }));
 app.use(morgan('dev'));
 
@@ -20,10 +32,12 @@ app.use(morgan('dev'));
 const paymentRoutes = require('./routes/payments');
 const clientRoutes = require('./routes/clients');
 const webhookRoutes = require('./routes/webhooks');
+const integrationsRoutes = require('./routes/integrations');
 
 app.use('/api/payments', paymentRoutes);
 app.use('/api/clients', clientRoutes);
 app.use('/api/webhooks', webhookRoutes);
+app.use('/api/integrations', integrationsRoutes);
 
 app.get('/api/health', (_req, res) => {
   res.json({ ok: true, service: 'PaymentFlow×Sage backend', time: new Date().toISOString() });

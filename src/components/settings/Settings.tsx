@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Mail, User, Bell, Shield, Users } from "lucide-react";
+import { Mail, User, Bell, Shield, Users, Plug } from "lucide-react";
 import { Elements } from "@stripe/react-stripe-js"; // Importer Elements
 import { loadStripe } from "@stripe/stripe-js"; // Importer loadStripe
 // Composants à créer ou importer
@@ -29,6 +29,7 @@ import NotificationSettings from "./NotificationSettings";
 import UnsavedChangesModal from "./UnsavedChangesModal"; // Modal pour changements non enregistrés
 import ProfileSettings from "./ProfileSettings";
 import SignatureSettings from "./SenderSettings";
+import SageSettings from "./SageSettings";
 import { useLocation, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import DeleteAccount from "./DeleteAccount";
@@ -118,6 +119,18 @@ const sections = [
         id: "list",
         name: "Liste des membres",
         component: MemberList,
+      },
+    ],
+  },
+  {
+    id: "integrations",
+    name: "Intégrations",
+    icon: Plug,
+    subTabs: [
+      {
+        id: "sage",
+        name: "Sage",
+        component: SageSettings,
       },
     ],
   }

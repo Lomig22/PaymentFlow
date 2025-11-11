@@ -1,8 +1,14 @@
 const axios = require('axios');
+const { getSageConfig } = require('./configService');
 
-const SAGE_API_BASE = process.env.SAGE_API_BASE;
-const SAGE_CLIENT_ID = process.env.SAGE_CLIENT_ID;
-const SAGE_CLIENT_SECRET = process.env.SAGE_CLIENT_SECRET;
+function readConfig() {
+  const cfg = getSageConfig() || {};
+  const baseUrl = cfg.baseUrl || process.env.SAGE_API_BASE || '';
+  const apiToken = cfg.apiToken || process.env.SAGE_API_TOKEN || '';
+  const clientId = process.env.SAGE_CLIENT_ID || '';
+  const clientSecret = process.env.SAGE_CLIENT_SECRET || '';
+  return { baseUrl, apiToken, clientId, clientSecret };
+}
 
 let sageToken = null;
 let sageTokenExpiry = null;
@@ -11,9 +17,10 @@ async function getSageToken() {
   if (sageToken && sageTokenExpiry && Date.now() < sageTokenExpiry) return sageToken;
 
   // NOTE: Replace this with the real Sage OAuth/token endpoint and payload
-  const { data } = await axios.post(`${SAGE_API_BASE}/authService`, {
-    clientId: SAGE_CLIENT_ID,
-    clientSecret: SAGE_CLIENT_SECRET,
+  const { baseUrl, clientId, clientSecret } = readConfig();
+  const { data } = await axios.post(`${baseUrl}/authService`, {
+    clientId,
+    clientSecret,
   });
 
   sageToken = data.access_token;
@@ -22,6 +29,10 @@ async function getSageToken() {
 }
 
 async function authHeaders() {
+  const { apiToken } = readConfig();
+  if (apiToken) {
+    return { Authorization: `Bearer ${apiToken}` };
+  }
   const token = await getSageToken();
   return { Authorization: `Bearer ${token}` };
 }
@@ -29,22 +40,25 @@ async function authHeaders() {
 async function getClients() {
   const headers = await authHeaders();
   // NOTE: Replace with real Sage API endpoint/path and mapping
-  const { data } = await axios.get(`${SAGE_API_BASE}/v1/clients`, { headers });
+  const { baseUrl } = readConfig();
+  const { data } = await axios.get(`${baseUrl}/v1/clients`, { headers });
   return data.clients || [];
 }
 
 async function getInvoices() {
   const headers = await authHeaders();
   // NOTE: Replace with real Sage API endpoint/path and mapping
-  const { data } = await axios.get(`${SAGE_API_BASE}/v1/invoices`, { headers });
+  const { baseUrl } = readConfig();
+  const { data } = await axios.get(`${baseUrl}/v1/invoices`, { headers });
   return data.invoices || [];
 }
 
 async function getPayments() {
   const headers = await authHeaders();
+  const { baseUrl } = readConfig();
   // Optional: pull payments list if available from Sage API
   try {
-    const { data } = await axios.get(`${SAGE_API_BASE}/v1/payments`, { headers });
+    const { data } = await axios.get(`${baseUrl}/v1/payments`, { headers });
     return data.payments || [];
   } catch (e) {
     return [];
@@ -53,9 +67,10 @@ async function getPayments() {
 
 async function createPayment(invoiceId, amount, currency) {
   const headers = await authHeaders();
+  const { baseUrl } = readConfig();
   // NOTE: Replace with real Sage payment endpoint
   const { data } = await axios.post(
-    `${SAGE_API_BASE}/provider/v1/payments`,
+    `${baseUrl}/provider/v1/payments`,
     { invoiceId, amount, currency },
     { headers: { ...headers, 'Content-Type': 'application/json' } }
   );
