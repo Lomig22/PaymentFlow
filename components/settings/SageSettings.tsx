@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 
 // Base d'API: si VITE_SAGE_BACKEND_URL est défini (prod ou préprod), on l'utilise.
 // Sinon, on utilise un chemin relatif "/api" pour passer via le proxy Vite (dev) ou un reverse proxy (prod).
-const API_BASE = (import.meta.env.VITE_SAGE_BACKEND_URL as string | undefined)?.replace(/\/$/, '') || '';
+const API_BASE = process.env.VITE_SAGE_BACKEND_URL?.replace(/\/$/, '') || '';
 
 type ApiState = {
   loading: boolean;
@@ -11,7 +11,7 @@ type ApiState = {
 };
 
 export default function SageSettings() {
-  const DEFAULT_SAGE_API_URL = ((import.meta.env.VITE_SAGE_API_URL as string | undefined) || 'https://sandbox-api.sage.com').replace(/\/$/, '');
+  const DEFAULT_SAGE_API_URL = ((process.env.VITE_SAGE_API_URL as string | undefined) || 'https://sandbox-api.sage.com').replace(/\/$/, '');
   const [baseUrl, setBaseUrl] = useState(DEFAULT_SAGE_API_URL);
   const [apiToken, setApiToken] = useState('');
   const [tokenConfigured, setTokenConfigured] = useState<boolean>(false);

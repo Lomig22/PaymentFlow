@@ -1,25 +1,18 @@
 import { useEffect, useState } from "react";
-import { supabase } from "../../lib/supabase";
 import { Client, Receivable, Reminder } from "../../types/database";
 import { AlertCircle, Eye, FileText, Mail, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { decodeReminderStatus } from "../../lib/decodeReminderStatus";
 import Swal from "sweetalert2";
 import { File } from "lucide-react";
-import { useAbonnement } from "../context/AbonnementContext";
+import { supabase } from "../../lib/supabase/supabase";
 
 const ReminderList = () => {
-  const { checkAbonnement } = useAbonnement();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [records, setRecords] = useState<
     (Reminder & { receivable: (Receivable & { client: Client }) | null })[]
   >([]);
-  const handleClick = () => {
-    if (!checkAbonnement()) return;
-    console.log("Action autorisée !");
-    return true;
-  };
   const showError = (message: string) => {
     setError(message);
     setTimeout(() => {
@@ -212,8 +205,6 @@ const ReminderList = () => {
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-              const allowed = handleClick();
-              if (!allowed) return;
               handleBulkDeleteConfirmation();
             }}
             disabled={selectedIds.length === 0}
@@ -314,8 +305,6 @@ const ReminderList = () => {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        const allowed = handleClick();
-                        if (!allowed) return;
                         Swal.fire({
                           title: "Email envoyé",
                           html: `<div style="text-align:left">${
@@ -340,8 +329,6 @@ const ReminderList = () => {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        const allowed = handleClick();
-                        if (!allowed) return;
                         Swal.fire({
                           title: "Confirmer la suppression",
                           text: "Voulez-vous vraiment supprimer cette ligne de l'historique des relances ?",

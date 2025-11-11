@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useRef, useState } from "react";
-import { Mail, User, Bell, Shield, Users, Landmark, LucideIcon } from "lucide-react";
+import { Mail, User, Bell, Shield, Users, Landmark, LucideIcon, Plug } from "lucide-react";
 import { Elements } from "@stripe/react-stripe-js"; // Importer Elements
 import { loadStripe } from "@stripe/stripe-js"; // Importer loadStripe
 // Composants à créer ou importer
@@ -129,17 +129,16 @@ const sections = [
       },
     ],
   }, {
-    id: "integration-bancaire",
-    name: "Intégration bancaire",
-    version: "alpha",
-    icon: Landmark,
+    id: "integrations",
+    name: "Intégrations",
+    icon: Plug,
     subTabs: [
       {
-        id: "sync-Payment",
-        name: "Synchronisation des paiements",
-        component: PaymentSync
-      }
-    ]
+        id: "sage",
+        name: "Sage",
+        component: SageSettings,
+      },
+    ],
   }
 ] as const satisfies { id: string, name: string, version?: "stable" | "alpha" | "beta", icon: LucideIcon, subTabs: SubTab[] }[];
 type SettingsProps = {
