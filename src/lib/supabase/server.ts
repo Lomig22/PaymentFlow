@@ -372,7 +372,7 @@ export async function fetchProfiles(): Promise<any[]> {
     let profiles: any[] | null = null;
     // On récupère tous les profils uniques de l'utilisateur
     const { data, error } = await supabase
-        .from("reminder_profile")
+        .from("reminder_profiles")
         .select("*")
         .eq("owner_id", user.id)
         .eq("public", false);

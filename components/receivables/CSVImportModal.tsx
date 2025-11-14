@@ -883,7 +883,7 @@ const fetchClients = async () => {
 
       // Get the default reminder profile
       const { data: reminderPorfile } = await supabase
-        .from("reminder_profile")
+        .from("reminder_profiles")
         .select()
         .eq("name", "Default")
         .eq("owner_id", user.id);

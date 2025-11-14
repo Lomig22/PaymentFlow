@@ -17,6 +17,7 @@ import { Calendly } from "./Calendly";
 import { Testimonials } from "./Testimonials";
 import { ConfirmCalendarButton } from "./ConfirmCalendarButton";
 import CalendlyAndChatlingLoader from "../../../components/CalendlyAndChatlingLoader";
+import Script from "next/script";
 
 export const metadata: Metadata = {
   title: "Logiciel de recouvrement | Payment Flow",
@@ -46,10 +47,9 @@ export default function LandingPage() {
     ...clientLogos,
   ];
 
-  // Liste doublée pour un marquee CSS en boucle parfaite
-  const clientLogosMarquee = [...clientLogos, ...clientLogos];
   return (
     <>
+    <Script src="//widget.trustpilot.com/bootstrap/v5/tp.widget.bootstrap.min.js"/>
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
         {/* Hero Section */}
         <main>
@@ -103,24 +103,26 @@ export default function LandingPage() {
                     <div className="text-xs text-gray-500 mt-1 text-left">
                       Noté&nbsp;<span className="font-semibold" style={{ color: '#2563eb' }}>4,93/5</span>&nbsp;sur Capterra, Trustpilot, GetApp, Appvizer & Google
                     </div>
-                    <div
-                      className="trustpilot-widget"
-                      data-locale="fr-FR"
-                      data-template-id="56278e9abfbbba0bdcd568bc"
-                      data-businessunit-id="685b0b9f257a8efcadffa636"
-                      data-style-height="52px"
-                      data-style-width="240px"
-                      data-token="42912aec-66d4-4c4a-bbfd-eb389f93e620"
-                    >
-                      <a
-                        href="https://fr.trustpilot.com/review/payment-flow.fr"
-                        target="_blank"
-                        rel="noopener"
-                      >
-                        Trustpilot
-                      </a>
-                    </div>
                   </div>
+                  <div className="mt-4 text-left inline-block">
+    <div
+      className="trustpilot-widget"
+      data-locale="fr-FR"
+      data-template-id="56278e9abfbbba0bdcd568bc"
+      data-businessunit-id="685b0b9f257a8efcadffa636"
+      data-style-height="52px"
+      data-style-width="240px"
+      data-token="42912aec-66d4-4c4a-bbfd-eb389f93e620"
+    >
+      <a
+        href="https://fr.trustpilot.com/review/payment-flow.fr"
+        target="_blank"
+        rel="noopener"
+      >
+        Trustpilot
+      </a>
+    </div>
+  </div>
                 </div>
               }
               rightColumn={
@@ -190,6 +192,7 @@ export default function LandingPage() {
                 </>
               }
               clientLogos={clientLogos}
+              clientLogosLoop={clientLogosLoop}
             >
 
             </AnimatedLandingSection>

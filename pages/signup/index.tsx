@@ -147,14 +147,19 @@ export default function SignupPage() {
             "Erreur lors du upsert dans profiles:",
             upsertError.message
           );
+          setMessage({
+        type: "error",
+        text:
+          `Une erreur est survenue lors de la création du compte: ${upsertError}`,
+      });
         } else {
           console.log("Profil mis à jour ou inséré avec succès !");
+          setMessage({
+            type: "success",
+            text: "Un e-mail de confirmation vous a été envoyé. Veuillez vérifier votre boîte de réception.",
+          });
         }
       }
-      setMessage({
-        type: "success",
-        text: "Un e-mail de confirmation vous a été envoyé. Veuillez vérifier votre boîte de réception.",
-      });
 
       setTimeout(async () => await createStripeSession(), 3000);
     } catch (error: any) {
@@ -192,7 +197,7 @@ export default function SignupPage() {
       if (upsertError) {
         console.error(
           "Erreur lors du upsert dans pending_profiles:",
-          upsertError.message
+          upsertError
         );
       } else {
         console.log("Profil Google inséré ou mis à jour !");

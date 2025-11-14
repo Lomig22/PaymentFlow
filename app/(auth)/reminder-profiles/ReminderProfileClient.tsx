@@ -93,12 +93,12 @@ export default function ReminderProfilesClient({ profiles }: { profiles: any[] }
             public: false,
         };
         if (editingId) {
-            await supabase.from("reminder_profile").update(dataToSave).eq("id", editingId);
+            await supabase.from("reminder_profiles").update(dataToSave).eq("id", editingId);
             setLocalProfiles((prev) =>
                 prev.map((p) => (p.id === editingId ? { ...p, ...dataToSave } : p))
             );
         } else {
-            const { data, error } = await supabase.from("reminder_profile").insert(dataToSave).select();
+            const { data, error } = await supabase.from("reminder_profiles").insert(dataToSave).select();
             if (!error && data) {
                 console.log(data);
                 setLocalProfiles((prev) => [...prev, data]);
@@ -145,12 +145,12 @@ export default function ReminderProfilesClient({ profiles }: { profiles: any[] }
                     label: "Oui",
                     onClick: async () => {
                         // UI optimiste
-                        const { error } = await supabase.from("reminder_profile").delete().eq("id", id);
+                        const { error } = await supabase.from("reminder_profiles").delete().eq("id", id);
 
                         if (error) {
                             // Si référence côté clients empêche la suppression, on délient puis on réessaie
                             await supabase.from("clients").update({ reminder_profile: null }).eq("reminder_profile", id);
-                            await supabase.from("reminder_profile").delete().eq("id", id);
+                            await supabase.from("reminder_profiles").delete().eq("id", id);
                         }
                         setLocalProfiles(prev => prev.filter(p => p.id !== id));
                     },
@@ -184,7 +184,7 @@ export default function ReminderProfilesClient({ profiles }: { profiles: any[] }
                 public: false,
             };
 
-            const { data } = await supabase.from("reminder_profile").insert(copy).select().single();
+            const { data } = await supabase.from("reminder_profiles").insert(copy).select().single();
             setLocalProfiles(prev => [...prev, data]);
         } catch (e) {
             console.error("Erreur duplication profil:", e);

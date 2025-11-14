@@ -133,7 +133,7 @@ function ClientList({
       // 3. Récupérer les clients pour ces propriétaires
       const { data: clients, error: clientsError } = await supabase
         .from("clients")
-        .select("*, reminderProfile:reminder_profile(*)")
+        .select("*, reminderProfile:reminder_profiles(*)")
         .in("owner_id", allOwnerIds)
         .order("company_name");
       if (clientsError) throw clientsError;
@@ -171,7 +171,7 @@ function ClientList({
         const orFilter = ownerConds ? `public.is.true,${ownerConds}` : 'public.is.true';
 
         const { data, error } = await supabase
-          .from('reminder_profile')
+          .from("reminder_profiles")
           .select('*')
           .or(orFilter)
           .order('name');
@@ -210,7 +210,7 @@ function ClientList({
         const orFilter = ownerConds ? `public.is.true,${ownerConds}` : 'public.is.true';
 
         const { data, error } = await supabase
-          .from('reminder_profile')
+          .from("reminder_profiles")
           .select('*')
           .in('id', missingIds)
           .or(orFilter);

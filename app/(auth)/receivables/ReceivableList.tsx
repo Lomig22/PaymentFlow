@@ -297,7 +297,7 @@ export function ReceivablesList({ user }: { user: SupabaseUser }) {
       const orFilter = ownerConds ? `public.is.true,${ownerConds}` : 'public.is.true';
       const { data: reminderProfilesData, error: profilesError } =
         await supabase
-          .from("reminder_profile")
+          .from("reminder_profiles")
           .select("*")
           .or(orFilter)
           .order('name');
@@ -451,7 +451,7 @@ export function ReceivablesList({ user }: { user: SupabaseUser }) {
       const effId = (selectedReceivable.client as any)?.reminder_profile || (selectedReceivable.client as any)?.reminder_profiles || null;
       if (effId && result?.level) {
         const { data: prof, error: pErr } = await supabase
-          .from('reminder_profile')
+          .from("reminder_profiles")
           .select('email_template_1, email_template_2, email_template_3, email_template_4')
           .eq('id', effId as string)
           .maybeSingle();

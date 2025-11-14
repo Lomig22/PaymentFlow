@@ -3,7 +3,7 @@
 import * as motion from "motion/react-client";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Autoplay, FreeMode } from "swiper/modules";
+import { Autoplay, FreeMode, Navigation } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 
 const fadeInUp = {
@@ -33,7 +33,7 @@ const staggerContainer = {
     },
 };
 
-export function AnimatedLandingSection({ leftColumn, rightColumn, target, email, chart, clientLogos }: { leftColumn: React.ReactNode, rightColumn: React.ReactNode, target: React.ReactNode, email: React.ReactNode, chart: React.ReactNode, clientLogos: { src: string; alt: string }[] }) {
+export function AnimatedLandingSection({ leftColumn, rightColumn, target, email, chart, clientLogos, clientLogosLoop }: { leftColumn: React.ReactNode, rightColumn: React.ReactNode, target: React.ReactNode, email: React.ReactNode, chart: React.ReactNode, clientLogos: { src: string; alt: string }[] , clientLogosLoop: { src: string; alt: string }[]}) {
     const router = useRouter();
     const [viewport, setViewport] = useState<{ once: boolean; margin: string; amount: number }>({
         once: true,
@@ -117,6 +117,8 @@ export function AnimatedLandingSection({ leftColumn, rightColumn, target, email,
                 {chart}
             </motion.div>
 
+
+        </motion.div>
             {/* Logos défilants - Ils nous font confiance */}
           <motion.div
             className="mt-16"
@@ -146,7 +148,7 @@ export function AnimatedLandingSection({ leftColumn, rightColumn, target, email,
                   spaceBetween={120}
                   allowTouchMove={false}
                 >
-                  {clientLogos.map((logo, idx) => (
+                  {clientLogosLoop.map((logo, idx) => (
                     <SwiperSlide key={idx} style={{ width: "auto" }}>
                       <img
                         src={logo.src}
@@ -162,7 +164,5 @@ export function AnimatedLandingSection({ leftColumn, rightColumn, target, email,
               </div>
             </div>
           </motion.div>
-
-        </motion.div>
     </>
 }

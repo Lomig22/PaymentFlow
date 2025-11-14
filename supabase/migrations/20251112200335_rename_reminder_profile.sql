@@ -1,0 +1,1 @@
+alter table if exists reminder_profile rename to reminder_profiles

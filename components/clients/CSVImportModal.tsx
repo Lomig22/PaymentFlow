@@ -618,7 +618,7 @@ export default function CSVImportModal({
 
 			// Get the default reminder profile
 			const { data: reminderPorfile, error } = await supabase
-				.from('reminder_profile')
+				.from("reminder_profiles")
 				.select()
 				.eq('name', 'Default')
 				.eq('owner_id', user.id);

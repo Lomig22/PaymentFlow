@@ -77,7 +77,7 @@ export default function ReminderSettingsModal({
     if (!reminderProfile?.id) return;
     setLoading(true);
     const { error } = await supabase
-      .from("reminder_profile")
+      .from("reminder_profiles")
       .update(emailTemplates)
       .eq("id", reminderProfile.id);
     setLoading(false);
@@ -300,7 +300,7 @@ export default function ReminderSettingsModal({
       const profileId = effectiveProfileId;
       if (!profileId) return;
       const { data: reminderProfile, error } = await supabase
-        .from('reminder_profile')
+        .from("reminder_profiles")
         .select('name')
         .eq('id', profileId)
         .single(); // pour récupérer un seul objet au lieu d'un tableau

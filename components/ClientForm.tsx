@@ -151,7 +151,7 @@ export default function ClientForm({
       let selectedProfile: ReminderProfile | null = null;
       if (formData.reminder_profile && formData.reminder_profile !== "") {
         const { data: rp, error: rpError } = await supabase
-          .from("reminder_profile")
+          .from("reminder_profiles")
           .select("*")
           .eq("id", formData.reminder_profile)
           .single();
@@ -357,7 +357,7 @@ export default function ClientForm({
     }
 
     const { data, error } = await supabase
-      .from("reminder_profile")
+      .from("reminder_profiles")
       .select()
       .eq("owner_id", user.id)
       .eq("public", false);
