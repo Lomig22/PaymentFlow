@@ -21,15 +21,14 @@ const formatEmailTemplateWrapper = (
 		<body style="font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 20px;">
 			<div style="max-width: 600px; margin: 0 auto;">
 			${content}
-			${
-				signature
-					? `
+			${signature
+			? `
 				<div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee;">
 				${signature}
 				</div>
 			`
-					: ''
-			}
+			: ''
+		}
 			</div>
 		</body>
 		</html>`;
@@ -120,12 +119,12 @@ const updateReminderTable = async (
 				action === 'pre'
 					? 'Relance préventive'
 					: action === 'first'
-					? 'Relance 1'
-					: action === 'second'
-					? 'Relance 2'
-					: action === 'third'
-					? 'Relance 3'
-					: 'Relance finale',
+						? 'Relance 1'
+						: action === 'second'
+							? 'Relance 2'
+							: action === 'third'
+								? 'Relance 3'
+								: 'Relance finale',
 		})
 		.eq('id', receivableId);
 
@@ -188,11 +187,11 @@ const sendDueEmails = async (
 			html: emailContent, // html body
 			attachments: receivable.invoice_pdf_url
 				? [
-						{
-							filename: 'logo.png',
-							path: receivable.invoice_pdf_url,
-						},
-				  ]
+					{
+						filename: 'logo.png',
+						path: receivable.invoice_pdf_url,
+					},
+				]
 				: undefined,
 		});
 
@@ -263,11 +262,11 @@ const sendFirstReminders = async (
 			html: emailContent, // html body
 			attachments: receivable.invoice_pdf_url
 				? [
-						{
-							filename: 'logo.png',
-							path: receivable.invoice_pdf_url,
-						},
-				  ]
+					{
+						filename: 'logo.png',
+						path: receivable.invoice_pdf_url,
+					},
+				]
 				: undefined,
 		});
 
@@ -340,11 +339,11 @@ const secondReminders = async (
 			html: emailContent, // html body
 			attachments: receivable.invoice_pdf_url
 				? [
-						{
-							filename: 'logo.png',
-							path: receivable.invoice_pdf_url,
-						},
-				  ]
+					{
+						filename: 'logo.png',
+						path: receivable.invoice_pdf_url,
+					},
+				]
 				: undefined,
 		});
 
@@ -416,11 +415,11 @@ const thirdReminders = async (
 			html: emailContent, // html body
 			attachments: receivable.invoice_pdf_url
 				? [
-						{
-							filename: 'logo.png',
-							path: receivable.invoice_pdf_url,
-						},
-				  ]
+					{
+						filename: 'logo.png',
+						path: receivable.invoice_pdf_url,
+					},
+				]
 				: undefined,
 		});
 
@@ -493,11 +492,11 @@ const finalReminders = async (
 			html: emailContent, // html body
 			attachments: receivable.invoice_pdf_url
 				? [
-						{
-							filename: 'logo.png',
-							path: receivable.invoice_pdf_url,
-						},
-				  ]
+					{
+						filename: 'logo.png',
+						path: receivable.invoice_pdf_url,
+					},
+				]
 				: undefined,
 		});
 
@@ -545,34 +544,34 @@ Deno.serve(async (req) => {
 		const supabaseClient = createClient(
 		process.env.SUPABASE_URL ?? '',
 		process.env.SUPABASE_SERVICE_ROLE_KEY ?? ''
-		);
+	);
 
-		const transporter = setupMailTransporter();
+	const transporter = setupMailTransporter();
 
-		// Send reminders to users who are closer to due date
-		// Send reminders to clients who are due a reminder according to their reminder profile and have enabled reminders
-		// After every reminder update the reminder history table with information about the reminder sent
+	// Send reminders to users who are closer to due date
+	// Send reminders to clients who are due a reminder according to their reminder profile and have enabled reminders
+	// After every reminder update the reminder history table with information about the reminder sent
 
-		const { data: clients, error: clientsError } = await supabaseClient
-			.from('clients')
-			.select('*');
+	const { data: clients, error: clientsError } = await supabaseClient
+		.from('clients')
+		.select('*');
 
-		if (clientsError) {
-			return new Response(JSON.stringify({ error: clientsError.message }), {
-				status: 500,
-				headers: { 'Content-Type': 'application/json' },
-			});
-		}
+	if (clientsError) {
+		return new Response(JSON.stringify({ error: clientsError.message }), {
+			status: 500,
+			headers: { 'Content-Type': 'application/json' },
+		});
+	}
 
-		const clientMap = new Map<string, any>(
-			clients.map((client: any) => [client.id, client])
-		);
+	const clientMap = new Map<string, any>(
+		clients.map((client: any) => [client.id, client])
+	);
 
-		const { data, error } = await supabaseClient
-			.from('receivables')
-			.select('*')
-			.eq('automatic_reminder', true)
-			.not('email', 'is', null);
+	const { data, error } = await supabaseClient
+		.from('receivables')
+		.select('*')
+		.eq('automatic_reminder', true)
+		.not('email', 'is', null);
 
 		if (error) {
 			return new Response(JSON.stringify({ error: error.message }), {
@@ -647,15 +646,14 @@ Deno.serve(async (req) => {
 	}
 });
 
-
 /* To invoke locally:
 
   1. Run `supabase start` (see: https://supabase.com/docs/reference/cli/supabase-start)
   2. Make an HTTP request:
 
   curl -i --location --request POST 'http://127.0.0.1:54321/functions/v1/pre-reminder-email' \
-    --header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0' \
-    --header 'Content-Type: application/json' \
-    --data '{"name":"Functions"}'
+	--header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0' \
+	--header 'Content-Type: application/json' \
+	--data '{"name":"Functions"}'
 
 */

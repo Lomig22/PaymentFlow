@@ -61,7 +61,7 @@ END;
 $$ language 'plpgsql';
 
 CREATE TRIGGER update_notification_settings_timestamp
-    BEFORE UPDATE ON notification_settings
+    BEFORE UPDATE ON public.notification_settings
     FOR EACH ROW
     EXECUTE FUNCTION update_notification_settings_updated_at();
 
@@ -72,7 +72,7 @@ CREATE INDEX IF NOT EXISTS idx_notification_settings_user_id ON notification_set
 CREATE OR REPLACE FUNCTION create_default_notification_settings()
 RETURNS TRIGGER AS $$
 BEGIN
-    INSERT INTO notification_settings (user_id)
+    INSERT INTO public.notification_settings (user_id)
     VALUES (NEW.id)
     ON CONFLICT (user_id) DO NOTHING;
     RETURN NEW;

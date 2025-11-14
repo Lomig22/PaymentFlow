@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
-import { supabase } from '../lib/supabase';
 import type { Reminder } from '../types/database';
+import { useSupabase } from '../../app/providers/supabase-provider';
 
 // Calcule et publie périodiquement l'état d'ouverture des emails pour une créance
 export function useReminderOpenStatus(
@@ -8,6 +8,7 @@ export function useReminderOpenStatus(
   setLiveReminders: (items: Reminder[]) => void,
   setOpenStatus: (status: Record<string, boolean | null>) => void
 ): void {
+  const supabase = useSupabase();
   const liveRemindersRef = useRef<Reminder[] | null>(null);
   const receivableEmailIdRef = useRef<string | null>(null);
 
@@ -26,7 +27,7 @@ export function useReminderOpenStatus(
           setLiveReminders(data as Reminder[]);
           liveRemindersRef.current = data as Reminder[];
         }
-      } catch {}
+      } catch { }
     };
 
     const fetchReceivableEmailId = async () => {

@@ -116,12 +116,14 @@ create trigger trg_due_soon_change
   after insert or update of due_date, status on public.receivables
   for each row execute function public.notify_due_soon_on_change();
 
+create extension pg_cron with schema pg_catalog; 
+
 -- Optional: schedule daily scan via pg_cron if available
 do $$
 begin
   if exists (select 1 from pg_extension where extname = 'pg_cron') then
     if not exists (select 1 from cron.job where jobname = 'notif_due_soon_daily') then
-      perform cron.schedule('notif_due_soon_daily', '0 6 * * *', $$select public.scan_due_soon_notifications()$$);
+      perform cron.schedule('notif_due_soon_daily', '0 6 * * *', $inner$select public.scan_due_soon_notifications()$inner$);
     end if;
   end if;
 end $$;

@@ -1,0 +1,218 @@
+'use client';
+import React, { useState } from "react";
+import { Lock, Mail, Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+
+
+export default function LoginPage() {
+  const router = useRouter();
+
+  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [message, setMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const navigate = (page: string) => {
+    router.push(page);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage(null);
+
+    try {
+      const res = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const result = await res.json();
+
+      if (result.error) {
+        setMessage({
+          type: "error",
+          text: result.error || "Une erreur est survenue lors de la connexion",
+        });
+        return;
+      }
+      const { user, session, requiresMFA } = result;
+
+      if (requiresMFA) {
+        router.push("auth/mfa");
+      }
+      else {
+        router.push("/dashboard");
+      }
+
+      return;
+
+    } catch (error: any) {
+      setMessage({
+        type: "error",
+        text: error.message || "Erreur lors de la connexion",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    setMessage(null);
+
+    try {
+      const qs = new URLSearchParams(location.search);
+      const res = await fetch("/api/oauth/google");
+      const json = await res.json();
+
+      if (json.error) {
+        throw json.error;
+      }
+
+      console.log("GOOGLE REDIRECT URL", json.url);
+
+      window.location.href = json.url;
+
+      // const { data, error } = await supabase.auth.signInWithOAuth({
+      //   provider: "google",
+      //   options: {
+      //     redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
+      //   },
+      // });
+
+      // L'utilisateur est redirigé automatiquement via l'OAuth callback.
+    } catch (error: any) {
+      setMessage({
+        type: "error",
+        text: error.message || "Une erreur est survenue avec Google",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-100/80 backdrop-blur-sm flex items-center justify-center p-4 fixed inset-0 z-50">
+      <div className="max-w-md w-full bg-white rounded-lg shadow-xl p-8 relative">
+        <h2 className="text-2xl font-bold text-center mb-8">Se connecter</h2>
+
+        {message && (
+          <div
+            className={`p-4 rounded-md mb-6 ${message.type === "success"
+              ? "bg-green-50 text-green-700"
+              : "bg-red-50 text-red-700"
+              }`}
+          >
+            {message.text}
+          </div>
+        )}
+
+        <form className="space-y-6" onSubmit={handleSubmit}>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Email
+            </label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="pl-10 w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+                placeholder="exemple@email.com"
+                autoComplete="username"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Mot de passe
+            </label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="pl-10 pr-12 w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+                placeholder="••••••••"
+                autoComplete="current-password"
+              />
+              <button
+                type="button"
+                onMouseDown={() => setShowPassword(true)}
+                onMouseUp={() => setShowPassword(false)}
+                onMouseLeave={() => setShowPassword(false)}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                {showPassword ? (
+                  <EyeOff className="h-5 w-5" />
+                ) : (
+                  <Eye className="h-5 w-5" />
+                )}
+              </button>
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-blue-600 text-white p-3 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-50"
+          >
+            {loading ? "Connexion en cours..." : "Se connecter"}
+          </button>
+          <div className="flex items-center justify-center">
+            <span className="text-sm text-gray-500">ou</span>
+          </div>
+          <div className="space-y-4 mb-6">
+            <button type="button" onClick={handleGoogleLogin} disabled={loading}
+              className="w-full flex items-center justify-center gap-2 bg-white border border-gray-300 text-gray-700 p-3 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-50"
+            >
+              <img
+                src="https://www.svgrepo.com/show/475656/google-color.svg"
+                alt="Google"
+                className="h-5 w-5"
+              />
+              Continuer avec Google</button>
+          </div>
+
+          <div className="text-center space-y-2">
+            <p className="text-sm text-gray-600">
+              Pas encore de compte ?{" "}
+              <Link
+                href="/signup"
+                className="text-blue-600 hover:text-blue-800 font-medium"
+              >
+                Créer un compte
+              </Link>
+            </p>
+
+            <p className="text-sm">
+              <Link
+                href="/forgot-password"
+                className="text-blue-600 hover:text-blue-800 font-medium"
+              >
+                Mot de passe oublié ?
+              </Link>
+            </p>
+          </div>
+        </form>
+        <Link href="/">
+          <button className="mt-6 w-full flex items-center justify-center text-gray-600 hover:text-gray-800 transition-colors">
+            <ArrowLeft className="h-5 w-5 mr-2" />
+            Retour à l'accueil
+          </button>
+        </Link>
+      </div>
+    </div>
+  );
+}

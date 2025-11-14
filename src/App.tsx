@@ -1,22 +1,24 @@
 import { useState, useEffect } from "react";
-import { supabase, checkAuth } from "./lib/supabase";
+import { supabase, checkAuth } from "./lib/supabase/supabase";
 import { User } from "@supabase/supabase-js";
-import AuthMFA from "./components/AuthMFA";
+import AuthMFA from "../components/AuthMFA";
 import AppRoutes from "./AppRoutes";
+
+import { useUser } from "../components/context/UserContext";
 
 function clearSupabaseAuthOnly() {
   try {
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
     const host = new URL(supabaseUrl).host;
     // Supprimer uniquement les clés d'auth Supabase locales
     localStorage.removeItem(`paymentflow-auth:${host}`);
     localStorage.removeItem("paymentflow-auth"); // rétrocompatibilité éventuelle
     // Ne pas toucher aux clés d'onboarding (onboarding_*), ni aux autres données
-  } catch {}
+  } catch { }
 }
 
 export default function AppWithMFA() {
-  const [user, setUser] = useState<User | null>(null);
+  const { user, setUser } = useUser();
   const [isLoading, setIsLoading] = useState(true);
   const [showMFAScreen, setShowMFAScreen] = useState(false);
 
@@ -38,7 +40,7 @@ export default function AppWithMFA() {
           if (shouldTrigger) {
             localStorage.setItem('onboarding_deferred', '1');
           }
-        } catch {}
+        } catch { }
 
         const session = await checkAuth();
         const currentUser = session?.user ?? null;
@@ -163,7 +165,7 @@ export default function AppWithMFA() {
   }
 
   if (showMFAScreen) {
-    return <AuthMFA onMFASuccess={handleMFASuccess} />;
+    return <AuthMFA />;
   }
 
   return <AppRoutes user={user} mfaRequired={false} onMFASuccess={handleMFASuccess} />;

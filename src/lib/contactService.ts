@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { supabase } from './supabase/supabase';
 
 interface ContactFormData {
   name: string;
@@ -10,8 +10,8 @@ interface ContactFormData {
 export const sendContactForm = async (formData: ContactFormData): Promise<boolean> => {
   try {
     // Utiliser l'API Resend directement au lieu de la fonction Edge
-    const RESEND_API_KEY = import.meta.env.VITE_RESEND_API_KEY;
-    
+    const RESEND_API_KEY = process.env.NEXT_RESEND_API_KEY;
+
     if (!RESEND_API_KEY) {
       console.error('Clé API Resend non configurée');
       return false;

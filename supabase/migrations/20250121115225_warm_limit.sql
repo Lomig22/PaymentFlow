@@ -9,7 +9,6 @@
 
   2. Modifications de Tables
     - `clients`
-      - Ajout des délais de relance personnalisés
       - Ajout des templates de relance personnalisés
 
   3. Sécurité
@@ -33,22 +32,6 @@ CREATE TABLE IF NOT EXISTS email_settings (
 -- Ajout des colonnes de délai de relance aux clients
 DO $$ 
 BEGIN
-    -- Délais de relance
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'clients' AND column_name = 'reminder_delay_1') THEN
-        ALTER TABLE clients ADD COLUMN reminder_delay_1 integer DEFAULT 15;
-    END IF;
-
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'clients' AND column_name = 'reminder_delay_2') THEN
-        ALTER TABLE clients ADD COLUMN reminder_delay_2 integer DEFAULT 30;
-    END IF;
-
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'clients' AND column_name = 'reminder_delay_3') THEN
-        ALTER TABLE clients ADD COLUMN reminder_delay_3 integer DEFAULT 45;
-    END IF;
-
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'clients' AND column_name = 'reminder_delay_final') THEN
-        ALTER TABLE clients ADD COLUMN reminder_delay_final integer DEFAULT 60;
-    END IF;
 
     -- Templates d'email
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'clients' AND column_name = 'reminder_template_1') THEN
