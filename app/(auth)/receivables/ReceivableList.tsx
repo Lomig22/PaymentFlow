@@ -969,6 +969,7 @@ export function ReceivablesList({ user }: { user: SupabaseUser }) {
             "Impossible d'envoyer la relance. Vérifiez les paramètres email, la signature et les templates."
           );
         }
+        setSendSuccess(false);
       }
       setSending(false);
       setShowConfirmReminder(false);
@@ -2402,11 +2403,7 @@ export function ReceivablesList({ user }: { user: SupabaseUser }) {
                   <button
                     onClick={async () => {
                       setSendError(false);
-                      setSendSuccess(false);
                       await handleSendReminder();
-                      setSendSuccess(true);
-                      setShowConfirmReminder(false);
-                      setSelectedReceivable(null);
                       fetchReceivables();
                     }}
                     disabled={sending}

@@ -9,7 +9,7 @@ export interface EmailSettings {
 }
 
 import { v4 as uuidv4 } from 'uuid';
-import { supabase } from './supabase/supabase';
+import { createBrowserClient } from '@supabase/ssr';
 const supabaseUrl: string = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 const supabaseAnonKey: string = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
 
@@ -65,6 +65,10 @@ export const sendEmail = async (
 	emailId?: string
 ): Promise<boolean> => {
 	try {
+		const supabase = createBrowserClient(
+					process.env.NEXT_PUBLIC_SUPABASE_URL!,
+					process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+		);
 		// Récupérer le token en cours via le client Supabase
 		const { data: { session } } = await supabase.auth.getSession();
 		let access_token = session?.access_token;
