@@ -1,10 +1,10 @@
 import { Helmet } from "react-helmet";
-import { motion, useInView } from "framer-motion";
-import { CheckCircle, TrendingUp } from "lucide-react";
+import { motion } from "framer-motion";
+import { CheckCircle } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { useEffect, useState } from "react";
 import Footer from "../components/Footer";
-import { useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 
@@ -376,7 +376,7 @@ const PricingPage = ({ setShowContact, setDefaultSubject }: Props) => {
                 {isPricingPage && (
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-2 pt-4">
                         <Link
-                            href={'/'}
+                            to={'/'}
                             className="flex items-center gap-2 text-xl font-medium text-blue-600 hover:text-blue-800 transition-colors"
                         >
                             <ArrowLeft className="w-4 h-4" />
