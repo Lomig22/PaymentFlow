@@ -37,7 +37,6 @@ export default function PricingPage({ setShowContact, setDefaultSubject }: Props
     const [billingInterval, setBillingInterval] = useState<"monthly" | "yearly">(
         "monthly"
     );
-    const [selectedPlan, setSelectedPlan] = useState("basic");
     const [message, setMessage] = useState<string | null>(null);
 
     const router = useRouter();
