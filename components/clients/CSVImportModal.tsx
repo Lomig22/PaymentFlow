@@ -1,10 +1,10 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { supabase } from '../../src/lib/supabase/supabase';
 import { X, Upload, AlertCircle, HelpCircle, Loader2 } from 'lucide-react';
 import { Client,Notification } from '../../src/types/database';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css'; // Importer les styles
 import { saveNotificationServer } from '../../app/actions/saveNotification';
+import { useSupabase } from '../../app/providers/supabase-provider';
 
 interface CSVImportModalProps {
 	onClose: () => void;
@@ -61,6 +61,7 @@ export default function CSVImportModal({
 	onClose,
 	onImportSuccess,
 }:	CSVImportModalProps) {
+	const supabase = useSupabase();
 	const [file, setFile] = useState<File | null>(null);
 	const [csvData, setCsvData] = useState<string[][]>([]);
 	const [headers, setHeaders] = useState<string[]>([]);

@@ -4,7 +4,7 @@ import { useEffect, createContext, useContext, useState } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
 import { Session } from '@supabase/supabase-js';
 
-type SupabaseContextType = ReturnType<typeof createBrowserClient>;
+type SupabaseContextType = ReturnType<typeof createBrowserClient<any, "public">>;
 
 const SupabaseContext = createContext<SupabaseContextType | null>(null);
 
