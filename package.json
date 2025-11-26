@@ -34,6 +34,12 @@
     "dayjs": "^1.11.13",
     "framer-motion": "^12.23.0",
     "lucide-react": "^0.344.0",
+<<<<<<< Updated upstream
+=======
+    "framer-motion": "^11.0.0",
+    "motion": "^12.23.0",
+    "next": "^15.5.4",
+>>>>>>> Stashed changes
     "nodemailer": "^7.0.5",
     "papaparse": "^5.5.2",
     "prop-types": "^15.8.1",
