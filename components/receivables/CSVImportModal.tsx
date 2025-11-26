@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
-import { supabase } from "../../src/lib/supabase/supabase";
 import { X, Upload, AlertCircle, Info, Loader2, CheckCircle, AlertTriangle, XCircle } from "lucide-react";
 import { Receivable, Client } from "../../src/types/database";
 import Papa from "papaparse";
 import { toast } from "react-toastify";
 import Tooltip from "../Common/Tooltip";
 import Swal from "sweetalert2";
+import { useSupabase } from "../../app/providers/supabase-provider";
 
 interface CSVImportModalProps {
   onClose: () => void;
@@ -200,6 +200,7 @@ export default function CSVImportModal({
   onImportSuccess,
   receivables,
 }: CSVImportModalProps) {
+  const supabase = useSupabase();
   const [file, setFile] = useState<File | null>(null);
   const [data, setData] = useState<any[]>([]);
   const [planError, setPlanError] = useState<string | null>(null);
