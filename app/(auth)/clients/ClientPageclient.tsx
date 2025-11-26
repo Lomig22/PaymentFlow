@@ -1,5 +1,5 @@
 'use client';
-import { AlertCircle, Check, Plus } from "lucide-react";
+import { AlertCircle, Check, Plus, Upload } from "lucide-react";
 import { useState } from "react";
 import ClientList from "../../../components/clients/ClientList";
 import UnknownClientList from "../../../components/unknownClients/UnknownClientList";
@@ -21,6 +21,18 @@ export default function ClientPageClient() {
             <div className="flex justify-between items-center mb-6 ml-4">
                 <h1 className="text-2xl font-bold text-gray-900">Clients</h1>
                 <div className="flex gap-4">
+                    <button
+                        onClick={(e) => {
+                        e.stopPropagation();
+                        setShowImportModal(true);
+                        }}
+                        className="flex items-center gap-2 rounded-md bg-green-600 px-4 py-2 text-white font-medium shadow-md
+                            hover:bg-green-700 transition-all duration-300 ease-in-out
+                            focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-75"
+                    >
+                        <Upload className="h-5 w-5" />
+                        Importer CSV
+                    </button>
                     <button
                         onClick={(e) => {
                             e.stopPropagation();
