@@ -18,7 +18,30 @@ const validatePassword = (password: string) => {
       hasSpecialChar,
     },
   };
+
 };
+
+  const DEFAULT_PAYMENT_LINKS = {
+    basic: {
+      monthly: "https://buy.stripe.com/aFa00k4tG9DReqb0tu8Ra08",
+      yearly: "https://buy.stripe.com/3cI7sM6BOeYbeqb6RS8Ra0a",
+    },
+    pro: {
+      monthly: "https://buy.stripe.com/14AcN66BO2bpbdZekk8Ra09",
+      yearly: "https://buy.stripe.com/4gMbJ25xK03h4PB9008Ra0b",
+    },
+  } as const;
+
+  const paymentLinkMap = {
+    basic: {
+      monthly: (import.meta.env.VITE_STRIPE_LINK_BASIC as string) || DEFAULT_PAYMENT_LINKS.basic.monthly,
+      yearly: (import.meta.env.VITE_STRIPE_LINK_BASIC_ANNUEL as string) || DEFAULT_PAYMENT_LINKS.basic.yearly,
+    },
+    pro: {
+      monthly: (import.meta.env.VITE_STRIPE_LINK_PRO as string) || DEFAULT_PAYMENT_LINKS.pro.monthly,
+      yearly: (import.meta.env.VITE_STRIPE_LINK_PRO_ANNUEL as string) || DEFAULT_PAYMENT_LINKS.pro.yearly,
+    },
+  } as const;
 
 export default function SignupPage() {
   const [loading, setLoading] = useState(false);
@@ -38,13 +61,35 @@ export default function SignupPage() {
   const [phone, setPhone] = useState("");
   const [company, setCompany] = useState("");
   const [selectedPlan, setSelectedPlan] = useState("basic");
+  const [selectedInterval, setSelectedInterval] = useState<"monthly" | "yearly">("monthly");
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
 
   useEffect(() => {
     const savedPlan = localStorage.getItem("selectedPlan");
     if (savedPlan) setSelectedPlan(savedPlan);
+    const savedInterval = localStorage.getItem("selectedInterval") as "monthly" | "yearly" | null;
+    if (savedInterval === "monthly" || savedInterval === "yearly") {
+      setSelectedInterval(savedInterval);
+    }
   }, []);
+
+  useEffect(() => {
+    (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        navigate('/dashboard');
+      }
+    })();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) {
+        navigate('/dashboard');
+      }
+    });
+    return () => {
+      subscription?.unsubscribe?.();
+    };
+  }, [navigate]);
 
   const validateForm = () => {
     if (!email.trim()) {
@@ -146,12 +191,7 @@ export default function SignupPage() {
           console.log("Profil mis à jour ou inséré avec succès !");
         }
       }
-      setMessage({
-        type: "success",
-        text: "Un e-mail de confirmation vous a été envoyé. Veuillez vérifier votre boîte de réception.",
-      });
-
-      setTimeout(async () => await createStripeSession(), 3000);
+      await createStripeSession();
     } catch (error: any) {
       setMessage({
         type: "error",
@@ -217,48 +257,21 @@ export default function SignupPage() {
   };
 
   const createStripeSession = async () => {
-    const plan = localStorage.getItem("selectedPlan");
-    const interval = localStorage.getItem("selectedInterval");
-
-    if (!selectedPlan) {
-      console.error("Aucun plan sélectionné !");
-      return;
-    }
+    const plan = (localStorage.getItem("selectedPlan") as keyof typeof paymentLinkMap) || (selectedPlan as keyof typeof paymentLinkMap);
+    const interval = (localStorage.getItem("selectedInterval") as "monthly" | "yearly") || selectedInterval;
 
     if (!plan || !interval) {
-      console.error("Plan ou intervalle non défini dans le localStorage");
+      console.error("Plan ou intervalle non défini");
       return;
     }
-    const payload = {
-      price_id: priceMap[plan as keyof typeof priceMap][interval as "monthly" | "yearly"],
-      success_url: window.location.origin + "/paiement-abonement",
-      cancel_url: window.location,
-    };
 
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    const token = import.meta.env.VITE_TOKEN_STRIPE;
-    const res = await fetch(
-      "https://rsomeerndudkhyhpigmn.supabase.co/functions/v1/create-stripe-session",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      }
-    );
-
-    const data = await res.json();
-
-    if (data?.url) {
-      window.location.href = data.url;
-    } else {
-      console.error("Erreur création session Stripe", data);
+    const link = (paymentLinkMap as any)?.[plan]?.[interval] as string | undefined;
+    if (!link) {
+      console.error("Payment Link introuvable pour", plan, interval);
+      return;
     }
+    const target = email ? `${link}?prefilled_email=${encodeURIComponent(email)}` : link;
+    window.location.href = target;
   };
 
   return (

@@ -4,7 +4,7 @@ import { motion, useInView } from "framer-motion";
 import { CheckCircle, TrendingUp } from "lucide-react";
 import { useSupabase } from "../../providers/supabase-provider";
 import React, { useEffect, useState } from "react";
-import Footer from "../../../components/Footer";
+import Footer from "../../components/Footer";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
@@ -37,6 +37,7 @@ export default function PricingPage({ setShowContact, setDefaultSubject }: Props
     const [billingInterval, setBillingInterval] = useState<"monthly" | "yearly">(
         "monthly"
     );
+    const [selectedPlan, setSelectedPlan] = useState("basic");
     const [message, setMessage] = useState<string | null>(null);
 
     const router = useRouter();
@@ -217,6 +218,12 @@ export default function PricingPage({ setShowContact, setDefaultSubject }: Props
     ) => {
         setMessage(null);
 
+        try {
+            localStorage.setItem("selectedPlan", plan);
+            localStorage.setItem("selectedInterval", interval);
+            localStorage.setItem("redirectToPaymentAfterSignup", "1");
+        } catch {}
+
         const {
             data: { session },
         } = await supabase.auth.getSession();
@@ -283,10 +290,6 @@ export default function PricingPage({ setShowContact, setDefaultSubject }: Props
             setMessage("Plan ou intervalle invalide.");
             return;
         }
-
-        // Stockage local pour potentielle récupération après le paiement
-        localStorage.setItem("selectedPlan", plan);
-        localStorage.setItem("selectedInterval", interval);
 
         // Récupère le token d'accès utilisateur Supabase
         const { data: { session: stripeSession } } = await supabase.auth.getSession();
