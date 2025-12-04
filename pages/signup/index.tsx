@@ -202,9 +202,9 @@ export default function SignupPage() {
       } else {
         console.log("Profil Google inséré ou mis à jour !");
       }
-      await supabase.auth.signInWithOAuth({
-        provider: "google",
-      });
+      const res = await fetch("/api/oauth/google");
+      const json = await res.json();
+      window.location.href = json.url;
     } catch (err) {
       console.error("Erreur auth Google", err);
     }
