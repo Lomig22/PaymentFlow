@@ -2006,7 +2006,8 @@ export function ReceivablesList({ user }: { user: SupabaseUser }) {
                                 >
                                   <button
                                     type="button"
-                                    className={`flex items-center justify-center rounded-full w-8 h-8 transition focus:outline-none ${(remindersEnabled(receivable.client) || canPlayDirect(receivable)) ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-gray-300 text-gray-400 cursor-not-allowed'}`}
+                                    className={`flex items-center justify-center rounded-lg w-8 h-8 transition focus:outline-none ${(remindersEnabled(receivable.client) || canPlayDirect(receivable)) ? 'bg-blue-100 text-blue-600 hover:-translate-y-1 hover:shadow-md hover:bg-blue-200'
+              : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
                                     disabled={!(remindersEnabled(receivable.client) || canPlayDirect(receivable))}
                                     aria-label="Activer les relances"
                                     style={{ fontSize: '1.2rem' }}
@@ -2019,7 +2020,7 @@ export function ReceivablesList({ user }: { user: SupabaseUser }) {
                                       transition={{ duration: 0.09 }}
                                       style={{ fontWeight: 'bold', fontFamily: 'inherit', fontSize: '1.3rem', marginLeft: '2px' }}
                                     >
-                                      ▶
+                                      <Play className="h-4 w-4" strokeWidth={3} />
                                     </motion.span>
                                   </button>
                                 </Tooltip>
@@ -2027,7 +2028,7 @@ export function ReceivablesList({ user }: { user: SupabaseUser }) {
                                 <Tooltip label="Mettre en pause" theme="green" key={`pause-${receivable.id}`}>
                                   <button
                                     type="button"
-                                    className="flex items-center justify-center rounded-full w-8 h-8 bg-orange-500 hover:bg-orange-600 text-white transition focus:outline-none"
+                                    className="flex items-center justify-center rounded-lg w-8 h-8 bg-blue-100 text-blue-600 hover:-translate-y-1 hover:shadow-md hover:bg-blue-200 transition-transform duration-300 ease-in-out focus:outline-none"
                                     aria-label="Mettre en pause"
                                     style={{ fontSize: '1.2rem' }}
                                   >
